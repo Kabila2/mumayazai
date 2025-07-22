@@ -58,7 +58,7 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
                 transition={{ duration: 0.4 }}
                 style={{ display: "inline-block", marginLeft: 4 }}
               >
-                {lang === "en" ? "Sign Up" : "إنشاء حساب"}
+                {lang === "en" ? "Sign DOWN" : "إنشاء حساب"}
               </motion.span>
             </AnimatePresence>
           </button>
@@ -74,7 +74,7 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
                 transition={{ duration: 0.4 }}
                 style={{ display: "inline-block", marginLeft: 4 }}
               >
-                {lang === "en" ? "Sign I" : "تسجيل الدخول"}
+                {lang === "en" ? "Sign In" : "تسجيل الدخول"}
               </motion.span>
             </AnimatePresence>
           </button>
