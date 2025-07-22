@@ -1,0 +1,187 @@
+/* src/components/Stepper.css */
+
+/* 1) Smaller outer container rectangle */
+.outer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60vw;         /* was 80vw */
+  max-width: 600px;    /* was 800px */
+  margin: 0 auto;
+  padding: 1.5rem;     /* reduced from 2rem */
+  box-sizing: border-box;
+}
+
+/* 2) Step circle wrapper fills the card */
+.step-circle-container {
+  width: 100%;
+  border-radius: 2rem;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: visible;
+  margin-bottom: 2rem;
+}
+
+/* 3) Center and evenly space the step indicators */
+.step-indicator-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;       /* adjust for spacing */
+  padding: 1rem 0;
+}
+
+/* 4) Connectors keep a small fixed width */
+.step-connector {
+  flex: 0 0 20px;  /* connector width */
+  height: 2px;
+  background-color: #52525b;
+  border-radius: 1px;
+}
+
+/* Animate the connector fill */
+.step-connector-inner {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #5227FF;
+}
+
+/* 5) Circles stay their size and sit centered */
+.step-indicator,
+.step-indicator-inner {
+  flex: 0 0 auto;
+}
+.step-indicator-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  font-weight: 600;
+}
+.step-indicator-inner.inactive {
+  background-color: #222;
+  color: #a3a3a3;
+}
+.step-indicator-inner.active {
+  background-color: #5227FF;
+  color: #5227FF;
+}
+.step-indicator-inner.complete {
+  background-color: #5227FF;
+  color: #3b82f6;
+}
+
+/* 6) Inner dot & numbers */
+.active-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: #fff;
+}
+.step-number {
+  font-size: 1rem;
+}
+
+/* 7) Content area */
+.step-content-default {
+  position: relative;
+  overflow: hidden;
+}
+.step-default {
+  padding: 2rem;
+}
+
+/* 8) Footer/nav buttons */
+.footer-container {
+  padding: 0 2rem 2rem;
+}
+.footer-nav {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+.footer-nav.spread {
+  justify-content: space-between;
+}
+.footer-nav.end {
+  justify-content: flex-end;
+}
+.back-button,
+.next-button {
+  cursor: pointer;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.back-button {
+  background: transparent;
+  color: #a3a3a3;
+}
+.back-button:hover {
+  color: #fff;
+}
+.back-button.inactive {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.next-button {
+  background-color: #5227FF;
+  color: #fff;
+}
+.next-button:hover,
+.next-button:active {
+  background-color: #3b0fcf;
+}
+
+/* 9) Checkmark icon */
+.check-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #fff;
+}
+/* -----------------------------------
+   Fade-in + slide-up for the Stepper
+   ----------------------------------- */
+.outer-container.fade-in {
+  /* start hidden & shifted down */
+  opacity: 0;
+  transform: translateY(20px);
+  /* animate in */
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.outer-container {
+  /* start hidden & down */
+  opacity: 0;
+  transform: translateY(20px);
+}
+.outer-container.fade-in {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,64 @@
+/* index.css */
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  color: #fff;
+  font-family: 'Cairo', sans-serif;
+  direction: rtl;
+  overflow-y: auto;
+}
+/* src/index.css */
+
+/* 1. CSS variables for Dark theme */
+:root {
+  /* colors */
+  --bg-page: #000;
+  --bg-panel: rgba(26, 0, 26, 0.6);
+  --accent-light: #b199ff;
+  --accent: #8e2de2;
+  --accent-dark: #4a00e0;
+  --text-main: #e0d6ff;
+  --text-secondary: #aaa;
+
+  /* typography */
+  --font-sans: 'Cairo', sans-serif;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+
+  /* spacing */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+}
+
+/* 2. Light mode overrides */
+:root.light {
+  --bg-page: #fafafa;
+  --bg-panel: rgba(255, 255, 255, 0.8);
+  --text-main: #111;
+  --accent: #4a00e0;
+  --accent-light: #7b61ff;
+  --text-secondary: #666;
+}
+
+/* 3. Apply page background & font */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+body {
+  background: var(--bg-page);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* 4. Gradient animation for chat-area background */
+@keyframes gradientBG {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

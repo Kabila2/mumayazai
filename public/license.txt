@@ -1,0 +1,11 @@
+Model Information:
+* title:	Simple Things [XYZ School DAILY CHALLENGE]
+* source:	https://sketchfab.com/3d-models/simple-things-xyz-school-daily-challenge-72a51d9519c74369914822593f399c41
+* author:	Andy Zarn (https://sketchfab.com/andyzarn)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Simple Things [XYZ School DAILY CHALLENGE]" (https://sketchfab.com/3d-models/simple-things-xyz-school-daily-challenge-72a51d9519c74369914822593f399c41) by Andy Zarn (https://sketchfab.com/andyzarn) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,15 @@
+.reactbits-switcher {
+  position: relative;
+  display: inline-grid;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  /* ensure the container grows to the largest component */
+  width: max-content;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.reactbits-item {
+  grid-area: 1 / 1 / 2 / 2;
+}

@@ -1,0 +1,62 @@
+.avatar {
+  width: 80px;
+  height: 80px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.avatar:hover {
+  transform: scale(1.2);
+}
+
+.avatar svg {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-bg {
+  fill: var(--panel-bg);
+  transition: fill 0.2s;
+}
+
+.avatar-head {
+  fill: var(--accent);
+  transition: fill 0.2s;
+}
+
+.avatar-body {
+  fill: var(--accent);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.avatar-mouth {
+  fill: var(--accent-light);
+  transform-origin: center center;
+  transition: transform 0.2s;
+}
+
+.avatar:hover .avatar-bg {
+  fill: rgba(0, 0, 0, 0.7);
+}
+
+.avatar:hover .avatar-head {
+  fill: var(--accent-light);
+}
+
+.avatar:hover .avatar-body {
+  opacity: 1;
+}
+
+.avatar:hover .avatar-mouth {
+  animation: speak 0.3s infinite alternate ease-in-out;
+}
+
+@keyframes speak {
+  to {
+    transform: scaleY(1.5);
+  }
+}

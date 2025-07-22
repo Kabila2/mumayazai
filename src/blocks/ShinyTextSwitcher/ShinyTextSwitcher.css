@@ -1,0 +1,15 @@
+/* src/blocks/ShinyTextSwitcher/ShinyTextSwitcher.css */
+
+.shiny-text-switcher {
+  display: inline-grid;
+  position: relative;
+  overflow: hidden;
+  /* center the text in its cell */
+  justify-content: center;
+  align-items: center;
+}
+
+.shiny-text-switcher > * {
+  /* Every direct child (your motion.divs) goes into the same grid cell */
+  grid-area: 1 / 1 / 2 / 2;
+}

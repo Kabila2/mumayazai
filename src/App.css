@@ -1,0 +1,292 @@
+/* ChatInterface.css */
+
+.chat-area {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-window {
+  width: 100%;
+  max-width: 600px;
+  height: 80%;
+  background: #111;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 16px;
+  background: #1a001a; /* deep purple accent */
+  color: #f0e6ff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #333;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  line-height: 1.4;
+}
+.chat-bubble.user {
+  background: #2a005e;
+  color: #fff;
+  align-self: flex-end;
+}
+.chat-bubble.gpt {
+  background: #26002e;
+  color: #e0d6ff;
+  align-self: flex-start;
+}
+
+.chat-input-area {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #111;
+  border-top: 1px solid #333;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 1rem;
+  background: #1a001a;
+  color: #f0e6ff;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+  margin-right: 12px;
+}
+
+.chat-input::placeholder {
+  color: #b199ff;
+}
+
+.chat-send {
+  padding: 0 20px;
+  height: 44px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #8e2de2, #4a00e0);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-send:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(138, 43, 226, 0.6);
+}
+
+.chat-send:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.mode-switcher {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  justify-content: center;
+}
+.mode-switcher button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background: #222;
+  color: #ccc;
+  border: none;
+  cursor: pointer;
+}
+.mode-switcher button.active {
+  color: #fff;
+  border-bottom: 2px solid #0af;
+}
+.mode-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #111;
+}
+
+.mode-switcher button {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+}
+
+.mode-switcher button.active {
+  color: #fff;
+  border-bottom: 2px solid #0af;
+}
+/* src/App.css */
+
+/* 1) Base reset */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;        /* match your chat background */
+  color: #fff;
+  font-family: sans-serif; /* or your --font-sans */
+}
+
+/* 2) Space for your fixed TopNav */
+:root {
+  --nav-height: 4rem;  /* adjust if your nav is taller/shorter */
+}
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: var(--nav-height);
+  background: #000;     /* fallback background */
+}
+
+/* 3) Mode-switcher (Text vs. Voice) */
+.mode-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #111;
+}
+
+.mode-switcher button {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+
+.mode-switcher button:hover {
+  color: #aaa;
+}
+
+.mode-switcher button.active {
+  color: #fff;
+  border-bottom: 2px solid #0af;
+}
+/* App.css */
+
+/* Prevent the page itself from ever scrolling */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Keep your wrapper layout as before */
+:root {
+  --nav-height: 4rem;
+}
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: var(--nav-height);
+  background: #000;
+}
+
+/* Mode‐switcher styling */
+.mode-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #111;
+}
+.mode-switcher button {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+.mode-switcher button:hover {
+  color: #aaa;
+}
+.mode-switcher button.active {
+  color: #fff;
+  border-bottom: 2px solid #0af;
+}
+/* --- Base reset & no page scroll --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+/* --- Fixed nav height variable --- */
+:root {
+  --nav-height: 4rem;
+}
+
+/* --- Push everything below the fixed TopNav --- */
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--nav-height));
+  margin-top: var(--nav-height);
+  background: #000;
+}
+
+/* --- Mode switcher always on top --- */
+.mode-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #111;
+  z-index: 10; /* above the chat areas */
+}
+.mode-switcher button {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+.mode-switcher button:hover {
+  color: #aaa;
+}
+.mode-switcher button.active {
+  color: #fff;
+  border-bottom: 2px solid #0af;
+}

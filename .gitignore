@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -22,19 +20,3 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .env
-*.js
-*.css
-.env
-node_modules/
-git rm -r --cached .
-git add .
-git commit -m "Initial commit or saving changes"
-node_modules/
-.env
-*.css
-*.js
-*.svg
-package-lock.json
-.gitignore
-*
-!.gitignore

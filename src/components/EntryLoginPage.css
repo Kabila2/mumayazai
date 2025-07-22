@@ -1,0 +1,164 @@
+/* src/components/EntryLoginPage.css */
+
+/* —————————————————————————————  
+   Full-screen container  
+   ————————————————————————————— */
+.entry-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  font-family: "Cairo", "Noto Kufi Arabic", "Segoe UI", sans-serif;
+}
+
+/* —————————————————————————————  
+   AUTH BUTTONS (Sign Up / Sign In)  
+   ————————————————————————————— */
+.auth-container {
+  /* fixed so it ignores any parent clipping / transforms */
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+
+  display: flex;
+  gap: 0.5rem;
+
+  /* sit on the very top of the stacking order */
+  z-index: 10000;
+}
+
+.auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: #5227ff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.auth-btn:hover       { background: #3a1eca; }
+.auth-btn:hover svg   { transform: translateX(4px) rotate(10deg); }
+.auth-btn:hover       { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+
+/* slide-in animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.auth-container .auth-btn {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+.auth-container .auth-btn:nth-child(1) { animation-delay: 0.2s; }
+.auth-container .auth-btn:nth-child(2) { animation-delay: 0.4s; }
+
+/* —————————————————————————————  
+   Center title (ShinyTextSwitcher)  
+   ————————————————————————————— */
+.shiny-text-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+  animation: shimmer 2s infinite linear;
+}
+@keyframes shimmer {
+  0%   { text-shadow: 0 0 10px rgba(255,255,255,0.4); }
+  50%  { text-shadow: 0 0 20px rgba(255,255,255,0.9); }
+  100% { text-shadow: 0 0 10px rgba(255,255,255,0.4); }
+}
+
+/* —————————————————————————————  
+   MODAL (dark theme)  
+   ————————————————————————————— */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000;               /* above buttons */
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.modal {
+  background: #121212;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 0.75rem;
+  position: relative;
+  box-shadow:
+    0 0 30px rgba(82,39,255,0.5),
+    0 10px 30px rgba(0,0,0,0.4);
+  color: #eee;
+}
+
+.modal-close {               /* X icon */
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #fff;
+}
+
+.modal-input {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #1f1f1f;
+  color: #ddd;
+  border: 1px solid #333;
+  border-radius: 0.25rem;
+}
+.modal-input::placeholder { color: #777; }
+
+.modal-submit {
+  width: 100%;
+  padding: 0.75rem;
+  background: #5227ff;
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.modal-submit:hover { background: #3a1eca; }
+
+/* —————————————————————————————  
+   FORCE ORB / CANVAS TO THE BACK  
+   ————————————————————————————— */
+/* 1) Any canvas generated inside entry-container */
+.entry-container canvas { z-index: 0 !important; pointer-events: none; }
+
+/* 2) Common wrapper class names used by Orb components */
+.orb-wrapper,
+.orb-bg,
+#orb-canvas,
+canvas[data-orb]           { z-index: 0 !important; pointer-events: none; }
+
+/* Feel free to add more selectors if your Orb uses a unique class / id */
+
+/* —————————————————————————————  
+   Misc utility  
+   ————————————————————————————— */
+.error-text                { font-size: 0.75rem; color: #f66; margin: 4px 0 8px; }
+.success-message.success   { color: #5ff36c; font-weight: bold; margin-top: 20px; }
+.success-message.error     { color: #ff6464; }

@@ -1,0 +1,36 @@
+.glass-icons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  margin: 0 auto;
+  max-width: 1000px;
+}
+
+.glass-icon-card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px 30px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.glass-icon-card:hover {
+  transform: translateY(-10px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 10px;
+}

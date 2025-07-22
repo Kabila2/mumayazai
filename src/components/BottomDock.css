@@ -1,0 +1,33 @@
+/* src/components/BottomDock.css */
+.bottom-dock {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20,20,20,0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  z-index: 100; /* above everything else */
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.6);
+}
+
+.dock-item {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.dock-item:hover {
+  color: #fff;
+  transform: translateY(-4px);
+}
+
+.dock-item:active {
+  transform: translateY(-2px);
+}

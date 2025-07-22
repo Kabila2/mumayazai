@@ -1,0 +1,333 @@
+/* src/components/ChatInterface.css */
+
+/* 0. CSS Variables */
+:root {
+  --accent: #8e2de2;
+  --accent-dark: #4a00e0;
+  --accent-light: #b199ff;
+  --bg-panel: rgba(26, 0, 26, 0.8);
+  --text-main: #e0d6ff;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --fs-base: 1rem;
+  --fs-lg: 1.25rem;
+}
+
+/* 1. Gradient page background */
+.chat-area {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(115deg, #1a001a, #000020, #100018);
+  background-size: 300% 300%;
+  animation: gradientBG 30s ease infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  direction: ltr;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+@keyframes gradientBG {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+/* 2. Glassmorphic chat window */
+.chat-window {
+  width: 100%;
+  max-width: 600px;
+  height: 80%;
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 3. Header */
+.chat-header {
+  padding: var(--space-md);
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+/* 4. Scrollable messages + custom scrollbar */
+.chat-messages {
+  flex: 1;
+  padding: var(--space-md);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-light) rgba(0, 0, 0, 0.3);
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-messages::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+/* 5. Pop-in bubble animation */
+@keyframes popIn {
+  0%   { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.chat-bubble {
+  max-width: 80%;
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  border-radius: 12px;
+  line-height: 1.4;
+  text-align: left;
+  animation: popIn 0.2s ease-out forwards;
+}
+
+.chat-bubble.user {
+  background: #2a005e;
+  color: #fff;
+  align-self: flex-end;
+}
+
+.chat-bubble.gpt {
+  background: #26002e;
+  color: var(--text-main);
+  align-self: flex-start;
+}
+
+/* 6. Input row */
+.chat-input-area {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md);
+  background: var(--bg-panel);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-input {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--fs-base);
+  background: rgba(26, 0, 26, 0.8);
+  color: var(--text-main);
+  border: none;
+  border-radius: 6px;
+  outline: none;
+  margin-right: var(--space-md);
+}
+
+.chat-input::placeholder {
+  color: var(--accent-light);
+}
+
+.chat-send {
+  padding: 0 var(--space-lg);
+  height: 44px;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-send:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(138, 43, 226, 0.6);
+}
+
+.chat-send:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.chat-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 7. Responsive tweaks */
+@media (max-width: 600px) {
+  .chat-window {
+    height: 90%;
+    border-radius: 0;
+  }
+  .chat-header {
+    font-size: 1.125rem;
+  }
+}
+/* ChatInterface.css */
+
+.chat-area {
+  position: relative;
+  width: 100%;    /* avoid 100vw to prevent horizontal overflow */
+  height: 100%;   /* fill available space without scrolling the page */
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;  /* no scrollbars on the outer container */
+}
+
+/* internal scrollable region, but hide its scrollbar */
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+.chat-messages::-webkit-scrollbar {
+  width: 0;    /* Chrome, Safari, Edge */
+  height: 0;
+}
+
+.chat-window { /* ... your existing styles ... */ }
+.chat-header { /* ... */ }
+.chat-bubble { /* ... */ }
+/* rest of your existing ChatInterface.css */
+/* Make the chat container flex‐grow rather than full‐viewport */
+.chat-area {
+  flex: 1;              /* fill remaining space under switcher */
+  width: 100%;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;     /* no scrollbars on the outer container */
+}
+
+/* Let the window fill its parent’s height */
+.chat-window {
+  width: 100%;
+  max-width: 600px;
+  height: 100%;         /* was 80% of viewport; now 100% of chat-area */
+  background: #111;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Messages pane scrolls internally (scrollbar hidden) */
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  scrollbar-width: none;    /* Firefox */
+}
+.chat-messages::-webkit-scrollbar {
+  width: 0;                 /* Chrome/Safari/Edge */
+  height: 0;
+}
+
+/* ... rest of your existing chat styles untouched ... */
+.chat-header { /* your existing rules */ }
+.chat-bubble { /* ... */ }
+.chat-input-area { /* ... */ }
+.chat-input { /* ... */ }
+.chat-send { /* ... */ }
+:root {
+  --switcher-height: 3rem;
+  --dock-height: 3.5rem; /* matches BottomDock’s total height */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Mode‐switcher fixed at top */
+.mode-switcher {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--switcher-height);
+  background: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  z-index: 50;
+}
+
+.mode-switcher button {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+.mode-switcher button:hover {
+  color: #aaa;
+}
+.mode-switcher button.active {
+  color: #fff;
+  border-bottom: 2px solid #0af;
+}
+
+/* Main content sits between switcher and dock */
+.main-content {
+  position: fixed;
+  top: var(--switcher-height);
+  left: 0;
+  right: 0;
+  bottom: var(--dock-height);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Simple placeholder styling */
+.placeholder {
+  color: #ccc;
+  font-size: 1.5rem;
+}
+.chat-dock {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background: #000;
+  padding: 10px 0;
+  z-index: 100;
+}
+
+.dock-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  margin: 0 16px;
+  cursor: pointer;
+}
