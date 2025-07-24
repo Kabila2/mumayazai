@@ -1,6 +1,5 @@
 // src/App.js
 import React, { useState, useEffect } from "react";
-import EntryLoginPage from "./components/EntryLoginPage";
 import ChatInterface   from "./components/ChatInterface";
 import VoiceInterface  from "./components/VoiceInterface";
 import VoiceSettings   from "./blocks/VoiceSettings/VoiceSettings";
@@ -8,9 +7,6 @@ import BottomDock      from "./components/BottomDock";
 import "./App.css";
 
 export default function App() {
-  // --- authentication / first-page flow ---
-  const [isLoggedIn, setIsLoggedIn] = useState(false);  // ⬅️ NEW
-
   // --- mode & view state ---
   const [mode, setMode] = useState("text");             // "text" | "voice"
   const [view, setView] = useState("chat");             // "chat" | "profile" | "settings"
@@ -54,28 +50,13 @@ export default function App() {
 
   // --- choose which main content to render ---
   let content;
-
-  // 0) Not logged in yet → show EntryLoginPage
-  if (!isLoggedIn) {
-    content = (
-      <EntryLoginPage
-        // you probably already have these props – adjust as needed
-        onSuccess={() => {
-          setIsLoggedIn(true);   // flip to logged-in flow
-          setView("chat");       // land straight in chat
-        }}
-      />
-    );
-  }
-
-  // 1) Logged in → show the rest of the app
-  else if (view === "chat") {
+  if (view === "chat") {
     content = mode === "text"
       ? <ChatInterface />
       : <VoiceInterface />;
   } else if (view === "profile") {
     content = <div className="placeholder">Profile Page</div>;
-  } else /* view === "settings" */ {
+  } else {
     content = (
       <VoiceSettings
         voices={voices}
@@ -94,31 +75,23 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Mode switcher & dock only AFTER login */}
-      {isLoggedIn && (
-        <>
-          <div className="mode-switcher">
-            <button
-              className={mode === "text" ? "active" : ""}
-              onClick={() => { setMode("text"); setView("chat"); }}
-            >
-              Text Chat
-            </button>
-            <button
-              className={mode === "voice" ? "active" : ""}
-              onClick={() => { setMode("voice"); setView("chat"); }}
-            >
-              Voice Chat
-            </button>
-          </div>
-        </>
-      )}
+      <div className="mode-switcher">
+        <button
+          className={mode === "text" ? "active" : ""}
+          onClick={() => { setMode("text"); setView("chat"); }}
+        >
+          Text Chat
+        </button>
+        <button
+          className={mode === "voice" ? "active" : ""}
+          onClick={() => { setMode("voice"); setView("chat"); }}
+        >
+          Voice Chat
+        </button>
+      </div>
 
-      {/* Main area */}
       <div className="main-content">{content}</div>
-
-      {/* Bottom dock only AFTER login */}
-      {isLoggedIn && <BottomDock onSelect={setView} />}
+      <BottomDock onSelect={setView} />
     </div>
   );
 }

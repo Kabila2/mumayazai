@@ -63,7 +63,10 @@ export default function ChatInterface() {
     setIsSending(true);
     setMessages(prev => [...prev, { sender: "gpt", text: "…", loading: true }]);
     try {
-      const resp = await puter.ai.chat(text);
+      const disability = localStorage.getItem("disability") || "none";
+      const prompt = `You are helping a user with ${disability}. Answer simply and supportively.\n\nUser: ${text}`;
+      const resp = await puter.ai.chat(prompt);
+
       let replyText =
         typeof resp === "string"
           ? resp

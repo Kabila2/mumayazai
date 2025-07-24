@@ -49,7 +49,10 @@ export default function VoiceInterface() {
       const text = e.results[0][0].transcript;
       setMessages((m) => [...m, { sender: "user", text }]);
       try {
-        const resp = await puter.ai.chat(text);
+        const disability = localStorage.getItem("disability") || "none";
+        const prompt = `You are helping a user with ${disability}. Answer simply and supportively.\n\nUser: ${text}`;
+        const resp = await puter.ai.chat(prompt);
+
         const reply =
           typeof resp === "string"
             ? resp
@@ -71,7 +74,6 @@ export default function VoiceInterface() {
 
   const startListening = () => recognitionRef.current?.start();
 
-  // TTS via Web Speech API
   const speak = (text) => {
     if (!window.speechSynthesis) {
       alert("Sorry, your browser does not support speech synthesis.");
@@ -92,7 +94,6 @@ export default function VoiceInterface() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Optional conversation summary
   const generateSummary = async () => {
     const prompt = `Summarize this conversation in 3 bullet points:\n${messages
       .map((m) => `${m.sender}: ${m.text}`)
@@ -120,6 +121,8 @@ export default function VoiceInterface() {
             {isListening ? t("listening") : t("speak")}
           </button>
         </div>
+
+       
       </div>
 
       <div className="voice-log">
