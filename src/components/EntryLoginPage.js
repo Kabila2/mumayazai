@@ -30,28 +30,23 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
   }, [langEnabled]);
 
   const handleSubmit = (type, userData) => {
+    // Store role for later use if needed
     localStorage.setItem("mumayaz_role", userData.role);
+    
     if (type === "signup") {
-      onSignUp();           // success happens here
-      setSuccess(true);     // trigger success
-    } else {
-      onSignIn({}, userData.role);
-    }
-  };
-
-  // Redirect after successful signup
-  useEffect(() => {
-    if (success) {
-      const role = localStorage.getItem("mumayaz_role");
+      setSuccess(true); // Show success message first
+      // Call onSignUp after a brief delay to show success message
       setTimeout(() => {
-        if (role === "parent") {
-          window.location.href = "/parent-dashboard";
-        } else {
-          window.location.href = "/chat"; // or "/voice" depending on your app
-        }
+        onSignUp(userData); // Pass userData to parent
+      }, 1500);
+    } else {
+      setSuccess(true); // Show success message first
+      // Call onSignIn after a brief delay to show success message
+      setTimeout(() => {
+        onSignIn(userData); // Pass userData to parent
       }, 1500);
     }
-  }, [success]);
+  };
 
   const textVariants = {
     enter: { opacity: 0, y: 10 },

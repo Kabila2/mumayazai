@@ -4,24 +4,26 @@ import ChatInterface from "./components/ChatInterface";
 import VoiceInterface from "./components/VoiceInterface";
 import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
 import BottomDock from "./components/BottomDock";
+import EntryLoginPage from "./components/EntryLoginPage"; // Add this import
 import "./App.css";
 
 export default function App() {
+  // --- login state ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mode, setMode] = useState("text");
-  const [view, setView] = useState("chat");
+  const [userRole, setUserRole] = useState(null);
 
+  // --- mode & view state ---
+  const [mode, setMode] = useState("voice"); // Default to voice mode
+  const [view, setView] = useState("chat"); // "chat" | "profile" | "settings"
+
+  // --- TTS state for VoiceSettings ---
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState("");
   const [speed, setSpeed] = useState(1);
   const [pitch, setPitch] = useState(1);
   const [language, setLanguage] = useState("en-US");
 
-  useEffect(() => {
-    const storedLogin = localStorage.getItem("isLoggedIn");
-    if (storedLogin === "true") setIsLoggedIn(true);
-  }, []);
-
+  // Load voices once
   useEffect(() => {
     const synth = window.speechSynthesis;
     const loadVoices = () => {
@@ -37,6 +39,7 @@ export default function App() {
     };
   }, [selectedVoice]);
 
+  // Handle TTS
   const speak = (text) => {
     if (!window.speechSynthesis) return;
     const utter = new SpeechSynthesisUtterance(text);
@@ -52,25 +55,75 @@ export default function App() {
     window.speechSynthesis.speak(utter);
   };
 
-  const handleLogin = () => {
+  // Check for stored login on app start
+  useEffect(() => {
+    const storedLogin = localStorage.getItem("isLoggedIn");
+    const storedRole = localStorage.getItem("mumayaz_role");
+    if (storedLogin === "true") {
+      setIsLoggedIn(true);
+      setUserRole(storedRole);
+    }
+  }, []);
+
+  // Handle sign in
+  const handleSignIn = (userData) => {
     setIsLoggedIn(true);
+    setUserRole(userData.role);
     localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("mumayaz_role", userData.role);
+    
+    // Set default mode based on role if needed
+    if (userData.role === "parent") {
+      setView("profile"); // or whatever view you want for parents
+    } else {
+      setMode("voice"); // Default to voice chat for students
+      setView("chat");
+    }
   };
 
+  // Handle sign up
+  const handleSignUp = (userData) => {
+    setIsLoggedIn(true);
+    setUserRole(userData.role);
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("mumayaz_role", userData.role);
+    
+    // Set default mode based on role if needed
+    if (userData.role === "parent") {
+      setView("profile"); // or whatever view you want for parents
+    } else {
+      setMode("voice"); // Default to voice chat for students
+      setView("chat");
+    }
+  };
+
+  // Handle logout (you can add this functionality later)
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserRole(null);
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("mumayaz_role");
+  };
+
+  // --- content rendering ---
   let content;
   if (!isLoggedIn) {
     content = (
-      <div className="login-screen">
-        <h1>Mumayaz AI</h1>
-        <button className="login-btn" onClick={handleLogin}>
-          Enter Now
-        </button>
-      </div>
+      <EntryLoginPage 
+        onSignIn={handleSignIn}
+        onSignUp={handleSignUp}
+      />
     );
   } else if (view === "chat") {
     content = mode === "text" ? <ChatInterface /> : <VoiceInterface />;
   } else if (view === "profile") {
-    content = <div className="placeholder">Profile Page</div>;
+    content = (
+      <div className="placeholder">
+        <h2>Profile Page</h2>
+        <p>Welcome, {userRole}!</p>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
+    );
   } else {
     content = (
       <VoiceSettings
@@ -112,7 +165,9 @@ export default function App() {
           </button>
         </div>
       )}
+
       <div className="main-content">{content}</div>
+
       {isLoggedIn && <BottomDock onSelect={setView} />}
     </div>
   );
