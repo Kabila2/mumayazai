@@ -1,6 +1,5 @@
 // src/App.js
 import React, { useState, useEffect } from "react";
-import EntryLoginPage from "./components/EntryLoginPage";
 import ChatInterface from "./components/ChatInterface";
 import VoiceInterface from "./components/VoiceInterface";
 import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
@@ -8,21 +7,21 @@ import BottomDock from "./components/BottomDock";
 import "./App.css";
 
 export default function App() {
-  // --- authentication state ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mode, setMode] = useState("text");
+  const [view, setView] = useState("chat");
 
-  // --- mode & view state ---
-  const [mode, setMode] = useState("text");             // "text" | "voice"
-  const [view, setView] = useState("chat");             // "chat" | "profile" | "settings"
-
-  // --- TTS settings ---
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState("");
   const [speed, setSpeed] = useState(1);
   const [pitch, setPitch] = useState(1);
   const [language, setLanguage] = useState("en-US");
 
-  // Load system voices
+  useEffect(() => {
+    const storedLogin = localStorage.getItem("isLoggedIn");
+    if (storedLogin === "true") setIsLoggedIn(true);
+  }, []);
+
   useEffect(() => {
     const synth = window.speechSynthesis;
     const loadVoices = () => {
@@ -33,10 +32,11 @@ export default function App() {
     };
     loadVoices();
     synth.onvoiceschanged = loadVoices;
-    return () => { synth.onvoiceschanged = null; };
+    return () => {
+      synth.onvoiceschanged = null;
+    };
   }, [selectedVoice]);
 
-  // Voice synthesis function
   const speak = (text) => {
     if (!window.speechSynthesis) return;
     const utter = new SpeechSynthesisUtterance(text);
@@ -52,10 +52,21 @@ export default function App() {
     window.speechSynthesis.speak(utter);
   };
 
-  // --- main content renderer ---
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+    localStorage.setItem("isLoggedIn", "true");
+  };
+
   let content;
   if (!isLoggedIn) {
-    content = <EntryLoginPage onLogin={() => setIsLoggedIn(true)} />;
+    content = (
+      <div className="login-screen">
+        <h1>Mumayaz AI</h1>
+        <button className="login-btn" onClick={handleLogin}>
+          Enter Now
+        </button>
+      </div>
+    );
   } else if (view === "chat") {
     content = mode === "text" ? <ChatInterface /> : <VoiceInterface />;
   } else if (view === "profile") {
@@ -101,9 +112,7 @@ export default function App() {
           </button>
         </div>
       )}
-
       <div className="main-content">{content}</div>
-
       {isLoggedIn && <BottomDock onSelect={setView} />}
     </div>
   );
