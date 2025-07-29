@@ -14,6 +14,8 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
   const [showModal, setShowModal] = useState(false);
   const [mode, setMode] = useState("signin");
 
+  const [success, setSuccess] = useState(false);
+
   useEffect(() => {
     if (langEnabled) {
       intervalRef.current = setInterval(() => {
@@ -30,11 +32,26 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
   const handleSubmit = (type, userData) => {
     localStorage.setItem("mumayaz_role", userData.role);
     if (type === "signup") {
-      onSignUp();
+      onSignUp();           // success happens here
+      setSuccess(true);     // trigger success
     } else {
       onSignIn({}, userData.role);
     }
   };
+
+  // Redirect after successful signup
+  useEffect(() => {
+    if (success) {
+      const role = localStorage.getItem("mumayaz_role");
+      setTimeout(() => {
+        if (role === "parent") {
+          window.location.href = "/parent-dashboard";
+        } else {
+          window.location.href = "/chat"; // or "/voice" depending on your app
+        }
+      }, 1500);
+    }
+  }, [success]);
 
   const textVariants = {
     enter: { opacity: 0, y: 10 },
@@ -82,7 +99,17 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
 
         <Orb rotateOnHover hoverIntensity={0.3} />
         <div className="shiny-text-container">
-          <ShinyTextSwitcher />
+          {success ? (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="success-message"
+            >
+              ✅ Success! Redirecting...
+            </motion.p>
+          ) : (
+            <ShinyTextSwitcher />
+          )}
         </div>
       </div>
 

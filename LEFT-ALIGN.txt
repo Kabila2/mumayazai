@@ -1,0 +1,5 @@
+.empty-state {
+  text-align: left;     /* Force left alignment */
+  direction: ltr;       /* Force left-to-right layout */
+  text-align: center;   /* Optional: if you want it centered instead of left */
+}
