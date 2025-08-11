@@ -1,333 +1,571 @@
-/* src/components/ChatInterface.css */
+/* src/components/ChatInterface.css - Dyslexia-Optimized Design */
 
-/* 0. CSS Variables */
+/* Import dyslexic-friendly fonts */
+@import url('https://fonts.googleapis.com/css2?family=Open+Dyslexic:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap');
+
+/* CSS Variables for Dyslexia-Friendly Design */
 :root {
-  --accent: #8e2de2;
-  --accent-dark: #4a00e0;
-  --accent-light: #b199ff;
+  --accent: #4CAF50; /* Green for calm and focus */
+  --accent-dark: #45a049;
+  --accent-light: #81C784;
   --bg-panel: rgba(26, 0, 26, 0.8);
-  --text-main: #e0d6ff;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --fs-base: 1rem;
-  --fs-lg: 1.25rem;
+  --text-main: #e8f5e8; /* Soft green-tinted white */
+  --text-user: #ffffff;
+  --space-sm: 10px; /* Increased spacing */
+  --space-md: 20px;
+  --space-lg: 30px;
+  --fs-base: 1.1rem; /* Larger base font for readability */
+  --fs-lg: 1.4rem;
+  --dyslexic-font: 'Lexend', 'Open Dyslexic', 'Arial', sans-serif;
+  --line-height: 1.8; /* Generous line spacing */
+  --letter-spacing: 0.05em; /* Slight letter spacing */
+  --word-spacing: 0.15em; /* Word spacing for clarity */
+  --border-radius: 16px; /* Rounded corners for friendliness */
 }
 
-/* 1. Gradient page background */
+/* High Contrast Theme Variables */
+.high-contrast {
+  --accent: #ffffff;
+  --accent-dark: #cccccc;
+  --accent-light: #ffffff;
+  --bg-panel: rgba(0, 0, 0, 0.95);
+  --text-main: #ffffff;
+  --text-user: #000000;
+}
+
+/* Main chat container */
 .chat-area {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(115deg, #1a001a, #000020, #100018);
+  flex: 1;
+  width: 100%;
+  background: linear-gradient(135deg, #1a001a, #000020, #100018);
   background-size: 300% 300%;
-  animation: gradientBG 30s ease infinite;
+  animation: gentleGradient 45s ease infinite;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  font-family: var(--dyslexic-font);
   direction: ltr;
   margin: 0;
-  padding: 0;
-  overflow: hidden;
+  padding: var(--space-md);
+  min-height: 100vh;
 }
 
-@keyframes gradientBG {
-  0%   { background-position: 0%   50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0%   50%; }
+/* Gentle gradient animation - slower and calmer */
+@keyframes gentleGradient {
+  0%, 100%   { background-position: 0% 50%; }
+  33%  { background-position: 100% 50%; }
+  66%  { background-position: 50% 100%; }
 }
 
-/* 2. Glassmorphic chat window */
+/* Chat window with enhanced accessibility */
 .chat-window {
   width: 100%;
-  max-width: 600px;
-  height: 80%;
+  max-width: 700px; /* Wider for better text flow */
+  height: 100%;
+  max-height: 80vh; /* Limit height for better focus */
   background: var(--bg-panel);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(76, 175, 80, 0.2);
+  border-radius: var(--border-radius);
+  border: 2px solid rgba(76, 175, 80, 0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  font-family: var(--dyslexic-font);
 }
 
-/* 3. Header */
+/* Header with accessibility controls */
 .chat-header {
   padding: var(--space-md);
-  background: var(--accent);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color: var(--text-user);
   font-size: var(--fs-lg);
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(76, 175, 80, 0.3);
   text-align: center;
+  font-family: var(--dyslexic-font);
+  letter-spacing: var(--letter-spacing);
+  line-height: var(--line-height);
+  position: relative;
 }
 
-/* 4. Scrollable messages + custom scrollbar */
+.accessibility-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.accessibility-controls button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--dyslexic-font);
+  transition: all 0.2s ease;
+}
+
+.accessibility-controls button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.accessibility-controls button:focus {
+  outline: 3px solid #ffff00;
+  outline-offset: 2px;
+}
+
+/* Messages container with enhanced readability */
 .chat-messages {
   flex: 1;
-  padding: var(--space-md);
+  padding: var(--space-lg);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-light) rgba(0, 0, 0, 0.3);
+  scrollbar-color: var(--accent-light) transparent;
+  font-family: var(--dyslexic-font);
+  scroll-behavior: smooth;
 }
 
 .chat-messages::-webkit-scrollbar {
   width: 8px;
 }
+
 .chat-messages::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
+  background: transparent;
 }
+
 .chat-messages::-webkit-scrollbar-thumb {
-  background: var(--accent);
+  background: var(--accent-light);
   border-radius: 4px;
 }
 
-/* 5. Pop-in bubble animation */
-@keyframes popIn {
-  0%   { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1);   opacity: 1; }
+/* Enhanced bubble styling for dyslexia */
+.chat-bubble {
+  max-width: 80%; /* Good width for reading */
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg) 1.5rem;
+  border-radius: var(--border-radius);
+  line-height: var(--line-height);
+  text-align: left;
+  animation: gentlePopIn 0.4s ease-out forwards;
+  font-family: var(--dyslexic-font);
+  font-size: var(--fs-base);
+  font-weight: 400;
+  letter-spacing: var(--letter-spacing);
+  word-spacing: var(--word-spacing);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.chat-bubble {
-  max-width: 80%;
-  margin-bottom: var(--space-md);
-  padding: var(--space-md);
-  border-radius: 12px;
-  line-height: 1.4;
-  text-align: left;
-  animation: popIn 0.2s ease-out forwards;
+/* Gentler animation */
+@keyframes gentlePopIn {
+  0%   { 
+    transform: scale(0.9) translateY(20px); 
+    opacity: 0; 
+  }
+  100% { 
+    transform: scale(1) translateY(0); 
+    opacity: 1; 
+  }
+}
+
+.chat-bubble:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .chat-bubble.user {
-  background: #2a005e;
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color: var(--text-user);
   align-self: flex-end;
+  border-color: rgba(76, 175, 80, 0.4);
+  margin-left: auto;
 }
 
 .chat-bubble.gpt {
-  background: #26002e;
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.15), 
+    rgba(69, 160, 73, 0.1));
   color: var(--text-main);
   align-self: flex-start;
+  border-color: rgba(76, 175, 80, 0.3);
+  margin-right: auto;
 }
 
-/* 6. Input row */
+/* High contrast adjustments */
+.high-contrast .chat-bubble.user {
+  background: #000080;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.high-contrast .chat-bubble.gpt {
+  background: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+/* Reading mode - extra spacing and highlighting */
+.reading-mode .chat-bubble {
+  margin-bottom: calc(var(--space-lg) * 1.5);
+  padding: calc(var(--space-lg) * 1.2) 2rem;
+  line-height: 2.0;
+  font-size: calc(var(--fs-base) * 1.1);
+}
+
+/* Input area styling */
 .chat-input-area {
   display: flex;
   align-items: center;
-  padding: var(--space-md);
+  padding: var(--space-lg);
   background: var(--bg-panel);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid rgba(76, 175, 80, 0.3);
+  font-family: var(--dyslexic-font);
+  gap: var(--space-md);
 }
 
 .chat-input {
   flex: 1;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) 1.5rem;
   font-size: var(--fs-base);
-  background: rgba(26, 0, 26, 0.8);
+  background: rgba(26, 0, 26, 0.9);
   color: var(--text-main);
-  border: none;
-  border-radius: 6px;
+  border: 2px solid rgba(76, 175, 80, 0.4);
+  border-radius: 12px;
   outline: none;
-  margin-right: var(--space-md);
+  font-family: var(--dyslexic-font);
+  font-weight: 400;
+  letter-spacing: var(--letter-spacing);
+  line-height: var(--line-height);
+  word-spacing: var(--word-spacing);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .chat-input::placeholder {
   color: var(--accent-light);
+  font-family: var(--dyslexic-font);
+  font-weight: 400;
+  opacity: 0.8;
 }
 
+.chat-input:focus {
+  border-color: var(--accent);
+  box-shadow: 
+    0 0 0 3px rgba(76, 175, 80, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  background: rgba(26, 0, 26, 0.95);
+}
+
+/* High contrast input */
+.high-contrast .chat-input {
+  background: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.high-contrast .chat-input:focus {
+  box-shadow: 0 0 0 3px #ffffff;
+}
+
+.high-contrast .chat-input::placeholder {
+  color: #cccccc;
+}
+
+/* Send button styling */
 .chat-send {
-  padding: 0 var(--space-lg);
-  height: 44px;
+  padding: var(--space-md) var(--space-lg);
+  height: 56px;
+  min-width: 120px;
   font-size: var(--fs-base);
   font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color: #fff;
+  color: var(--text-user);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+  font-family: var(--dyslexic-font);
+  letter-spacing: var(--letter-spacing);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.chat-send:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(138, 43, 226, 0.6);
+.chat-send:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
 }
 
-.chat-send:active {
-  transform: translateY(0);
-  box-shadow: none;
+.chat-send:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
 }
 
 .chat-send:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
-/* 7. Responsive tweaks */
-@media (max-width: 600px) {
+/* High contrast send button */
+.high-contrast .chat-send:not(:disabled) {
+  background: linear-gradient(135deg, #ffffff, #cccccc);
+  color: #000000;
+}
+
+.high-contrast .chat-send:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e0e0e0, #b0b0b0);
+}
+
+/* Loading dots animation */
+.loading-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.loading-dots div {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+/* Focus indicators for accessibility */
+.chat-input:focus,
+.chat-send:focus,
+.accessibility-controls button:focus {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 2px !important;
+}
+
+/* Responsive design for dyslexia-friendly layouts */
+@media (max-width: 768px) {
   .chat-window {
-    height: 90%;
-    border-radius: 0;
+    max-width: 95%;
+    max-height: 90vh;
+    border-radius: 12px;
   }
+  
   .chat-header {
-    font-size: 1.125rem;
+    font-size: 1.2rem;
+    padding: var(--space-md);
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .accessibility-controls {
+    justify-content: center;
+  }
+  
+  .chat-bubble {
+    max-width: 90%;
+    padding: var(--space-md) 1.2rem;
+    font-size: 1rem;
+    margin-bottom: var(--space-md);
+  }
+  
+  .chat-input {
+    font-size: 1rem;
+    padding: var(--space-md) 1.2rem;
+  }
+  
+  .chat-send {
+    font-size: 1rem;
+    padding: var(--space-md) 1rem;
+    height: 50px;
+    min-width: 100px;
+  }
+  
+  .chat-input-area {
+    padding: var(--space-md);
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .chat-input {
+    margin-right: 0;
   }
 }
-/* ChatInterface.css */
 
-.chat-area {
-  position: relative;
-  width: 100%;    /* avoid 100vw to prevent horizontal overflow */
-  height: 100%;   /* fill available space without scrolling the page */
-  background-color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;  /* no scrollbars on the outer container */
-}
-
-/* internal scrollable region, but hide its scrollbar */
-.chat-messages {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-}
-.chat-messages::-webkit-scrollbar {
-  width: 0;    /* Chrome, Safari, Edge */
-  height: 0;
-}
-
-.chat-window { /* ... your existing styles ... */ }
-.chat-header { /* ... */ }
-.chat-bubble { /* ... */ }
-/* rest of your existing ChatInterface.css */
-/* Make the chat container flex‐grow rather than full‐viewport */
-.chat-area {
-  flex: 1;              /* fill remaining space under switcher */
-  width: 100%;
-  background-color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;     /* no scrollbars on the outer container */
+@media (max-width: 480px) {
+  :root {
+    --fs-base: 1rem;
+    --fs-lg: 1.2rem;
+    --space-md: 16px;
+    --space-lg: 20px;
+  }
+  
+  .chat-bubble {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    padding: var(--space-md) 1rem;
+  }
+  
+  .chat-input {
+    font-size: 0.95rem;
+    padding: var(--space-md) 1rem;
+  }
+  
+  .chat-send {
+    font-size: 0.9rem;
+    padding: var(--space-md) 0.8rem;
+    min-width: 90px;
+  }
+  
+  .chat-messages {
+    padding: var(--space-md);
+  }
 }
 
-/* Let the window fill its parent’s height */
-.chat-window {
-  width: 100%;
-  max-width: 600px;
-  height: 100%;         /* was 80% of viewport; now 100% of chat-area */
-  background: #111;
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* High contrast mode media query */
+@media (prefers-contrast: high) {
+  .chat-bubble.user {
+    background: #000080 !important;
+    border: 3px solid #ffffff !important;
+    color: #ffffff !important;
+  }
+  
+  .chat-bubble.gpt {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 3px solid #ffffff !important;
+  }
+  
+  .chat-input {
+    border: 3px solid #ffffff !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  
+  .chat-send {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+  }
 }
 
-/* Messages pane scrolls internally (scrollbar hidden) */
-.chat-messages {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  scrollbar-width: none;    /* Firefox */
-}
-.chat-messages::-webkit-scrollbar {
-  width: 0;                 /* Chrome/Safari/Edge */
-  height: 0;
-}
-
-/* ... rest of your existing chat styles untouched ... */
-.chat-header { /* your existing rules */ }
-.chat-bubble { /* ... */ }
-.chat-input-area { /* ... */ }
-.chat-input { /* ... */ }
-.chat-send { /* ... */ }
-:root {
-  --switcher-height: 3rem;
-  --dock-height: 3.5rem; /* matches BottomDock’s total height */
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #000;
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .chat-area {
+    animation: none;
+  }
+  
+  @keyframes gentlePopIn {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 1; 
+    }
+  }
+  
+  @keyframes gentleGradient {
+    0%, 100% { 
+      background-position: 0% 50%; 
+    }
+  }
+  
+  .chat-send:hover:not(:disabled) {
+    transform: none;
+  }
+  
+  .chat-bubble:hover {
+    transform: none;
+  }
 }
 
-* {
-  box-sizing: border-box;
+/* Print styles for accessibility */
+@media print {
+  .chat-area {
+    background: white !important;
+  }
+  
+  .chat-window {
+    background: white !important;
+    box-shadow: none !important;
+    border: 2px solid #000000 !important;
+  }
+  
+  .chat-header {
+    background: #f0f0f0 !important;
+    color: #000000 !important;
+  }
+  
+  .chat-bubble {
+    background: white !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    box-shadow: none !important;
+  }
+  
+  .chat-input-area {
+    display: none !important;
+  }
+  
+  .accessibility-controls {
+    display: none !important;
+  }
 }
 
-/* Mode‐switcher fixed at top */
-.mode-switcher {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--switcher-height);
-  background: #111;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  z-index: 50;
+/* Additional dyslexia-specific features */
+.dyslexia-highlight {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 0, 0.2), 
+    rgba(255, 255, 0, 0.1));
+  padding: 2px 4px;
+  border-radius: 4px;
 }
 
-.mode-switcher button {
-  background: transparent;
-  border: none;
-  color: #888;
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  transition: color 0.2s, border-bottom 0.2s;
-}
-.mode-switcher button:hover {
-  color: #aaa;
-}
-.mode-switcher button.active {
-  color: #fff;
-  border-bottom: 2px solid #0af;
+.word-spacing-wide {
+  word-spacing: 0.3em;
 }
 
-/* Main content sits between switcher and dock */
-.main-content {
-  position: fixed;
-  top: var(--switcher-height);
-  left: 0;
-  right: 0;
-  bottom: var(--dock-height);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.letter-spacing-wide {
+  letter-spacing: 0.1em;
 }
 
-/* Simple placeholder styling */
-.placeholder {
-  color: #ccc;
-  font-size: 1.5rem;
-}
-.chat-dock {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  background: #000;
-  padding: 10px 0;
-  z-index: 100;
+/* Status indicator animations */
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-.dock-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 24px;
-  margin: 0 16px;
-  cursor: pointer;
+.status-online {
+  background: #4CAF50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+}
+
+.status-typing {
+  background: #FF9800;
+  box-shadow: 0 0 10px rgba(255, 152, 0, 0.6);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.2);
+    opacity: 0.7;
+  }
 }

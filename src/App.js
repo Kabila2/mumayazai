@@ -1,20 +1,14 @@
-// src/App.js
+// src/App.js - Enhanced with Mode Switcher
 import React, { useState, useEffect } from "react";
 import ChatInterface from "./components/ChatInterface";
 import VoiceInterface from "./components/VoiceInterface";
 import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
-import BottomDock from "./components/BottomDock";
-import EntryLoginPage from "./components/EntryLoginPage"; // Add this import
 import "./App.css";
 
 export default function App() {
-  // --- login state ---
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null);
-
-  // --- mode & view state ---
-  const [mode, setMode] = useState("voice"); // Default to voice mode
-  const [view, setView] = useState("chat"); // "chat" | "profile" | "settings"
+  // --- Core state management ---
+  const [mode, setMode] = useState("text"); // "text" | "voice"
+  const [view, setView] = useState("chat");  // "chat" | "profile" | "settings"
 
   // --- TTS state for VoiceSettings ---
   const [voices, setVoices] = useState([]);
@@ -23,152 +17,112 @@ export default function App() {
   const [pitch, setPitch] = useState(1);
   const [language, setLanguage] = useState("en-US");
 
-  // Load voices once
+  // --- Accessibility state ---
+  const [fontSize, setFontSize] = useState(1.1);
+  const [highContrast, setHighContrast] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  // Initialize preferences & default disability
+  useEffect(() => {
+    if (!localStorage.getItem("disability")) localStorage.setItem("disability", "dyslexia");
+    const hc = localStorage.getItem("high-contrast");
+    const fs = localStorage.getItem("font-size");
+    const rm = localStorage.getItem("reduced-motion");
+    if (hc === "true") setHighContrast(true);
+    if (fs) setFontSize(parseFloat(fs));
+    if (rm === "true") setReducedMotion(true);
+    if (window.matchMedia('(prefers-contrast: high)').matches) setHighContrast(true);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setReducedMotion(true);
+  }, []);
+
+  // Load voices
   useEffect(() => {
     const synth = window.speechSynthesis;
-    const loadVoices = () => {
+    const load = () => {
       const all = synth.getVoices();
-      const en = all.filter((v) => v.lang.startsWith("en"));
+      const en = all.filter(v => v.lang.startsWith("en"));
       setVoices(en);
       if (!selectedVoice && en.length) setSelectedVoice(en[0].name);
     };
-    loadVoices();
-    synth.onvoiceschanged = loadVoices;
-    return () => {
-      synth.onvoiceschanged = null;
-    };
+    load();
+    synth.onvoiceschanged = load;
+    return () => (synth.onvoiceschanged = null);
   }, [selectedVoice]);
 
-  // Handle TTS
+  // TTS speak
   const speak = (text) => {
     if (!window.speechSynthesis) return;
-    const utter = new SpeechSynthesisUtterance(text);
-    const vObj = voices.find((v) => v.name === selectedVoice);
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const vObj = voices.find(v => v.name === selectedVoice);
     if (vObj) {
-      utter.voice = vObj;
-      utter.lang = vObj.lang;
-    } else {
-      utter.lang = language;
-    }
-    utter.rate = speed;
-    utter.pitch = pitch;
-    window.speechSynthesis.speak(utter);
+      u.voice = vObj;
+      u.lang = vObj.lang;
+    } else u.lang = language;
+    u.rate = speed;
+    u.pitch = pitch;
+    window.speechSynthesis.speak(u);
   };
 
-  // Check for stored login on app start
-  useEffect(() => {
-    const storedLogin = localStorage.getItem("isLoggedIn");
-    const storedRole = localStorage.getItem("mumayaz_role");
-    if (storedLogin === "true") {
-      setIsLoggedIn(true);
-      setUserRole(storedRole);
-    }
-  }, []);
+  // Accessibility toggles
+  const toggleHighContrast = () => { const v = !highContrast; setHighContrast(v); localStorage.setItem("high-contrast", v); };
+  const adjustFontSize = (d) => { const n = Math.max(0.8, Math.min(2.0, fontSize + d)); setFontSize(n); localStorage.setItem("font-size", n); };
+  const toggleReducedMotion = () => { const v = !reducedMotion; setReducedMotion(v); localStorage.setItem("reduced-motion", v); };
 
-  // Handle sign in
-  const handleSignIn = (userData) => {
-    setIsLoggedIn(true);
-    setUserRole(userData.role);
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("mumayaz_role", userData.role);
-    
-    // Set default mode based on role if needed
-    if (userData.role === "parent") {
-      setView("profile"); // or whatever view you want for parents
-    } else {
-      setMode("voice"); // Default to voice chat for students
-      setView("chat");
-    }
-  };
-
-  // Handle sign up
-  const handleSignUp = (userData) => {
-    setIsLoggedIn(true);
-    setUserRole(userData.role);
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("mumayaz_role", userData.role);
-    
-    // Set default mode based on role if needed
-    if (userData.role === "parent") {
-      setView("profile"); // or whatever view you want for parents
-    } else {
-      setMode("voice"); // Default to voice chat for students
-      setView("chat");
-    }
-  };
-
-  // Handle logout (you can add this functionality later)
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserRole(null);
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("mumayaz_role");
-  };
-
-  // --- content rendering ---
+  // Render content
   let content;
-  if (!isLoggedIn) {
-    content = (
-      <EntryLoginPage 
-        onSignIn={handleSignIn}
-        onSignUp={handleSignUp}
-      />
-    );
-  } else if (view === "chat") {
-    content = mode === "text" ? <ChatInterface /> : <VoiceInterface />;
+  if (view === "chat") {
+    content = mode === "text"
+      ? <ChatInterface
+          fontSize={fontSize}
+          highContrast={highContrast}
+          reducedMotion={reducedMotion}
+          onSwitchMode={() => setMode("voice")}
+        />
+      : <VoiceInterface
+          voices={voices}
+          selectedVoice={selectedVoice}
+          setSelectedVoice={setSelectedVoice}
+          speed={speed}
+          setSpeed={setSpeed}
+          pitch={pitch}
+          setPitch={setPitch}
+          language={language}
+          setLanguage={setLanguage}
+          speak={speak}
+          highContrast={highContrast}
+          fontSize={fontSize}
+          reducedMotion={reducedMotion}
+          onSwitchMode={() => setMode("text")}
+        />;
   } else if (view === "profile") {
-    content = (
-      <div className="placeholder">
-        <h2>Profile Page</h2>
-        <p>Welcome, {userRole}!</p>
-        <button onClick={handleLogout}>Logout</button>
-      </div>
-    );
+    content = (<div className="placeholder">
+      <h2>👤 User Profile</h2>
+      <p>Manage your preferences and accessibility settings.</p>
+      <button onClick={() => setView("chat")}>Back to Chat</button>
+    </div>);
   } else {
-    content = (
-      <VoiceSettings
-        voices={voices}
-        selectedVoice={selectedVoice}
-        setSelectedVoice={setSelectedVoice}
-        speed={speed}
-        setSpeed={setSpeed}
-        pitch={pitch}
-        setPitch={setPitch}
-        language={language}
-        setLanguage={setLanguage}
-        speak={speak}
-      />
-    );
+    content = (<VoiceSettings
+      voices={voices}
+      selectedVoice={selectedVoice}
+      setSelectedVoice={setSelectedVoice}
+      speed={speed}
+      setSpeed={setSpeed}
+      pitch={pitch}
+      setPitch={setPitch}
+      language={language}
+      setLanguage={setLanguage}
+      speak={speak}
+      onClose={() => setView("chat")}
+    />);
   }
 
   return (
-    <div className="app-container">
-      {isLoggedIn && (
-        <div className="mode-switcher">
-          <button
-            className={mode === "text" ? "active" : ""}
-            onClick={() => {
-              setMode("text");
-              setView("chat");
-            }}
-          >
-            Text Chat
-          </button>
-          <button
-            className={mode === "voice" ? "active" : ""}
-            onClick={() => {
-              setMode("voice");
-              setView("chat");
-            }}
-          >
-            Voice Chat
-          </button>
-        </div>
-      )}
-
-      <div className="main-content">{content}</div>
-
-      {isLoggedIn && <BottomDock onSelect={setView} />}
+    <div
+      className={`app-container ${highContrast ? 'high-contrast' : ''} ${reducedMotion ? 'reduced-motion' : ''}`}
+      style={{ fontSize: `${fontSize}rem` }}
+    >
+      {content}
     </div>
   );
 }
