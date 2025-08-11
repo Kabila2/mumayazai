@@ -2,13 +2,47 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 
-// AI response function using puter.ai.chat
-const getAIResponse = async (prompt) => {
-  const resp = await puter.ai.chat(prompt);
-  return typeof resp === "string" ? resp : resp.message?.content ?? "";
+/** ---------- Shared AI helpers ---------- */
+const hasPuter = () =>
+  typeof window !== "undefined" &&
+  window.puter &&
+  puter.ai &&
+  typeof puter.ai.chat === "function";
+
+/** timeout + puter presence check */
+const aiChat = async (prompt, ms = 20000) => {
+  if (!hasPuter()) throw new Error("Puter SDK not available");
+  const timeout = new Promise((_, rej) =>
+    setTimeout(() => rej(new Error("AI request timed out")), ms)
+  );
+  const req = (async () => {
+    const resp = await puter.ai.chat(prompt);
+    return typeof resp === "string" ? resp : resp?.message?.content ?? "";
+  })();
+  return Promise.race([req, timeout]);
 };
 
-// Voice Interface Component
+/** graceful fallback so UI still works offline */
+const mockAI = (prompt) => {
+  const lastUser = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
+  return (
+    "⚠️ AI offline (mock mode).\n" +
+    "• I received: \"" + lastUser + "\"\n" +
+    "• Tip: ensure the Puter SDK script is loaded before your app.\n" +
+    "• Dev: open console for details."
+  );
+};
+
+const getAIResponse = async (prompt) => {
+  try {
+    return await aiChat(prompt, 20000);
+  } catch (err) {
+    console.warn("[ChatInterface] AI error:", err);
+    return mockAI(prompt);
+  }
+};
+
+/** ---------- Voice Interface (kept inline for your current structure) ---------- */
 const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
   const [messages, setMessages] = useState([]);
   const [isListening, setListening] = useState(false);
@@ -22,7 +56,6 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
   const recognitionRef = useRef(null);
   const messagesRef = useRef(null);
 
-  // Load voices
   useEffect(() => {
     const synth = window.speechSynthesis;
     const loadVoices = () => {
@@ -38,14 +71,12 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
     return () => { synth.onvoiceschanged = null; };
   }, [selectedVoice]);
 
-  // Auto-scroll messages
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Speech recognition setup
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -60,16 +91,13 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
       if (navigator.vibrate) navigator.vibrate(100);
     };
 
-    recognition.onend = () => {
-      setListening(false);
-    };
+    recognition.onend = () => { setListening(false); };
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
       setListening(false);
       setMessages(prev => [...prev, {
         sender: "system",
-        text: `❌ Speech recognition error: ${event.error}. Please try again.`,
+        text: `❌ Speech recognition error: ${event.error}.`,
         id: Date.now()
       }]);
     };
@@ -97,44 +125,29 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
           text: cleanReply,
           id: Date.now() + 1
         }]);
-
         speak(cleanReply);
-      } catch (error) {
-        const errorMsg = "I'm sorry, I'm having trouble connecting right now. Please try again.";
-        setMessages(prev => [...prev, {
-          sender: "gpt",
-          text: `⚠️ ${errorMsg}`,
-          id: Date.now() + 1
-        }]);
-        speak(errorMsg);
+      } catch (err) {
+        const msg = err?.message || String(err);
+        const helpful = hasPuter()
+          ? "Network/API issue."
+          : "Puter SDK not detected. Load https://sdk.puter.com/v1/sdk.js before your app.";
+        const errorMsg = `Connection error: ${msg}\n${helpful}`;
+        setMessages(prev => [...prev, { sender: "gpt", text: `⚠️ ${errorMsg}`, id: Date.now() + 1 }]);
+        speak("I'm having trouble connecting to the AI right now.");
+        console.warn("[VoiceInterface] AI error:", err);
       }
     };
 
     recognitionRef.current = recognition;
   }, []);
 
-  const startListening = () => {
-    if (!recognitionRef.current) {
-      alert("Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.");
-      return;
-    }
-    recognitionRef.current.start();
-  };
-
   const speak = (text) => {
-    if (!window.speechSynthesis) {
-      alert("Sorry, your browser does not support speech synthesis.");
-      return;
-    }
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     const voiceObj = voices.find(v => v.name === selectedVoice);
-    if (voiceObj) {
-      utterance.voice = voiceObj;
-      utterance.lang = voiceObj.lang;
-    } else {
-      utterance.lang = "en-US";
-    }
+    if (voiceObj) { utterance.voice = voiceObj; utterance.lang = voiceObj.lang; }
+    else { utterance.lang = "en-US"; }
     utterance.rate = speed;
     utterance.pitch = pitch;
     utterance.volume = 0.9;
@@ -144,14 +157,20 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  const startListening = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
+    recognitionRef.current.start();
+  };
+
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
 
-  const clearMessages = () => {
-    setMessages([]);
-  };
+  const clearMessages = () => { setMessages([]); };
 
   return (
     <motion.div
@@ -216,7 +235,7 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
             padding: '1rem 2rem',
             fontSize: '1.1rem',
             fontWeight: '600',
-            background: isListening 
+            background: isListening
               ? 'linear-gradient(135deg, #4caf50, #45a049)'
               : 'linear-gradient(135deg, #8e2de2, #4a00e0)',
             border: 'none',
@@ -232,7 +251,7 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
           }}
           whileHover={!isListening && !isSpeaking ? { scale: 1.05, y: -3 } : {}}
           whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
-          animate={isListening ? { 
+          animate={isListening ? {
             boxShadow: [
               '0 0 20px rgba(76, 175, 80, 0.4)',
               '0 0 40px rgba(76, 175, 80, 0.8)',
@@ -399,10 +418,10 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
             <motion.div
               key={msg.id}
               style={{
-                background: msg.sender === 'user' 
-                  ? 'rgba(138, 43, 226, 0.2)' 
-                  : msg.sender === 'gpt' 
-                  ? 'rgba(76, 175, 80, 0.2)' 
+                background: msg.sender === 'user'
+                  ? 'rgba(138, 43, 226, 0.2)'
+                  : msg.sender === 'gpt'
+                  ? 'rgba(76, 175, 80, 0.2)'
                   : 'rgba(255, 152, 0, 0.2)',
                 borderRadius: '12px',
                 padding: '1rem',
@@ -434,31 +453,31 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
                     borderRadius: '12px',
                     fontSize: '0.8rem',
                     fontWeight: '500',
-                    background: msg.confidence > 0.8 
-                      ? 'rgba(76, 175, 80, 0.3)' 
-                      : msg.confidence > 0.5 
-                      ? 'rgba(255, 152, 0, 0.3)' 
+                    background: msg.confidence > 0.8
+                      ? 'rgba(76, 175, 80, 0.3)'
+                      : msg.confidence > 0.5
+                      ? 'rgba(255, 152, 0, 0.3)'
                       : 'rgba(244, 67, 54, 0.3)',
-                    color: msg.confidence > 0.8 
-                      ? '#4caf50' 
-                      : msg.confidence > 0.5 
-                      ? '#ff9800' 
+                    color: msg.confidence > 0.8
+                      ? '#4caf50'
+                      : msg.confidence > 0.5
+                      ? '#ff9800'
                       : '#f44336'
                   }}>
                     {Math.round(msg.confidence * 100)}%
                   </span>
                 )}
               </div>
-              <div style={{
-                color: '#e0d6ff',
-                lineHeight: 1.6,
-                wordWrap: 'break-word'
-              }}>
+              <div style={{ color: '#e0d6ff', lineHeight: 1.6, wordWrap: 'break-word' }}>
                 {msg.text}
               </div>
               {msg.sender === "gpt" && (
                 <button
-                  onClick={() => speak(msg.text.replace(/[⚠️❌]/g, ''))}
+                  onClick={() => {
+                    if (!window.speechSynthesis) return;
+                    const u = new SpeechSynthesisUtterance(msg.text.replace(/[⚠️❌]/g, ''));
+                    window.speechSynthesis.speak(u);
+                  }}
                   style={{
                     position: 'absolute',
                     top: '1rem',
@@ -477,34 +496,19 @@ const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
               )}
             </motion.div>
           ))}
+          <div />
         </AnimatePresence>
-
-        {messages.length === 0 && (
-          <motion.div
-            style={{
-              textAlign: 'center',
-              padding: '4rem 2rem',
-              color: '#b199ff'
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div style={{ fontSize: '5rem', marginBottom: '1.5rem', opacity: 0.6 }}>🎙️</div>
-            <h3 style={{ margin: '0 0 1rem 0', color: '#e0d6ff', fontSize: '1.5rem' }}>Ready to chat!</h3>
-            <p style={{ margin: 0, opacity: 0.8, fontSize: '1.1rem' }}>Click "Speak Now" to start your voice conversation.</p>
-          </motion.div>
-        )}
       </motion.div>
     </motion.div>
   );
 };
 
-// Chat Interface Component
+/** ---------- Text Chat Interface ---------- */
 const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
   const [messages, setMessages] = useState([
     {
       sender: "gpt",
-      text: "Hi there! 👋 I know you have dyslexia, and I'll provide dyslexia-friendly support. What would you like to work on today?",
+      text: "Hi there! 👋 I’ll keep things dyslexia-friendly. What would you like to work on today?",
       id: Date.now()
     }
   ]);
@@ -513,7 +517,6 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
   const controls = useAnimation();
   const bottomRef = useRef(null);
 
-  // Auto-scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -544,13 +547,18 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
           m.id === loadingId ? { sender: "gpt", text: clean, id: loadingId } : m
         )
       );
-    } catch (error) {
-      const err = "Sorry, I'm having trouble right now. Please try again later.";
+    } catch (err) {
+      const msg = err?.message || String(err);
+      const helpful = hasPuter()
+        ? "Network/API issue."
+        : "Puter SDK not detected. Load https://sdk.puter.com/v1/sdk.js before your app.";
+      const fallback = `⚠️ Connection error: ${msg}\n${helpful}`;
       setMessages(prev =>
         prev.map(m =>
-          m.id === loadingId ? { sender: "gpt", text: err, id: loadingId } : m
+          m.id === loadingId ? { sender: "gpt", text: fallback, id: loadingId } : m
         )
       );
+      console.warn("[ChatInterface] AI error:", err);
     } finally {
       setIsSending(false);
     }
@@ -570,7 +578,6 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
         fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif"
       }}
     >
-      {/* Switch Button */}
       <motion.button
         onClick={onSwitchMode}
         style={{
@@ -605,7 +612,6 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
           overflow: 'hidden'
         }}
       >
-        {/* Header */}
         <motion.div
           style={{
             padding: '1rem',
@@ -622,10 +628,9 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
           Dyslexia-Friendly Chat Assistant 💚
         </motion.div>
 
-        {/* Messages */}
-        <div style={{ 
-          flex: 1, 
-          overflowY: 'auto', 
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
           padding: '1rem',
           display: 'flex',
           flexDirection: 'column',
@@ -640,8 +645,8 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
                   maxWidth: '80%',
                   padding: '1rem 1.5rem',
                   borderRadius: '16px',
-                  background: msg.sender === 'user' 
-                    ? 'linear-gradient(135deg, #4CAF50, #45a049)' 
+                  background: msg.sender === 'user'
+                    ? 'linear-gradient(135deg, #4CAF50, #45a049)'
                     : 'linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(69, 160, 73, 0.1))',
                   color: msg.sender === 'user' ? '#ffffff' : '#e8f5e8',
                   alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
@@ -669,15 +674,8 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
                           borderRadius: '50%',
                           background: '#4CAF50'
                         }}
-                        animate={{
-                          scale: [1, 1.5, 1],
-                          opacity: [0.4, 1, 0.4]
-                        }}
-                        transition={{
-                          duration: 1.4,
-                          repeat: Infinity,
-                          delay: i * 0.2
-                        }}
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
                       />
                     ))}
                   </div>
@@ -690,11 +688,10 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
           </AnimatePresence>
         </div>
 
-        {/* Input Area */}
-        <div style={{ 
-          padding: '1rem', 
-          background: 'rgba(0,0,0,0.2)', 
-          display: 'flex', 
+        <div style={{
+          padding: '1rem',
+          background: 'rgba(0,0,0,0.2)',
+          display: 'flex',
           gap: '0.75rem',
           borderTop: '2px solid rgba(76, 175, 80, 0.3)',
           direction: 'ltr'
@@ -720,7 +717,7 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
               textAlign: 'left',
               direction: 'ltr'
             }}
-            whileFocus={{ 
+            whileFocus={{
               borderColor: '#4CAF50',
               boxShadow: '0 0 0 3px rgba(76, 175, 80, 0.3)'
             }}
@@ -752,27 +749,24 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
   );
 };
 
-// Main App Component
+/** ---------- Main App ---------- */
 export default function App() {
   const [mode, setMode] = useState("text");
   const [fontSize, setFontSize] = useState(1.1);
   const [highContrast, setHighContrast] = useState(false);
 
-  // Initialize disability preference
   useEffect(() => {
     if (!localStorage.getItem("disability")) {
       localStorage.setItem("disability", "dyslexia");
     }
   }, []);
 
-  const switchMode = () => {
-    setMode(mode === "text" ? "voice" : "text");
-  };
+  const switchMode = () => setMode(mode === "text" ? "voice" : "text");
 
   return (
-    <div style={{ 
-      height: '100vh', 
-      width: '100vw', 
+    <div style={{
+      height: '100vh',
+      width: '100vw',
       overflow: 'hidden',
       fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
       direction: 'ltr'
