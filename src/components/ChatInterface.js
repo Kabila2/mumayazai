@@ -9,6 +9,19 @@ const hasPuter = () =>
   puter.ai &&
   typeof puter.ai.chat === "function";
 
+/** wait briefly for Puter SDK to attach before giving up */
+const waitForPuter = (timeoutMs = 3000) =>
+  new Promise((resolve) => {
+    if (hasPuter()) return resolve(true);
+    const t0 = Date.now();
+    const id = setInterval(() => {
+      if (hasPuter() || Date.now() - t0 > timeoutMs) {
+        clearInterval(id);
+        resolve(hasPuter());
+      }
+    }, 100);
+  });
+
 /** timeout + puter presence check */
 const aiChat = async (prompt, ms = 20000) => {
   if (!hasPuter()) throw new Error("Puter SDK not available");
@@ -27,13 +40,16 @@ const mockAI = (prompt) => {
   const lastUser = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
   return (
     "⚠️ AI offline (mock mode).\n" +
-    "• I received: \"" + lastUser + "\"\n" +
+    '• I received: "' + lastUser + '"\n' +
     "• Tip: ensure the Puter SDK script is loaded before your app.\n" +
     "• Dev: open console for details."
   );
 };
 
 const getAIResponse = async (prompt) => {
+  // 👇 Wait up to 3s for the SDK before falling back to mock
+  const ready = await waitForPuter(3000);
+  if (!ready) return mockAI(prompt);
   try {
     return await aiChat(prompt, 20000);
   } catch (err) {
