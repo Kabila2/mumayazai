@@ -4,7 +4,8 @@ import ChatInterface from "./components/ChatInterface";
 import VoiceInterface from "./components/VoiceInterface";
 import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
 import EntryLoginPage from "./components/EntryLoginPage";
-import OnboardingSetup from "./components/OnboardingSetup"; // ✅ NEW
+import OnboardingSetup from "./components/OnboardingSetup";
+import { translations } from "./translations";
 import "./App.css";
 
 /* ---------- LocalStorage keys ---------- */
@@ -13,29 +14,27 @@ const SESSION_KEY = "mumayaz_session";
 const DISABILITY_KEY = "disability";
 const LANGUAGE_KEY = "app-language";
 
+/* ---------- Simple local auth utils (prototype only) ---------- */
 function loadUsers() {
   try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; }
   catch { return {}; }
 }
-function saveUsers(map) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(map));
-}
-function openSession(email) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ email }));
-}
-function closeSession() {
-  localStorage.removeItem(SESSION_KEY);
-}
-function getSession() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY)); }
-  catch { return null; }
-}
+function saveUsers(map) { localStorage.setItem(USERS_KEY, JSON.stringify(map)); }
+function openSession(email) { localStorage.setItem(SESSION_KEY, JSON.stringify({ email })); }
+function closeSession() { localStorage.removeItem(SESSION_KEY); }
+function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
 export default function App() {
   // ---------- Auth & flow ----------
   const [isLoggedIn, setIsLoggedIn] = useState(!!getSession());
-  const [showSetup, setShowSetup]   = useState(false);  // ✅ Show onboarding selectors
+  const [showSetup, setShowSetup]   = useState(false);
   const [pendingEmail, setPendingEmail] = useState(null);
+
+  // ---------- Language / translations ----------
+  const [appLanguage, setAppLanguage] = useState(
+    localStorage.getItem(LANGUAGE_KEY) || "en"
+  );
+  const t = translations[appLanguage] || translations.en;
 
   // ---------- Main UI state ----------
   const [mode, setMode] = useState("text");   // "text" | "voice"
@@ -51,7 +50,13 @@ export default function App() {
   const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Initialize preferences (safe defaults)
+  // Reflect UI dir/lang on <html>
+  useEffect(() => {
+    document.documentElement.lang = appLanguage;
+    document.documentElement.dir = appLanguage === "ar" ? "rtl" : "ltr";
+  }, [appLanguage]);
+
+  // Initialize defaults
   useEffect(() => {
     if (!localStorage.getItem(DISABILITY_KEY)) localStorage.setItem(DISABILITY_KEY, "dyslexia");
     const hc = localStorage.getItem("high-contrast");
@@ -87,26 +92,21 @@ export default function App() {
   };
 
   /* ===================== AUTH HANDLERS ===================== */
-  // After Sign Up → save user → go to SETUP (don’t open session yet)
   const handleSignUp = async ({ name, email, password, role }) => {
     const users = loadUsers();
     const key = email.trim().toLowerCase();
     if (users[key]) return { ok: false, message: "This email is already registered." };
 
-    // NOTE: plain-text passwords in localStorage are not secure (prototype only)
     users[key] = { name, email: key, password, role };
     saveUsers(users);
 
-    // Defer session until setup is complete
     setPendingEmail(key);
     localStorage.setItem("mumayaz_role", role || "student");
     setShowSetup(true);
     setIsLoggedIn(false);
-
     return { ok: true };
   };
 
-  // Sign In → if missing prefs, go to SETUP; else open session → main
   const handleSignIn = async ({ email, password }) => {
     const users = loadUsers();
     const key = (email || "").trim().toLowerCase();
@@ -114,8 +114,6 @@ export default function App() {
     if (!user || user.password !== password) {
       return { ok: false, message: "Invalid email or password." };
     }
-
-    // If user has no disability/language saved, force setup
     const hasDisability = !!localStorage.getItem(DISABILITY_KEY);
     const hasLanguage   = !!localStorage.getItem(LANGUAGE_KEY);
     if (!hasDisability || !hasLanguage) {
@@ -125,8 +123,6 @@ export default function App() {
       setIsLoggedIn(false);
       return { ok: true };
     }
-
-    // Otherwise go straight in
     openSession(key);
     setIsLoggedIn(true);
     localStorage.setItem("mumayaz_role", user.role || "student");
@@ -134,11 +130,10 @@ export default function App() {
   };
 
   const handleCompleteSetup = ({ disability, lang }) => {
-    // Persist selections
     localStorage.setItem(DISABILITY_KEY, disability);
     localStorage.setItem(LANGUAGE_KEY, lang);
+    setAppLanguage(lang);
 
-    // Start session (for sign-up or sign-in path)
     if (pendingEmail) openSession(pendingEmail);
 
     setShowSetup(false);
@@ -154,7 +149,6 @@ export default function App() {
   };
 
   /* ===================== RENDER FLOW ===================== */
-  // 1) Entry (not logged in) → show EntryLoginPage
   if (!isLoggedIn && !showSetup) {
     return (
       <EntryLoginPage
@@ -164,25 +158,24 @@ export default function App() {
     );
   }
 
-  // 2) Setup (disability + language)
   if (showSetup) {
     return (
       <OnboardingSetup
         defaultDisability={localStorage.getItem(DISABILITY_KEY) || "dyslexia"}
         defaultLanguage={localStorage.getItem(LANGUAGE_KEY) || "en"}
         onComplete={handleCompleteSetup}
-        onCancel={() => { setShowSetup(false); setPendingEmail(null); }} // optional
+        onCancel={() => { setShowSetup(false); setPendingEmail(null); }}
       />
     );
   }
 
-  // 3) Main app after login
   const signOutButton = (
     <button
       style={{
         position: "absolute",
         top: "1rem",
-        right: "1rem",
+        right: appLanguage === "ar" ? "auto" : "1rem",
+        left:  appLanguage === "ar" ? "1rem" : "auto",
         background: "rgba(255,255,255,0.12)",
         border: "1px solid rgba(255,255,255,0.24)",
         color: "#fff",
@@ -195,7 +188,7 @@ export default function App() {
       }}
       onClick={handleSignOut}
     >
-      🔒 Sign Out
+      🔒 {t.back || "Sign Out"}
     </button>
   );
 
@@ -206,6 +199,8 @@ export default function App() {
         {signOutButton}
         {mode === "text" ? (
           <ChatInterface
+            t={t}
+            language={appLanguage}
             fontSize={fontSize}
             highContrast={highContrast}
             reducedMotion={reducedMotion}
@@ -213,6 +208,8 @@ export default function App() {
           />
         ) : (
           <VoiceInterface
+            t={t}
+            language={appLanguage}
             voices={voices}
             selectedVoice={selectedVoice}
             setSelectedVoice={setSelectedVoice}
@@ -220,7 +217,6 @@ export default function App() {
             setSpeed={setSpeed}
             pitch={pitch}
             setPitch={setPitch}
-            language={language}
             setLanguage={setLanguage}
             speak={speak}
             highContrast={highContrast}
@@ -235,9 +231,9 @@ export default function App() {
     content = (
       <div className="placeholder" style={{ position: "relative" }}>
         {signOutButton}
-        <h2>👤 User Profile</h2>
+        <h2>👤 Profile</h2>
         <p>Manage your preferences and accessibility settings.</p>
-        <button onClick={() => setView("chat")}>Back to Chat</button>
+        <button onClick={() => setView("chat")}>{t.back}</button>
       </div>
     );
   } else {
