@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import ChatInterface from "./components/ChatInterface";
 import VoiceInterface from "./components/VoiceInterface";
 import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
-import EntryLoginPage from "./components/EntryLoginPage"; // ✅ Import the entry page
+import EntryLoginPage from "./components/EntryLoginPage";
 import "./App.css";
 
 export default function App() {
@@ -33,7 +33,7 @@ export default function App() {
     if (rm === "true") setReducedMotion(true);
   }, []);
 
-  // Load available voices
+  // Load voices
   useEffect(() => {
     const synth = window.speechSynthesis;
     const load = () => {
@@ -72,17 +72,82 @@ export default function App() {
     );
   }
 
+  // Sign out handler
+  const handleSignOut = () => {
+    setIsLoggedIn(false);
+    setMode("text");
+    setView("chat");
+  };
+
+  // Sign out button (shown in all main views)
+  const signOutButton = (
+    <button
+      style={{
+        position: "absolute",
+        top: "1rem",
+        right: "1rem",
+        background: "rgba(255,255,255,0.1)",
+        border: "none",
+        color: "#fff",
+        padding: "0.5rem 1rem",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontSize: "0.9rem",
+        zIndex: 100
+      }}
+      onClick={handleSignOut}
+    >
+      🔒 Sign Out
+    </button>
+  );
+
   // Main content after login
   let content;
   if (view === "chat") {
-    content = mode === "text"
-      ? <ChatInterface
-          fontSize={fontSize}
-          highContrast={highContrast}
-          reducedMotion={reducedMotion}
-          onSwitchMode={() => setMode("voice")}
-        />
-      : <VoiceInterface
+    content = (
+      <div style={{ position: "relative", height: "100%" }}>
+        {signOutButton}
+        {mode === "text" ? (
+          <ChatInterface
+            fontSize={fontSize}
+            highContrast={highContrast}
+            reducedMotion={reducedMotion}
+            onSwitchMode={() => setMode("voice")}
+          />
+        ) : (
+          <VoiceInterface
+            voices={voices}
+            selectedVoice={selectedVoice}
+            setSelectedVoice={setSelectedVoice}
+            speed={speed}
+            setSpeed={setSpeed}
+            pitch={pitch}
+            setPitch={setPitch}
+            language={language}
+            setLanguage={setLanguage}
+            speak={speak}
+            highContrast={highContrast}
+            fontSize={fontSize}
+            reducedMotion={reducedMotion}
+            onSwitchMode={() => setMode("text")}
+          />
+        )}
+      </div>
+    );
+  } else if (view === "profile") {
+    content = (
+      <div className="placeholder" style={{ position: "relative" }}>
+        {signOutButton}
+        <h2>👤 User Profile</h2>
+        <p>Manage your preferences and accessibility settings.</p>
+        <button onClick={() => setView("chat")}>Back to Chat</button>
+      </div>
+    );
+  } else {
+    content = (
+      <div style={{ position: "relative" }}>
+        {signOutButton}
+        <VoiceSettings
           voices={voices}
           selectedVoice={selectedVoice}
           setSelectedVoice={setSelectedVoice}
@@ -93,36 +158,15 @@ export default function App() {
           language={language}
           setLanguage={setLanguage}
           speak={speak}
-          highContrast={highContrast}
-          fontSize={fontSize}
-          reducedMotion={reducedMotion}
-          onSwitchMode={() => setMode("text")}
-        />;
-  } else if (view === "profile") {
-    content = (<div className="placeholder">
-      <h2>👤 User Profile</h2>
-      <p>Manage your preferences and accessibility settings.</p>
-      <button onClick={() => setView("chat")}>Back to Chat</button>
-    </div>);
-  } else {
-    content = (<VoiceSettings
-      voices={voices}
-      selectedVoice={selectedVoice}
-      setSelectedVoice={setSelectedVoice}
-      speed={speed}
-      setSpeed={setSpeed}
-      pitch={pitch}
-      setPitch={setPitch}
-      language={language}
-      setLanguage={setLanguage}
-      speak={speak}
-      onClose={() => setView("chat")}
-    />);
+          onClose={() => setView("chat")}
+        />
+      </div>
+    );
   }
 
   return (
     <div
-      className={`app-container ${highContrast ? 'high-contrast' : ''} ${reducedMotion ? 'reduced-motion' : ''}`}
+      className={`app-container ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""}`}
       style={{ fontSize: `${fontSize}rem` }}
     >
       {content}
