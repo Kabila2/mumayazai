@@ -14,8 +14,6 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
   const [showModal, setShowModal] = useState(false);
   const [mode, setMode] = useState("signin");
 
-  const [success, setSuccess] = useState(false);
-
   useEffect(() => {
     if (langEnabled) {
       intervalRef.current = setInterval(() => {
@@ -24,29 +22,8 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
     } else if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [langEnabled]);
-
-  const handleSubmit = (type, userData) => {
-    // Store role for later use if needed
-    localStorage.setItem("mumayaz_role", userData.role);
-    
-    if (type === "signup") {
-      setSuccess(true); // Show success message first
-      // Call onSignUp after a brief delay to show success message
-      setTimeout(() => {
-        onSignUp(userData); // Pass userData to parent
-      }, 1500);
-    } else {
-      setSuccess(true); // Show success message first
-      // Call onSignIn after a brief delay to show success message
-      setTimeout(() => {
-        onSignIn(userData); // Pass userData to parent
-      }, 1500);
-    }
-  };
 
   const textVariants = {
     enter: { opacity: 0, y: 10 },
@@ -94,17 +71,7 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
 
         <Orb rotateOnHover hoverIntensity={0.3} />
         <div className="shiny-text-container">
-          {success ? (
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="success-message"
-            >
-              ✅ Success! Redirecting...
-            </motion.p>
-          ) : (
-            <ShinyTextSwitcher />
-          )}
+          <ShinyTextSwitcher />
         </div>
       </div>
 
@@ -115,7 +82,13 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
           mode={mode}
           setMode={setMode}
           onClose={() => setShowModal(false)}
-          onSubmit={handleSubmit}
+          // Pass through to App; AuthModal will display success or error based on result
+          onSubmit={async (type, payload) => {
+            if (type === "signup") {
+              return await onSignUp(payload);   // {ok, message?}
+            }
+            return await onSignIn(payload);     // {ok, message?}
+          }}
         />
       )}
     </>

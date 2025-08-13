@@ -9,6 +9,7 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
   const [role, setRole] = useState("student");
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
+  const [serverError, setServerError] = useState("");
 
   const stopLangToggle = () => onToggleLang(false);
 
@@ -21,12 +22,22 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
-    setSuccess("🎉 Success! Redirecting...");
-    setTimeout(() => {
-      onSubmit(mode, { name, email, password, role });
-    }, 1000);
+    setServerError("");
+    setSuccess(null);
+
+    try {
+      const res = await onSubmit(mode, { name, email, password, role });
+      if (res && res.ok) {
+        setSuccess("🎉 Success! Redirecting...");
+        setTimeout(() => onClose(), 900); // close modal -> App shows main UI
+      } else {
+        setServerError(res?.message || "Authentication failed. Please try again.");
+      }
+    } catch (e) {
+      setServerError("Unexpected error. Please try again.");
+    }
   };
 
   const textVariants = {
@@ -121,6 +132,7 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
         )}
 
         {success && <div className="success-message success">{success}</div>}
+        {serverError && <div className="success-message error">{serverError}</div>}
 
         <button className="modal-submit" onClick={handleSubmit}>
           {lang === "en" ? (mode === "signup" ? "Register" : "Login") : (mode === "signup" ? "تسجيل" : "دخول")}
@@ -135,16 +147,12 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
               ? "هل لديك حساب؟"
               : "ليس لديك حساب؟"}{" "}
           <span
-            onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+            onClick={() => { setServerError(""); setSuccess(null); setMode(mode === "signup" ? "signin" : "signup"); }}
             style={{ color: "#0ff", cursor: "pointer", textDecoration: "underline" }}
           >
             {lang === "en"
-              ? mode === "signup"
-                ? "Sign In"
-                : "Sign Up"
-              : mode === "signup"
-                ? "تسجيل الدخول"
-                : "إنشاء حساب"}
+              ? mode === "signup" ? "Sign In" : "Sign Up"
+              : mode === "signup" ? "تسجيل الدخول" : "إنشاء حساب"}
           </span>
         </div>
       </div>

@@ -6,9 +6,36 @@ import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
 import EntryLoginPage from "./components/EntryLoginPage";
 import "./App.css";
 
+const USERS_KEY = "mumayaz_users";
+const SESSION_KEY = "mumayaz_session";
+
+function loadUsers() {
+  try {
+    return JSON.parse(localStorage.getItem(USERS_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+function saveUsers(map) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(map));
+}
+function openSession(email) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ email }));
+}
+function closeSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+function getSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY));
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
   // --- App state ---
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!getSession());
   const [mode, setMode] = useState("text"); // "text" | "voice"
   const [view, setView] = useState("chat"); // "chat" | "profile" | "settings"
 
@@ -22,7 +49,7 @@ export default function App() {
   const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Initialize accessibility preferences
+  // Initialize preferences
   useEffect(() => {
     if (!localStorage.getItem("disability")) localStorage.setItem("disability", "dyslexia");
     const hc = localStorage.getItem("high-contrast");
@@ -47,53 +74,78 @@ export default function App() {
     return () => (synth.onvoiceschanged = null);
   }, [selectedVoice]);
 
-  // Speak helper
   const speak = (text) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     const vObj = voices.find(v => v.name === selectedVoice);
-    if (vObj) {
-      u.voice = vObj;
-      u.lang = vObj.lang;
-    } else u.lang = language;
-    u.rate = speed;
-    u.pitch = pitch;
+    if (vObj) { u.voice = vObj; u.lang = vObj.lang; } else { u.lang = language; }
+    u.rate = speed; u.pitch = pitch;
     window.speechSynthesis.speak(u);
+  };
+
+  // ---------- Auth handlers passed to EntryLoginPage ----------
+  const handleSignUp = async ({ name, email, password, role }) => {
+    const users = loadUsers();
+    const key = email.trim().toLowerCase();
+    if (users[key]) {
+      return { ok: false, message: "This email is already registered." };
+    }
+    // NOTE: Storing plain text password in localStorage is NOT secure.
+    users[key] = { name, email: key, password, role };
+    saveUsers(users);
+    openSession(key);
+    setIsLoggedIn(true);
+    localStorage.setItem("mumayaz_role", role || "student");
+    return { ok: true };
+  };
+
+  const handleSignIn = async ({ email, password }) => {
+    const users = loadUsers();
+    const key = (email || "").trim().toLowerCase();
+    const user = users[key];
+    if (!user || user.password !== password) {
+      return { ok: false, message: "Invalid email or password." };
+    }
+    openSession(key);
+    setIsLoggedIn(true);
+    localStorage.setItem("mumayaz_role", user.role || "student");
+    return { ok: true };
+  };
+
+  const handleSignOut = () => {
+    closeSession();
+    setIsLoggedIn(false);
+    setMode("text");
+    setView("chat");
   };
 
   // If not logged in, show entry login page
   if (!isLoggedIn) {
     return (
       <EntryLoginPage
-        onSignIn={() => setIsLoggedIn(true)}
-        onSignUp={() => setIsLoggedIn(true)}
+        onSignUp={handleSignUp}
+        onSignIn={handleSignIn}
       />
     );
   }
 
-  // Sign out handler
-  const handleSignOut = () => {
-    setIsLoggedIn(false);
-    setMode("text");
-    setView("chat");
-  };
-
-  // Sign out button (shown in all main views)
+  // Sign out button
   const signOutButton = (
     <button
       style={{
         position: "absolute",
         top: "1rem",
         right: "1rem",
-        background: "rgba(255,255,255,0.1)",
-        border: "none",
+        background: "rgba(255,255,255,0.12)",
+        border: "1px solid rgba(255,255,255,0.24)",
         color: "#fff",
         padding: "0.5rem 1rem",
-        borderRadius: "8px",
+        borderRadius: "10px",
         cursor: "pointer",
         fontSize: "0.9rem",
-        zIndex: 100
+        zIndex: 100,
+        boxShadow: "0 6px 20px rgba(0,0,0,0.35)"
       }}
       onClick={handleSignOut}
     >
