@@ -1,6 +1,7 @@
 /* global puter */
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import Cookies from "js-cookie";
 import "./VoiceInterface.css";
 import { translations } from "../translations";
 
@@ -70,7 +71,13 @@ export default function VoiceInterface() {
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [speed, setSpeed] = useState(1);
   const [pitch, setPitch] = useState(1);
-  const [language, setLanguage] = useState("en-US");
+
+  // Pull language from LS, fallback to cookie, then default
+  const initialLang =
+    localStorage.getItem("language") ||
+    Cookies.get("mumayaz_language") ||
+    "en-US";
+  const [language, setLanguage] = useState(initialLang === "en" ? "en-US" : initialLang);
 
   const [summary, setSummary] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -90,7 +97,7 @@ export default function VoiceInterface() {
   useEffect(() => {
     const check = () => setAiReady(hasPuter());
     check();
-    const id = setInterval(check, 1500); // brief poll for late SDK load
+    const id = setInterval(check, 1500);
     window.addEventListener("focus", check);
     return () => {
       clearInterval(id);
@@ -98,6 +105,7 @@ export default function VoiceInterface() {
     };
   }, []);
 
+  // Accessibility prefs
   useEffect(() => {
     const savedContrast = localStorage.getItem("high-contrast");
     const savedTextSize = localStorage.getItem("large-text");
@@ -170,10 +178,15 @@ export default function VoiceInterface() {
         { sender: "user", text: `${confidenceIcon} ${text}`, confidence, id: Date.now() }
       ]);
 
+      // Get disability from LS, fallback cookie, default dyslexia
+      const storedDisability =
+        localStorage.getItem("disability") ||
+        Cookies.get("mumayaz_disability") ||
+        "dyslexia";
+
       // ---- Robust AI call with explicit diagnostics ----
       try {
-        const disability = localStorage.getItem("disability") || "dyslexia";
-        const prompt = `You are helping a user with ${disability}. Answer simply and supportively. Keep responses concise for voice interaction.\n\nUser: ${text}`;
+        const prompt = `You are helping a user with ${storedDisability}. Answer simply and supportively. Keep responses concise for voice interaction.\n\nUser: ${text}`;
         const reply = await aiChat(prompt);
         const cleanReply = reply.trim().replace(/[*_#]/g, "");
 
@@ -321,6 +334,22 @@ export default function VoiceInterface() {
         </motion.div>
       )}
 
+      {/* Listening Waves */}
+      <AnimatePresence>
+        {isListening && (
+          <motion.div
+            className="voice-waves"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="wave w1" />
+            <div className="wave w2" />
+            <div className="wave w3" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Accessibility Controls */}
       <motion.div className="accessibility-controls" variants={itemVariants}>
         <motion.button
@@ -364,17 +393,19 @@ export default function VoiceInterface() {
           {isListening ? "Listening..." : "Speak Now"}
         </motion.button>
 
-        {isSpeaking && (
-          <motion.button
-            className="secondary-btn stop-btn"
-            onClick={stopSpeaking}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-          >
-            🔇 Stop
-          </motion.button>
-        )}
+        <AnimatePresence>
+          {isSpeaking && (
+            <motion.button
+              className="secondary-btn stop-btn"
+              onClick={stopSpeaking}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+            >
+              🔇 Stop
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         <motion.button
           className="secondary-btn"
@@ -475,6 +506,8 @@ export default function VoiceInterface() {
                 <motion.button
                   className="replay-btn"
                   onClick={() => speak(m.text.replace(/[⚠️❌]/g, ""))}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   🔄
                 </motion.button>
@@ -492,7 +525,11 @@ export default function VoiceInterface() {
         )}
 
         {summary && (
-          <motion.div className="summary-panel" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div
+            className="summary-panel"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <h4>📋 Conversation Summary</h4>
             <div className="summary-content">{summary}</div>
             <motion.button className="speak-summary-btn" onClick={() => speak(summary)}>
@@ -501,6 +538,15 @@ export default function VoiceInterface() {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Status Indicator */}
+      <motion.div
+        className={`status-indicator ${isListening ? "listening" : isSpeaking ? "speaking" : "idle"}`}
+        aria-label={isListening ? "Listening" : isSpeaking ? "Speaking" : "Idle"}
+        title={isListening ? "Listening" : isSpeaking ? "Speaking" : "Idle"}
+        initial={{ scale: 0.9, opacity: 0.8 }}
+        animate={{ scale: 1, opacity: 1 }}
+      />
     </motion.div>
   );
 }
