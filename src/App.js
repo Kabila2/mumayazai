@@ -24,6 +24,15 @@ function openSession(email) { localStorage.setItem(SESSION_KEY, JSON.stringify({
 function closeSession() { localStorage.removeItem(SESSION_KEY); }
 function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
+function getAssistantTitle(disability) {
+  switch ((disability || "").toLowerCase()) {
+    case "dyslexia": return "Dyslexia‑Friendly Chat Assistant";
+    case "adhd":     return "ADHD‑Friendly Chat Assistant";
+    case "autism":   return "Autism‑Friendly Chat Assistant";
+    default:         return "Accessible Chat Assistant";
+  }
+}
+
 export default function App() {
   // ---------- Auth & flow ----------
   const [isLoggedIn, setIsLoggedIn] = useState(!!getSession());
@@ -50,6 +59,11 @@ export default function App() {
   const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
+  // ---------- Assistant title ----------
+  const [assistantTitle, setAssistantTitle] = useState(
+    getAssistantTitle(localStorage.getItem(DISABILITY_KEY) || "dyslexia")
+  );
+
   // Reflect UI dir/lang on <html>
   useEffect(() => {
     document.documentElement.lang = appLanguage;
@@ -58,13 +72,17 @@ export default function App() {
 
   // Initialize defaults
   useEffect(() => {
-    if (!localStorage.getItem(DISABILITY_KEY)) localStorage.setItem(DISABILITY_KEY, "dyslexia");
+    if (!localStorage.getItem(DISABILITY_KEY)) {
+      localStorage.setItem(DISABILITY_KEY, "dyslexia");
+    }
     const hc = localStorage.getItem("high-contrast");
     const fs = localStorage.getItem("font-size");
     const rm = localStorage.getItem("reduced-motion");
     if (hc === "true") setHighContrast(true);
     if (fs) setFontSize(parseFloat(fs));
     if (rm === "true") setReducedMotion(true);
+    // ensure title sync on initial load
+    setAssistantTitle(getAssistantTitle(localStorage.getItem(DISABILITY_KEY)));
   }, []);
 
   // Load voices
@@ -126,6 +144,8 @@ export default function App() {
     openSession(key);
     setIsLoggedIn(true);
     localStorage.setItem("mumayaz_role", user.role || "student");
+    // refresh title on login
+    setAssistantTitle(getAssistantTitle(localStorage.getItem(DISABILITY_KEY)));
     return { ok: true };
   };
 
@@ -134,6 +154,9 @@ export default function App() {
     localStorage.setItem(LANGUAGE_KEY, lang);
     setAppLanguage(lang);
 
+    // refresh title after setup
+    setAssistantTitle(getAssistantTitle(disability));
+
     if (pendingEmail) openSession(pendingEmail);
 
     setShowSetup(false);
@@ -141,7 +164,7 @@ export default function App() {
     setIsLoggedIn(true);
   };
 
-  // Keep sign-out logic for later use; not rendered anywhere now
+  // Keep sign-out logic for later use; not rendered now
   const handleSignOut = () => {
     closeSession();
     setIsLoggedIn(false);
@@ -181,6 +204,7 @@ export default function App() {
             fontSize={fontSize}
             highContrast={highContrast}
             reducedMotion={reducedMotion}
+            assistantTitle={assistantTitle}
             onSwitchMode={() => setMode("voice")}
           />
         ) : (
@@ -199,6 +223,7 @@ export default function App() {
             highContrast={highContrast}
             fontSize={fontSize}
             reducedMotion={reducedMotion}
+            assistantTitle={assistantTitle}
             onSwitchMode={() => setMode("text")}
           />
         )}
