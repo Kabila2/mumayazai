@@ -141,6 +141,7 @@ export default function App() {
     setIsLoggedIn(true);
   };
 
+  // Keep sign-out logic for later use; not rendered anywhere now
   const handleSignOut = () => {
     closeSession();
     setIsLoggedIn(false);
@@ -169,34 +170,10 @@ export default function App() {
     );
   }
 
-  const signOutButton = (
-    <button
-      style={{
-        position: "absolute",
-        top: "1rem",
-        right: appLanguage === "ar" ? "auto" : "1rem",
-        left:  appLanguage === "ar" ? "1rem" : "auto",
-        background: "rgba(255,255,255,0.12)",
-        border: "1px solid rgba(255,255,255,0.24)",
-        color: "#fff",
-        padding: "0.5rem 1rem",
-        borderRadius: "10px",
-        cursor: "pointer",
-        fontSize: "0.9rem",
-        zIndex: 100,
-        boxShadow: "0 6px 20px rgba(0,0,0,0.35)"
-      }}
-      onClick={handleSignOut}
-    >
-      🔒 {t.back || "Sign Out"}
-    </button>
-  );
-
   let content;
   if (view === "chat") {
     content = (
       <div style={{ position: "relative", height: "100%" }}>
-        {signOutButton}
         {mode === "text" ? (
           <ChatInterface
             t={t}
@@ -230,7 +207,6 @@ export default function App() {
   } else if (view === "profile") {
     content = (
       <div className="placeholder" style={{ position: "relative" }}>
-        {signOutButton}
         <h2>👤 Profile</h2>
         <p>Manage your preferences and accessibility settings.</p>
         <button onClick={() => setView("chat")}>{t.back}</button>
@@ -239,7 +215,6 @@ export default function App() {
   } else {
     content = (
       <div style={{ position: "relative" }}>
-        {signOutButton}
         <VoiceSettings
           voices={voices}
           selectedVoice={selectedVoice}
