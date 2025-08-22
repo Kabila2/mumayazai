@@ -4,67 +4,13 @@ import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
 import "./VoiceInterface.css";
 
-/* ---------- Helpers: disability → title + theme ---------- */
-const getCurrentDisability = () =>
-  (localStorage.getItem("disability") || Cookies.get("mumayaz_disability") || "dyslexia").toLowerCase();
-
-const getAssistantTitleByDisability = (d) => {
-  switch ((d || "").toLowerCase()) {
-    case "adhd":
-      return "ADHD-Friendly Voice Assistant";
-    case "autism":
-      return "Autism-Friendly Voice Assistant";
-    case "dyslexia":
-      return "Dyslexia-Friendly Voice Assistant";
-    default:
-      return "Accessible Voice Assistant";
-  }
-};
-
-const getTheme = (d) => {
-  const key = (d || "").toLowerCase();
-  if (key === "adhd") {
-    return {
-      headerBg: "linear-gradient(135deg, #FF6F00, #FF8F00)",
-      primary: "#FF8F00",
-      waveBorder: "rgba(255, 143, 0, 0.6)",
-      btnGradient: "linear-gradient(135deg, #FF6F00, #FF8F00)",
-      stopBg: "#e53935",
-      panelBg: "rgba(0,0,0,0.65)",
-      text: "#fff",
-      textAlt: "#FFF9E6",
-      ringGlow: "rgba(255, 200, 0, 0.6)",
-      accentBorder: "rgba(255, 143, 0, 0.35)",
-    };
-  }
-  if (key === "autism") {
-    return {
-      headerBg: "linear-gradient(135deg, #26A69A, #00796B)",
-      primary: "#26A69A",
-      waveBorder: "rgba(38, 166, 154, 0.6)",
-      btnGradient: "linear-gradient(135deg, #26A69A, #00796B)",
-      stopBg: "#c62828",
-      panelBg: "rgba(0,0,0,0.65)",
-      text: "#E0F2F1",
-      textAlt: "#E0F7FA",
-      ringGlow: "rgba(0, 150, 136, 0.6)",
-      accentBorder: "rgba(38, 166, 154, 0.35)",
-    };
-  }
-  // default: dyslexia
-  return {
-    headerBg: "linear-gradient(135deg, #4CAF50, #45a049)",
-    primary: "#4CAF50",
-    waveBorder: "rgba(76, 175, 80, 0.6)",
-    btnGradient: "linear-gradient(135deg, #4CAF50, #45a049)",
-    stopBg: "#d32f2f",
-    panelBg: "rgba(0,0,0,0.65)",
-    text: "#ffffff",
-    textAlt: "#e8f5e8",
-    ringGlow: "rgba(76, 175, 80, 0.6)",
-    accentBorder: "rgba(76, 175, 80, 0.35)",
-  };
-};
+/* ---------- Import disability utilities ---------- */
+import { 
+  getCurrentDisability, 
+  getVoiceAssistantTitle, 
+  getDisabilityTheme,
+  getAIPromptContext 
+} from "../utils/disabilityUtils";
 
 /* ---------- Puter helpers ---------- */
 const hasPuter = () =>
@@ -85,9 +31,9 @@ const aiChat = async (prompt, ms = 20000) => {
   return Promise.race([req, timeout]);
 };
 
-const mockAI = (prompt) => {
+const mockAI = (prompt, disability) => {
   const last = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
-  return `⚠️ AI offline (mock). You said: "${last}"`;
+  return `⚠️ AI offline (mock). You said: "${last}" (${disability.toUpperCase()} mode active)`;
 };
 
 export default function VoiceInterface({
@@ -106,10 +52,12 @@ export default function VoiceInterface({
   fontSize,
   reducedMotion,
   onSwitchMode,
+  currentDisability: propDisability
 }) {
-  const disability = getCurrentDisability();
-  const theme = getTheme(disability);
-  const assistantTitle = getAssistantTitleByDisability(disability);
+  // Get disability from props or localStorage
+  const disability = propDisability || getCurrentDisability();
+  const theme = getDisabilityTheme(disability);
+  const assistantTitle = getVoiceAssistantTitle(disability);
 
   /* ---------- State ---------- */
   const [messages, setMessages] = useState([]);
@@ -177,7 +125,7 @@ export default function VoiceInterface({
       setListening(false);
       setMessages((m) => [
         ...m,
-        { sender: "system", text: `❌ Speech recognition error: ${event.error}`, id: Date.now() },
+        { sender: "system", text: `⚠️ Speech recognition error: ${event.error}`, id: Date.now() },
       ]);
     };
     recog.onresult = async (e) => {
@@ -188,15 +136,17 @@ export default function VoiceInterface({
         { sender: "user", text: text, confidence, id: Date.now() },
       ]);
       try {
-        const prompt = `You are helping a user with ${disability}. Keep answers clear and concise for voice.\n\nUser: ${text}`;
-        const raw = aiReady ? await aiChat(prompt) : mockAI(prompt);
+        const promptContext = getAIPromptContext(disability);
+        const prompt = `You are helping a user with ${disability}. ${promptContext} Keep responses concise for voice interaction.\n\nUser: ${text}`;
+        const raw = aiReady ? await aiChat(prompt) : mockAI(prompt, disability);
         const clean = (raw || "").toString().trim().replace(/[*_#`]/g, "");
         setMessages((m) => [...m, { sender: "gpt", text: clean, id: Date.now() + 1 }]);
         speak(clean);
       } catch (err) {
+        const errorMsg = `⚠️ Connection issue. Please check AI SDK.`;
         setMessages((m) => [
           ...m,
-          { sender: "gpt", text: "⚠️ Connection issue. Please check AI SDK.", id: Date.now() + 1 },
+          { sender: "gpt", text: errorMsg, id: Date.now() + 1 },
         ]);
         speak("I'm having trouble connecting to the AI right now.");
       }
@@ -241,10 +191,12 @@ export default function VoiceInterface({
       alert("Speech recognition not supported. Try Chrome, Edge, or Safari.");
       return;
     }
-    buttonControls.start({
-      scale: [1, 0.95, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
+    if (!reducedMotion) {
+      buttonControls.start({
+        scale: [1, 0.95, 1.1, 1],
+        transition: { duration: 0.3 },
+      });
+    }
     recognitionRef.current.start();
   };
 
@@ -276,7 +228,7 @@ export default function VoiceInterface({
             borderRadius: "50%",
             border: `2px solid ${theme.waveBorder}`,
             opacity: 0,
-            animation: `ring 2.2s ease-out ${delay} infinite`,
+            animation: reducedMotion ? "none" : `ring 2.2s ease-out ${delay} infinite`,
           }}
         />
       ))}
@@ -323,13 +275,16 @@ export default function VoiceInterface({
           textAlign: "center",
           color: theme.text,
           background: theme.headerBg,
-          borderBottom: `2px solid ${theme.accentBorder}`,
+          borderBottom: `2px solid ${theme.borderColor}`,
           width: "100%",
           fontWeight: 700,
           letterSpacing: "0.02em",
         }}
       >
         {assistantTitle}
+        {disability === 'adhd' && ' 🧠'}
+        {disability === 'autism' && ' 🌈'}
+        {disability === 'dyslexia' && ' 💚'}
       </div>
 
       {/* Switch */}
@@ -370,7 +325,7 @@ export default function VoiceInterface({
         }}
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: reducedMotion ? 0 : 0.2 }}
       >
         <motion.button
           onClick={startListening}
@@ -380,7 +335,7 @@ export default function VoiceInterface({
             padding: "1rem 2rem",
             fontSize: "1.1rem",
             fontWeight: 700,
-            background: isListening ? theme.btnGradient : theme.btnGradient,
+            background: theme.headerBg,
             border: "none",
             borderRadius: 16,
             color: theme.text,
@@ -391,11 +346,10 @@ export default function VoiceInterface({
             justifyContent: "center",
             gap: "0.5rem",
             opacity: isListening || isSpeaking ? 0.75 : 1,
-            boxShadow: isListening ? `0 0 40px ${theme.ringGlow}` : "none",
+            boxShadow: isListening && !reducedMotion ? `0 0 40px ${theme.ringGlow}` : "none",
           }}
-          whileHover={!isListening && !isSpeaking ? { scale: 1.05, y: -3 } : {}}
+          whileHover={!isListening && !isSpeaking && !reducedMotion ? { scale: 1.05, y: -3 } : {}}
           whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
-          transition={{ duration: 2, repeat: isListening ? Infinity : 0 }}
         >
           <span>{isListening ? "🎤" : "🗣️"}</span>
           {isListening ? "Listening..." : "Speak Now"}
@@ -407,7 +361,7 @@ export default function VoiceInterface({
             style={{
               padding: "0.85rem 1.5rem",
               fontSize: "1rem",
-              background: theme.stopBg,
+              background: "#f44336",
               border: "none",
               borderRadius: 16,
               color: "#fff",
@@ -417,7 +371,7 @@ export default function VoiceInterface({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={!reducedMotion ? { scale: 1.05 } : {}}
           >
             🔇 Stop
           </motion.button>
@@ -429,14 +383,14 @@ export default function VoiceInterface({
             padding: "0.85rem 1.5rem",
             fontSize: "1rem",
             background: "rgba(255,255,255,0.12)",
-            border: `2px solid ${theme.accentBorder}`,
+            border: `2px solid ${theme.borderColor}`,
             borderRadius: 16,
             color: theme.text,
             cursor: "pointer",
             fontWeight: 600,
             backdropFilter: "blur(8px)",
           }}
-          whileHover={{ scale: 1.05 }}
+          whileHover={!reducedMotion ? { scale: 1.05 } : {}}
         >
           ⚙️ Settings
         </motion.button>
@@ -447,13 +401,13 @@ export default function VoiceInterface({
             padding: "0.85rem 1.5rem",
             fontSize: "1rem",
             background: "rgba(255,255,255,0.12)",
-            border: `2px solid ${theme.accentBorder}`,
+            border: `2px solid ${theme.borderColor}`,
             borderRadius: 16,
             color: theme.text,
             cursor: "pointer",
             fontWeight: 600,
           }}
-          whileHover={{ scale: 1.05 }}
+          whileHover={!reducedMotion ? { scale: 1.05 } : {}}
         >
           🗑️ Clear
         </motion.button>
@@ -470,7 +424,7 @@ export default function VoiceInterface({
               padding: "1.25rem",
               margin: "0.5rem 0 0.5rem",
               minWidth: 320,
-              border: `1px solid ${theme.accentBorder}`,
+              border: `1px solid ${theme.borderColor}`,
             }}
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -524,7 +478,7 @@ export default function VoiceInterface({
                   width: "100%",
                   padding: "0.5rem",
                   borderRadius: 10,
-                  border: `1px solid ${theme.accentBorder}`,
+                  border: `1px solid ${theme.borderColor}`,
                   background: "rgba(0,0,0,0.35)",
                   color: theme.text,
                 }}
@@ -537,7 +491,7 @@ export default function VoiceInterface({
               </select>
             </div>
             <button
-              onClick={() => speak("This is a test of the voice settings.")}
+              onClick={() => speak(`This is a test of the ${disability} voice assistant settings.`)}
               style={{
                 width: "100%",
                 padding: "0.8rem",
@@ -562,7 +516,7 @@ export default function VoiceInterface({
           width: "100%",
           maxWidth: 840,
           background: theme.panelBg,
-          border: `1px solid ${theme.accentBorder}`,
+          border: `1px solid ${theme.borderColor}`,
           borderRadius: 16,
           padding: "1rem",
           marginTop: "1rem",
@@ -572,7 +526,7 @@ export default function VoiceInterface({
         ref={messagesRef}
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.25 }}
+        transition={{ delay: reducedMotion ? 0 : 0.25 }}
       >
         <div
           style={{
@@ -581,81 +535,97 @@ export default function VoiceInterface({
             alignItems: "center",
             marginBottom: "0.75rem",
             paddingBottom: "0.5rem",
-            borderBottom: `1px solid ${theme.accentBorder}`,
+            borderBottom: `1px solid ${theme.borderColor}`,
           }}
         >
-          <h3 style={{ margin: 0, fontSize: "1.15rem", color: theme.text }}>Conversation History</h3>
+          <h3 style={{ margin: 0, fontSize: "1.15rem", color: theme.text }}>
+            Conversation History ({disability.toUpperCase()} Mode)
+          </h3>
         </div>
 
         <AnimatePresence mode="popLayout">
-          {messages.map((m) => (
-            <motion.div
-              key={m.id}
-              style={{
-                background:
-                  m.sender === "user"
+          {messages.length === 0 ? (
+            <div style={{
+              textAlign: "center",
+              padding: "3rem 1rem",
+              color: theme.textAlt,
+              opacity: 0.7
+            }}>
+              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎤</div>
+              <h4 style={{ margin: "0 0 0.5rem 0" }}>Ready to chat!</h4>
+              <p style={{ margin: 0 }}>
+                Press "Speak Now" to start a conversation in {disability.toUpperCase()} mode
+              </p>
+            </div>
+          ) : (
+            messages.map((m) => (
+              <motion.div
+                key={m.id}
+                style={{
+                  background: m.sender === "user"
                     ? "rgba(255,255,255,0.06)"
                     : "rgba(255,255,255,0.08)",
-                border: `1px solid ${theme.accentBorder}`,
-                borderRadius: 12,
-                padding: "0.85rem 1rem",
-                marginBottom: "0.75rem",
-                position: "relative",
-                color: theme.textAlt,
-              }}
-              initial={{ opacity: 0, x: -40, scale: 0.98 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 40, scale: 0.98 }}
-              transition={{ duration: reducedMotion ? 0 : 0.25 }}
-              layout
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: "1.1rem" }}>
-                  {m.sender === "user" ? "👤" : m.sender === "gpt" ? "🤖" : "⚙️"}
-                </span>
-                <b>{m.sender === "user" ? "You" : m.sender === "gpt" ? "Assistant" : "System"}</b>
-                {typeof m.confidence === "number" && (
-                  <span
+                  border: `1px solid ${theme.borderColor}`,
+                  borderRadius: 12,
+                  padding: "0.85rem 1rem",
+                  marginBottom: "0.75rem",
+                  position: "relative",
+                  color: theme.textAlt,
+                }}
+                initial={{ opacity: 0, x: -40, scale: 0.98 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 40, scale: 0.98 }}
+                transition={{ duration: reducedMotion ? 0 : 0.25 }}
+                layout
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: "1.1rem" }}>
+                    {m.sender === "user" ? "👤" : m.sender === "gpt" ? "🤖" : "⚙️"}
+                  </span>
+                  <b>{m.sender === "user" ? "You" : m.sender === "gpt" ? "Assistant" : "System"}</b>
+                  {typeof m.confidence === "number" && (
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        padding: "0.15rem 0.45rem",
+                        borderRadius: 10,
+                        fontSize: "0.8rem",
+                        background:
+                          m.confidence > 0.8
+                            ? "rgba(76,175,80,0.22)"
+                            : m.confidence > 0.5
+                            ? "rgba(255,152,0,0.22)"
+                            : "rgba(244,67,54,0.22)",
+                        color:
+                          m.confidence > 0.8 ? "#4CAF50" : m.confidence > 0.5 ? "#FF9800" : "#F44336",
+                      }}
+                    >
+                      {Math.round(m.confidence * 100)}%
+                    </span>
+                  )}
+                </div>
+                <div style={{ lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{m.text}</div>
+                {m.sender === "gpt" && (
+                  <button
+                    onClick={() => speak(m.text.replace(/[⚠️⚌]/g, ""))}
+                    title="Replay message"
                     style={{
-                      marginLeft: "auto",
-                      padding: "0.15rem 0.45rem",
-                      borderRadius: 10,
-                      fontSize: "0.8rem",
-                      background:
-                        m.confidence > 0.8
-                          ? "rgba(76,175,80,0.22)"
-                          : m.confidence > 0.5
-                          ? "rgba(255,152,0,0.22)"
-                          : "rgba(244,67,54,0.22)",
-                      color:
-                        m.confidence > 0.8 ? "#4CAF50" : m.confidence > 0.5 ? "#FF9800" : "#F44336",
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      background: "transparent",
+                      border: "none",
+                      color: theme.textAlt,
+                      cursor: "pointer",
+                      fontSize: "1.1rem",
                     }}
                   >
-                    {Math.round(m.confidence * 100)}%
-                  </span>
+                    🔄
+                  </button>
                 )}
-              </div>
-              <div style={{ lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{m.text}</div>
-              {m.sender === "gpt" && (
-                <button
-                  onClick={() => speak(m.text.replace(/[⚠️❌]/g, ""))}
-                  title="Replay message"
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    background: "transparent",
-                    border: "none",
-                    color: theme.textAlt,
-                    cursor: "pointer",
-                    fontSize: "1.1rem",
-                  }}
-                >
-                  🔄
-                </button>
-              )}
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </AnimatePresence>
       </motion.div>
 

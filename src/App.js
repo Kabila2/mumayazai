@@ -26,11 +26,21 @@ function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY
 
 function getAssistantTitle(disability) {
   switch ((disability || "").toLowerCase()) {
-    case "dyslexia": return "Dyslexia‑Friendly Chat Assistant";
-    case "adhd":     return "ADHD‑Friendly Chat Assistant";
-    case "autism":   return "Autism‑Friendly Chat Assistant";
+    case "dyslexia": return "Dyslexia-Friendly Chat Assistant";
+    case "adhd":     return "ADHD-Friendly Chat Assistant";
+    case "autism":   return "Autism-Friendly Chat Assistant";
     default:         return "Accessible Chat Assistant";
   }
+}
+
+// Get current disability preference with fallback
+function getCurrentDisability() {
+  return localStorage.getItem(DISABILITY_KEY) || "dyslexia";
+}
+
+// Save disability preference
+function saveDisability(disability) {
+  localStorage.setItem(DISABILITY_KEY, disability);
 }
 
 export default function App() {
@@ -49,6 +59,9 @@ export default function App() {
   const [mode, setMode] = useState("text");   // "text" | "voice"
   const [view, setView] = useState("chat");   // "chat" | "profile" | "settings"
 
+  // ---------- Disability state ----------
+  const [currentDisability, setCurrentDisability] = useState(getCurrentDisability());
+
   // ---------- TTS & accessibility ----------
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState("");
@@ -59,10 +72,8 @@ export default function App() {
   const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // ---------- Assistant title ----------
-  const [assistantTitle, setAssistantTitle] = useState(
-    getAssistantTitle(localStorage.getItem(DISABILITY_KEY) || "dyslexia")
-  );
+  // ---------- Assistant title (reactive to disability) ----------
+  const [assistantTitle, setAssistantTitle] = useState(getAssistantTitle(currentDisability));
 
   // Reflect UI dir/lang on <html>
   useEffect(() => {
@@ -70,20 +81,25 @@ export default function App() {
     document.documentElement.dir = appLanguage === "ar" ? "rtl" : "ltr";
   }, [appLanguage]);
 
-  // Initialize defaults
+  // Initialize defaults and sync disability
   useEffect(() => {
-    if (!localStorage.getItem(DISABILITY_KEY)) {
-      localStorage.setItem(DISABILITY_KEY, "dyslexia");
-    }
+    const disability = getCurrentDisability();
+    setCurrentDisability(disability);
+    setAssistantTitle(getAssistantTitle(disability));
+    
+    // Load accessibility preferences
     const hc = localStorage.getItem("high-contrast");
     const fs = localStorage.getItem("font-size");
     const rm = localStorage.getItem("reduced-motion");
     if (hc === "true") setHighContrast(true);
     if (fs) setFontSize(parseFloat(fs));
     if (rm === "true") setReducedMotion(true);
-    // ensure title sync on initial load
-    setAssistantTitle(getAssistantTitle(localStorage.getItem(DISABILITY_KEY)));
   }, []);
+
+  // Watch for disability changes and update title
+  useEffect(() => {
+    setAssistantTitle(getAssistantTitle(currentDisability));
+  }, [currentDisability]);
 
   // Load voices
   useEffect(() => {
@@ -144,17 +160,23 @@ export default function App() {
     openSession(key);
     setIsLoggedIn(true);
     localStorage.setItem("mumayaz_role", user.role || "student");
-    // refresh title on login
-    setAssistantTitle(getAssistantTitle(localStorage.getItem(DISABILITY_KEY)));
+    
+    // Sync disability on login
+    const disability = getCurrentDisability();
+    setCurrentDisability(disability);
+    setAssistantTitle(getAssistantTitle(disability));
+    
     return { ok: true };
   };
 
   const handleCompleteSetup = ({ disability, lang }) => {
-    localStorage.setItem(DISABILITY_KEY, disability);
+    // Save disability preference
+    saveDisability(disability);
     localStorage.setItem(LANGUAGE_KEY, lang);
     setAppLanguage(lang);
 
-    // refresh title after setup
+    // Update current disability state
+    setCurrentDisability(disability);
     setAssistantTitle(getAssistantTitle(disability));
 
     if (pendingEmail) openSession(pendingEmail);
@@ -185,7 +207,7 @@ export default function App() {
   if (showSetup) {
     return (
       <OnboardingSetup
-        defaultDisability={localStorage.getItem(DISABILITY_KEY) || "dyslexia"}
+        defaultDisability={getCurrentDisability()}
         defaultLanguage={localStorage.getItem(LANGUAGE_KEY) || "en"}
         onComplete={handleCompleteSetup}
         onCancel={() => { setShowSetup(false); setPendingEmail(null); }}
@@ -205,6 +227,7 @@ export default function App() {
             highContrast={highContrast}
             reducedMotion={reducedMotion}
             assistantTitle={assistantTitle}
+            currentDisability={currentDisability}
             onSwitchMode={() => setMode("voice")}
           />
         ) : (
@@ -224,6 +247,7 @@ export default function App() {
             fontSize={fontSize}
             reducedMotion={reducedMotion}
             assistantTitle={assistantTitle}
+            currentDisability={currentDisability}
             onSwitchMode={() => setMode("text")}
           />
         )}
@@ -233,6 +257,7 @@ export default function App() {
     content = (
       <div className="placeholder" style={{ position: "relative" }}>
         <h2>👤 Profile</h2>
+        <p>Current disability preference: <strong>{currentDisability.toUpperCase()}</strong></p>
         <p>Manage your preferences and accessibility settings.</p>
         <button onClick={() => setView("chat")}>{t.back}</button>
       </div>

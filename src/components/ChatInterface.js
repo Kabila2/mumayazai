@@ -36,495 +36,104 @@ const aiChat = async (prompt, ms = 20000) => {
 };
 
 /** graceful fallback so UI still works offline */
-const mockAI = (prompt) => {
+const mockAI = (prompt, disability) => {
   const lastUser = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
   return (
-    "⚠️ AI offline (mock mode).\n" +
-    '• I received: "' + lastUser + '"\n' +
-    "• Tip: ensure the Puter SDK script is loaded before your app.\n" +
-    "• Dev: open console for details."
+    `⚠️ AI offline (mock mode).\n` +
+    `• I received: "${lastUser}"\n` +
+    `• This is ${disability.toUpperCase()}-friendly mode\n` +
+    `• Tip: ensure the Puter SDK script is loaded before your app.\n` +
+    `• Dev: open console for details.`
   );
 };
 
-const getAIResponse = async (prompt) => {
+const getAIResponse = async (prompt, disability) => {
   // 👇 Wait up to 3s for the SDK before falling back to mock
   const ready = await waitForPuter(3000);
-  if (!ready) return mockAI(prompt);
+  if (!ready) return mockAI(prompt, disability);
   try {
     return await aiChat(prompt, 20000);
   } catch (err) {
     console.warn("[ChatInterface] AI error:", err);
-    return mockAI(prompt);
+    return mockAI(prompt, disability);
   }
 };
 
-/** ---------- Voice Interface (kept inline for your current structure) ---------- */
-const VoiceInterface = ({ onSwitchMode, highContrast, fontSize }) => {
-  const [messages, setMessages] = useState([]);
-  const [isListening, setListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState("");
-  const [speed, setSpeed] = useState(1);
-  const [pitch, setPitch] = useState(1);
-  const [showSettings, setShowSettings] = useState(false);
+/** ---------- Disability-specific themes ---------- */
+const getDisabilityTheme = (disability) => {
+  switch (disability?.toLowerCase()) {
+    case "adhd":
+      return {
+        headerBg: "linear-gradient(135deg, #FF6F00, #FF8F00)",
+        primary: "#FF8F00",
+        accentColor: "#FF6F00",
+        textColor: "#ffffff",
+        bubbleUserBg: "linear-gradient(135deg, #FF6F00, #FF8F00)",
+        bubbleGptBg: "linear-gradient(135deg, rgba(255, 143, 0, 0.15), rgba(255, 111, 0, 0.1))",
+        borderColor: "rgba(255, 143, 0, 0.4)",
+        inputBorderColor: "rgba(255, 143, 0, 0.4)",
+        focusBorderColor: "#FF8F00"
+      };
+    case "autism":
+      return {
+        headerBg: "linear-gradient(135deg, #26A69A, #00796B)",
+        primary: "#26A69A",
+        accentColor: "#26A69A",
+        textColor: "#E0F2F1",
+        bubbleUserBg: "linear-gradient(135deg, #26A69A, #00796B)",
+        bubbleGptBg: "linear-gradient(135deg, rgba(38, 166, 154, 0.15), rgba(0, 121, 107, 0.1))",
+        borderColor: "rgba(38, 166, 154, 0.4)",
+        inputBorderColor: "rgba(38, 166, 154, 0.4)",
+        focusBorderColor: "#26A69A"
+      };
+    case "dyslexia":
+    default:
+      return {
+        headerBg: "linear-gradient(135deg, #4CAF50, #45a049)",
+        primary: "#4CAF50",
+        accentColor: "#4CAF50",
+        textColor: "#e8f5e8",
+        bubbleUserBg: "linear-gradient(135deg, #4CAF50, #45a049)",
+        bubbleGptBg: "linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(69, 160, 73, 0.1))",
+        borderColor: "rgba(76, 175, 80, 0.4)",
+        inputBorderColor: "rgba(76, 175, 80, 0.4)",
+        focusBorderColor: "#4CAF50"
+      };
+  }
+};
 
-  const recognitionRef = useRef(null);
-  const messagesRef = useRef(null);
-
-  useEffect(() => {
-    const synth = window.speechSynthesis;
-    const loadVoices = () => {
-      const allVoices = synth.getVoices();
-      const englishVoices = allVoices.filter(v => v.lang.startsWith("en"));
-      setVoices(englishVoices);
-      if (!selectedVoice && englishVoices.length) {
-        setSelectedVoice(englishVoices[0].name);
-      }
-    };
-    loadVoices();
-    synth.onvoiceschanged = loadVoices;
-    return () => { synth.onvoiceschanged = null; };
-  }, [selectedVoice]);
-
-  useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-
-    recognition.onstart = () => {
-      setListening(true);
-      if (navigator.vibrate) navigator.vibrate(100);
-    };
-
-    recognition.onend = () => { setListening(false); };
-
-    recognition.onerror = (event) => {
-      setListening(false);
-      setMessages(prev => [...prev, {
-        sender: "system",
-        text: `❌ Speech recognition error: ${event.error}.`,
-        id: Date.now()
-      }]);
-    };
-
-    recognition.onresult = async (event) => {
-      const text = event.results[0][0].transcript;
-      const confidence = event.results[0][0].confidence;
-      const confidenceIcon = confidence > 0.8 ? "✅" : confidence > 0.5 ? "⚠️" : "❓";
-
-      setMessages(prev => [...prev, {
-        sender: "user",
-        text: `${confidenceIcon} ${text}`,
-        confidence,
-        id: Date.now()
-      }]);
-
-      try {
-        const disability = localStorage.getItem("disability") || "dyslexia";
-        const prompt = `You are helping a user with ${disability}. Answer simply and supportively. Keep responses concise for voice interaction.\n\nUser: ${text}`;
-        const reply = await getAIResponse(prompt);
-        const cleanReply = reply.trim().replace(/[*_#]/g, '');
-
-        setMessages(prev => [...prev, {
-          sender: "gpt",
-          text: cleanReply,
-          id: Date.now() + 1
-        }]);
-        speak(cleanReply);
-      } catch (err) {
-        const msg = err?.message || String(err);
-        const helpful = hasPuter()
-          ? "Network/API issue."
-          : "Puter SDK not detected. Load https://sdk.puter.com/v1/sdk.js before your app.";
-        const errorMsg = `Connection error: ${msg}\n${helpful}`;
-        setMessages(prev => [...prev, { sender: "gpt", text: `⚠️ ${errorMsg}`, id: Date.now() + 1 }]);
-        speak("I'm having trouble connecting to the AI right now.");
-        console.warn("[VoiceInterface] AI error:", err);
-      }
-    };
-
-    recognitionRef.current = recognition;
-  }, []);
-
-  const speak = (text) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voiceObj = voices.find(v => v.name === selectedVoice);
-    if (voiceObj) { utterance.voice = voiceObj; utterance.lang = voiceObj.lang; }
-    else { utterance.lang = "en-US"; }
-    utterance.rate = speed;
-    utterance.pitch = pitch;
-    utterance.volume = 0.9;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const startListening = () => {
-    if (!recognitionRef.current) {
-      alert("Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.");
-      return;
-    }
-    recognitionRef.current.start();
-  };
-
-  const stopSpeaking = () => {
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  };
-
-  const clearMessages = () => { setMessages([]); };
-
-  return (
-    <motion.div
-      className={`voice-area ${highContrast ? 'high-contrast' : ''}`}
-      style={{
-        fontSize: `${fontSize}rem`,
-        position: 'relative',
-        width: '100%',
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        padding: '2rem 1rem',
-        background: 'linear-gradient(135deg, #0a0a23 0%, #1a001a 50%, #000020 100%)',
-        color: '#ffffff',
-        fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-        overflow: 'hidden'
-      }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-    >
-      {/* Switch Button */}
-      <motion.button
-        onClick={onSwitchMode}
-        style={{
-          position: 'absolute',
-          top: '1rem',
-          left: '1rem',
-          background: 'rgba(255,255,255,0.1)',
-          border: 'none',
-          color: '#fff',
-          padding: '0.5rem 1rem',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          fontSize: '0.9rem'
-        }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        ← Switch to Text Chat
-      </motion.button>
-
-      {/* Voice Controls */}
-      <motion.div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          margin: '2rem 0',
-          flexWrap: 'wrap',
-          justifyContent: 'center'
-        }}
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <motion.button
-          onClick={startListening}
-          disabled={isListening || isSpeaking}
-          style={{
-            padding: '1rem 2rem',
-            fontSize: '1.1rem',
-            fontWeight: '600',
-            background: isListening
-              ? 'linear-gradient(135deg, #4caf50, #45a049)'
-              : 'linear-gradient(135deg, #8e2de2, #4a00e0)',
-            border: 'none',
-            borderRadius: '16px',
-            color: '#ffffff',
-            cursor: isListening || isSpeaking ? 'not-allowed' : 'pointer',
-            minWidth: '160px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            opacity: isListening || isSpeaking ? 0.7 : 1
-          }}
-          whileHover={!isListening && !isSpeaking ? { scale: 1.05, y: -3 } : {}}
-          whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
-          animate={isListening ? {
-            boxShadow: [
-              '0 0 20px rgba(76, 175, 80, 0.4)',
-              '0 0 40px rgba(76, 175, 80, 0.8)',
-              '0 0 20px rgba(76, 175, 80, 0.4)'
-            ]
-          } : {}}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <span>{isListening ? "🎤" : "🗣️"}</span>
-          {isListening ? "Listening..." : "Speak Now"}
-        </motion.button>
-
-        {isSpeaking && (
-          <motion.button
-            onClick={stopSpeaking}
-            style={{
-              padding: '0.8rem 1.5rem',
-              fontSize: '1rem',
-              background: '#f44336',
-              border: 'none',
-              borderRadius: '16px',
-              color: '#ffffff',
-              cursor: 'pointer'
-            }}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            🔇 Stop
-          </motion.button>
-        )}
-
-        <motion.button
-          onClick={() => setShowSettings(!showSettings)}
-          style={{
-            padding: '0.8rem 1.5rem',
-            fontSize: '1rem',
-            background: 'rgba(255,255,255,0.1)',
-            border: 'none',
-            borderRadius: '16px',
-            color: '#ffffff',
-            cursor: 'pointer'
-          }}
-          whileHover={{ scale: 1.05 }}
-        >
-          ⚙️ Settings
-        </motion.button>
-      </motion.div>
-
-      {/* Quick Settings */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            style={{
-              background: 'rgba(0,0,0,0.8)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: '16px',
-              padding: '1.5rem',
-              margin: '1rem 0',
-              minWidth: '300px'
-            }}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          >
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e0d6ff' }}>
-                Voice Speed: {speed.toFixed(1)}x
-              </label>
-              <input
-                type="range"
-                min="0.5"
-                max="2"
-                step="0.1"
-                value={speed}
-                onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#e0d6ff' }}>
-                Voice Pitch: {pitch.toFixed(1)}
-              </label>
-              <input
-                type="range"
-                min="0.5"
-                max="2"
-                step="0.1"
-                value={pitch}
-                onChange={(e) => setPitch(parseFloat(e.target.value))}
-                style={{ width: '100%' }}
-              />
-            </div>
-            <button
-              onClick={() => speak("This is a test of the voice settings.")}
-              style={{
-                width: '100%',
-                padding: '0.8rem',
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                border: 'none',
-                borderRadius: '8px',
-                color: '#ffffff',
-                cursor: 'pointer'
-              }}
-            >
-              🔊 Test Voice
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Voice Log */}
-      <motion.div
-        style={{
-          flex: 1,
-          width: '100%',
-          maxWidth: '800px',
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          marginTop: '1rem',
-          overflowY: 'auto',
-          maxHeight: '50vh'
-        }}
-        ref={messagesRef}
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-          paddingBottom: '1rem',
-          borderBottom: '1px solid rgba(255,255,255,0.1)'
-        }}>
-          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '1.4rem', fontWeight: '600' }}>
-            Conversation History
-          </h3>
-          {messages.length > 0 && (
-            <button
-              onClick={clearMessages}
-              style={{
-                padding: '0.6rem 1.2rem',
-                fontSize: '0.95rem',
-                background: '#f44336',
-                border: 'none',
-                borderRadius: '10px',
-                color: '#ffffff',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              🗑️ Clear
-            </button>
-          )}
-        </div>
-
-        <AnimatePresence mode="popLayout">
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              style={{
-                background: msg.sender === 'user'
-                  ? 'rgba(138, 43, 226, 0.2)'
-                  : msg.sender === 'gpt'
-                  ? 'rgba(76, 175, 80, 0.2)'
-                  : 'rgba(255, 152, 0, 0.2)',
-                borderRadius: '12px',
-                padding: '1rem',
-                marginBottom: '1rem',
-                position: 'relative'
-              }}
-              initial={{ opacity: 0, x: -50, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 50, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              layout
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.5rem'
-              }}>
-                <span style={{ fontSize: '1.2rem' }}>
-                  {msg.sender === "user" ? "👤" : msg.sender === "gpt" ? "🤖" : "⚙️"}
-                </span>
-                <span style={{ fontWeight: '600', color: '#ffffff' }}>
-                  {msg.sender === "user" ? "You" : msg.sender === "gpt" ? "Assistant" : "System"}
-                </span>
-                {msg.confidence && (
-                  <span style={{
-                    marginLeft: 'auto',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '12px',
-                    fontSize: '0.8rem',
-                    fontWeight: '500',
-                    background: msg.confidence > 0.8
-                      ? 'rgba(76, 175, 80, 0.3)'
-                      : msg.confidence > 0.5
-                      ? 'rgba(255, 152, 0, 0.3)'
-                      : 'rgba(244, 67, 54, 0.3)',
-                    color: msg.confidence > 0.8
-                      ? '#4caf50'
-                      : msg.confidence > 0.5
-                      ? '#ff9800'
-                      : '#f44336'
-                  }}>
-                    {Math.round(msg.confidence * 100)}%
-                  </span>
-                )}
-              </div>
-              <div style={{ color: '#e0d6ff', lineHeight: 1.6, wordWrap: 'break-word' }}>
-                {msg.text}
-              </div>
-              {msg.sender === "gpt" && (
-                <button
-                  onClick={() => {
-                    if (!window.speechSynthesis) return;
-                    const u = new SpeechSynthesisUtterance(msg.text.replace(/[⚠️❌]/g, ''));
-                    window.speechSynthesis.speak(u);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: '1rem',
-                    right: '1rem',
-                    background: 'transparent',
-                    border: 'none',
-                    fontSize: '1.2rem',
-                    color: '#b199ff',
-                    cursor: 'pointer',
-                    borderRadius: '50%',
-                    padding: '0.5rem'
-                  }}
-                >
-                  🔄
-                </button>
-              )}
-            </motion.div>
-          ))}
-          <div />
-        </AnimatePresence>
-      </motion.div>
-    </motion.div>
-  );
+/** ---------- Get disability-specific welcome message ---------- */
+const getWelcomeMessage = (disability) => {
+  switch (disability?.toLowerCase()) {
+    case "adhd":
+      return "Hi there! 👋 I'm your ADHD-friendly assistant. I'll keep things clear, focused, and bite-sized. What would you like to work on today?";
+    case "autism":
+      return "Hello! 👋 I'm your autism-friendly assistant. I'll be direct, clear, and consistent in my responses. What can I help you with today?";
+    case "dyslexia":
+      return "Hi there! 👋 I'll keep things dyslexia-friendly with clear formatting and simple language. What would you like to work on today?";
+    default:
+      return "Hi there! 👋 I'm here to help you in an accessible way. What would you like to work on today?";
+  }
 };
 
 /** ---------- Text Chat Interface ---------- */
-const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
+const ChatInterface = ({ 
+  onSwitchMode, 
+  fontSize, 
+  highContrast, 
+  assistantTitle,
+  currentDisability = "dyslexia",
+  t = {},
+  language = "en",
+  reducedMotion = false
+}) => {
+  
+  const theme = getDisabilityTheme(currentDisability);
+  
   const [messages, setMessages] = useState([
     {
       sender: "gpt",
-      text: "Hi there! 👋 I’ll keep things dyslexia-friendly. What would you like to work on today?",
+      text: getWelcomeMessage(currentDisability),
       id: Date.now()
     }
   ]);
@@ -537,13 +146,24 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Update welcome message when disability changes
+  useEffect(() => {
+    setMessages([{
+      sender: "gpt",
+      text: getWelcomeMessage(currentDisability),
+      id: Date.now()
+    }]);
+  }, [currentDisability]);
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || isSending) return;
 
     setIsSending(true);
-    await controls.start({ scale: 0.95, transition: { duration: 0.1 } });
-    controls.start({ scale: 1, transition: { type: "spring", stiffness: 300, damping: 15 } });
+    if (!reducedMotion) {
+      await controls.start({ scale: 0.95, transition: { duration: 0.1 } });
+      controls.start({ scale: 1, transition: { type: "spring", stiffness: 300, damping: 15 } });
+    }
 
     const userId = Date.now();
     setMessages(prev => [...prev, { sender: "user", text, id: userId }]);
@@ -553,9 +173,20 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
     setMessages(prev => [...prev, { sender: "gpt", loading: true, id: loadingId }]);
 
     try {
-      const disability = localStorage.getItem("disability") || "dyslexia";
-      const prompt = `You are helping a user with ${disability}. Answer directly and supportively.\n\nUser: ${text}`;
-      const resp = await getAIResponse(prompt);
+      // Create disability-specific prompt
+      const disabilityContext = {
+        dyslexia: "Keep responses clear and well-structured. Use simple language, short paragraphs, and bullet points when helpful. Avoid complex jargon.",
+        adhd: "Keep responses focused and concise. Break information into clear, manageable chunks. Stay on topic and avoid overwhelming details.",
+        autism: "Be direct and literal in responses. Avoid metaphors or ambiguous language. Provide clear, step-by-step information when needed."
+      };
+      
+      const context = disabilityContext[currentDisability.toLowerCase()] || disabilityContext.dyslexia;
+      
+      const prompt = `You are helping a user with ${currentDisability}. ${context}
+
+User: ${text}`;
+      
+      const resp = await getAIResponse(prompt, currentDisability);
       const clean = resp.trim().replace(/[*_#]/g, '');
 
       setMessages(prev =>
@@ -594,26 +225,28 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
         fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif"
       }}
     >
-      <motion.button
-        onClick={onSwitchMode}
-        style={{
-          position: 'absolute',
-          top: '16px',
-          left: '16px',
-          background: 'rgba(255,255,255,0.1)',
-          border: 'none',
-          color: '#fff',
-          fontSize: '0.9rem',
-          cursor: 'pointer',
-          padding: '0.5rem 1rem',
-          borderRadius: '8px',
-          zIndex: 10
-        }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        → Switch to Voice Chat
-      </motion.button>
+      {onSwitchMode && (
+        <motion.button
+          onClick={onSwitchMode}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            left: '16px',
+            background: 'rgba(255,255,255,0.1)',
+            border: 'none',
+            color: '#fff',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            padding: '0.5rem 1rem',
+            borderRadius: '8px',
+            zIndex: 10
+          }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          → Switch to Voice Chat
+        </motion.button>
+      )}
 
       <div
         style={{
@@ -632,8 +265,8 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
           style={{
             padding: '1rem',
             fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #4CAF50, #45a049)',
-            color: '#ffffff',
+            background: theme.headerBg,
+            color: theme.textColor,
             textAlign: 'center',
             fontSize: '1.2rem'
           }}
@@ -641,7 +274,10 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200, damping: 25 }}
         >
-          Dyslexia-Friendly Chat Assistant 💚
+          {assistantTitle} 
+          {currentDisability === 'adhd' && ' 🧠'}
+          {currentDisability === 'autism' && ' 🌈'}
+          {currentDisability === 'dyslexia' && ' 💚'}
         </motion.div>
 
         <div style={{
@@ -661,12 +297,10 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
                   maxWidth: '80%',
                   padding: '1rem 1.5rem',
                   borderRadius: '16px',
-                  background: msg.sender === 'user'
-                    ? 'linear-gradient(135deg, #4CAF50, #45a049)'
-                    : 'linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(69, 160, 73, 0.1))',
-                  color: msg.sender === 'user' ? '#ffffff' : '#e8f5e8',
+                  background: msg.sender === 'user' ? theme.bubbleUserBg : theme.bubbleGptBg,
+                  color: msg.sender === 'user' ? '#ffffff' : theme.textColor,
                   alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                  border: `2px solid ${msg.sender === 'user' ? 'rgba(76, 175, 80, 0.4)' : 'rgba(76, 175, 80, 0.3)'}`,
+                  border: `2px solid ${theme.borderColor}`,
                   lineHeight: 1.8,
                   letterSpacing: '0.05em',
                   wordSpacing: '0.15em',
@@ -688,7 +322,7 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          background: '#4CAF50'
+                          background: theme.primary
                         }}
                         animate={{ scale: [1, 1.5, 1], opacity: [0.4, 1, 0.4] }}
                         transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
@@ -709,7 +343,7 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
           background: 'rgba(0,0,0,0.2)',
           display: 'flex',
           gap: '0.75rem',
-          borderTop: '2px solid rgba(76, 175, 80, 0.3)',
+          borderTop: `2px solid ${theme.borderColor}`,
           direction: 'ltr'
         }}>
           <motion.input
@@ -717,14 +351,14 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
             disabled={isSending}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder="Type your message..."
+            placeholder={`Type your message... (${currentDisability.toUpperCase()} mode)`}
             style={{
               flex: 1,
               padding: '0.75rem 1rem',
               borderRadius: '12px',
-              border: '2px solid rgba(76, 175, 80, 0.4)',
+              border: `2px solid ${theme.inputBorderColor}`,
               background: 'rgba(26, 0, 26, 0.9)',
-              color: '#e8f5e8',
+              color: theme.textColor,
               outline: 'none',
               fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
               fontSize: '1rem',
@@ -734,8 +368,8 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
               direction: 'ltr'
             }}
             whileFocus={{
-              borderColor: '#4CAF50',
-              boxShadow: '0 0 0 3px rgba(76, 175, 80, 0.3)'
+              borderColor: theme.focusBorderColor,
+              boxShadow: `0 0 0 3px ${theme.primary}33`
             }}
           />
           <motion.button
@@ -746,7 +380,7 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
               padding: '0.75rem 1.5rem',
               borderRadius: '12px',
               border: 'none',
-              background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+              background: theme.bubbleUserBg,
               color: '#ffffff',
               cursor: isSending || !input.trim() ? 'not-allowed' : 'pointer',
               opacity: isSending || !input.trim() ? 0.6 : 1,
@@ -765,41 +399,4 @@ const ChatInterface = ({ onSwitchMode, fontSize, highContrast }) => {
   );
 };
 
-/** ---------- Main App ---------- */
-export default function App() {
-  const [mode, setMode] = useState("text");
-  const [fontSize, setFontSize] = useState(1.1);
-  const [highContrast, setHighContrast] = useState(false);
-
-  useEffect(() => {
-    if (!localStorage.getItem("disability")) {
-      localStorage.setItem("disability", "dyslexia");
-    }
-  }, []);
-
-  const switchMode = () => setMode(mode === "text" ? "voice" : "text");
-
-  return (
-    <div style={{
-      height: '100vh',
-      width: '100vw',
-      overflow: 'hidden',
-      fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-      direction: 'ltr'
-    }}>
-      {mode === "text" ? (
-        <ChatInterface
-          onSwitchMode={switchMode}
-          fontSize={fontSize}
-          highContrast={highContrast}
-        />
-      ) : (
-        <VoiceInterface
-          onSwitchMode={switchMode}
-          fontSize={fontSize}
-          highContrast={highContrast}
-        />
-      )}
-    </div>
-  );
-}
+export default ChatInterface;
