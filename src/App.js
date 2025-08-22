@@ -186,12 +186,12 @@ export default function App() {
     setIsLoggedIn(true);
   };
 
-  // Keep sign-out logic for later use; not rendered now
   const handleSignOut = () => {
     closeSession();
     setIsLoggedIn(false);
     setMode("text");
     setView("chat");
+    // Optional: Clear some app state but keep accessibility preferences
   };
 
   /* ===================== RENDER FLOW ===================== */
@@ -219,6 +219,38 @@ export default function App() {
   if (view === "chat") {
     content = (
       <div style={{ position: "relative", height: "100%" }}>
+        {/* Sign Out Button - positioned at top right */}
+        <button
+          onClick={handleSignOut}
+          style={{
+            position: "fixed",
+            top: "1rem",
+            right: "1rem",
+            background: "linear-gradient(135deg, #ff4757, #ff3838)",
+            border: "none",
+            color: "#ffffff",
+            padding: "0.6rem 1.2rem",
+            borderRadius: "12px",
+            cursor: "pointer",
+            fontWeight: "600",
+            fontSize: "0.9rem",
+            zIndex: 1000,
+            boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)",
+            transition: "all 0.3s ease",
+            fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif"
+          }}
+          onMouseOver={(e) => {
+            e.target.style.transform = "translateY(-2px)";
+            e.target.style.boxShadow = "0 8px 25px rgba(255, 71, 87, 0.5)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = "translateY(0)";
+            e.target.style.boxShadow = "0 4px 15px rgba(255, 71, 87, 0.3)";
+          }}
+        >
+          🚪 Sign Out
+        </button>
+
         {mode === "text" ? (
           <ChatInterface
             t={t}
@@ -256,6 +288,28 @@ export default function App() {
   } else if (view === "profile") {
     content = (
       <div className="placeholder" style={{ position: "relative" }}>
+        {/* Sign Out Button in profile view */}
+        <button
+          onClick={handleSignOut}
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            background: "linear-gradient(135deg, #ff4757, #ff3838)",
+            border: "none",
+            color: "#ffffff",
+            padding: "0.6rem 1.2rem",
+            borderRadius: "12px",
+            cursor: "pointer",
+            fontWeight: "600",
+            fontSize: "0.9rem",
+            zIndex: 10,
+            boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)"
+          }}
+        >
+          🚪 Sign Out
+        </button>
+        
         <h2>👤 Profile</h2>
         <p>Current disability preference: <strong>{currentDisability.toUpperCase()}</strong></p>
         <p>Manage your preferences and accessibility settings.</p>
@@ -265,6 +319,28 @@ export default function App() {
   } else {
     content = (
       <div style={{ position: "relative" }}>
+        {/* Sign Out Button in settings view */}
+        <button
+          onClick={handleSignOut}
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            background: "linear-gradient(135deg, #ff4757, #ff3838)",
+            border: "none",
+            color: "#ffffff",
+            padding: "0.6rem 1.2rem",
+            borderRadius: "12px",
+            cursor: "pointer",
+            fontWeight: "600",
+            fontSize: "0.9rem",
+            zIndex: 10,
+            boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)"
+          }}
+        >
+          🚪 Sign Out
+        </button>
+        
         <VoiceSettings
           voices={voices}
           selectedVoice={selectedVoice}
