@@ -284,17 +284,19 @@ User: ${text}`;
           </motion.button>
         )}
 
-        {/* Title in center */}
+        {/* Title in center - PROPERLY CENTERED */}
         <motion.div
           style={{
             position: 'absolute',
             left: '50%',
-            transform: 'translateX(-50%)',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
             textAlign: 'center',
             color: theme.textColor,
             fontWeight: '700',
             fontSize: '1.1rem',
-            letterSpacing: '0.02em'
+            letterSpacing: '0.02em',
+            whiteSpace: 'nowrap'
           }}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

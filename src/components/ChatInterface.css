@@ -78,7 +78,7 @@
   font-family: var(--dyslexic-font);
 }
 
-/* Header with accessibility controls */
+/* Header with accessibility controls - CENTERED TEXT */
 .chat-header {
   padding: var(--space-md);
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -86,11 +86,22 @@
   font-size: var(--fs-lg);
   font-weight: 600;
   border-bottom: 2px solid rgba(76, 175, 80, 0.3);
-  text-align: center;
+  text-align: center; /* CENTER THE ASSISTANT TITLE */
   font-family: var(--dyslexic-font);
   letter-spacing: var(--letter-spacing);
   line-height: var(--line-height);
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* CENTER THE CONTENT */
+}
+
+/* Make sure the title stays centered in the header */
+.chat-header .assistant-title {
+  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .accessibility-controls {
