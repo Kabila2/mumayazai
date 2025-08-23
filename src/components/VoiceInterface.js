@@ -1,15 +1,16 @@
 /* global puter */
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
-import Cookies from "js-cookie";
 import "./VoiceInterface.css";
 
-/* ---------- Import disability utilities ---------- */
+// 🎯 ENHANCED: Import disability utilities
 import { 
   getCurrentDisability, 
   getVoiceAssistantTitle, 
   getDisabilityTheme,
-  getAIPromptContext 
+  createDisabilityAwarePrompt,
+  formatAIResponse,
+  getDisabilityErrorMessage
 } from "../utils/disabilityUtils";
 
 /* ---------- Puter helpers ---------- */
@@ -33,7 +34,10 @@ const aiChat = async (prompt, ms = 20000) => {
 
 const mockAI = (prompt, disability) => {
   const last = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
-  return `⚠️ AI offline (mock). You said: "${last}" (${disability.toUpperCase()} mode active)`;
+  return formatAIResponse(
+    `⚠️ AI offline (mock). You said: "${last}" (${disability.toUpperCase()} mode active)`,
+    disability
+  );
 };
 
 export default function VoiceInterface({
@@ -137,14 +141,15 @@ export default function VoiceInterface({
         { sender: "user", text: text, confidence, id: Date.now() },
       ]);
       try {
-        const promptContext = getAIPromptContext(disability);
-        const prompt = `You are helping a user with ${disability}. ${promptContext} Keep responses concise for voice interaction.\n\nUser: ${text}`;
+        // 🎯 ENHANCED: Use disability-aware prompting for voice mode
+        const prompt = createDisabilityAwarePrompt(text, disability, true); // true = voice mode
         const raw = aiReady ? await aiChat(prompt) : mockAI(prompt, disability);
-        const clean = (raw || "").toString().trim().replace(/[*_#`]/g, "");
-        setMessages((m) => [...m, { sender: "gpt", text: clean, id: Date.now() + 1 }]);
-        speak(clean);
+        const cleanResponse = formatAIResponse(raw, disability);
+        
+        setMessages((m) => [...m, { sender: "gpt", text: cleanResponse, id: Date.now() + 1 }]);
+        speak(cleanResponse);
       } catch (err) {
-        const errorMsg = `⚠️ Connection issue. Please check AI SDK.`;
+        const errorMsg = getDisabilityErrorMessage(disability);
         setMessages((m) => [
           ...m,
           { sender: "gpt", text: errorMsg, id: Date.now() + 1 },
@@ -165,7 +170,14 @@ export default function VoiceInterface({
     }
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Clean text for speech (remove markdown-like formatting)
+    const cleanText = text.replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
+                          .replace(/📋|🎯|✨/g, '') // Remove emojis
+                          .replace(/ADHD-FRIENDLY RESPONSE:|AUTISM-FRIENDLY RESPONSE:|DYSLEXIA-FRIENDLY RESPONSE:/g, '') // Remove prefixes
+                          .trim();
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     const voiceObj = voices.find((v) => v.name === localVoice);
     if (voiceObj) {
       utterance.voice = voiceObj;
@@ -441,7 +453,7 @@ export default function VoiceInterface({
             whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
           >
             <span>{isListening ? "🎤" : "🗣️"}</span>
-            {isListening ? "Listening..." : "Speak Now"}
+            {isListening ? "Listening..." : `Speak Now (${disability.toUpperCase()} mode)`}
           </motion.button>
 
           {isSpeaking && (
@@ -630,7 +642,7 @@ export default function VoiceInterface({
             }}
           >
             <h3 style={{ margin: 0, fontSize: "1.15rem", color: theme.textColor }}>
-              Conversation History ({disability.toUpperCase()} Mode)
+              🎤 Voice History ({disability.toUpperCase()} Mode)
             </h3>
           </div>
 
@@ -650,7 +662,9 @@ export default function VoiceInterface({
                 <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎤</div>
                 <h4 style={{ margin: "0 0 0.5rem 0" }}>Ready to chat!</h4>
                 <p style={{ margin: 0 }}>
-                  Press "Speak Now" to start a conversation in {disability.toUpperCase()} mode
+                  Press "Speak Now" to start a conversation in <strong>{disability.toUpperCase()}</strong> mode.
+                  <br />
+                  <small>Your responses will be optimized for {disability} accessibility.</small>
                 </p>
               </motion.div>
             ) : (
@@ -682,7 +696,7 @@ export default function VoiceInterface({
                     <span style={{ fontSize: "1.1rem" }}>
                       {m.sender === "user" ? "👤" : m.sender === "gpt" ? "🤖" : "⚙️"}
                     </span>
-                    <b>{m.sender === "user" ? "You" : m.sender === "gpt" ? "Assistant" : "System"}</b>
+                    <b>{m.sender === "user" ? "You" : m.sender === "gpt" ? `${disability.toUpperCase()} Assistant` : "System"}</b>
                     {typeof m.confidence === "number" && (
                       <span
                         style={{
@@ -704,7 +718,12 @@ export default function VoiceInterface({
                       </span>
                     )}
                   </div>
-                  <div style={{ lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{m.text}</div>
+                  <div style={{ 
+                    lineHeight: 1.6, 
+                    whiteSpace: "pre-wrap" // 🎯 Allow formatted responses from AI
+                  }}>
+                    {m.text}
+                  </div>
                   {m.sender === "gpt" && (
                     <motion.button
                       onClick={() => speak(m.text.replace(/[⚠️⚌]/g, ""))}
