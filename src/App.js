@@ -219,38 +219,6 @@ export default function App() {
   if (view === "chat") {
     content = (
       <div style={{ position: "relative", height: "100%" }}>
-        {/* Sign Out Button - positioned at top right */}
-        <button
-          onClick={handleSignOut}
-          style={{
-            position: "fixed",
-            top: "1rem",
-            right: "1rem",
-            background: "linear-gradient(135deg, #ff4757, #ff3838)",
-            border: "none",
-            color: "#ffffff",
-            padding: "0.6rem 1.2rem",
-            borderRadius: "12px",
-            cursor: "pointer",
-            fontWeight: "600",
-            fontSize: "0.9rem",
-            zIndex: 1000,
-            boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)",
-            transition: "all 0.3s ease",
-            fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif"
-          }}
-          onMouseOver={(e) => {
-            e.target.style.transform = "translateY(-2px)";
-            e.target.style.boxShadow = "0 8px 25px rgba(255, 71, 87, 0.5)";
-          }}
-          onMouseOut={(e) => {
-            e.target.style.transform = "translateY(0)";
-            e.target.style.boxShadow = "0 4px 15px rgba(255, 71, 87, 0.3)";
-          }}
-        >
-          🚪 Sign Out
-        </button>
-
         {mode === "text" ? (
           <ChatInterface
             t={t}
@@ -261,6 +229,7 @@ export default function App() {
             assistantTitle={assistantTitle}
             currentDisability={currentDisability}
             onSwitchMode={() => setMode("voice")}
+            onSignOut={handleSignOut}
           />
         ) : (
           <VoiceInterface
@@ -281,6 +250,7 @@ export default function App() {
             assistantTitle={assistantTitle}
             currentDisability={currentDisability}
             onSwitchMode={() => setMode("text")}
+            onSignOut={handleSignOut}
           />
         )}
       </div>
