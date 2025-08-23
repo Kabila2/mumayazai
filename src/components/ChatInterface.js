@@ -125,7 +125,8 @@ const ChatInterface = ({
   currentDisability = "dyslexia",
   t = {},
   language = "en",
-  reducedMotion = false
+  reducedMotion = false,
+  onSignOut
 }) => {
   
   const theme = getDisabilityTheme(currentDisability);
@@ -225,28 +226,122 @@ User: ${text}`;
         fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif"
       }}
     >
-      {onSwitchMode && (
-        <motion.button
-          onClick={onSwitchMode}
+      {/* Top Navigation Bar */}
+      <motion.div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '80px',
+          background: 'rgba(26, 0, 26, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: `2px solid ${theme.borderColor}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem',
+          zIndex: 1000
+        }}
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: reducedMotion ? 0 : 0.6, type: "spring", stiffness: 100 }}
+      >
+        {/* Switch to Voice Button */}
+        {onSwitchMode && (
+          <motion.button
+            onClick={onSwitchMode}
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+              border: `2px solid ${theme.borderColor}`,
+              borderRadius: '12px',
+              color: theme.textColor,
+              padding: '0.7rem 1.2rem',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
+              transition: 'all 0.3s ease'
+            }}
+            whileHover={{ 
+              scale: 1.05, 
+              y: -2,
+              background: theme.bubbleUserBg,
+              boxShadow: `0 8px 25px ${theme.primary}30`
+            }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.2 }}
+          >
+            <span>🎤</span>
+            Switch to Voice
+          </motion.button>
+        )}
+
+        {/* Title in center */}
+        <motion.div
           style={{
             position: 'absolute',
-            top: '16px',
-            left: '16px',
-            background: 'rgba(255,255,255,0.1)',
-            border: 'none',
-            color: '#fff',
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            zIndex: 10
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center',
+            color: theme.textColor,
+            fontWeight: '700',
+            fontSize: '1.1rem',
+            letterSpacing: '0.02em'
           }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
-          → Switch to Voice Chat
-        </motion.button>
-      )}
+          {assistantTitle}
+          {currentDisability === 'adhd' && ' 🧠'}
+          {currentDisability === 'autism' && ' 🌈'}
+          {currentDisability === 'dyslexia' && ' 💚'}
+        </motion.div>
+
+        {/* Sign Out Button */}
+        {onSignOut && (
+          <motion.button
+            onClick={onSignOut}
+            style={{
+              background: 'linear-gradient(135deg, #ff4757, #ff3838)',
+              border: 'none',
+              borderRadius: '12px',
+              color: '#ffffff',
+              padding: '0.7rem 1.2rem',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 15px rgba(255, 71, 87, 0.3)',
+              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
+              transition: 'all 0.3s ease'
+            }}
+            whileHover={{ 
+              scale: 1.05, 
+              y: -2,
+              boxShadow: '0 8px 25px rgba(255, 71, 87, 0.5)',
+              background: 'linear-gradient(135deg, #ff3838, #ff2525)'
+            }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.3 }}
+          >
+            <span>🚪</span>
+            Sign Out
+          </motion.button>
+        )}
+      </motion.div>
 
       <div
         style={{
@@ -258,28 +353,10 @@ User: ${text}`;
           flexDirection: 'column',
           background: 'rgba(26, 0, 26, 0.8)',
           backdropFilter: 'blur(15px)',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          paddingTop: '80px' // Account for fixed header
         }}
       >
-        <motion.div
-          style={{
-            padding: '1rem',
-            fontWeight: 'bold',
-            background: theme.headerBg,
-            color: theme.textColor,
-            textAlign: 'center',
-            fontSize: '1.2rem'
-          }}
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 25 }}
-        >
-          {assistantTitle} 
-          {currentDisability === 'adhd' && ' 🧠'}
-          {currentDisability === 'autism' && ' 🌈'}
-          {currentDisability === 'dyslexia' && ' 💚'}
-        </motion.div>
-
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -307,10 +384,19 @@ User: ${text}`;
                   textAlign: 'left',
                   direction: 'ltr'
                 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 200, 
+                  damping: 20,
+                  duration: reducedMotion ? 0.1 : 0.4
+                }}
+                whileHover={!reducedMotion ? { 
+                  y: -2, 
+                  boxShadow: `0 8px 25px ${theme.primary}30` 
+                } : {}}
               >
                 {msg.loading ? (
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -324,8 +410,15 @@ User: ${text}`;
                           borderRadius: '50%',
                           background: theme.primary
                         }}
-                        animate={{ scale: [1, 1.5, 1], opacity: [0.4, 1, 0.4] }}
-                        transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
+                        animate={{ 
+                          scale: reducedMotion ? 1 : [1, 1.5, 1], 
+                          opacity: reducedMotion ? 0.7 : [0.4, 1, 0.4] 
+                        }}
+                        transition={{ 
+                          duration: reducedMotion ? 0 : 1.4, 
+                          repeat: reducedMotion ? 0 : Infinity, 
+                          delay: reducedMotion ? 0 : i * 0.2 
+                        }}
                       />
                     ))}
                   </div>
@@ -338,14 +431,24 @@ User: ${text}`;
           </AnimatePresence>
         </div>
 
-        <div style={{
-          padding: '1rem',
-          background: 'rgba(0,0,0,0.2)',
-          display: 'flex',
-          gap: '0.75rem',
-          borderTop: `2px solid ${theme.borderColor}`,
-          direction: 'ltr'
-        }}>
+        <motion.div 
+          style={{
+            padding: '1rem',
+            background: 'rgba(0,0,0,0.2)',
+            display: 'flex',
+            gap: '0.75rem',
+            borderTop: `2px solid ${theme.borderColor}`,
+            direction: 'ltr'
+          }}
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ 
+            delay: reducedMotion ? 0 : 0.5, 
+            duration: reducedMotion ? 0.1 : 0.6,
+            type: "spring",
+            stiffness: 100
+          }}
+        >
           <motion.input
             value={input}
             disabled={isSending}
@@ -365,11 +468,13 @@ User: ${text}`;
               letterSpacing: '0.05em',
               lineHeight: 1.6,
               textAlign: 'left',
-              direction: 'ltr'
+              direction: 'ltr',
+              transition: 'all 0.3s ease'
             }}
             whileFocus={{
               borderColor: theme.focusBorderColor,
-              boxShadow: `0 0 0 3px ${theme.primary}33`
+              boxShadow: `0 0 0 3px ${theme.primary}33`,
+              scale: !reducedMotion ? 1.01 : 1
             }}
           />
           <motion.button
@@ -386,14 +491,19 @@ User: ${text}`;
               opacity: isSending || !input.trim() ? 0.6 : 1,
               fontWeight: '600',
               fontSize: '1rem',
-              minWidth: '80px'
+              minWidth: '80px',
+              transition: 'all 0.3s ease'
             }}
-            whileHover={!isSending && input.trim() ? { scale: 1.05, y: -3 } : {}}
+            whileHover={!isSending && input.trim() && !reducedMotion ? { 
+              scale: 1.05, 
+              y: -3,
+              boxShadow: `0 8px 25px ${theme.primary}50`
+            } : {}}
             whileTap={!isSending && input.trim() ? { scale: 0.95 } : {}}
           >
             {isSending ? "Sending..." : "Send"}
           </motion.button>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
