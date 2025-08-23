@@ -112,29 +112,139 @@ export const getDisabilityTheme = (disability) => {
 export const getWelcomeMessage = (disability) => {
   switch ((disability || "").toLowerCase()) {
     case "adhd":
-      return "Hi there! 👋 I'm your ADHD-friendly assistant. I'll keep things clear, focused, and bite-sized. What would you like to work on today?";
+      return "Hi! I'm your ADHD-friendly assistant. I'll keep things clear, focused, and bite-sized. What would you like to work on today?";
     case "autism":
-      return "Hello! 👋 I'm your autism-friendly assistant. I'll be direct, clear, and consistent in my responses. What can I help you with today?";
+      return "Hello! I'm your autism-friendly assistant. I'll be direct, clear, and consistent in my responses. What can I help you with today?";
     case "dyslexia":
-      return "Hi there! 👋 I'll keep things dyslexia-friendly with clear formatting and simple language. What would you like to work on today?";
+      return "Hi there! I'll keep things dyslexia-friendly with clear formatting and simple language. What would you like to work on today?";
     default:
-      return "Hi there! 👋 I'm here to help you in an accessible way. What would you like to work on today?";
+      return "Hi there! I'm here to help you in an accessible way. What would you like to work on today?";
   }
 };
 
 /**
- * Get disability-specific AI prompt context
+ * Create disability-specific AI prompt with clear formatting instructions
  */
-export const getAIPromptContext = (disability) => {
+export const createDisabilityAwarePrompt = (userInput, disability, isVoiceMode = false) => {
+  const modeContext = isVoiceMode ? "This is a voice interaction, so keep responses conversational and clear." : "";
+  
   switch ((disability || "").toLowerCase()) {
-    case "dyslexia":
-      return "Keep responses clear and well-structured. Use simple language, short paragraphs, and bullet points when helpful. Avoid complex jargon.";
     case "adhd":
-      return "Keep responses focused and concise. Break information into clear, manageable chunks. Stay on topic and avoid overwhelming details.";
+      return `You are an ADHD-friendly AI assistant. Follow these formatting rules STRICTLY:
+
+IMPORTANT: Start EVERY response with "🧠 ADHD-FRIENDLY RESPONSE:"
+
+Format your response using:
+• Short bullet points for main ideas
+• Maximum 3-4 bullet points per response
+• Each bullet point should be 1-2 sentences maximum
+• Use clear, direct language
+• Avoid overwhelming details
+• Stay focused on ONE main topic
+
+Keep responses concise and well-organized. Break complex information into digestible chunks.
+${modeContext}
+
+User: ${userInput}`;
+
     case "autism":
-      return "Be direct and literal in responses. Avoid metaphors or ambiguous language. Provide clear, step-by-step information when needed.";
+      return `You are an autism-friendly AI assistant. Follow these formatting rules STRICTLY:
+
+IMPORTANT: Start EVERY response with "🌈 AUTISM-FRIENDLY RESPONSE:"
+
+Format your response using:
+• Direct, literal language (avoid metaphors)
+• Clear step-by-step structure when explaining things
+• Be specific and precise
+• Use consistent formatting
+• Avoid ambiguous phrases
+• Provide concrete examples when helpful
+
+Be straightforward and predictable in your communication style.
+${modeContext}
+
+User: ${userInput}`;
+
+    case "dyslexia":
     default:
-      return "Keep responses clear and accessible. Use simple language and well-structured formatting.";
+      return `You are a dyslexia-friendly AI assistant. Follow these formatting rules STRICTLY:
+
+IMPORTANT: Start EVERY response with "💚 DYSLEXIA-FRIENDLY RESPONSE:"
+
+Format your response using:
+• Simple, clear language
+• Short paragraphs (2-3 sentences max)
+• Use bullet points for lists
+• Avoid complex sentence structures
+• Use common words instead of jargon
+• Good spacing between ideas
+
+Keep text readable with clear structure and simple vocabulary.
+${modeContext}
+
+User: ${userInput}`;
+  }
+};
+
+/**
+ * Format AI response to ensure disability-specific formatting
+ */
+export const formatAIResponse = (response, disability) => {
+  if (!response) return response;
+  
+  const cleanResponse = response.trim();
+  const disabilityPrefix = getDisabilityPrefix(disability);
+  
+  // If response doesn't start with the disability prefix, add it
+  if (!cleanResponse.startsWith(disabilityPrefix.split(':')[0])) {
+    return `${disabilityPrefix}\n\n${cleanResponse}`;
+  }
+  
+  return cleanResponse;
+};
+
+/**
+ * Get disability-specific prefix for responses
+ */
+const getDisabilityPrefix = (disability) => {
+  switch ((disability || "").toLowerCase()) {
+    case "adhd":
+      return "🧠 ADHD-FRIENDLY RESPONSE:";
+    case "autism":
+      return "🌈 AUTISM-FRIENDLY RESPONSE:";
+    case "dyslexia":
+    default:
+      return "💚 DYSLEXIA-FRIENDLY RESPONSE:";
+  }
+};
+
+/**
+ * Get disability-specific error message
+ */
+export const getDisabilityErrorMessage = (disability) => {
+  const prefix = getDisabilityPrefix(disability);
+  
+  switch ((disability || "").toLowerCase()) {
+    case "adhd":
+      return `${prefix}
+
+• Connection issue - trying to reconnect
+• Please wait a moment and try again
+• Your question was received successfully`;
+    case "autism":
+      return `${prefix}
+
+I'm having a technical problem right now. Here's what happened:
+1. Your message was received
+2. The AI connection is temporarily down  
+3. Please try asking your question again in a moment`;
+    case "dyslexia":
+    default:
+      return `${prefix}
+
+Sorry, I'm having trouble connecting right now. 
+
+Please try again in a few seconds. Your message was received okay.`;
   }
 };
 

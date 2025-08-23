@@ -1,6 +1,14 @@
 /* global puter */
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { 
+  getCurrentDisability, 
+  getDisabilityTheme,
+  getWelcomeMessage,
+  createDisabilityAwarePrompt,
+  formatAIResponse,
+  getDisabilityErrorMessage
+} from "../utils/disabilityUtils";
 
 /** ---------- Shared AI helpers ---------- */
 const hasPuter = () =>
@@ -38,81 +46,22 @@ const aiChat = async (prompt, ms = 20000) => {
 /** graceful fallback so UI still works offline */
 const mockAI = (prompt, disability) => {
   const lastUser = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
-  return (
-    `⚠️ AI offline (mock mode).\n` +
-    `• I received: "${lastUser}"\n` +
-    `• This is ${disability.toUpperCase()}-friendly mode\n` +
-    `• Tip: ensure the Puter SDK script is loaded before your app.\n` +
-    `• Dev: open console for details.`
+  return formatAIResponse(
+    `Connection offline (demo mode). You said: "${lastUser}" - This would normally get a ${disability.toUpperCase()}-optimized response.`,
+    disability
   );
 };
 
 const getAIResponse = async (prompt, disability) => {
-  // 👇 Wait up to 3s for the SDK before falling back to mock
+  // Wait up to 3s for the SDK before falling back to mock
   const ready = await waitForPuter(3000);
   if (!ready) return mockAI(prompt, disability);
   try {
-    return await aiChat(prompt, 20000);
+    const rawResponse = await aiChat(prompt, 20000);
+    return formatAIResponse(rawResponse, disability);
   } catch (err) {
     console.warn("[ChatInterface] AI error:", err);
-    return mockAI(prompt, disability);
-  }
-};
-
-/** ---------- Disability-specific themes ---------- */
-const getDisabilityTheme = (disability) => {
-  switch (disability?.toLowerCase()) {
-    case "adhd":
-      return {
-        headerBg: "linear-gradient(135deg, #FF6F00, #FF8F00)",
-        primary: "#FF8F00",
-        accentColor: "#FF6F00",
-        textColor: "#ffffff",
-        bubbleUserBg: "linear-gradient(135deg, #FF6F00, #FF8F00)",
-        bubbleGptBg: "linear-gradient(135deg, rgba(255, 143, 0, 0.15), rgba(255, 111, 0, 0.1))",
-        borderColor: "rgba(255, 143, 0, 0.4)",
-        inputBorderColor: "rgba(255, 143, 0, 0.4)",
-        focusBorderColor: "#FF8F00"
-      };
-    case "autism":
-      return {
-        headerBg: "linear-gradient(135deg, #26A69A, #00796B)",
-        primary: "#26A69A",
-        accentColor: "#26A69A",
-        textColor: "#E0F2F1",
-        bubbleUserBg: "linear-gradient(135deg, #26A69A, #00796B)",
-        bubbleGptBg: "linear-gradient(135deg, rgba(38, 166, 154, 0.15), rgba(0, 121, 107, 0.1))",
-        borderColor: "rgba(38, 166, 154, 0.4)",
-        inputBorderColor: "rgba(38, 166, 154, 0.4)",
-        focusBorderColor: "#26A69A"
-      };
-    case "dyslexia":
-    default:
-      return {
-        headerBg: "linear-gradient(135deg, #4CAF50, #45a049)",
-        primary: "#4CAF50",
-        accentColor: "#4CAF50",
-        textColor: "#e8f5e8",
-        bubbleUserBg: "linear-gradient(135deg, #4CAF50, #45a049)",
-        bubbleGptBg: "linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(69, 160, 73, 0.1))",
-        borderColor: "rgba(76, 175, 80, 0.4)",
-        inputBorderColor: "rgba(76, 175, 80, 0.4)",
-        focusBorderColor: "#4CAF50"
-      };
-  }
-};
-
-/** ---------- Get disability-specific welcome message ---------- */
-const getWelcomeMessage = (disability) => {
-  switch (disability?.toLowerCase()) {
-    case "adhd":
-      return "Hi there! 👋 I'm your ADHD-friendly assistant. I'll keep things clear, focused, and bite-sized. What would you like to work on today?";
-    case "autism":
-      return "Hello! 👋 I'm your autism-friendly assistant. I'll be direct, clear, and consistent in my responses. What can I help you with today?";
-    case "dyslexia":
-      return "Hi there! 👋 I'll keep things dyslexia-friendly with clear formatting and simple language. What would you like to work on today?";
-    default:
-      return "Hi there! 👋 I'm here to help you in an accessible way. What would you like to work on today?";
+    return getDisabilityErrorMessage(disability);
   }
 };
 
@@ -174,36 +123,21 @@ const ChatInterface = ({
     setMessages(prev => [...prev, { sender: "gpt", loading: true, id: loadingId }]);
 
     try {
-      // Create disability-specific prompt
-      const disabilityContext = {
-        dyslexia: "Keep responses clear and well-structured. Use simple language, short paragraphs, and bullet points when helpful. Avoid complex jargon.",
-        adhd: "Keep responses focused and concise. Break information into clear, manageable chunks. Stay on topic and avoid overwhelming details.",
-        autism: "Be direct and literal in responses. Avoid metaphors or ambiguous language. Provide clear, step-by-step information when needed."
-      };
-      
-      const context = disabilityContext[currentDisability.toLowerCase()] || disabilityContext.dyslexia;
-      
-      const prompt = `You are helping a user with ${currentDisability}. ${context}
-
-User: ${text}`;
+      // Create disability-specific prompt using the enhanced utility
+      const prompt = createDisabilityAwarePrompt(text, currentDisability, false);
       
       const resp = await getAIResponse(prompt, currentDisability);
-      const clean = resp.trim().replace(/[*_#]/g, '');
 
       setMessages(prev =>
         prev.map(m =>
-          m.id === loadingId ? { sender: "gpt", text: clean, id: loadingId } : m
+          m.id === loadingId ? { sender: "gpt", text: resp, id: loadingId } : m
         )
       );
     } catch (err) {
-      const msg = err?.message || String(err);
-      const helpful = hasPuter()
-        ? "Network/API issue."
-        : "Puter SDK not detected. Load https://sdk.puter.com/v1/sdk.js before your app.";
-      const fallback = `⚠️ Connection error: ${msg}\n${helpful}`;
+      const errorMsg = getDisabilityErrorMessage(currentDisability);
       setMessages(prev =>
         prev.map(m =>
-          m.id === loadingId ? { sender: "gpt", text: fallback, id: loadingId } : m
+          m.id === loadingId ? { sender: "gpt", text: errorMsg, id: loadingId } : m
         )
       );
       console.warn("[ChatInterface] AI error:", err);
@@ -384,7 +318,8 @@ User: ${text}`;
                   letterSpacing: '0.05em',
                   wordSpacing: '0.15em',
                   textAlign: 'left',
-                  direction: 'ltr'
+                  direction: 'ltr',
+                  whiteSpace: 'pre-wrap' // Important for preserving formatting
                 }}
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
