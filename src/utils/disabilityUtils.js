@@ -112,40 +112,51 @@ export const getDisabilityTheme = (disability) => {
 export const getWelcomeMessage = (disability) => {
   switch ((disability || "").toLowerCase()) {
     case "adhd":
-      return "Hi! I'm your ADHD-friendly assistant. I'll keep things clear, focused, and bite-sized. What would you like to work on today?";
+      return "🧠 ADHD-FRIENDLY RESPONSE:\n\n• Hi! I'm your ADHD-friendly assistant\n• I'll keep responses in short bullet points\n• Each point focuses on one clear idea\n• Ready to help you stay organized and focused\n\nWhat would you like to work on today?";
     case "autism":
-      return "Hello! I'm your autism-friendly assistant. I'll be direct, clear, and consistent in my responses. What can I help you with today?";
+      return "🌈 AUTISM-FRIENDLY RESPONSE:\n\nHello! I'm your autism-friendly assistant.\n\nI will provide:\n1. Direct, clear communication\n2. Consistent response patterns\n3. Specific, literal information\n4. Step-by-step guidance when needed\n\nWhat can I help you with today?";
     case "dyslexia":
-      return "Hi there! I'll keep things dyslexia-friendly with clear formatting and simple language. What would you like to work on today?";
+      return "💚 DYSLEXIA-FRIENDLY RESPONSE:\n\nHi there! I'm your dyslexia-friendly assistant.\n\nI will help with:\n• Clear, simple language\n• Well-spaced text\n• Easy-to-read format\n• Short sentences\n\nWhat would you like to work on today?";
     default:
       return "Hi there! I'm here to help you in an accessible way. What would you like to work on today?";
   }
 };
 
 /**
- * Create disability-specific AI prompt with clear formatting instructions
+ * Enhanced disability-aware prompt creation with stronger ADHD bullet point enforcement
  */
 export const createDisabilityAwarePrompt = (userInput, disability, isVoiceMode = false) => {
-  const modeContext = isVoiceMode ? "This is a voice interaction, so keep responses conversational and clear." : "";
+  const modeContext = isVoiceMode ? 
+    "This is a voice interaction, so keep responses conversational and clear for audio." : 
+    "This is a text chat interaction.";
   
   switch ((disability || "").toLowerCase()) {
     case "adhd":
-      return `You are an ADHD-friendly AI assistant. Follow these formatting rules STRICTLY:
+      return `You are an ADHD-friendly AI assistant. This is CRITICAL: You MUST follow these formatting rules with NO EXCEPTIONS:
 
-IMPORTANT: Start EVERY response with "🧠 ADHD-FRIENDLY RESPONSE:"
+🎯 MANDATORY RESPONSE FORMAT:
+1. ALWAYS start with "🧠 ADHD-FRIENDLY RESPONSE:" as the first line
+2. Leave ONE blank line after the header
+3. Use ONLY bullet points (•) for ALL content - NO paragraphs, NO sentences outside bullets
+4. Maximum 4 bullet points per response
+5. Each bullet point must be 15 words or less
+6. Each bullet addresses ONE clear idea only
+7. Use simple, direct language
+8. NO complex explanations - break them into separate bullets
 
-Format your response using:
-• Short bullet points for main ideas
-• Maximum 3-4 bullet points per response
-• Each bullet point should be 1-2 sentences maximum
-• Use clear, direct language
-• Avoid overwhelming details
-• Stay focused on ONE main topic
+EXAMPLE FORMAT:
+🧠 ADHD-FRIENDLY RESPONSE:
 
-Keep responses concise and well-organized. Break complex information into digestible chunks.
+• First key point in simple words
+• Second important detail briefly explained  
+• Third actionable step or information
+• Final summary or next step
+
 ${modeContext}
 
-User: ${userInput}`;
+CRITICAL: If you provide ANY text that is not in bullet point format, you have failed. Every piece of information must be a bullet point.
+
+User question: ${userInput}`;
 
     case "autism":
       return `You are an autism-friendly AI assistant. Follow these formatting rules STRICTLY:
@@ -153,14 +164,16 @@ User: ${userInput}`;
 IMPORTANT: Start EVERY response with "🌈 AUTISM-FRIENDLY RESPONSE:"
 
 Format your response using:
-• Direct, literal language (avoid metaphors)
-• Clear step-by-step structure when explaining things
-• Be specific and precise
-• Use consistent formatting
-• Avoid ambiguous phrases
+• Direct, literal language (avoid metaphors and idioms)
+• Clear step-by-step structure when explaining processes
+• Specific and precise information
+• Consistent formatting throughout
+• Numbered lists for sequences or procedures
+• Avoid ambiguous phrases like "might," "could," "perhaps"
 • Provide concrete examples when helpful
+• Use the same sentence structure patterns
 
-Be straightforward and predictable in your communication style.
+Be straightforward, predictable, and consistent in your communication style.
 ${modeContext}
 
 User: ${userInput}`;
@@ -172,12 +185,14 @@ User: ${userInput}`;
 IMPORTANT: Start EVERY response with "💚 DYSLEXIA-FRIENDLY RESPONSE:"
 
 Format your response using:
-• Simple, clear language
-• Short paragraphs (2-3 sentences max)
-• Use bullet points for lists
+• Simple, clear language with common words
+• Short paragraphs (maximum 2-3 sentences each)
+• Use bullet points for lists and key information
 • Avoid complex sentence structures
-• Use common words instead of jargon
-• Good spacing between ideas
+• Use active voice instead of passive voice
+• Break long explanations into smaller chunks
+• Good spacing between ideas (use line breaks)
+• Consistent formatting throughout
 
 Keep text readable with clear structure and simple vocabulary.
 ${modeContext}
@@ -187,7 +202,7 @@ User: ${userInput}`;
 };
 
 /**
- * Format AI response to ensure disability-specific formatting
+ * Enhanced response formatting with strict ADHD bullet point enforcement
  */
 export const formatAIResponse = (response, disability) => {
   if (!response) return response;
@@ -195,12 +210,99 @@ export const formatAIResponse = (response, disability) => {
   const cleanResponse = response.trim();
   const disabilityPrefix = getDisabilityPrefix(disability);
   
+  // Special handling for ADHD responses
+  if ((disability || "").toLowerCase() === "adhd") {
+    return enforceADHDBulletPoints(cleanResponse, disabilityPrefix);
+  }
+  
   // If response doesn't start with the disability prefix, add it
   if (!cleanResponse.startsWith(disabilityPrefix.split(':')[0])) {
     return `${disabilityPrefix}\n\n${cleanResponse}`;
   }
   
   return cleanResponse;
+};
+
+/**
+ * Enforce ADHD bullet point formatting - convert any non-bullet content to bullets
+ */
+const enforceADHDBulletPoints = (response, prefix) => {
+  // If response already starts with ADHD prefix, extract the content part
+  let content = response;
+  if (response.includes("ADHD-FRIENDLY RESPONSE:")) {
+    const parts = response.split("ADHD-FRIENDLY RESPONSE:");
+    content = parts.length > 1 ? parts[1].trim() : response;
+  }
+  
+  // Split content into lines and process each one
+  const lines = content.split('\n').filter(line => line.trim());
+  const bulletPoints = [];
+  
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    
+    // Skip if it's already a proper bullet point
+    if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+      // Ensure it uses the standard bullet symbol
+      const cleanBullet = line.replace(/^[-*]\s*/, '• ');
+      bulletPoints.push(cleanBullet);
+      continue;
+    }
+    
+    // Convert numbered lists to bullets
+    if (/^\d+\.?\s+/.test(line)) {
+      const cleanBullet = '• ' + line.replace(/^\d+\.?\s+/, '');
+      bulletPoints.push(cleanBullet);
+      continue;
+    }
+    
+    // Convert regular text to bullet points
+    // Split long sentences at logical break points
+    const sentences = line.split(/[.!?]+/).filter(s => s.trim());
+    
+    for (let sentence of sentences) {
+      sentence = sentence.trim();
+      if (!sentence) continue;
+      
+      // If sentence is too long (>15 words), try to split it
+      const words = sentence.split(' ');
+      if (words.length > 15) {
+        // Split at conjunctions or commas
+        const splitPoints = [', ', ' and ', ' but ', ' or ', ' so ', ' because ', ' when ', ' if '];
+        let split = false;
+        
+        for (let splitPoint of splitPoints) {
+          if (sentence.includes(splitPoint)) {
+            const parts = sentence.split(splitPoint);
+            if (parts.length === 2 && parts[0].split(' ').length <= 15) {
+              bulletPoints.push('• ' + parts[0].trim());
+              bulletPoints.push('• ' + parts[1].trim());
+              split = true;
+              break;
+            }
+          }
+        }
+        
+        if (!split) {
+          // If we can't split nicely, just use the first 15 words
+          bulletPoints.push('• ' + words.slice(0, 15).join(' ') + '...');
+        }
+      } else {
+        bulletPoints.push('• ' + sentence);
+      }
+    }
+  }
+  
+  // Limit to maximum 4 bullet points for ADHD
+  const limitedBullets = bulletPoints.slice(0, 4);
+  
+  // Ensure we have at least one bullet point
+  if (limitedBullets.length === 0) {
+    limitedBullets.push('• Got your message - let me help with that');
+  }
+  
+  return `${prefix}\n\n${limitedBullets.join('\n')}`;
 };
 
 /**
@@ -219,7 +321,7 @@ const getDisabilityPrefix = (disability) => {
 };
 
 /**
- * Get disability-specific error message
+ * Enhanced disability-specific error messages with proper formatting
  */
 export const getDisabilityErrorMessage = (disability) => {
   const prefix = getDisabilityPrefix(disability);
@@ -229,22 +331,30 @@ export const getDisabilityErrorMessage = (disability) => {
       return `${prefix}
 
 • Connection issue - trying to reconnect
+• Your message was received successfully  
 • Please wait a moment and try again
-• Your question was received successfully`;
+• System will restore shortly`;
+
     case "autism":
       return `${prefix}
 
-I'm having a technical problem right now. Here's what happened:
-1. Your message was received
-2. The AI connection is temporarily down  
-3. Please try asking your question again in a moment`;
+I'm experiencing a technical problem right now. Here's the status:
+
+1. Your message was received and processed
+2. The AI connection is temporarily unavailable
+3. This is a temporary technical issue
+4. Please try asking your question again in a moment
+5. The system should restore normal function shortly`;
+
     case "dyslexia":
     default:
       return `${prefix}
 
-Sorry, I'm having trouble connecting right now. 
+Sorry, I'm having trouble connecting right now.
 
-Please try again in a few seconds. Your message was received okay.`;
+Your message was received okay. This is just a temporary problem.
+
+Please try again in a few seconds. The system should work normally again soon.`;
   }
 };
 
@@ -274,26 +384,108 @@ export const getDisabilityUISettings = (disability) => {
         reducedAnimations: true,
         focusMode: true,
         highlightInteractives: true,
-        preferLargerButtons: true
+        preferLargerButtons: true,
+        enforceStructuredContent: true,
+        limitInformationDensity: true
       };
     case "autism":
       return {
         consistentLayout: true,
         predictableAnimations: true,
         clearHierarchy: true,
-        reducedSensoryLoad: true
+        reducedSensoryLoad: true,
+        maintainStructure: true,
+        avoidUnexpectedChanges: true
       };
     case "dyslexia":
       return {
         enhancedReadability: true,
         increasedSpacing: true,
         dyslexicFriendlyFonts: true,
-        colorCodedElements: false
+        colorCodedElements: false,
+        improvedLineSpacing: true,
+        clearFontChoices: true
       };
     default:
       return {
         enhancedReadability: true,
         increasedSpacing: true
+      };
+  }
+};
+
+/**
+ * Validate ADHD response format - check if response follows bullet point rules
+ */
+export const validateADHDResponse = (response) => {
+  if (!response || typeof response !== 'string') return false;
+  
+  // Check if it starts with the ADHD prefix
+  if (!response.includes("🧠 ADHD-FRIENDLY RESPONSE:")) return false;
+  
+  // Extract content after prefix
+  const parts = response.split("🧠 ADHD-FRIENDLY RESPONSE:");
+  if (parts.length < 2) return false;
+  
+  const content = parts[1].trim();
+  const lines = content.split('\n').filter(line => line.trim());
+  
+  // Check that all non-empty lines are bullet points
+  let bulletCount = 0;
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    
+    // Must start with bullet symbol
+    if (!line.startsWith('•')) return false;
+    
+    bulletCount++;
+    
+    // Check word count (should be 15 words or less)
+    const words = line.replace('•', '').trim().split(' ');
+    if (words.length > 15) return false;
+  }
+  
+  // Should have 1-4 bullet points
+  return bulletCount >= 1 && bulletCount <= 4;
+};
+
+/**
+ * Get speaking instructions for voice mode based on disability
+ */
+export const getVoiceSpeakingInstructions = (disability) => {
+  switch ((disability || "").toLowerCase()) {
+    case "adhd":
+      return {
+        rate: 1.1, // Slightly faster for energy
+        pitch: 1.0,
+        volume: 0.9,
+        pauseBetweenBullets: 800, // Longer pauses between bullet points
+        emphasizeStructure: true,
+        announceFormat: true // Announce "First point", "Second point", etc.
+      };
+    case "autism":
+      return {
+        rate: 0.95, // Slightly slower for clarity
+        pitch: 1.0,
+        volume: 0.9,
+        consistent: true, // Very consistent delivery
+        clearEnunciation: true,
+        predictablePacing: true
+      };
+    case "dyslexia":
+      return {
+        rate: 0.85, // Slower for processing
+        pitch: 1.0,
+        volume: 0.9,
+        clearPronunciation: true,
+        pauseBetweenSentences: 600
+      };
+    default:
+      return {
+        rate: 1.0,
+        pitch: 1.0,
+        volume: 0.9
       };
   }
 };
