@@ -3,41 +3,127 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import "./VoiceInterface.css";
 
-// 🎯 ENHANCED: Import disability utilities
+// Enhanced: Import disability utilities
 import { 
   getCurrentDisability, 
   getVoiceAssistantTitle, 
   getDisabilityTheme,
   createDisabilityAwarePrompt,
   formatAIResponse,
-  getDisabilityErrorMessage
+  getDisabilityErrorMessage,
+  getWelcomeMessage
 } from "../utils/disabilityUtils";
 
-/* ---------- Puter helpers ---------- */
+/* ---------- Enhanced Puter helpers ---------- */
 const hasPuter = () =>
   typeof window !== "undefined" &&
   window.puter &&
   window.puter.ai &&
   typeof window.puter.ai.chat === "function";
 
+const waitForPuter = (timeoutMs = 3000) =>
+  new Promise((resolve) => {
+    if (hasPuter()) return resolve(true);
+    const t0 = Date.now();
+    const id = setInterval(() => {
+      if (hasPuter() || Date.now() - t0 > timeoutMs) {
+        clearInterval(id);
+        resolve(hasPuter());
+      }
+    }, 100);
+  });
+
 const aiChat = async (prompt, ms = 20000) => {
   if (!hasPuter()) throw new Error("Puter AI not available");
+  
+  console.log("🎯 [Voice] Sending disability-aware prompt to AI:", prompt.substring(0, 200) + "...");
+  
   const timeout = new Promise((_, rej) =>
     setTimeout(() => rej(new Error("AI request timed out")), ms)
   );
+  
   const req = (async () => {
     const resp = await window.puter.ai.chat(prompt);
-    return typeof resp === "string" ? resp : resp?.message?.content ?? "";
+    const responseText = typeof resp === "string" ? resp : resp?.message?.content ?? "";
+    console.log("🤖 [Voice] Raw AI response:", responseText.substring(0, 200) + "...");
+    return responseText;
   })();
+  
   return Promise.race([req, timeout]);
 };
 
+/** Enhanced mock AI for voice mode with disability-specific responses */
 const mockAI = (prompt, disability) => {
-  const last = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
-  return formatAIResponse(
-    `⚠️ AI offline (mock). You said: "${last}" (${disability.toUpperCase()} mode active)`,
-    disability
-  );
+  const userInput = (prompt.split("User:").pop() || "").trim();
+  
+  // Generate disability-specific mock responses optimized for voice
+  switch (disability.toLowerCase()) {
+    case "adhd":
+      return `🧠 ADHD-FRIENDLY RESPONSE:
+
+Voice mode is offline right now, but here's how I'd help you:
+
+• Short, focused responses
+• Key points only
+• No overwhelming details
+• Clear next steps
+
+You said: "${userInput}"
+
+I'd break this down into simple chunks for easy listening.`;
+
+    case "autism":
+      return `🌈 AUTISM-FRIENDLY RESPONSE:
+
+Voice system status: Currently in demo mode.
+
+Your input was: "${userInput}"
+
+My response pattern for autism support:
+1. Direct, clear language
+2. Specific information
+3. Consistent voice tone
+4. No figurative language
+5. Predictable structure
+
+This ensures reliable communication.`;
+
+    case "dyslexia":
+    default:
+      return `💚 DYSLEXIA-FRIENDLY RESPONSE:
+
+You said: "${userInput}"
+
+Voice mode is in demo right now.
+
+I would speak clearly and slowly for you:
+• Simple words
+• Short sentences  
+• Good pace
+• Clear pronunciation
+
+This helps with audio processing.`;
+  }
+};
+
+/** Enhanced AI response handler for voice mode */
+const getAIResponse = async (prompt, disability) => {
+  const ready = await waitForPuter(3000);
+  
+  if (!ready) {
+    console.log("🔄 [Voice] Using mock AI response for disability:", disability);
+    return mockAI(prompt, disability);
+  }
+  
+  try {
+    const rawResponse = await aiChat(prompt, 20000);
+    const formattedResponse = formatAIResponse(rawResponse, disability);
+    console.log("✅ [Voice] Formatted response for", disability, ":", formattedResponse.substring(0, 100) + "...");
+    return formattedResponse;
+  } catch (err) {
+    console.warn("[VoiceInterface] AI error:", err);
+    return getDisabilityErrorMessage(disability);
+  }
 };
 
 export default function VoiceInterface({
@@ -64,8 +150,16 @@ export default function VoiceInterface({
   const theme = getDisabilityTheme(disability);
   const assistantTitle = getVoiceAssistantTitle(disability);
 
+  console.log("🎯 [Voice] VoiceInterface initialized with disability:", disability);
+
   /* ---------- State ---------- */
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    {
+      sender: "gpt",
+      text: getWelcomeMessage(disability) + "\n\nSpeak whenever you're ready!",
+      id: Date.now()
+    }
+  ]);
   const [isListening, setListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState(extVoices || []);
@@ -112,6 +206,16 @@ export default function VoiceInterface({
     }
   }, [messages]);
 
+  // Update welcome message when disability changes
+  useEffect(() => {
+    console.log("🔄 [Voice] Disability changed to:", disability);
+    setMessages([{
+      sender: "gpt",
+      text: getWelcomeMessage(disability) + "\n\nSpeak whenever you're ready!",
+      id: Date.now()
+    }]);
+  }, [disability]);
+
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
@@ -124,45 +228,79 @@ export default function VoiceInterface({
     recog.onstart = () => {
       setListening(true);
       if (navigator.vibrate) navigator.vibrate(80);
+      console.log("🎤 [Voice] Started listening for", disability, "mode");
     };
-    recog.onend = () => setListening(false);
+    
+    recog.onend = () => {
+      setListening(false);
+      console.log("🔇 [Voice] Stopped listening");
+    };
+    
     recog.onerror = (event) => {
       setListening(false);
+      const errorMsg = `⚠️ Speech recognition error: ${event.error}`;
       setMessages((m) => [
         ...m,
-        { sender: "system", text: `⚠️ Speech recognition error: ${event.error}`, id: Date.now() },
+        { sender: "system", text: errorMsg, id: Date.now() },
       ]);
+      console.error("[Voice] Speech recognition error:", event.error);
     };
+    
     recog.onresult = async (e) => {
       const text = e.results[0][0].transcript;
       const confidence = e.results[0][0].confidence;
+      
+      console.log("📤 [Voice] User said:", text, "with confidence:", confidence);
+      console.log("🎯 [Voice] Processing for disability:", disability);
+      
       setMessages((m) => [
         ...m,
         { sender: "user", text: text, confidence, id: Date.now() },
       ]);
+      
+      // Add loading message
+      const loadingId = Date.now() + 1;
+      setMessages((m) => [...m, { sender: "gpt", text: `Processing your request in ${disability.toUpperCase()} mode...`, loading: true, id: loadingId }]);
+      
       try {
-        // 🎯 ENHANCED: Use disability-aware prompting for voice mode
-        const prompt = createDisabilityAwarePrompt(text, disability, true); // true = voice mode
-        const raw = aiReady ? await aiChat(prompt) : mockAI(prompt, disability);
-        const cleanResponse = formatAIResponse(raw, disability);
+        // Enhanced: Use disability-aware prompting for voice mode
+        const enhancedPrompt = createDisabilityAwarePrompt(text, disability, true); // true = voice mode
         
-        setMessages((m) => [...m, { sender: "gpt", text: cleanResponse, id: Date.now() + 1 }]);
-        speak(cleanResponse);
+        console.log("🎯 [Voice] Enhanced prompt created for", disability);
+        console.log("📝 [Voice] Prompt preview:", enhancedPrompt.substring(0, 300) + "...");
+
+        const raw = await getAIResponse(enhancedPrompt, disability);
+        
+        setMessages((m) => 
+          m.map(msg => 
+            msg.id === loadingId ? { sender: "gpt", text: raw, id: loadingId } : msg
+          )
+        );
+        
+        console.log("✅ [Voice] Response displayed for", disability);
+        
+        // Speak the response
+        speak(raw);
+        
       } catch (err) {
         const errorMsg = getDisabilityErrorMessage(disability);
-        setMessages((m) => [
-          ...m,
-          { sender: "gpt", text: errorMsg, id: Date.now() + 1 },
-        ]);
+        setMessages((m) => 
+          m.map(msg => 
+            msg.id === loadingId ? { sender: "gpt", text: errorMsg, id: loadingId } : msg
+          )
+        );
         speak("I'm having trouble connecting to the AI right now.");
+        console.error("[VoiceInterface] AI error:", err);
       }
     };
 
     recognitionRef.current = recog;
   }, [language, aiReady, disability]);
 
-  /* ---------- Speech ---------- */
+  /* ---------- Enhanced Speech Function ---------- */
   const speak = (text) => {
+    console.log("🔊 [Voice] Speaking response for", disability, "mode");
+    
     // Prefer external speak if passed from App
     if (typeof extSpeak === "function") {
       extSpeak(text);
@@ -171,11 +309,32 @@ export default function VoiceInterface({
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     
-    // Clean text for speech (remove markdown-like formatting)
-    const cleanText = text.replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
-                          .replace(/📋|🎯|✨/g, '') // Remove emojis
-                          .replace(/ADHD-FRIENDLY RESPONSE:|AUTISM-FRIENDLY RESPONSE:|DYSLEXIA-FRIENDLY RESPONSE:/g, '') // Remove prefixes
-                          .trim();
+    // Enhanced text cleaning for disability-specific responses
+    let cleanText = text
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
+      .replace(/[🔋🎯✨🧠🌈💚⚠️⚙️]/g, '') // Remove emojis
+      .replace(/(ADHD-FRIENDLY RESPONSE:|AUTISM-FRIENDLY RESPONSE:|DYSLEXIA-FRIENDLY RESPONSE:)/g, '') // Remove prefixes
+      .replace(/•/g, '') // Remove bullet points for speech
+      .replace(/\n+/g, '. ') // Replace line breaks with pauses
+      .trim();
+    
+    // Disability-specific speech adjustments
+    switch (disability.toLowerCase()) {
+      case "adhd":
+        // Slightly faster, more energetic delivery
+        localSpeed = Math.max(localSpeed, 1.1);
+        cleanText = cleanText.replace(/\.\s+/g, '. '); // Ensure pauses between points
+        break;
+      case "autism":
+        // Clear, consistent delivery
+        localSpeed = Math.min(localSpeed, 1.0); // Not too fast
+        cleanText = cleanText.replace(/(\d+\.)/g, 'Step $1'); // Make numbered lists clearer
+        break;
+      case "dyslexia":
+        // Slower, clearer pronunciation
+        localSpeed = Math.min(localSpeed, 0.9);
+        break;
+    }
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
     const voiceObj = voices.find((v) => v.name === localVoice);
@@ -188,9 +347,18 @@ export default function VoiceInterface({
     utterance.rate = localSpeed;
     utterance.pitch = localPitch;
     utterance.volume = 0.92;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      console.log("🗣️ [Voice] Started speaking");
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      console.log("🔇 [Voice] Finished speaking");
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      console.error("[Voice] Speech synthesis error");
+    };
     window.speechSynthesis.speak(utterance);
   };
 
@@ -213,7 +381,13 @@ export default function VoiceInterface({
     recognitionRef.current.start();
   };
 
-  const clearMessages = () => setMessages([]);
+  const clearMessages = () => {
+    setMessages([{
+      sender: "gpt",
+      text: getWelcomeMessage(disability) + "\n\nSpeak whenever you're ready!",
+      id: Date.now()
+    }]);
+  };
 
   /* ---------- UI ---------- */
   const waves = isListening ? (
@@ -336,7 +510,7 @@ export default function VoiceInterface({
           </motion.button>
         )}
 
-        {/* Title in center */}
+        {/* Title in center with disability indicator */}
         <motion.div
           style={{
             position: 'absolute',
@@ -356,6 +530,9 @@ export default function VoiceInterface({
           {disability === 'adhd' && ' 🧠'}
           {disability === 'autism' && ' 🌈'}
           {disability === 'dyslexia' && ' 💚'}
+          <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '2px' }}>
+            {disability.toUpperCase()} Voice Mode Active
+          </div>
         </motion.div>
 
         {/* Sign Out Button */}
@@ -436,7 +613,7 @@ export default function VoiceInterface({
               borderRadius: 16,
               color: theme.textColor,
               cursor: isListening || isSpeaking ? "not-allowed" : "pointer",
-              minWidth: 160,
+              minWidth: 180,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -453,7 +630,7 @@ export default function VoiceInterface({
             whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
           >
             <span>{isListening ? "🎤" : "🗣️"}</span>
-            {isListening ? "Listening..." : `Speak Now (${disability.toUpperCase()} mode)`}
+            {isListening ? "Listening..." : `Speak (${disability.toUpperCase()} mode)`}
           </motion.button>
 
           {isSpeaking && (
@@ -592,7 +769,7 @@ export default function VoiceInterface({
                 </select>
               </div>
               <motion.button
-                onClick={() => speak(`This is a test of the ${disability} voice assistant settings.`)}
+                onClick={() => speak(`This is a test of the ${disability} voice assistant settings. Speech has been optimized for your accessibility needs.`)}
                 style={{
                   width: "100%",
                   padding: "0.8rem",
@@ -647,7 +824,7 @@ export default function VoiceInterface({
           </div>
 
           <AnimatePresence mode="popLayout">
-            {messages.length === 0 ? (
+            {messages.length === 1 ? (
               <motion.div 
                 style={{
                   textAlign: "center",
@@ -660,11 +837,11 @@ export default function VoiceInterface({
                 transition={{ duration: reducedMotion ? 0.1 : 0.4 }}
               >
                 <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎤</div>
-                <h4 style={{ margin: "0 0 0.5rem 0" }}>Ready to chat!</h4>
+                <h4 style={{ margin: "0 0 0.5rem 0" }}>Ready for voice chat!</h4>
                 <p style={{ margin: 0 }}>
-                  Press "Speak Now" to start a conversation in <strong>{disability.toUpperCase()}</strong> mode.
+                  Press "Speak" to start a conversation in <strong>{disability.toUpperCase()}</strong> mode.
                   <br />
-                  <small>Your responses will be optimized for {disability} accessibility.</small>
+                  <small>Your responses will be optimized for {disability} accessibility and spoken aloud.</small>
                 </p>
               </motion.div>
             ) : (
@@ -674,7 +851,9 @@ export default function VoiceInterface({
                   style={{
                     background: m.sender === "user"
                       ? "rgba(255,255,255,0.06)"
-                      : "rgba(255,255,255,0.08)",
+                      : m.sender === "gpt" 
+                      ? "rgba(255,255,255,0.08)"
+                      : "rgba(255,152,0,0.08)",
                     border: `1px solid ${theme.borderColor}`,
                     borderRadius: 12,
                     padding: "0.85rem 1rem",
@@ -696,7 +875,11 @@ export default function VoiceInterface({
                     <span style={{ fontSize: "1.1rem" }}>
                       {m.sender === "user" ? "👤" : m.sender === "gpt" ? "🤖" : "⚙️"}
                     </span>
-                    <b>{m.sender === "user" ? "You" : m.sender === "gpt" ? `${disability.toUpperCase()} Assistant` : "System"}</b>
+                    <b>
+                      {m.sender === "user" ? "You" : 
+                       m.sender === "gpt" ? `${disability.toUpperCase()} Assistant` : 
+                       "System"}
+                    </b>
                     {typeof m.confidence === "number" && (
                       <span
                         style={{
@@ -720,13 +903,13 @@ export default function VoiceInterface({
                   </div>
                   <div style={{ 
                     lineHeight: 1.6, 
-                    whiteSpace: "pre-wrap" // 🎯 Allow formatted responses from AI
+                    whiteSpace: "pre-wrap" // Allow formatted responses from AI
                   }}>
-                    {m.text}
+                    {m.loading ? `Processing your request in ${disability.toUpperCase()} mode...` : m.text}
                   </div>
-                  {m.sender === "gpt" && (
+                  {m.sender === "gpt" && !m.loading && (
                     <motion.button
-                      onClick={() => speak(m.text.replace(/[⚠️⚌]/g, ""))}
+                      onClick={() => speak(m.text)}
                       title="Replay message"
                       style={{
                         position: "absolute",

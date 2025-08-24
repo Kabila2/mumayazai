@@ -30,35 +30,91 @@ const waitForPuter = (timeoutMs = 3000) =>
     }, 100);
   });
 
-/** timeout + puter presence check */
+/** Enhanced AI chat with disability-specific prompting */
 const aiChat = async (prompt, ms = 20000) => {
   if (!hasPuter()) throw new Error("Puter SDK not available");
+  
+  console.log("🎯 Sending disability-aware prompt to AI:", prompt.substring(0, 200) + "...");
+  
   const timeout = new Promise((_, rej) =>
     setTimeout(() => rej(new Error("AI request timed out")), ms)
   );
+  
   const req = (async () => {
     const resp = await puter.ai.chat(prompt);
-    return typeof resp === "string" ? resp : resp?.message?.content ?? "";
+    const responseText = typeof resp === "string" ? resp : resp?.message?.content ?? "";
+    console.log("🤖 Raw AI response:", responseText.substring(0, 200) + "...");
+    return responseText;
   })();
+  
   return Promise.race([req, timeout]);
 };
 
-/** graceful fallback so UI still works offline */
+/** Enhanced mock AI that demonstrates disability formatting */
 const mockAI = (prompt, disability) => {
-  const lastUser = (prompt.split("\n").pop() || "").replace(/^User:\s*/i, "");
-  return formatAIResponse(
-    `Connection offline (demo mode). You said: "${lastUser}" - This would normally get a ${disability.toUpperCase()}-optimized response.`,
-    disability
-  );
+  const userInput = (prompt.split("User:").pop() || "").trim();
+  
+  // Generate disability-specific mock responses
+  switch (disability.toLowerCase()) {
+    case "adhd":
+      return `🧠 ADHD-FRIENDLY RESPONSE:
+
+• I understand you said: "${userInput}"
+• This is a mock response (AI offline)
+• Here are 3 key points:
+  - Short, focused answers work best
+  - Bullet points help organize thoughts
+  - Clear structure reduces overwhelm`;
+
+    case "autism":
+      return `🌈 AUTISM-FRIENDLY RESPONSE:
+
+I received your message: "${userInput}"
+
+This is a direct response format designed for autism accessibility:
+1. Clear, literal language
+2. Specific structure with numbered steps
+3. No metaphors or ambiguous phrases
+4. Consistent formatting throughout
+
+Note: AI system is currently offline (demo mode).`;
+
+    case "dyslexia":
+    default:
+      return `💚 DYSLEXIA-FRIENDLY RESPONSE:
+
+You asked: "${userInput}"
+
+I'm in demo mode right now. The AI is offline.
+
+Here's what would normally happen:
+• Simple, clear words
+• Short sentences
+• Good spacing between ideas
+• Easy-to-read format
+
+This helps make text more accessible.`;
+  }
 };
 
+/** Enhanced AI response handler with proper disability formatting */
 const getAIResponse = async (prompt, disability) => {
   // Wait up to 3s for the SDK before falling back to mock
   const ready = await waitForPuter(3000);
-  if (!ready) return mockAI(prompt, disability);
+  
+  if (!ready) {
+    console.log("🔄 Using mock AI response for disability:", disability);
+    return mockAI(prompt, disability);
+  }
+  
   try {
     const rawResponse = await aiChat(prompt, 20000);
-    return formatAIResponse(rawResponse, disability);
+    
+    // Enhanced response formatting
+    const formattedResponse = formatAIResponse(rawResponse, disability);
+    console.log("✅ Formatted response for", disability, ":", formattedResponse.substring(0, 100) + "...");
+    
+    return formattedResponse;
   } catch (err) {
     console.warn("[ChatInterface] AI error:", err);
     return getDisabilityErrorMessage(disability);
@@ -78,12 +134,16 @@ const ChatInterface = ({
   onSignOut
 }) => {
   
-  const theme = getDisabilityTheme(currentDisability);
+  // Ensure we always have the current disability
+  const activeDisability = currentDisability || getCurrentDisability();
+  const theme = getDisabilityTheme(activeDisability);
+  
+  console.log("🎯 ChatInterface initialized with disability:", activeDisability);
   
   const [messages, setMessages] = useState([
     {
       sender: "gpt",
-      text: getWelcomeMessage(currentDisability),
+      text: getWelcomeMessage(activeDisability),
       id: Date.now()
     }
   ]);
@@ -98,16 +158,20 @@ const ChatInterface = ({
 
   // Update welcome message when disability changes
   useEffect(() => {
+    console.log("🔄 Disability changed to:", activeDisability);
     setMessages([{
       sender: "gpt",
-      text: getWelcomeMessage(currentDisability),
+      text: getWelcomeMessage(activeDisability),
       id: Date.now()
     }]);
-  }, [currentDisability]);
+  }, [activeDisability]);
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || isSending) return;
+
+    console.log("📤 Sending message with disability context:", activeDisability);
+    console.log("💬 User message:", text);
 
     setIsSending(true);
     if (!reducedMotion) {
@@ -123,24 +187,30 @@ const ChatInterface = ({
     setMessages(prev => [...prev, { sender: "gpt", loading: true, id: loadingId }]);
 
     try {
-      // Create disability-specific prompt using the enhanced utility
-      const prompt = createDisabilityAwarePrompt(text, currentDisability, false);
+      // Create ENHANCED disability-specific prompt
+      const enhancedPrompt = createDisabilityAwarePrompt(text, activeDisability, false);
       
-      const resp = await getAIResponse(prompt, currentDisability);
+      console.log("🎯 Enhanced prompt created for", activeDisability);
+      console.log("📝 Prompt preview:", enhancedPrompt.substring(0, 300) + "...");
+
+      const resp = await getAIResponse(enhancedPrompt, activeDisability);
 
       setMessages(prev =>
         prev.map(m =>
           m.id === loadingId ? { sender: "gpt", text: resp, id: loadingId } : m
         )
       );
+      
+      console.log("✅ Response displayed for", activeDisability);
+      
     } catch (err) {
-      const errorMsg = getDisabilityErrorMessage(currentDisability);
+      const errorMsg = getDisabilityErrorMessage(activeDisability);
       setMessages(prev =>
         prev.map(m =>
           m.id === loadingId ? { sender: "gpt", text: errorMsg, id: loadingId } : m
         )
       );
-      console.warn("[ChatInterface] AI error:", err);
+      console.error("[ChatInterface] AI error:", err);
     } finally {
       setIsSending(false);
     }
@@ -218,7 +288,7 @@ const ChatInterface = ({
           </motion.button>
         )}
 
-        {/* Title in center - PROPERLY CENTERED */}
+        {/* Title in center - PROPERLY CENTERED with disability indicator */}
         <motion.div
           style={{
             position: 'absolute',
@@ -237,9 +307,12 @@ const ChatInterface = ({
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
           {assistantTitle}
-          {currentDisability === 'adhd' && ' 🧠'}
-          {currentDisability === 'autism' && ' 🌈'}
-          {currentDisability === 'dyslexia' && ' 💚'}
+          {activeDisability === 'adhd' && ' 🧠'}
+          {activeDisability === 'autism' && ' 🌈'}
+          {activeDisability === 'dyslexia' && ' 💚'}
+          <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '2px' }}>
+            {activeDisability.toUpperCase()} Mode Active
+          </div>
         </motion.div>
 
         {/* Sign Out Button */}
@@ -337,7 +410,7 @@ const ChatInterface = ({
               >
                 {msg.loading ? (
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <span>Thinking</span>
+                    <span>Thinking ({activeDisability.toUpperCase()} mode)</span>
                     {[0,1,2].map(i => (
                       <motion.div
                         key={i}
@@ -391,7 +464,7 @@ const ChatInterface = ({
             disabled={isSending}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder={`Type your message... (${currentDisability.toUpperCase()} mode)`}
+            placeholder={`Type your message... (${activeDisability.toUpperCase()} mode - responses will be optimized for your needs)`}
             style={{
               flex: 1,
               padding: '0.75rem 1rem',
@@ -428,7 +501,7 @@ const ChatInterface = ({
               opacity: isSending || !input.trim() ? 0.6 : 1,
               fontWeight: '600',
               fontSize: '1rem',
-              minWidth: '80px',
+              minWidth: '100px',
               transition: 'all 0.3s ease'
             }}
             whileHover={!isSending && input.trim() && !reducedMotion ? { 
@@ -438,7 +511,7 @@ const ChatInterface = ({
             } : {}}
             whileTap={!isSending && input.trim() ? { scale: 0.95 } : {}}
           >
-            {isSending ? "Sending..." : "Send"}
+            {isSending ? "Sending..." : `Send (${activeDisability.toUpperCase()})`}
           </motion.button>
         </motion.div>
       </div>
