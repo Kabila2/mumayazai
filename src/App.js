@@ -1,10 +1,11 @@
-// src/App.js
+// src/App.js - Enhanced with Paper Airplane Transition
 import React, { useState, useEffect } from "react";
 import ChatInterface from "./components/ChatInterface";
 import VoiceInterface from "./components/VoiceInterface";
 import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
 import EntryLoginPage from "./components/EntryLoginPage";
 import OnboardingSetup from "./components/OnboardingSetup";
+import PaperAirplaneTransition from "./components/PaperAirplaneTransition";
 import { translations } from "./translations";
 import "./App.css";
 
@@ -58,6 +59,10 @@ export default function App() {
   // ---------- Main UI state ----------
   const [mode, setMode] = useState("text");   // "text" | "voice"
   const [view, setView] = useState("chat");   // "chat" | "profile" | "settings"
+
+  // ---------- Transition state ----------
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [pendingMode, setPendingMode] = useState(null);
 
   // ---------- Disability state ----------
   const [currentDisability, setCurrentDisability] = useState(getCurrentDisability());
@@ -123,6 +128,22 @@ export default function App() {
     if (vObj) { u.voice = vObj; u.lang = vObj.lang; } else { u.lang = language; }
     u.rate = speed; u.pitch = pitch;
     window.speechSynthesis.speak(u);
+  };
+
+  /* ===================== MODE SWITCHING WITH TRANSITION ===================== */
+  const handleModeSwitch = (newMode) => {
+    if (isTransitioning || newMode === mode) return;
+    
+    console.log(`🔄 Starting transition from ${mode} to ${newMode} mode`);
+    setPendingMode(newMode);
+    setIsTransitioning(true);
+  };
+
+  const handleTransitionComplete = () => {
+    console.log(`✅ Transition completed to ${pendingMode} mode`);
+    setMode(pendingMode);
+    setPendingMode(null);
+    setIsTransitioning(false);
   };
 
   /* ===================== AUTH HANDLERS ===================== */
@@ -191,6 +212,9 @@ export default function App() {
     setIsLoggedIn(false);
     setMode("text");
     setView("chat");
+    // Reset transition state on sign out
+    setIsTransitioning(false);
+    setPendingMode(null);
     // Optional: Clear some app state but keep accessibility preferences
   };
 
@@ -218,42 +242,49 @@ export default function App() {
   let content;
   if (view === "chat") {
     content = (
-      <div style={{ position: "relative", height: "100%" }}>
-        {mode === "text" ? (
-          <ChatInterface
-            t={t}
-            language={appLanguage}
-            fontSize={fontSize}
-            highContrast={highContrast}
-            reducedMotion={reducedMotion}
-            assistantTitle={assistantTitle}
-            currentDisability={currentDisability}
-            onSwitchMode={() => setMode("voice")}
-            onSignOut={handleSignOut}
-          />
-        ) : (
-          <VoiceInterface
-            t={t}
-            language={appLanguage}
-            voices={voices}
-            selectedVoice={selectedVoice}
-            setSelectedVoice={setSelectedVoice}
-            speed={speed}
-            setSpeed={setSpeed}
-            pitch={pitch}
-            setPitch={setPitch}
-            setLanguage={setLanguage}
-            speak={speak}
-            highContrast={highContrast}
-            fontSize={fontSize}
-            reducedMotion={reducedMotion}
-            assistantTitle={assistantTitle}
-            currentDisability={currentDisability}
-            onSwitchMode={() => setMode("text")}
-            onSignOut={handleSignOut}
-          />
-        )}
-      </div>
+      <PaperAirplaneTransition
+        isTransitioning={isTransitioning}
+        fromMode={mode}
+        toMode={pendingMode}
+        onTransitionComplete={handleTransitionComplete}
+      >
+        <div style={{ position: "relative", height: "100%" }}>
+          {mode === "text" ? (
+            <ChatInterface
+              t={t}
+              language={appLanguage}
+              fontSize={fontSize}
+              highContrast={highContrast}
+              reducedMotion={reducedMotion}
+              assistantTitle={assistantTitle}
+              currentDisability={currentDisability}
+              onSwitchMode={() => handleModeSwitch("voice")}
+              onSignOut={handleSignOut}
+            />
+          ) : (
+            <VoiceInterface
+              t={t}
+              language={appLanguage}
+              voices={voices}
+              selectedVoice={selectedVoice}
+              setSelectedVoice={setSelectedVoice}
+              speed={speed}
+              setSpeed={setSpeed}
+              pitch={pitch}
+              setPitch={setPitch}
+              setLanguage={setLanguage}
+              speak={speak}
+              highContrast={highContrast}
+              fontSize={fontSize}
+              reducedMotion={reducedMotion}
+              assistantTitle={assistantTitle}
+              currentDisability={currentDisability}
+              onSwitchMode={() => handleModeSwitch("text")}
+              onSignOut={handleSignOut}
+            />
+          )}
+        </div>
+      </PaperAirplaneTransition>
     );
   } else if (view === "profile") {
     content = (
