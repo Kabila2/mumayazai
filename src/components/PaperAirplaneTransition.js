@@ -1,4 +1,4 @@
-// src/components/PaperAirplaneTransition.js - Simplified First-Person Pilot View
+// src/components/PaperAirplaneTransition.js - Simplified with Unique Effects
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -9,442 +9,346 @@ const PaperAirplaneTransition = ({
   onTransitionComplete,
   children 
 }) => {
-  const [stage, setStage] = useState('idle'); // 'idle', 'takeoff', 'flying', 'landing'
-  const [showCockpit, setShowCockpit] = useState(false);
+  const [stage, setStage] = useState('idle');
+  const [showTransition, setShowTransition] = useState(false);
 
   useEffect(() => {
     if (isTransitioning) {
-      console.log(`✈️ First-person transition: ${fromMode} → ${toMode}`);
+      setStage('launch');
+      setShowTransition(true);
       
-      // Simplified timing sequence
-      setStage('takeoff');
-      setShowCockpit(true);
-      
+      setTimeout(() => setStage('warp'), 800);
+      setTimeout(() => setStage('arrive'), 2000);
       setTimeout(() => {
-        setStage('flying');
-        console.log('🚀 Flying in first-person view');
-      }, 1000);
-      
-      setTimeout(() => {
-        setStage('landing');
-        console.log('🛬 Landing at destination');
-      }, 2500);
-      
-      setTimeout(() => {
-        setShowCockpit(false);
+        setShowTransition(false);
         setStage('idle');
-        console.log('✅ First-person transition complete');
         onTransitionComplete?.();
-      }, 3500);
+      }, 3000);
     }
-  }, [isTransitioning, fromMode, toMode, onTransitionComplete]);
+  }, [isTransitioning, onTransitionComplete]);
 
-  // Content fade-out during transition
-  const contentVariants = {
-    idle: { 
-      opacity: 1,
-      scale: 1,
-      filter: 'blur(0px)',
-      transition: { duration: 0.3 }
-    },
-    takeoff: {
-      opacity: 0,
-      scale: 0.95,
-      filter: 'blur(2px)',
-      transition: { duration: 0.5 }
-    },
-    flying: {
-      opacity: 0,
-      scale: 0.95,
-      filter: 'blur(2px)'
-    },
-    landing: {
-      opacity: [0, 0.3, 1],
-      scale: [0.95, 0.98, 1],
-      filter: ['blur(2px)', 'blur(1px)', 'blur(0px)'],
-      transition: { duration: 1.0, times: [0, 0.5, 1] }
-    }
+  // Paper airplane morphing shapes
+  const PlaneShape = ({ stage }) => {
+    const pathVariants = {
+      launch: "M12,2 L20,20 L12,17 L4,20 L12,2 Z",
+      warp: "M12,2 L22,15 L12,12 L2,15 L12,2 Z", 
+      arrive: "M12,2 L18,18 L12,16 L6,18 L12,2 Z"
+    };
+
+    return (
+      <motion.svg
+        width="40"
+        height="40"
+        viewBox="0 0 24 24"
+        style={{ filter: 'drop-shadow(0 0 10px currentColor)' }}
+      >
+        <motion.path
+          d={pathVariants[stage] || pathVariants.launch}
+          fill="currentColor"
+          animate={{
+            d: pathVariants[stage] || pathVariants.launch,
+            scale: stage === 'warp' ? [1, 1.5, 0.8] : 1,
+            rotate: stage === 'warp' ? [0, 180, 360] : 0
+          }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        />
+      </motion.svg>
+    );
   };
 
-  // First-Person Cockpit View Component
-  const FirstPersonCockpit = () => {
-    return (
-      <motion.div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 10000,
-          background: 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 30%, #FFFFFF 70%, #F0F8FF 100%)',
-          overflow: 'hidden'
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ 
-          opacity: 1,
-          background: stage === 'takeoff' ? 
-            'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 30%, #FFFFFF 70%, #F0F8FF 100%)' :
-            stage === 'flying' ?
-            'linear-gradient(to bottom, #001f3f 0%, #0074D9 30%, #87CEEB 70%, #E0F6FF 100%)' :
-            'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 30%, #FFFFFF 70%, #F0F8FF 100%)'
-        }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Cockpit Dashboard */}
+  // Warp tunnel effect
+  const WarpTunnel = () => (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      {Array.from({ length: 8 }, (_, i) => (
         <motion.div
+          key={i}
           style={{
             position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '25%',
-            background: 'linear-gradient(to top, #2c3e50, #34495e)',
-            borderTop: '3px solid #3498db'
-          }}
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          {/* Control Panel */}
-          <div style={{
-            position: 'absolute',
-            top: '20px',
             left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: '20px',
-            alignItems: 'center'
-          }}>
-            {/* Altitude Display */}
-            <motion.div
-              style={{
-                background: '#000',
-                color: '#00ff00',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                fontFamily: 'monospace',
-                fontSize: '14px',
-                border: '2px solid #333'
-              }}
-              animate={{
-                color: stage === 'takeoff' ? '#ffff00' : stage === 'flying' ? '#00ff00' : '#ff6600'
-              }}
-            >
-              ALT: {stage === 'takeoff' ? '1000ft' : stage === 'flying' ? '35000ft' : '500ft'}
-            </motion.div>
-            
-            {/* Speed Display */}
-            <motion.div
-              style={{
-                background: '#000',
-                color: '#00ff00',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                fontFamily: 'monospace',
-                fontSize: '14px',
-                border: '2px solid #333'
-              }}
-              animate={{
-                color: stage === 'takeoff' ? '#ffff00' : stage === 'flying' ? '#00ff00' : '#ff6600'
-              }}
-            >
-              SPD: {stage === 'takeoff' ? '150kts' : stage === 'flying' ? '450kts' : '120kts'}
-            </motion.div>
-            
-            {/* Mode Display */}
-            <motion.div
-              style={{
-                background: '#3498db',
-                color: '#fff',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontWeight: 'bold'
-              }}
-              animate={{
-                background: stage === 'takeoff' ? '#f39c12' : stage === 'flying' ? '#27ae60' : '#e74c3c'
-              }}
-            >
-              {stage === 'takeoff' ? 'TAKEOFF' : stage === 'flying' ? 'CRUISE' : 'LANDING'}
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Horizon and Clouds */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            top: '40%',
-            left: 0,
-            right: 0,
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent, #fff, transparent)',
-            transform: 'translateY(-50%)'
+            top: '50%',
+            width: `${100 + i * 80}px`,
+            height: `${100 + i * 80}px`,
+            border: '2px solid',
+            borderColor: `hsl(${200 + i * 20}, 100%, 70%)`,
+            borderRadius: '50%',
+            transform: 'translate(-50%, -50%)',
+            opacity: 0.7 - i * 0.08
           }}
           animate={{
-            y: stage === 'takeoff' ? [0, -100] : stage === 'landing' ? [0, 100] : 0,
-            opacity: stage === 'flying' ? 0.3 : 0.8
+            scale: [0, 3],
+            opacity: [0.7 - i * 0.08, 0],
+            borderWidth: [2, 0]
           }}
-          transition={{ duration: stage === 'takeoff' ? 1.5 : stage === 'landing' ? 1.0 : 0.5 }}
+          transition={{
+            duration: 1.2,
+            delay: i * 0.1,
+            repeat: Infinity,
+            ease: 'easeOut'
+          }}
         />
+      ))}
+    </div>
+  );
 
-        {/* Clouds Animation */}
-        {Array.from({ length: 6 }, (_, i) => (
+  // Particle burst effect
+  const ParticleBurst = ({ stage }) => (
+    <>
+      {Array.from({ length: 12 }, (_, i) => {
+        const angle = (i * 30) * Math.PI / 180;
+        const distance = 150 + Math.random() * 100;
+        
+        return (
           <motion.div
-            key={`cloud-${i}`}
+            key={i}
             style={{
               position: 'absolute',
-              left: `${-10 + (i * 25)}%`,
-              top: `${20 + (i % 3) * 15}%`,
-              width: `${80 + i * 10}px`,
-              height: `${40 + i * 5}px`,
-              background: 'radial-gradient(ellipse, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2))',
-              borderRadius: '50px',
-              filter: `blur(${1 + i * 0.5}px)`
+              left: '50%',
+              top: '50%',
+              width: '4px',
+              height: '4px',
+              background: `hsl(${180 + Math.random() * 80}, 100%, 70%)`,
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)'
             }}
             animate={{
-              x: stage === 'takeoff' ? [0, 300] : 
-                 stage === 'flying' ? [0, 400] : 
-                 [0, 200],
-              scale: stage === 'flying' ? [1, 1.5] : 1,
-              opacity: stage === 'flying' ? [0.8, 0.4] : 0.8
-            }}
-            transition={{
-              duration: stage === 'takeoff' ? 1.5 : stage === 'flying' ? 1.5 : 1.0,
-              delay: i * 0.1,
-              ease: 'easeOut'
-            }}
-          />
-        ))}
-
-        {/* Ground/Runway (during takeoff and landing) */}
-        {(stage === 'takeoff' || stage === 'landing') && (
-          <motion.div
-            style={{
-              position: 'absolute',
-              bottom: '25%',
-              left: 0,
-              right: 0,
-              height: '300px',
-              background: stage === 'takeoff' ? 
-                'linear-gradient(to bottom, #228B22, #32CD32, #90EE90)' :
-                'linear-gradient(to bottom, #228B22, #32CD32, #90EE90)',
-              transformOrigin: 'bottom'
-            }}
-            initial={{ 
-              scaleY: stage === 'takeoff' ? 1 : 0,
-              y: stage === 'takeoff' ? 0 : 300
-            }}
-            animate={{ 
-              scaleY: stage === 'takeoff' ? [1, 0.2, 0] : [0, 0.2, 1],
-              y: stage === 'takeoff' ? [0, -200, -400] : [300, 100, 0],
-              rotateX: stage === 'takeoff' ? [0, -45, -90] : [-90, -45, 0]
-            }}
-            transition={{ 
-              duration: stage === 'takeoff' ? 1.5 : 1.0,
-              ease: 'easeInOut'
-            }}
-          >
-            {/* Runway lines */}
-            {Array.from({ length: 5 }, (_, i) => (
-              <motion.div
-                key={`runway-line-${i}`}
-                style={{
-                  position: 'absolute',
-                  left: '45%',
-                  top: `${i * 15}%`,
-                  width: '10%',
-                  height: '5px',
-                  background: '#fff',
-                  transformOrigin: 'center'
-                }}
-                animate={{
-                  scaleY: stage === 'takeoff' ? [1, 0.5, 0] : [0, 0.5, 1],
-                  opacity: stage === 'takeoff' ? [1, 0.5, 0] : [0, 0.5, 1]
-                }}
-                transition={{
-                  duration: stage === 'takeoff' ? 1.5 : 1.0,
-                  delay: i * 0.1
-                }}
-              />
-            ))}
-          </motion.div>
-        )}
-
-        {/* Speed Lines during flying */}
-        {stage === 'flying' && Array.from({ length: 20 }, (_, i) => (
-          <motion.div
-            key={`speed-line-${i}`}
-            style={{
-              position: 'absolute',
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 60 + 10}%`,
-              width: '2px',
-              height: `${20 + Math.random() * 30}px`,
-              background: 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.8), transparent)',
-              transform: `rotate(${-20 + Math.random() * 40}deg)`
-            }}
-            animate={{
-              x: [-50, window.innerWidth + 50],
+              x: Math.cos(angle) * distance,
+              y: Math.sin(angle) * distance,
+              scale: [0, 1.5, 0],
               opacity: [0, 1, 0]
             }}
             transition={{
-              duration: 0.8,
-              delay: i * 0.05,
-              repeat: Infinity,
-              ease: 'linear'
+              duration: 1.5,
+              delay: stage === 'launch' ? 0.3 : 0,
+              ease: 'easeOut'
             }}
           />
-        ))}
+        );
+      })}
+    </>
+  );
 
-        {/* Destination Sign */}
+  // Glitch/digital transition effect
+  const GlitchBars = () => (
+    <>
+      {Array.from({ length: 6 }, (_, i) => (
         <motion.div
+          key={i}
           style={{
             position: 'absolute',
-            top: '30%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.8)',
-            color: '#fff',
-            padding: '20px 40px',
-            borderRadius: '10px',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            backdropFilter: 'blur(10px)',
-            border: '2px solid rgba(255, 255, 255, 0.3)'
+            left: 0,
+            right: 0,
+            top: `${i * 16.66}%`,
+            height: '16.66%',
+            background: 'linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent)',
+            mixBlendMode: 'screen'
           }}
-          initial={{ opacity: 0, y: -50, scale: 0.8 }}
-          animate={{ 
-            opacity: [0, 1, 1, 0],
-            y: [-50, 0, 0, 50],
-            scale: [0.8, 1, 1, 0.8]
+          animate={{
+            x: ['-100%', '100%'],
+            opacity: [0, 1, 0],
+            scaleY: [1, 1.2, 1]
           }}
           transition={{
-            duration: 3.5,
+            duration: 0.8,
+            delay: i * 0.05,
+            ease: 'easeInOut'
+          }}
+        />
+      ))}
+    </>
+  );
+
+  // Morphing background gradients
+  const backgroundVariants = {
+    launch: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    warp: 'linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)',
+    arrive: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+  };
+
+  const TransitionOverlay = () => (
+    <motion.div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 10000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: backgroundVariants[stage] || backgroundVariants.launch,
+        overflow: 'hidden'
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ 
+        opacity: 1,
+        background: backgroundVariants[stage] || backgroundVariants.launch
+      }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Warp tunnel - only during warp stage */}
+      {stage === 'warp' && <WarpTunnel />}
+      
+      {/* Glitch bars - during arrive stage */}
+      {stage === 'arrive' && <GlitchBars />}
+      
+      {/* Particle burst */}
+      <ParticleBurst stage={stage} />
+      
+      {/* Central content */}
+      <motion.div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '30px',
+          color: '#ffffff',
+          textAlign: 'center',
+          zIndex: 1
+        }}
+        animate={{
+          scale: stage === 'warp' ? [1, 1.2, 1] : 1,
+          y: stage === 'arrive' ? [0, -20, 0] : 0
+        }}
+        transition={{ duration: 0.8 }}
+      >
+        {/* Animated paper airplane */}
+        <motion.div
+          style={{
+            fontSize: '60px',
+            color: '#ffffff',
+            filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.5))'
+          }}
+          animate={{
+            rotate: stage === 'warp' ? [0, 360, 720] : 0,
+            scale: stage === 'launch' ? [1, 1.5, 1.2] : 
+                   stage === 'warp' ? [1.2, 0.8, 1.5] : 
+                   [1.5, 1],
+            y: stage === 'launch' ? [0, -30, -10] :
+               stage === 'warp' ? [-10, 20, -20] :
+               [-20, 0]
+          }}
+          transition={{ 
+            duration: stage === 'warp' ? 1.2 : 0.8,
+            ease: stage === 'warp' ? 'easeInOut' : 'easeOut'
+          }}
+        >
+          ✈️
+        </motion.div>
+
+        {/* Mode transition message */}
+        <motion.div
+          style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            textShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+            fontFamily: "'Lexend', sans-serif"
+          }}
+          animate={{
+            opacity: [0, 1, 1, 0],
+            y: [20, 0, 0, -20],
+            scale: [0.9, 1, 1, 1.1]
+          }}
+          transition={{
+            duration: 3,
             times: [0, 0.2, 0.8, 1],
             ease: 'easeInOut'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <motion.span
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              style={{ fontSize: '1.5em' }}
-            >
-              ✈️
-            </motion.span>
-            <div>
-              <div style={{ fontSize: '0.8em', opacity: 0.8, marginBottom: '5px' }}>
-                Flying to
-              </div>
-              <div style={{ fontSize: '1.2em' }}>
-                {toMode === 'voice' ? '🎤 Voice Mode' : '💬 Text Mode'}
-              </div>
-            </div>
-            <motion.span
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear', delay: 1 }}
-              style={{ fontSize: '1.5em' }}
-            >
-              {toMode === 'voice' ? '🎤' : '💬'}
-            </motion.span>
-          </div>
+          <motion.span
+            animate={{
+              background: stage === 'launch' ? 
+                'linear-gradient(45deg, #ff6b6b, #ffd93d)' :
+                stage === 'warp' ?
+                'linear-gradient(45deg, #6c5ce7, #fd79a8)' :
+                'linear-gradient(45deg, #00b894, #00cec9)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            {stage === 'launch' ? 'Launching...' :
+             stage === 'warp' ? `Warping to ${toMode === 'voice' ? '🎤 Voice' : '💬 Text'} Mode` :
+             stage === 'arrive' ? 'Welcome aboard!' : ''}
+          </motion.span>
         </motion.div>
 
-        {/* Engine Sound Visualization */}
+        {/* Progress indicator */}
         <motion.div
           style={{
+            width: '200px',
+            height: '4px',
+            background: 'rgba(255, 255, 255, 0.3)',
+            borderRadius: '2px',
+            overflow: 'hidden'
+          }}
+        >
+          <motion.div
+            style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, #ffffff, rgba(255, 255, 255, 0.8))',
+              borderRadius: '2px'
+            }}
+            animate={{
+              width: stage === 'launch' ? '33%' :
+                     stage === 'warp' ? '66%' :
+                     stage === 'arrive' ? '100%' : '0%',
+              opacity: [1, 0.7, 1]
+            }}
+            transition={{ 
+              width: { duration: 0.8, ease: 'easeInOut' },
+              opacity: { duration: 0.5, repeat: Infinity }
+            }}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Dynamic corner accents */}
+      {Array.from({ length: 4 }, (_, i) => (
+        <motion.div
+          key={i}
+          style={{
             position: 'absolute',
-            bottom: '25%',
-            left: 0,
-            right: 0,
-            height: '10px',
-            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
-            transformOrigin: 'center'
+            width: '100px',
+            height: '100px',
+            background: 'radial-gradient(circle, rgba(255, 255, 255, 0.4), transparent)',
+            borderRadius: '50%',
+            ...(i === 0 && { top: 0, left: 0, transform: 'translate(-50%, -50%)' }),
+            ...(i === 1 && { top: 0, right: 0, transform: 'translate(50%, -50%)' }),
+            ...(i === 2 && { bottom: 0, left: 0, transform: 'translate(-50%, 50%)' }),
+            ...(i === 3 && { bottom: 0, right: 0, transform: 'translate(50%, 50%)' })
           }}
           animate={{
-            scaleY: stage === 'takeoff' ? [1, 3, 2] : 
-                    stage === 'flying' ? [2, 4, 3] : 
-                    [3, 2, 1],
-            opacity: [0.3, 0.8, 0.5]
+            scale: [0, 1.5, 0],
+            opacity: [0, 0.6, 0],
+            rotate: [0, 180, 360]
           }}
           transition={{
-            duration: 0.5,
+            duration: 2,
+            delay: i * 0.2,
             repeat: Infinity,
             ease: 'easeInOut'
           }}
         />
-      </motion.div>
-    );
-  };
+      ))}
+    </motion.div>
+  );
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* Main content */}
+      {/* Main content with blur effect during transition */}
       <motion.div
-        variants={contentVariants}
-        animate={stage}
-        style={{
-          width: '100%',
-          height: '100%'
+        animate={{
+          filter: showTransition ? 'blur(8px) brightness(0.3)' : 'blur(0px) brightness(1)',
+          scale: showTransition ? 0.95 : 1
         }}
+        transition={{ duration: 0.5 }}
       >
         {children}
       </motion.div>
 
-      {/* First-person cockpit view */}
+      {/* Transition overlay */}
       <AnimatePresence>
-        {showCockpit && (
-          <FirstPersonCockpit key="cockpit-view" />
-        )}
-      </AnimatePresence>
-
-      {/* Simple status indicator */}
-      <AnimatePresence>
-        {isTransitioning && stage !== 'idle' && (
-          <motion.div
-            style={{
-              position: 'fixed',
-              top: '20px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(0, 0, 0, 0.9)',
-              color: '#ffffff',
-              padding: '15px 30px',
-              borderRadius: '25px',
-              fontSize: '16px',
-              fontWeight: '600',
-              zIndex: 10001,
-              backdropFilter: 'blur(10px)',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
-              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif"
-            }}
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <motion.span
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                style={{ fontSize: '1.2em' }}
-              >
-                ✈️
-              </motion.span>
-              <span>
-                {stage === 'takeoff' ? 'Taking off...' :
-                 stage === 'flying' ? `Flying to ${toMode === 'voice' ? '🎤 Voice' : '💬 Text'} Mode` :
-                 stage === 'landing' ? 'Landing...' :
-                 'Preparing for flight...'}
-              </span>
-            </div>
-          </motion.div>
-        )}
+        {showTransition && <TransitionOverlay />}
       </AnimatePresence>
     </div>
   );
