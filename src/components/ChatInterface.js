@@ -1,4 +1,4 @@
-/* global puter */
+// Enhanced ChatInterface.js with Memory, Storage, Quiz & Leaderboard
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { 
@@ -10,191 +10,279 @@ import {
   getDisabilityErrorMessage
 } from "../utils/disabilityUtils";
 
-/** ---------- Mobile-optimized AI helpers ---------- */
-const hasPuter = () =>
-  typeof window !== "undefined" &&
-  window.puter &&
-  puter.ai &&
-  typeof puter.ai.chat === "function";
-
-const waitForPuter = (timeoutMs = 3000) =>
-  new Promise((resolve) => {
-    if (hasPuter()) return resolve(true);
-    const t0 = Date.now();
-    const id = setInterval(() => {
-      if (hasPuter() || Date.now() - t0 > timeoutMs) {
-        clearInterval(id);
-        resolve(hasPuter());
-      }
-    }, 100);
-  });
-
-const aiChat = async (prompt, ms = 20000) => {
-  if (!hasPuter()) throw new Error("Puter SDK not available");
-  
-  console.log("🎯 Sending disability-aware prompt to AI:", prompt.substring(0, 200) + "...");
-  
-  const timeout = new Promise((_, rej) =>
-    setTimeout(() => rej(new Error("AI request timed out")), ms)
-  );
-  
-  const req = (async () => {
-    const resp = await puter.ai.chat(prompt);
-    const responseText = typeof resp === "string" ? resp : resp?.message?.content ?? "";
-    console.log("🤖 Raw AI response:", responseText.substring(0, 200) + "...");
-    return responseText;
-  })();
-  
-  return Promise.race([req, timeout]);
+// Enhanced storage utilities
+const STORAGE_KEYS = {
+  CHAT_SESSIONS: 'mumayaz_chat_sessions',
+  USER_SCORES: 'mumayaz_user_scores',
+  QUIZ_PROGRESS: 'mumayaz_quiz_progress',
+  DAILY_TASKS: 'mumayaz_daily_tasks'
 };
 
-/** Enhanced mock AI with mobile considerations */
-const mockAI = (prompt, disability) => {
-  const userInput = (prompt.split("User:").pop() || "").trim();
-  
-  switch (disability.toLowerCase()) {
-    case "adhd":
-      return `🧠 ADHD-FRIENDLY RESPONSE:
-
-• You said: "${userInput}"
-• This is demo mode (AI offline)
-• Quick points:
-  - Short answers
-  - Clear structure  
-  - Easy to scan
-  - No overwhelm`;
-
-    case "autism":
-      return `🌈 AUTISM-FRIENDLY RESPONSE:
-
-Input received: "${userInput}"
-
-Demo mode active. Structured response:
-1. Direct communication
-2. Clear expectations
-3. Consistent format
-4. No ambiguous language
-
-This format reduces uncertainty.`;
-
-    case "dyslexia":
-    default:
-      return `💚 DYSLEXIA-FRIENDLY RESPONSE:
-
-You asked: "${userInput}"
-
-Demo mode is on right now.
-
-Simple response format:
-• Easy words
-• Short lines
-• Good spacing
-• Clear meaning
-
-This helps with reading.`;
+// Session Memory Management
+class ChatMemory {
+  constructor(userId, disability) {
+    this.userId = userId;
+    this.disability = disability;
+    this.sessionId = Date.now().toString();
+    this.context = [];
+    this.maxContextLength = 10; // Keep last 10 exchanges for context
   }
-};
 
-const getAIResponse = async (prompt, disability) => {
-  const ready = await waitForPuter(3000);
-  
-  if (!ready) {
-    console.log("🔄 Using mock AI response for disability:", disability);
-    return mockAI(prompt, disability);
-  }
-  
-  try {
-    const rawResponse = await aiChat(prompt, 20000);
-    const formattedResponse = formatAIResponse(rawResponse, disability);
-    console.log("✅ Formatted response for", disability, ":", formattedResponse.substring(0, 100) + "...");
-    return formattedResponse;
-  } catch (err) {
-    console.warn("[ChatInterface] AI error:", err);
-    return getDisabilityErrorMessage(disability);
-  }
-};
-
-/** ---------- Mobile Utilities ---------- */
-const useViewportHeight = () => {
-  const [height, setHeight] = useState(window.innerHeight);
-  
-  useEffect(() => {
-    const updateHeight = () => {
-      // Use visualViewport API if available (better for mobile)
-      if (window.visualViewport) {
-        setHeight(window.visualViewport.height);
-      } else {
-        setHeight(window.innerHeight);
-      }
-    };
-    
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateHeight);
-    } else {
-      window.addEventListener('resize', updateHeight);
-    }
-    
-    // Handle orientation changes
-    window.addEventListener('orientationchange', () => {
-      setTimeout(updateHeight, 100);
+  addExchange(userMessage, aiResponse) {
+    this.context.push({
+      user: userMessage,
+      ai: aiResponse,
+      timestamp: Date.now(),
+      disability: this.disability
     });
     
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateHeight);
-      } else {
-        window.removeEventListener('resize', updateHeight);
-      }
-    };
-  }, []);
-  
-  return height;
-};
-
-const useMobileDetection = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isLandscape, setIsLandscape] = useState(false);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-  
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth <= 768 || 
-                   /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      setIsMobile(mobile);
-      setIsLandscape(window.innerWidth > window.innerHeight);
-    };
-    
-    const checkKeyboard = () => {
-      if (window.visualViewport) {
-        const heightDiff = window.screen.height - window.visualViewport.height;
-        setKeyboardOpen(heightDiff > 150); // Threshold for keyboard detection
-      }
-    };
-    
-    checkMobile();
-    checkKeyboard();
-    
-    window.addEventListener('resize', checkMobile);
-    window.addEventListener('orientationchange', () => {
-      setTimeout(checkMobile, 100);
-    });
-    
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', checkKeyboard);
+    // Keep context manageable
+    if (this.context.length > this.maxContextLength) {
+      this.context = this.context.slice(-this.maxContextLength);
     }
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', checkKeyboard);
-      }
-    };
-  }, []);
-  
-  return { isMobile, isLandscape, keyboardOpen };
-};
+  }
 
-/** ---------- Mobile-Optimized Chat Interface ---------- */
+  getContextPrompt() {
+    if (this.context.length === 0) return "";
+    
+    const contextString = this.context
+      .map(exchange => `Previous User: ${exchange.user}\nPrevious Assistant: ${exchange.ai}`)
+      .join('\n\n');
+    
+    return `\n\nPrevious conversation context (for continuity in ${this.disability.toUpperCase()} mode):\n${contextString}\n\nCurrent conversation:`;
+  }
+
+  saveSession() {
+    const sessions = this.getSavedSessions();
+    const sessionData = {
+      id: this.sessionId,
+      userId: this.userId,
+      disability: this.disability,
+      context: this.context,
+      created: Date.now(),
+      lastUpdated: Date.now(),
+      title: this.generateTitle()
+    };
+    
+    sessions[this.sessionId] = sessionData;
+    localStorage.setItem(STORAGE_KEYS.CHAT_SESSIONS, JSON.stringify(sessions));
+    return sessionData;
+  }
+
+  getSavedSessions() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_SESSIONS)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  generateTitle() {
+    if (this.context.length === 0) return `${this.disability.toUpperCase()} Chat Session`;
+    
+    const firstMessage = this.context[0]?.user || '';
+    const title = firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : '');
+    return title || `${this.disability.toUpperCase()} Chat - ${new Date().toLocaleDateString()}`;
+  }
+
+  loadSession(sessionId) {
+    const sessions = this.getSavedSessions();
+    if (sessions[sessionId]) {
+      this.context = sessions[sessionId].context || [];
+      this.sessionId = sessionId;
+      return true;
+    }
+    return false;
+  }
+}
+
+// Quiz System
+class QuizSystem {
+  constructor(disability) {
+    this.disability = disability;
+    this.questions = this.getDisabilityQuestions();
+  }
+
+  getDisabilityQuestions() {
+    const baseQuestions = {
+      dyslexia: [
+        {
+          question: "What reading strategy helps with dyslexia?",
+          options: ["Speed reading", "Breaking words into syllables", "Reading in dim light", "Memorizing entire texts"],
+          correct: 1,
+          explanation: "Breaking words into syllables helps dyslexic readers process text more effectively."
+        },
+        {
+          question: "Which font is most dyslexia-friendly?",
+          options: ["Times New Roman", "Comic Sans", "Lexend", "Courier"],
+          correct: 2,
+          explanation: "Lexend font is specifically designed to improve reading proficiency."
+        },
+        {
+          question: "What background color combination reduces visual stress for dyslexia?",
+          options: ["Black on white", "White on black", "Blue on yellow", "Red on green"],
+          correct: 2,
+          explanation: "Blue text on yellow background can reduce visual stress for many with dyslexia."
+        }
+      ],
+      adhd: [
+        {
+          question: "What is the Pomodoro Technique good for with ADHD?",
+          options: ["Cooking", "Breaking tasks into focused intervals", "Exercise", "Sleeping"],
+          correct: 1,
+          explanation: "The Pomodoro Technique helps ADHD individuals maintain focus through structured time intervals."
+        },
+        {
+          question: "Which environment helps ADHD focus?",
+          options: ["Noisy and busy", "Quiet with minimal distractions", "Dark rooms", "Crowded spaces"],
+          correct: 1,
+          explanation: "A quiet environment with minimal visual and auditory distractions supports ADHD focus."
+        },
+        {
+          question: "What's a good ADHD study strategy?",
+          options: ["Study for 4 hours straight", "Use fidget tools while learning", "Study in bed", "Multitask heavily"],
+          correct: 1,
+          explanation: "Fidget tools can help ADHD individuals channel excess energy while maintaining focus."
+        }
+      ],
+      autism: [
+        {
+          question: "What helps autistic individuals with routine?",
+          options: ["Constant surprises", "Predictable schedules", "Random activities", "Chaos"],
+          correct: 1,
+          explanation: "Predictable schedules and routines provide comfort and reduce anxiety for autistic individuals."
+        },
+        {
+          question: "Which communication style works best?",
+          options: ["Indirect hints", "Direct, clear language", "Sarcasm", "Abstract metaphors"],
+          correct: 1,
+          explanation: "Direct, clear communication reduces confusion and supports autistic understanding."
+        },
+        {
+          question: "What's important for sensory sensitivity?",
+          options: ["Bright lights always", "Loud environments", "Sensory-friendly spaces", "Overwhelming stimuli"],
+          correct: 2,
+          explanation: "Sensory-friendly environments help autistic individuals manage sensory sensitivities."
+        }
+      ]
+    };
+
+    return baseQuestions[this.disability] || baseQuestions.dyslexia;
+  }
+
+  getDailyQuestion() {
+    const today = new Date().toDateString();
+    const progress = this.getQuizProgress();
+    
+    if (progress.lastQuizDate === today && progress.todayCompleted) {
+      return null; // Already completed today
+    }
+
+    const questionIndex = progress.currentIndex || 0;
+    return {
+      ...this.questions[questionIndex % this.questions.length],
+      index: questionIndex
+    };
+  }
+
+  submitAnswer(questionIndex, selectedAnswer) {
+    const question = this.questions[questionIndex % this.questions.length];
+    const isCorrect = selectedAnswer === question.correct;
+    
+    const progress = this.getQuizProgress();
+    progress.lastQuizDate = new Date().toDateString();
+    progress.todayCompleted = true;
+    progress.currentIndex = (questionIndex + 1) % this.questions.length;
+    progress.totalAnswered = (progress.totalAnswered || 0) + 1;
+    progress.correctAnswers = (progress.correctAnswers || 0) + (isCorrect ? 1 : 0);
+    
+    localStorage.setItem(STORAGE_KEYS.QUIZ_PROGRESS, JSON.stringify(progress));
+    
+    // Update user score
+    if (isCorrect) {
+      this.updateScore(10); // 10 points for correct answer
+    }
+
+    return {
+      correct: isCorrect,
+      explanation: question.explanation,
+      progress
+    };
+  }
+
+  getQuizProgress() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.QUIZ_PROGRESS)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  updateScore(points) {
+    const userId = localStorage.getItem('mumayaz_session')?.email || 'anonymous';
+    const scores = this.getUserScores();
+    
+    if (!scores[userId]) {
+      scores[userId] = {
+        totalScore: 0,
+        quizzes: 0,
+        chats: 0,
+        disability: this.disability,
+        name: userId
+      };
+    }
+
+    scores[userId].totalScore += points;
+    scores[userId].quizzes += 1;
+    localStorage.setItem(STORAGE_KEYS.USER_SCORES, JSON.stringify(scores));
+    
+    return scores[userId];
+  }
+
+  getUserScores() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_SCORES)) || {};
+    } catch {
+      return {};
+    }
+  }
+}
+
+// Leaderboard System
+class LeaderboardSystem {
+  constructor() {
+    this.scores = this.loadScores();
+  }
+
+  loadScores() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_SCORES)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  getTopUsers(limit = 10) {
+    const users = Object.values(this.scores);
+    return users
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .slice(0, limit)
+      .map((user, index) => ({
+        ...user,
+        rank: index + 1
+      }));
+  }
+
+  getUserRank(userId) {
+    const sortedUsers = Object.entries(this.scores)
+      .sort(([,a], [,b]) => b.totalScore - a.totalScore);
+    
+    const userIndex = sortedUsers.findIndex(([id]) => id === userId);
+    return userIndex >= 0 ? userIndex + 1 : null;
+  }
+}
+
+// Enhanced ChatInterface Component
 const ChatInterface = ({ 
   onSwitchMode, 
   fontSize, 
@@ -209,12 +297,11 @@ const ChatInterface = ({
   
   const activeDisability = currentDisability || getCurrentDisability();
   const theme = getDisabilityTheme(activeDisability);
-  const viewportHeight = useViewportHeight();
-  const { isMobile, isLandscape, keyboardOpen } = useMobileDetection();
+  const [chatMemory] = useState(new ChatMemory('user', activeDisability));
+  const [quizSystem] = useState(new QuizSystem(activeDisability));
+  const [leaderboard] = useState(new LeaderboardSystem());
   
-  console.log("🎯 ChatInterface initialized with disability:", activeDisability);
-  console.log("📱 Mobile detection:", { isMobile, isLandscape, keyboardOpen });
-  
+  // Enhanced state management
   const [messages, setMessages] = useState([
     {
       sender: "gpt",
@@ -224,121 +311,88 @@ const ChatInterface = ({
   ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  
-  const controls = useAnimation();
+  const [currentView, setCurrentView] = useState('chat'); // 'chat', 'saved', 'quiz', 'leaderboard'
+  const [savedSessions, setSavedSessions] = useState([]);
+  const [dailyQuiz, setDailyQuiz] = useState(null);
+  const [showQuizResult, setShowQuizResult] = useState(null);
+  const [userStats, setUserStats] = useState(null);
+
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
-  
-  // Auto-scroll to bottom with mobile optimizations
-  const scrollToBottom = useCallback((smooth = true) => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ 
-        behavior: smooth && !reducedMotion ? "smooth" : "auto",
-        block: "nearest"
-      });
+  const controls = useAnimation();
+
+  // Load saved sessions and daily quiz on mount
+  useEffect(() => {
+    loadSavedSessions();
+    loadDailyQuiz();
+    loadUserStats();
+  }, []);
+
+  const loadSavedSessions = useCallback(() => {
+    const sessions = Object.values(chatMemory.getSavedSessions())
+      .sort((a, b) => b.lastUpdated - a.lastUpdated);
+    setSavedSessions(sessions);
+  }, [chatMemory]);
+
+  const loadDailyQuiz = useCallback(() => {
+    const quiz = quizSystem.getDailyQuestion();
+    setDailyQuiz(quiz);
+  }, [quizSystem]);
+
+  const loadUserStats = useCallback(() => {
+    const userId = 'user'; // Get from auth
+    const scores = quizSystem.getUserScores();
+    const userRank = leaderboard.getUserRank(userId);
+    setUserStats({
+      ...scores[userId],
+      rank: userRank
+    });
+  }, [quizSystem, leaderboard]);
+
+  // Enhanced AI communication with memory
+  const getAIResponse = async (prompt, disability) => {
+    try {
+      const contextPrompt = chatMemory.getContextPrompt();
+      const enhancedPrompt = createDisabilityAwarePrompt(prompt + contextPrompt, disability, false);
+      
+      // Mock AI response for demo
+      const response = `Based on our previous conversation and your ${disability} needs, here's my response to "${prompt}". I remember what we discussed earlier and I'm continuing our conversation with that context in mind.`;
+      
+      return formatAIResponse(response, disability);
+    } catch (err) {
+      return getDisabilityErrorMessage(disability);
     }
-  }, [reducedMotion]);
-  
-  useEffect(() => {
-    // Delay scroll to allow for keyboard animations
-    const timeout = setTimeout(scrollToBottom, keyboardOpen ? 300 : 100);
-    return () => clearTimeout(timeout);
-  }, [messages, keyboardOpen, scrollToBottom]);
+  };
 
-  // Handle viewport changes for mobile keyboards
-  useEffect(() => {
-    if (isMobile && isInputFocused) {
-      document.body.style.height = `${viewportHeight}px`;
-      return () => {
-        document.body.style.height = '';
-      };
-    }
-  }, [viewportHeight, isMobile, isInputFocused]);
-
-  // Scroll indicator for mobile
-  useEffect(() => {
-    if (!isMobile) return;
-    
-    const handleScroll = () => {
-      if (messagesRef.current) {
-        const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
-        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-        setShowScrollIndicator(!isNearBottom && messages.length > 3);
-      }
-    };
-    
-    const container = messagesRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll, { passive: true });
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [messages.length, isMobile]);
-
-  // Update welcome message when disability changes
-  useEffect(() => {
-    console.log("🔄 Disability changed to:", activeDisability);
-    setMessages([{
-      sender: "gpt",
-      text: getWelcomeMessage(activeDisability),
-      id: Date.now()
-    }]);
-  }, [activeDisability]);
-
-  // Mobile-optimized send handler
+  // Enhanced send handler with memory
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || isSending) return;
 
-    console.log("📤 Sending message with disability context:", activeDisability);
-    console.log("💬 User message:", text);
-
-    // Haptic feedback for mobile
-    if (navigator.vibrate && isMobile) {
-      navigator.vibrate(50);
-    }
-
     setIsSending(true);
-    if (!reducedMotion) {
-      await controls.start({ scale: 0.95, transition: { duration: 0.1 } });
-      controls.start({ scale: 1, transition: { type: "spring", stiffness: 300, damping: 15 } });
-    }
-
     const userId = Date.now();
     setMessages(prev => [...prev, { sender: "user", text, id: userId }]);
     setInput("");
-    
-    // Blur input to hide keyboard on mobile
-    if (isMobile && inputRef.current) {
-      inputRef.current.blur();
-      setIsInputFocused(false);
-    }
 
     const loadingId = Date.now() + 1;
     setMessages(prev => [...prev, { sender: "gpt", loading: true, id: loadingId }]);
 
     try {
-      const enhancedPrompt = createDisabilityAwarePrompt(text, activeDisability, false);
+      const response = await getAIResponse(text, activeDisability);
       
-      console.log("🎯 Enhanced prompt created for", activeDisability);
-      console.log("🔍 Prompt preview:", enhancedPrompt.substring(0, 300) + "...");
-
-      const resp = await getAIResponse(enhancedPrompt, activeDisability);
-
+      // Add to memory
+      chatMemory.addExchange(text, response);
+      
       setMessages(prev =>
         prev.map(m =>
-          m.id === loadingId ? { sender: "gpt", text: resp, id: loadingId } : m
+          m.id === loadingId ? { sender: "gpt", text: response, id: loadingId } : m
         )
       );
       
-      console.log("✅ Response displayed for", activeDisability);
-      
-      // Success haptic feedback
-      if (navigator.vibrate && isMobile) {
-        navigator.vibrate([50, 50, 50]);
-      }
+      // Update chat score
+      quizSystem.updateScore(5); // 5 points per chat message
+      loadUserStats();
       
     } catch (err) {
       const errorMsg = getDisabilityErrorMessage(activeDisability);
@@ -347,18 +401,61 @@ const ChatInterface = ({
           m.id === loadingId ? { sender: "gpt", text: errorMsg, id: loadingId } : m
         )
       );
-      console.error("[ChatInterface] AI error:", err);
-      
-      // Error haptic feedback
-      if (navigator.vibrate && isMobile) {
-        navigator.vibrate([100, 50, 100]);
-      }
     } finally {
       setIsSending(false);
     }
-  }, [input, isSending, activeDisability, controls, reducedMotion, isMobile]);
+  }, [input, isSending, activeDisability, chatMemory, quizSystem]);
 
-  // Mobile keyboard handlers
+  // Save current session
+  const saveCurrentSession = useCallback(() => {
+    if (messages.length > 1) { // Don't save empty sessions
+      const sessionData = chatMemory.saveSession();
+      loadSavedSessions();
+      alert(`Session saved: "${sessionData.title}"`);
+    }
+  }, [messages, chatMemory, loadSavedSessions]);
+
+  // Load saved session
+  const loadSession = useCallback((sessionId) => {
+    const sessions = chatMemory.getSavedSessions();
+    const session = sessions[sessionId];
+    if (session) {
+      const sessionMessages = [
+        {
+          sender: "gpt",
+          text: `Loaded previous ${session.disability.toUpperCase()} session: "${session.title}"`,
+          id: Date.now()
+        }
+      ];
+      
+      session.context.forEach(exchange => {
+        sessionMessages.push(
+          { sender: "user", text: exchange.user, id: Date.now() + Math.random() },
+          { sender: "gpt", text: exchange.ai, id: Date.now() + Math.random() }
+        );
+      });
+
+      setMessages(sessionMessages);
+      chatMemory.loadSession(sessionId);
+      setCurrentView('chat');
+    }
+  }, [chatMemory]);
+
+  // Handle quiz answer
+  const handleQuizAnswer = useCallback((selectedAnswer) => {
+    if (!dailyQuiz) return;
+
+    const result = quizSystem.submitAnswer(dailyQuiz.index, selectedAnswer);
+    setShowQuizResult(result);
+    loadUserStats();
+    
+    setTimeout(() => {
+      setShowQuizResult(null);
+      setDailyQuiz(null);
+    }, 3000);
+  }, [dailyQuiz, quizSystem]);
+
+  // Keyboard handler
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -366,444 +463,534 @@ const ChatInterface = ({
     }
   }, [handleSend]);
 
-  const handleInputFocus = useCallback(() => {
-    setIsInputFocused(true);
-    // Scroll to input area on focus for mobile
-    if (isMobile) {
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
-        }
-      }, 300);
-    }
-  }, [isMobile]);
-
-  const handleInputBlur = useCallback(() => {
-    setIsInputFocused(false);
-  }, []);
-
-  // Dynamic styles based on mobile state
-  const dynamicStyles = {
-    container: {
-      height: isMobile ? `${viewportHeight}px` : '100vh',
-      '--mobile-keyboard-offset': keyboardOpen ? '20px' : '0px',
-    },
-    messagesContainer: {
-      paddingBottom: keyboardOpen ? '20px' : '16px',
-      maxHeight: isMobile 
-        ? `calc(${viewportHeight}px - ${isLandscape ? '140px' : '180px'} - var(--mobile-keyboard-offset))`
-        : 'calc(100vh - 180px)',
-    },
-    inputArea: {
-      position: keyboardOpen ? 'fixed' : 'relative',
-      bottom: keyboardOpen ? '0' : 'auto',
-      left: keyboardOpen ? '0' : 'auto',
-      right: keyboardOpen ? '0' : 'auto',
-      zIndex: keyboardOpen ? 1000 : 'auto',
-    }
-  };
-
-  return (
-    <div
+  // Navigation buttons
+  const NavigationBar = () => (
+    <motion.div
       style={{
-        position: 'relative',
-        fontSize: `${fontSize}rem`,
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '0',
-        background: 'linear-gradient(135deg, #1a001a, #000020, #100018)',
-        minHeight: '100vh',
-        fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-        ...dynamicStyles.container
+        gap: '0.5rem',
+        padding: '0.5rem',
+        background: 'rgba(255,255,255,0.1)',
+        borderRadius: '12px',
+        marginBottom: '1rem',
+        flexWrap: 'wrap',
+        justifyContent: 'center'
       }}
     >
-      {/* Top Navigation Bar - Mobile Optimized */}
+      {[
+        { view: 'chat', label: 'Chat', icon: '💬' },
+        { view: 'saved', label: 'Saved', icon: '💾' },
+        { view: 'quiz', label: 'Daily Quiz', icon: '🧩' },
+        { view: 'leaderboard', label: 'Leaderboard', icon: '🏆' }
+      ].map(({ view, label, icon }) => (
+        <button
+          key={view}
+          onClick={() => setCurrentView(view)}
+          style={{
+            padding: '0.5rem 1rem',
+            background: currentView === view ? theme.bubbleUserBg : 'transparent',
+            color: theme.textColor,
+            border: `2px solid ${theme.borderColor}`,
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          {icon} {label}
+        </button>
+      ))}
+    </motion.div>
+  );
+
+  // Saved Sessions View
+  const SavedSessionsView = () => (
+    <div style={{ padding: '1rem' }}>
+      <h3 style={{ color: theme.textColor, marginBottom: '1rem' }}>
+        Saved Chat Sessions
+      </h3>
+      {savedSessions.length === 0 ? (
+        <p style={{ color: theme.textColor, opacity: 0.7 }}>
+          No saved sessions yet. Start chatting and save your conversations!
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {savedSessions.map(session => (
+            <motion.div
+              key={session.id}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                padding: '1rem',
+                borderRadius: '8px',
+                border: `1px solid ${theme.borderColor}`,
+                cursor: 'pointer'
+              }}
+              whileHover={{ scale: 1.02, background: 'rgba(255,255,255,0.15)' }}
+              onClick={() => loadSession(session.id)}
+            >
+              <h4 style={{ margin: '0 0 0.5rem 0', color: theme.textColor }}>
+                {session.title}
+              </h4>
+              <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>
+                {session.disability.toUpperCase()} • {new Date(session.created).toLocaleDateString()} • {session.context.length} messages
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // Quiz View
+  const QuizView = () => (
+    <div style={{ padding: '1rem' }}>
+      <h3 style={{ color: theme.textColor, marginBottom: '1rem' }}>
+        Daily Quiz - {activeDisability.toUpperCase()} Mode
+      </h3>
+      
+      {showQuizResult && (
+        <motion.div
+          style={{
+            background: showQuizResult.correct ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            border: `2px solid ${showQuizResult.correct ? '#4CAF50' : '#F44336'}`
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h4 style={{ margin: '0 0 0.5rem 0', color: theme.textColor }}>
+            {showQuizResult.correct ? '🎉 Correct!' : '❌ Incorrect'}
+          </h4>
+          <p style={{ margin: 0, color: theme.textColor }}>
+            {showQuizResult.explanation}
+          </p>
+          {showQuizResult.correct && (
+            <p style={{ margin: '0.5rem 0 0 0', fontWeight: 'bold', color: '#4CAF50' }}>
+              +10 points earned!
+            </p>
+          )}
+        </motion.div>
+      )}
+
+      {!dailyQuiz ? (
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <p style={{ color: theme.textColor, fontSize: '1.2rem' }}>
+            🎉 You've completed today's quiz!
+          </p>
+          <p style={{ color: theme.textColor, opacity: 0.8 }}>
+            Come back tomorrow for a new question.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <div style={{
+            background: 'rgba(255,255,255,0.1)',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            marginBottom: '1rem'
+          }}>
+            <h4 style={{ color: theme.textColor, marginBottom: '1rem' }}>
+              {dailyQuiz.question}
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {dailyQuiz.options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuizAnswer(index)}
+                  style={{
+                    padding: '0.75rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    color: theme.textColor,
+                    border: `2px solid ${theme.borderColor}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {String.fromCharCode(65 + index)}. {option}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {userStats && (
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          padding: '1rem',
+          borderRadius: '8px',
+          marginTop: '1rem'
+        }}>
+          <h4 style={{ color: theme.textColor, margin: '0 0 0.5rem 0' }}>
+            Your Quiz Stats
+          </h4>
+          <p style={{ margin: '0.25rem 0', color: theme.textColor }}>
+            Quizzes completed: {userStats.quizzes || 0}
+          </p>
+          <p style={{ margin: '0.25rem 0', color: theme.textColor }}>
+            Accuracy: {userStats.quizzes > 0 ? Math.round((userStats.correctAnswers || 0) / userStats.quizzes * 100) : 0}%
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  // Leaderboard View
+  const LeaderboardView = () => {
+    const topUsers = leaderboard.getTopUsers();
+    
+    return (
+      <div style={{ padding: '1rem' }}>
+        <h3 style={{ color: theme.textColor, marginBottom: '1rem' }}>
+          🏆 Accessibility Champion Leaderboard
+        </h3>
+        
+        {userStats && userStats.rank && (
+          <div style={{
+            background: theme.bubbleUserBg,
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            textAlign: 'center'
+          }}>
+            <h4 style={{ margin: '0 0 0.5rem 0', color: '#fff' }}>
+              Your Rank: #{userStats.rank}
+            </h4>
+            <p style={{ margin: 0, color: '#fff' }}>
+              Total Score: {userStats.totalScore || 0} points
+            </p>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {topUsers.map((user, index) => (
+            <motion.div
+              key={user.name}
+              style={{
+                background: index < 3 ? 
+                  'linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,140,0,0.2))' :
+                  'rgba(255,255,255,0.1)',
+                padding: '1rem',
+                borderRadius: '8px',
+                border: `2px solid ${index < 3 ? '#FFD700' : theme.borderColor}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div>
+                <span style={{ fontSize: '1.2rem', marginRight: '0.5rem' }}>
+                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${user.rank}`}
+                </span>
+                <strong style={{ color: theme.textColor }}>
+                  {user.name}
+                </strong>
+                <div style={{ fontSize: '0.9rem', opacity: 0.8, color: theme.textColor }}>
+                  {user.disability?.toUpperCase()} • {user.chats || 0} chats • {user.quizzes || 0} quizzes
+                </div>
+              </div>
+              <div style={{ 
+                color: theme.textColor, 
+                fontWeight: 'bold', 
+                fontSize: '1.1rem' 
+              }}>
+                {user.totalScore} pts
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {topUsers.length === 0 && (
+          <p style={{ color: theme.textColor, textAlign: 'center', padding: '2rem' }}>
+            No users on the leaderboard yet. Be the first to earn points!
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  // Main render
+  return (
+    <div style={{
+      position: 'relative',
+      fontSize: `${fontSize}rem`,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '0',
+      background: 'linear-gradient(135deg, #1a001a, #000020, #100018)',
+      minHeight: '100vh',
+      fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
+    }}>
+      {/* Enhanced Top Navigation Bar */}
       <motion.div
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
-          height: isLandscape && isMobile ? '56px' : '80px',
+          height: '80px',
           background: 'rgba(26, 0, 26, 0.95)',
           backdropFilter: 'blur(20px)',
           borderBottom: `2px solid ${theme.borderColor}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 clamp(0.5rem, 2vw, 1rem)',
-          zIndex: 1000,
-          // Safe area handling for mobile
-          paddingTop: isMobile ? 'max(0.5rem, env(safe-area-inset-top))' : '0.5rem',
-          paddingLeft: isMobile ? 'max(1rem, env(safe-area-inset-left))' : '1rem',
-          paddingRight: isMobile ? 'max(1rem, env(safe-area-inset-right))' : '1rem',
+          padding: '0 1rem',
+          zIndex: 1000
         }}
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: reducedMotion ? 0 : 0.6, type: "spring", stiffness: 100 }}
       >
-        {/* Switch to Voice Button - Mobile Optimized */}
-        {onSwitchMode && (
-          <motion.button
-            onClick={onSwitchMode}
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-              border: `2px solid ${theme.borderColor}`,
-              borderRadius: '12px',
-              color: theme.textColor,
-              padding: isMobile ? '0.6rem 1rem' : '0.7rem 1.2rem',
-              cursor: 'pointer',
-              fontSize: isMobile ? '0.8rem' : '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-              transition: 'all 0.3s ease',
-              minHeight: '44px', // Touch target
-              minWidth: '44px',
-              whiteSpace: 'nowrap'
-            }}
-            whileHover={{ 
-              scale: 1.05, 
-              y: -2,
-              background: theme.bubbleUserBg,
-              boxShadow: `0 8px 25px ${theme.primary}30`
-            }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.2 }}
-          >
-            <span>🎤</span>
-            {!isMobile || !isLandscape ? 'Voice' : '🎤'}
-          </motion.button>
-        )}
-
-        {/* Title - Mobile Optimized */}
-        <motion.div
+        <motion.button
+          onClick={onSwitchMode}
           style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            textAlign: 'center',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+            border: `2px solid ${theme.borderColor}`,
+            borderRadius: '12px',
             color: theme.textColor,
-            fontWeight: '700',
-            fontSize: isMobile ? (isLandscape ? '0.9rem' : '1rem') : '1.1rem',
-            letterSpacing: '0.02em',
-            whiteSpace: 'nowrap',
-            maxWidth: '60%',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            padding: '0.7rem 1.2rem',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: '600'
           }}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
-          <div>
-            {isMobile && isLandscape ? 
-              `${activeDisability.toUpperCase()} Chat` :
-              assistantTitle
-            }
-            {activeDisability === 'adhd' && ' 🧠'}
-            {activeDisability === 'autism' && ' 🌈'}
-            {activeDisability === 'dyslexia' && ' 💚'}
+          <span>🎤</span> Voice
+        </motion.button>
+
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          textAlign: 'center'
+        }}>
+          <div style={{ color: theme.textColor, fontWeight: '700', fontSize: '1.1rem' }}>
+            {assistantTitle}
           </div>
-          {(!isMobile || !isLandscape) && (
-            <div style={{ 
-              fontSize: '0.6rem', 
-              opacity: 0.8, 
-              marginTop: '2px' 
-            }}>
-              {activeDisability.toUpperCase()} Mode
+          {userStats && (
+            <div style={{ fontSize: '0.7rem', opacity: 0.8, color: theme.textColor }}>
+              Score: {userStats.totalScore || 0} • Rank: #{userStats.rank || 'Unranked'}
             </div>
           )}
-        </motion.div>
+        </div>
 
-        {/* Sign Out Button - Mobile Optimized */}
-        {onSignOut && (
-          <motion.button
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {currentView === 'chat' && (
+            <motion.button
+              onClick={saveCurrentSession}
+              style={{
+                background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                border: 'none',
+                borderRadius: '12px',
+                color: '#ffffff',
+                padding: '0.7rem 1rem',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                fontWeight: '600'
+              }}
+            >
+              💾 Save
+            </motion.button>
+          )}
+          
+                      <motion.button
             onClick={onSignOut}
             style={{
               background: 'linear-gradient(135deg, #ff4757, #ff3838)',
               border: 'none',
               borderRadius: '12px',
               color: '#ffffff',
-              padding: isMobile ? '0.6rem 1rem' : '0.7rem 1.2rem',
+              padding: '0.7rem 1.2rem',
               cursor: 'pointer',
-              fontSize: isMobile ? '0.8rem' : '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              boxShadow: '0 4px 15px rgba(255, 71, 87, 0.3)',
-              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-              transition: 'all 0.3s ease',
-              minHeight: '44px',
-              minWidth: '44px',
-              whiteSpace: 'nowrap'
+              fontSize: '0.9rem',
+              fontWeight: '600'
             }}
-            whileHover={{ 
-              scale: 1.05, 
-              y: -2,
-              boxShadow: '0 8px 25px rgba(255, 71, 87, 0.5)',
-              background: 'linear-gradient(135deg, #ff3838, #ff2525)'
-            }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.3 }}
           >
-            <span>🚪</span>
-            {!isMobile || !isLandscape ? 'Sign Out' : '🚪'}
+            Sign Out
           </motion.button>
-        )}
+        </div>
       </motion.div>
 
-      {/* Main Chat Container */}
-      <div
-        style={{
-          width: '100vw',
-          height: dynamicStyles.container.height,
-          maxWidth: '100vw',
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'rgba(26, 0, 26, 0.8)',
-          backdropFilter: 'blur(15px)',
-          overflow: 'hidden',
-          paddingTop: isLandscape && isMobile ? '56px' : '80px'
-        }}
-      >
-        {/* Messages Area - Mobile Optimized */}
-        <div 
-          ref={messagesRef}
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            padding: isMobile ? 'clamp(0.5rem, 2vw, 1rem)' : '1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: isMobile ? '0.75rem' : '1rem',
-            direction: 'ltr',
-            // Mobile scroll optimizations
-            WebkitOverflowScrolling: 'touch',
-            scrollBehavior: 'smooth',
-            scrollPadding: '1rem',
-            overscrollBehavior: 'contain',
-            ...dynamicStyles.messagesContainer
-          }}
-        >
-          <AnimatePresence mode="popLayout">
-            {messages.map(msg => (
-              <motion.div
-                key={msg.id}
-                style={{
-                  maxWidth: isMobile ? '85%' : '80%',
-                  padding: isMobile ? 'clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.5rem)' : '1rem 1.5rem',
-                  borderRadius: isMobile ? '12px' : '16px',
-                  background: msg.sender === 'user' ? theme.bubbleUserBg : theme.bubbleGptBg,
-                  color: msg.sender === 'user' ? '#ffffff' : theme.textColor,
-                  alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                  border: `2px solid ${theme.borderColor}`,
-                  lineHeight: isMobile ? 1.6 : 1.8,
-                  letterSpacing: '0.04em',
-                  wordSpacing: '0.12em',
-                  textAlign: 'left',
-                  direction: 'ltr',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word',
-                  hyphens: 'auto',
-                  fontSize: isMobile ? 'clamp(15px, 4vw, 16px)' : 'inherit',
-                  // Touch-friendly margins
-                  marginBottom: isMobile ? '0.75rem' : '1rem'
-                }}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 200, 
-                  damping: 20,
-                  duration: reducedMotion ? 0.1 : 0.4
-                }}
-                whileTap={isMobile ? { scale: 0.98 } : {}}
-                layout
-              >
-                {msg.loading ? (
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <span>Thinking ({activeDisability.toUpperCase()} mode)</span>
-                    {[0,1,2].map(i => (
-                      <motion.div
-                        key={i}
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          background: theme.primary
-                        }}
-                        animate={{ 
-                          scale: reducedMotion ? 1 : [1, 1.4, 1], 
-                          opacity: reducedMotion ? 0.7 : [0.4, 1, 0.4] 
-                        }}
-                        transition={{ 
-                          duration: reducedMotion ? 0 : 1.2, 
-                          repeat: reducedMotion ? 0 : Infinity, 
-                          delay: reducedMotion ? 0 : i * 0.15 
-                        }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <span>{msg.text}</span>
-                )}
-              </motion.div>
-            ))}
-            <div ref={bottomRef} />
-          </AnimatePresence>
-          
-          {/* Mobile Scroll Indicator */}
-          {isMobile && showScrollIndicator && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{
-                position: 'fixed',
-                right: '8px',
-                bottom: keyboardOpen ? '120px' : '100px',
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: theme.primary,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                fontSize: '14px',
-                cursor: 'pointer',
-                zIndex: 10,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-              }}
-              onClick={scrollToBottom}
-              whileTap={{ scale: 0.9 }}
-            >
-              ↓
-            </motion.div>
-          )}
+      {/* Main Chat Container with Navigation */}
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        maxWidth: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'rgba(26, 0, 26, 0.8)',
+        backdropFilter: 'blur(15px)',
+        overflow: 'hidden',
+        paddingTop: '80px'
+      }}>
+        {/* Navigation Bar */}
+        <div style={{ padding: '1rem' }}>
+          <NavigationBar />
         </div>
 
-        {/* Input Area - Mobile Optimized */}
-        <motion.div 
-          style={{
-            padding: isMobile ? 'clamp(0.5rem, 2vw, 1rem)' : '1rem',
-            background: 'rgba(0,0,0,0.2)',
-            display: 'flex',
-            gap: isMobile ? '0.5rem' : '0.75rem',
-            borderTop: `2px solid ${theme.borderColor}`,
-            direction: 'ltr',
-            flexShrink: 0,
-            // Safe area for mobile
-            paddingBottom: isMobile ? 'max(clamp(0.5rem, 2vw, 1rem), env(safe-area-inset-bottom))' : '1rem',
-            paddingLeft: isMobile ? 'max(clamp(0.5rem, 2vw, 1rem), env(safe-area-inset-left))' : '1rem',
-            paddingRight: isMobile ? 'max(clamp(0.5rem, 2vw, 1rem), env(safe-area-inset-right))' : '1rem',
-            // Handle mobile keyboard
-            ...dynamicStyles.inputArea
-          }}
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ 
-            delay: reducedMotion ? 0 : 0.5, 
-            duration: reducedMotion ? 0.1 : 0.6,
-            type: "spring",
-            stiffness: 100
-          }}
-        >
-          <motion.input
-            ref={inputRef}
-            value={input}
-            disabled={isSending}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-            placeholder={isMobile && isLandscape ? 
-              `${activeDisability.toUpperCase()} mode...` :
-              `Type your message... (${activeDisability.toUpperCase()} mode - responses optimized for your needs)`
-            }
-            style={{
-              flex: 1,
-              padding: isMobile ? 'clamp(0.75rem, 3vw, 1rem)' : '0.75rem 1rem',
-              borderRadius: '12px',
-              border: `2px solid ${theme.inputBorderColor}`,
-              background: 'rgba(26, 0, 26, 0.9)',
-              color: theme.textColor,
-              outline: 'none',
-              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-              fontSize: isMobile ? 'max(16px, clamp(16px, 4vw, 18px))' : '1rem', // Prevent zoom on iOS
-              letterSpacing: '0.04em',
-              lineHeight: 1.6,
-              textAlign: 'left',
-              direction: 'ltr',
-              transition: 'all 0.3s ease',
-              minHeight: isMobile ? '48px' : 'auto',
-              // Mobile-specific input styles
-              WebkitAppearance: 'none',
-              WebkitBorderRadius: '12px'
-            }}
-            whileFocus={{
-              borderColor: theme.focusBorderColor,
-              boxShadow: `0 0 0 3px ${theme.primary}33`,
-              scale: !reducedMotion && !isMobile ? 1.01 : 1
-            }}
-          />
-          <motion.button
-            onClick={handleSend}
-            disabled={isSending || !input.trim()}
-            animate={controls}
-            style={{
-              padding: isMobile ? 'clamp(0.75rem, 3vw, 1rem)' : '0.75rem 1.5rem',
-              borderRadius: '12px',
-              border: 'none',
-              background: theme.bubbleUserBg,
-              color: '#ffffff',
-              cursor: isSending || !input.trim() ? 'not-allowed' : 'pointer',
-              opacity: isSending || !input.trim() ? 0.6 : 1,
-              fontWeight: '600',
-              fontSize: isMobile ? 'clamp(14px, 3.5vw, 16px)' : '1rem',
-              minWidth: isMobile ? '60px' : '100px',
-              minHeight: isMobile ? '48px' : 'auto',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              whiteSpace: 'nowrap',
-              // Mobile touch optimizations
-              WebkitTapHighlightColor: 'transparent',
-              userSelect: 'none'
-            }}
-            whileHover={!isSending && input.trim() && !reducedMotion && !isMobile ? { 
-              scale: 1.05, 
-              y: -3,
-              boxShadow: `0 8px 25px ${theme.primary}50`
-            } : {}}
-            whileTap={!isSending && input.trim() ? { scale: 0.95 } : {}}
-          >
-            {isSending ? (
-              isMobile ? "..." : "Sending..."
-            ) : (
-              isMobile && isLandscape ? "Send" : `Send (${activeDisability.toUpperCase()})`
-            )}
-          </motion.button>
-        </motion.div>
+        {/* Dynamic Content Area */}
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          {currentView === 'chat' && (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              {/* Messages Area */}
+              <div 
+                ref={messagesRef}
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
+                <AnimatePresence mode="popLayout">
+                  {messages.map(msg => (
+                    <motion.div
+                      key={msg.id}
+                      style={{
+                        maxWidth: '80%',
+                        padding: '1rem 1.5rem',
+                        borderRadius: '16px',
+                        background: msg.sender === 'user' ? theme.bubbleUserBg : theme.bubbleGptBg,
+                        color: msg.sender === 'user' ? '#ffffff' : theme.textColor,
+                        alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                        border: `2px solid ${theme.borderColor}`,
+                        lineHeight: 1.8,
+                        letterSpacing: '0.04em',
+                        wordSpacing: '0.12em',
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word'
+                      }}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 200, 
+                        damping: 20,
+                        duration: reducedMotion ? 0.1 : 0.4
+                      }}
+                      layout
+                    >
+                      {msg.loading ? (
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <span>Thinking with memory context...</span>
+                          {[0,1,2].map(i => (
+                            <motion.div
+                              key={i}
+                              style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                background: theme.primary
+                              }}
+                              animate={{ 
+                                scale: reducedMotion ? 1 : [1, 1.4, 1], 
+                                opacity: reducedMotion ? 0.7 : [0.4, 1, 0.4] 
+                              }}
+                              transition={{ 
+                                duration: reducedMotion ? 0 : 1.2, 
+                                repeat: reducedMotion ? 0 : Infinity, 
+                                delay: reducedMotion ? 0 : i * 0.15 
+                              }}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <span>{msg.text}</span>
+                      )}
+                    </motion.div>
+                  ))}
+                  <div ref={bottomRef} />
+                </AnimatePresence>
+              </div>
+
+              {/* Input Area with Memory Indicator */}
+              <motion.div 
+                style={{
+                  padding: '1rem',
+                  background: 'rgba(0,0,0,0.2)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  borderTop: `2px solid ${theme.borderColor}`,
+                  flexShrink: 0
+                }}
+              >
+                {/* Memory Status */}
+                {chatMemory.context.length > 0 && (
+                  <div style={{
+                    fontSize: '0.8rem',
+                    color: theme.textColor,
+                    opacity: 0.7,
+                    textAlign: 'center'
+                  }}>
+                    Remembering {chatMemory.context.length} previous exchanges for context
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <motion.input
+                    ref={inputRef}
+                    value={input}
+                    disabled={isSending}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Chat with memory context (${activeDisability.toUpperCase()} mode)`}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem 1rem',
+                      borderRadius: '12px',
+                      border: `2px solid ${theme.inputBorderColor}`,
+                      background: 'rgba(26, 0, 26, 0.9)',
+                      color: theme.textColor,
+                      outline: 'none',
+                      fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
+                      fontSize: '1rem',
+                      letterSpacing: '0.04em',
+                      lineHeight: 1.6
+                    }}
+                  />
+                  <motion.button
+                    onClick={handleSend}
+                    disabled={isSending || !input.trim()}
+                    animate={controls}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: theme.bubbleUserBg,
+                      color: '#ffffff',
+                      cursor: isSending || !input.trim() ? 'not-allowed' : 'pointer',
+                      opacity: isSending || !input.trim() ? 0.6 : 1,
+                      fontWeight: '600',
+                      fontSize: '1rem',
+                      minWidth: '100px'
+                    }}
+                  >
+                    {isSending ? "Sending..." : "Send"}
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {currentView === 'saved' && <SavedSessionsView />}
+          {currentView === 'quiz' && <QuizView />}
+          {currentView === 'leaderboard' && <LeaderboardView />}
+        </div>
       </div>
     </div>
   );
