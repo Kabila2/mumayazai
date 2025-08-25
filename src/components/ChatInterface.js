@@ -777,7 +777,7 @@ const ChatInterface = ({
               color: '#ffffff',
               cursor: isSending || !input.trim() ? 'not-allowed' : 'pointer',
               opacity: isSending || !input.trim() ? 0.6 : 1,
-              fontWeight: '400',
+              fontWeight: '600',
               fontSize: isMobile ? 'clamp(14px, 3.5vw, 16px)' : '1rem',
               minWidth: isMobile ? '60px' : '100px',
               minHeight: isMobile ? '48px' : 'auto',
