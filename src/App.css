@@ -1,639 +1,384 @@
-/* App.css - Ultra-Optimized Mobile-First Dyslexia-Friendly Application */
-/* MOBILE-FIRST: All base styles optimized for mobile, desktop enhanced via media queries */
+/* App.css - Mobile-Optimized Dyslexia-Friendly Application Layout */
 
-/* Import dyslexic-friendly fonts with display=swap for better loading */
+/* Import dyslexic-friendly fonts */
 @import url('https://fonts.googleapis.com/css2?family=Open+Dyslexic:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap');
 
 :root {
-  --dyslexic-font: 'Lexend', 'Open Dyslexic', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  --background: #8e2de2;
+  --dyslexic-font: 'Lexend', 'Open Dyslexic', Arial, sans-serif;
+  --background: #8e2de2;  /* Unified purple background */
   --text-light: #e8f5e8;
-  --border-radius: min(12px, 2vw);
-  --transition: all 0.15s ease;
+  --border-radius: 12px;
+  --transition: all 0.3s ease;
   --letter-spacing: 0.03em;
   --line-height: 1.6;
   
-  /* FLUID TYPOGRAPHY - Scales automatically between min-max */
-  --fluid-xs: clamp(0.75rem, 2vw, 0.875rem);
-  --fluid-sm: clamp(0.875rem, 2.5vw, 1rem);
-  --fluid-base: clamp(1rem, 3vw, 1.125rem);
-  --fluid-lg: clamp(1.125rem, 3.5vw, 1.25rem);
-  --fluid-xl: clamp(1.25rem, 4vw, 1.5rem);
-  --fluid-2xl: clamp(1.5rem, 5vw, 2rem);
-  --fluid-3xl: clamp(2rem, 6vw, 2.5rem);
-  
-  /* FLUID SPACING - Responsive spacing system */
-  --space-xs: clamp(0.25rem, 1vw, 0.5rem);
-  --space-sm: clamp(0.5rem, 2vw, 0.75rem);
-  --space-md: clamp(0.75rem, 3vw, 1rem);
-  --space-lg: clamp(1rem, 4vw, 1.5rem);
-  --space-xl: clamp(1.5rem, 5vw, 2rem);
-  --space-2xl: clamp(2rem, 6vw, 3rem);
-  
-  /* ADAPTIVE COMPONENT SIZES */
-  --button-height: clamp(44px, 8vw, 56px);
-  --header-height: clamp(52px, 12vw, 64px);
-  --dock-height: clamp(60px, 14vw, 80px);
-  --touch-target: max(44px, 10vw);
-  
-  /* PERFORMANCE OPTIMIZATIONS */
-  --gpu-acceleration: translateZ(0);
-  --contain-layout: layout style paint;
-  --border-width: max(1px, 0.5vw);
-  
-  /* SAFE AREA AWARE PADDING */
-  --safe-top: max(var(--space-sm), env(safe-area-inset-top));
-  --safe-bottom: max(var(--space-md), env(safe-area-inset-bottom));
-  --safe-left: max(var(--space-sm), env(safe-area-inset-left));
-  --safe-right: max(var(--space-sm), env(safe-area-inset-right));
+  /* Mobile-specific variables */
+  --mobile-padding: clamp(0.75rem, 2vw, 1rem);
+  --mobile-gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  --mobile-button-height: 48px; /* iOS/Android recommended minimum */
+  --mobile-font-base: clamp(16px, 4vw, 18px);
+  --mobile-header-height: 60px;
 }
 
-/* RESET WITH MOBILE-FIRST APPROACH */
-html {
-  font-size: 16px; /* Base font size for rem calculations */
-  -webkit-text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeSpeed;
-}
-
-body {
+/* Base reset with mobile-first approach */
+html, body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   background: var(--background);
   font-family: var(--dyslexic-font);
   line-height: var(--line-height);
   letter-spacing: var(--letter-spacing);
-  font-size: var(--fluid-base);
+  font-size: var(--mobile-font-base);
   color: var(--text-light);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  overscroll-behavior: none;
+  
+  /* Mobile optimizations */
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation; /* Prevents zoom on double-tap */
+  -webkit-tap-highlight-color: transparent; /* Removes blue highlight on tap */
 }
 
-*, *::before, *::after {
+* {
   box-sizing: border-box;
-  font-family: inherit;
+  font-family: var(--dyslexic-font);
 }
 
-/* MOBILE-FIRST APP CONTAINER */
-.app-container {
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-  background: var(--background);
-  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  overscroll-behavior: none;
-  display: flex;
-  flex-direction: column;
-}
-
-/* MAIN CONTENT AREA - MOBILE OPTIMIZED */
+/* Main content area: mobile-first responsive */
 .main-content {
-  flex: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-md);
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  position: relative;
+  padding: 0;
 }
 
-/* ADAPTIVE PLACEHOLDER */
+/* Enhanced placeholder styling with mobile considerations */
 .placeholder {
   color: var(--text-light);
-  font-size: var(--fluid-2xl);
+  font-size: clamp(1.5rem, 5vw, 2rem);
   text-align: center;
-  padding: var(--space-lg);
-  background: rgba(255, 255, 255, 0.1);
+  padding: var(--mobile-padding);
+  background: rgba(255,255,255,0.1);
   border-radius: var(--border-radius);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  max-width: min(90vw, 600px);
-  margin: var(--space-md);
   animation: gentlePulse 4s ease-in-out infinite;
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  backdrop-filter: blur(10px);
-  border: var(--border-width) solid rgba(255, 255, 255, 0.2);
+  max-width: 90vw;
+  margin: var(--mobile-padding);
 }
 
-/* PERFORMANCE-OPTIMIZED ANIMATION */
 @keyframes gentlePulse {
-  0%, 100% { 
-    opacity: 1;
-    transform: translateZ(0) scale(1); 
-  }
-  50% { 
-    opacity: 0.95;
-    transform: translateZ(0) scale(1.02); 
-  }
+  0%,100% { transform: scale(1); }
+  50%    { transform: scale(1.02); }
 }
 
-/* ADAPTIVE HEADER - MOBILE FIRST */
+/* Mobile-optimized mode switcher */
 .mode-switcher {
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: var(--header-height);
-  background: rgba(142, 45, 226, 0.95);
+  height: var(--mobile-header-height);
+  background: var(--background);
   backdrop-filter: blur(20px);
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--mobile-gap);
   z-index: 500;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  padding: var(--space-xs) var(--space-md);
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  border-bottom: var(--border-width) solid rgba(255, 255, 255, 0.1);
-  flex-wrap: wrap;
-  min-height: var(--header-height);
+  padding: 0 var(--mobile-padding);
 }
 
-/* ADAPTIVE BUTTONS */
 .mode-switcher button {
   background: transparent;
-  border: var(--border-width) solid transparent;
+  border: none;
   color: #ccc;
-  font-size: var(--fluid-sm);
+  font-size: clamp(1rem, 3vw, 1.2rem);
   font-weight: 500;
   cursor: pointer;
-  padding: var(--space-sm) var(--space-md);
+  padding: 0.6rem 1rem;
   border-radius: var(--border-radius);
   transition: var(--transition);
-  min-height: var(--touch-target);
-  min-width: var(--touch-target);
+  min-height: var(--mobile-button-height);
+  min-width: 44px; /* iOS minimum touch target */
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  position: relative;
-  overflow: hidden;
-  flex: 0 0 auto;
 }
 
-.mode-switcher button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.1);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  border-radius: inherit;
-}
-
-.mode-switcher button:hover::before,
-.mode-switcher button:focus::before {
-  opacity: 1;
-}
-
+.mode-switcher button:hover,
 .mode-switcher button:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
-  outline-offset: 2px;
   color: var(--text-light);
-}
-
-.mode-switcher button:active {
-  transform: translateZ(0) scale(0.95);
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
 }
 
 .mode-switcher button.active {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* ADAPTIVE DOCK - MOBILE OPTIMIZED */
+/* Mobile-optimized bottom dock */
 .chat-dock {
-  position: sticky;
+  position: fixed;
   bottom: 0;
   width: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
-  background: rgba(142, 45, 226, 0.95);
+  background: var(--background);
   backdrop-filter: blur(20px);
-  padding: var(--space-md);
+  padding: var(--mobile-padding) 0;
   z-index: 500;
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-  border-top: var(--border-width) solid rgba(255, 255, 255, 0.1);
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  min-height: var(--dock-height);
+  /* Add safe area for iPhone notch */
+  padding-bottom: max(var(--mobile-padding), env(safe-area-inset-bottom));
 }
 
-/* ADAPTIVE DOCK BUTTONS */
 .dock-btn {
   background: transparent;
-  border: var(--border-width) solid transparent;
+  border: none;
   color: #ccc;
-  font-size: var(--fluid-lg);
+  font-size: clamp(1.4rem, 4vw, 1.7rem);
+  margin: 0 var(--mobile-gap);
   cursor: pointer;
-  padding: var(--space-sm);
+  padding: 0.6rem 0.8rem;
   border-radius: var(--border-radius);
   transition: var(--transition);
-  min-height: var(--touch-target);
-  min-width: var(--touch-target);
+  min-height: var(--mobile-button-height);
+  min-width: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  position: relative;
-  overflow: hidden;
-  flex: 0 0 auto;
 }
 
-.dock-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.1);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  border-radius: inherit;
-}
-
-.dock-btn:hover::before,
-.dock-btn:focus::before {
-  opacity: 1;
-}
-
+.dock-btn:hover,
 .dock-btn:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
-  outline-offset: 2px;
   color: var(--text-light);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  outline: none;
 }
 
-.dock-btn:active {
-  transform: translateZ(0) scale(0.95);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* CHAT COMPONENTS - FULL SCREEN ADAPTIVE */
-.chat-area {
-  padding: 0;
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  flex: 1;
+/* App container with mobile considerations */
+.app-container {
+  height: 100vh;
+  width: 100vw;
   overflow: hidden;
+  position: relative;
+  background: var(--background);
+  /* Handle iOS safe areas */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
-.chat-window {
-  max-width: none;
-  max-height: none;
-  width: 100%;
-  height: 100%;
-  border-radius: 0;
-  contain: var(--contain-layout);
-  transform: var(--gpu-acceleration);
-  display: flex;
-  flex-direction: column;
-}
-
-/* RESPONSIVE BREAKPOINTS - DESKTOP ENHANCEMENTS */
-@media (min-width: 768px) {
+/* Mobile-specific responsive breakpoints */
+@media (max-width: 768px) {
   :root {
-    --space-xs: 0.5rem;
-    --space-sm: 0.75rem;
-    --space-md: 1rem;
-    --space-lg: 1.5rem;
-    --space-xl: 2rem;
-    --space-2xl: 3rem;
-    --button-height: 48px;
-    --header-height: 64px;
-    --dock-height: 72px;
-    --touch-target: 48px;
-    --transition: all 0.2s ease;
+    --mobile-header-height: 56px;
+    --mobile-padding: 0.75rem;
+    --mobile-gap: 0.5rem;
   }
-
-  .main-content {
-    padding: var(--space-xl);
+  
+  .placeholder { 
+    font-size: clamp(1.3rem, 4.5vw, 1.8rem); 
+    padding: var(--mobile-padding); 
   }
-
-  .placeholder {
-    max-width: min(80vw, 700px);
-    animation-duration: 5s;
+  
+  .mode-switcher button { 
+    font-size: clamp(0.9rem, 2.5vw, 1rem); 
+    padding: 0.5rem 0.8rem;
   }
+  
+  .dock-btn { 
+    font-size: clamp(1.2rem, 3.5vw, 1.5rem); 
+    margin: 0 0.4rem;
+  }
+  
+  /* Optimize for portrait orientation */
+  @media (orientation: portrait) {
+    .main-content {
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .placeholder {
+      max-width: 85vw;
+    }
+  }
+}
 
+@media (max-width: 480px) {
+  :root {
+    --mobile-header-height: 52px;
+    --mobile-padding: 0.5rem;
+    --mobile-gap: 0.4rem;
+    --mobile-font-base: 16px; /* Never go below 16px on mobile */
+  }
+  
+  .placeholder { 
+    font-size: clamp(1.2rem, 4vw, 1.6rem); 
+    padding: var(--mobile-padding); 
+  }
+  
+  .mode-switcher button { 
+    font-size: 0.9rem; 
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .dock-btn { 
+    font-size: 1.2rem; 
+    margin: 0 0.3rem;
+  }
+  
+  /* Stack elements vertically on very small screens */
   .mode-switcher {
-    justify-content: space-between;
-    padding: var(--space-sm) var(--space-xl);
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--mobile-header-height);
+    padding: 0.5rem var(--mobile-padding);
   }
-
-  .mode-switcher button {
-    font-size: var(--fluid-base);
-    padding: var(--space-sm) var(--space-lg);
-  }
-
+  
   .chat-dock {
-    padding: var(--space-lg) var(--space-xl);
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
+}
 
+/* Touch-friendly enhancements */
+@media (hover: none) and (pointer: coarse) {
+  /* This targets touch devices */
+  .mode-switcher button,
   .dock-btn {
-    margin: 0 var(--space-sm);
+    min-height: 48px; /* Larger touch targets */
+    min-width: 48px;
   }
-
-  /* Add hover effects for non-touch devices */
-  .dock-btn:hover {
-    transform: translateZ(0) translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  }
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --space-md: 1.25rem;
-    --space-lg: 2rem;
-    --space-xl: 2.5rem;
-    --space-2xl: 4rem;
-    --header-height: 72px;
-    --dock-height: 80px;
-  }
-
-  .placeholder {
-    max-width: min(70vw, 800px);
-    padding: var(--space-2xl);
-  }
-
-  .mode-switcher {
-    padding: var(--space-md) var(--space-2xl);
-  }
-
-  .chat-dock {
-    padding: var(--space-xl) var(--space-2xl);
+  
+  .mode-switcher button:active,
+  .dock-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.95);
   }
 }
 
-/* ORIENTATION ADAPTIVE STYLES */
-@media (orientation: portrait) {
-  .main-content {
-    justify-content: flex-start;
-    padding-top: var(--space-xl);
-  }
-
-  .placeholder {
-    max-width: 90vw;
-    margin-top: var(--space-lg);
-  }
-}
-
+/* Landscape orientation optimizations */
 @media (orientation: landscape) and (max-height: 500px) {
   :root {
-    --header-height: clamp(40px, 8vh, 56px);
-    --dock-height: clamp(50px, 10vh, 64px);
-    --transition: none;
+    --mobile-header-height: 44px;
   }
-
+  
+  .mode-switcher {
+    height: var(--mobile-header-height);
+  }
+  
   .placeholder {
-    font-size: var(--fluid-lg);
-    animation: none;
-    padding: var(--space-md);
+    font-size: clamp(1rem, 3vw, 1.4rem);
   }
-
-  .main-content {
-    padding: var(--space-sm);
-  }
-
-  .mode-switcher,
+  
   .chat-dock {
-    padding: var(--space-xs) var(--space-md);
+    padding: 0.4rem 0;
   }
 }
 
-/* ULTRA-SMALL SCREENS */
-@media (max-width: 320px) {
-  :root {
-    --space-xs: 0.25rem;
-    --space-sm: 0.375rem;
-    --space-md: 0.5rem;
-    --space-lg: 0.75rem;
-    --header-height: 48px;
-    --dock-height: 56px;
-    --touch-target: 44px;
-    --border-radius: 8px;
-  }
-
-  .placeholder {
-    font-size: var(--fluid-lg);
-    padding: var(--space-md);
-    margin: var(--space-sm);
-  }
-
-  .mode-switcher button,
-  .dock-btn {
-    font-size: var(--fluid-sm);
-    padding: var(--space-xs) var(--space-sm);
-  }
-}
-
-/* LARGE SCREENS - DESKTOP OPTIMIZATIONS */
-@media (min-width: 1440px) {
-  :root {
-    --space-2xl: 5rem;
-    --header-height: 80px;
-    --dock-height: 88px;
-  }
-
-  .app-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    border-radius: var(--border-radius);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    margin-top: var(--space-lg);
-    margin-bottom: var(--space-lg);
-    min-height: calc(100vh - 2 * var(--space-lg));
-    min-height: calc(100dvh - 2 * var(--space-lg));
-  }
-
-  .placeholder {
-    max-width: 600px;
-  }
-}
-
-/* ACCESSIBILITY - HIGH CONTRAST */
+/* High contrast and accessibility improvements */
 @media (prefers-contrast: high) {
-  :root {
-    --background: #000000;
-    --text-light: #ffffff;
-  }
-
   .mode-switcher button,
   .dock-btn {
-    border-color: rgba(255, 255, 255, 0.5);
+    border: 2px solid transparent;
   }
-
+  
   .mode-switcher button:focus,
   .dock-btn:focus {
     border-color: #ffffff;
-    outline: 3px solid #ffff00;
+    outline: 2px solid #ffff00;
     outline-offset: 2px;
   }
-
-  .placeholder {
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
 }
 
-/* ACCESSIBILITY - REDUCED MOTION */
+/* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  * { 
+    animation-duration: 0.01ms !important; 
+    animation-iteration-count: 1 !important; 
+    transition-duration: 0.01ms !important; 
   }
-
-  .placeholder {
-    animation: none !important;
-  }
-
+  
+  .placeholder { animation: none; }
+  
   .dock-btn:hover,
   .mode-switcher button:hover {
-    transform: none !important;
+    transform: none;
   }
 }
 
-/* PWA OPTIMIZATIONS */
+/* Print styles remain accessible */
+@media print {
+  .mode-switcher, .chat-dock { display: none !important; }
+  .main-content { 
+    top: 0; 
+    bottom: 0; 
+    position: static !important; 
+  }
+  .app-container { 
+    background: white !important; 
+    color: black !important; 
+    padding: 0;
+  }
+}
+
+/* Full-screen chat override with mobile considerations */
+.chat-area {
+  padding: 0 !important;
+}
+
+.chat-window {
+  max-width: none !important;
+  max-height: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+}
+
+/* PWA and mobile browser optimizations */
 @supports (display-mode: standalone) {
+  /* When app is installed as PWA */
   .app-container {
-    padding-top: 0;
-  }
-
-  .mode-switcher {
-    padding-top: var(--space-md);
+    padding-top: 0; /* PWA handles safe areas differently */
   }
 }
 
-/* iOS SAFARI SPECIFIC FIXES */
+/* iOS Safari specific fixes */
 @supports (-webkit-touch-callout: none) {
   .app-container {
-    min-height: -webkit-fill-available;
+    height: -webkit-fill-available;
   }
-
+  
   .main-content,
   .chat-window {
     height: -webkit-fill-available;
   }
 }
 
-/* BATTERY SAVING OPTIMIZATIONS */
-@media (prefers-reduced-data: reduce) {
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  /* Already optimized for dark theme */
+}
+
+/* Large text accessibility */
+@media (prefers-reduced-motion: no-preference) {
   .placeholder {
-    animation: none;
-  }
-
-  .mode-switcher,
-  .chat-dock {
-    backdrop-filter: none;
-    background: var(--background);
-  }
-}
-
-/* PRINT STYLES */
-@media print {
-  .mode-switcher,
-  .chat-dock {
-    display: none !important;
-  }
-
-  .main-content {
-    position: static !important;
-    padding: 1rem;
-  }
-
-  .app-container {
-    background: white !important;
-    color: black !important;
-    padding: 0;
-    box-shadow: none;
-  }
-
-  .placeholder {
-    background: transparent !important;
-    color: black !important;
-    box-shadow: none !important;
-    border: 1px solid black;
-  }
-}
-
-/* CONTAINER QUERIES FOR FINE-GRAINED CONTROL */
-@container (max-width: 400px) {
-  .mode-switcher {
-    flex-direction: column;
-    gap: var(--space-xs);
-    height: auto;
-    padding: var(--space-sm);
-  }
-
-  .mode-switcher button {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@container (min-width: 800px) {
-  .placeholder {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: var(--space-xl);
-    text-align: left;
-  }
-}
-
-/* UTILITY CLASSES FOR DYNAMIC ADJUSTMENTS */
-.mobile-only {
-  display: block;
-}
-
-.desktop-only {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .mobile-only {
-    display: none;
-  }
-
-  .desktop-only {
-    display: block;
-  }
-}
-
-/* HIGH DPI DISPLAYS */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .placeholder {
-    backdrop-filter: blur(15px);
-  }
-
-  .mode-switcher,
-  .chat-dock {
-    backdrop-filter: blur(25px);
+    animation-duration: 6s; /* Slower for better accessibility */
   }
 }
