@@ -1,384 +1,159 @@
-/* App.css - Mobile-Optimized Dyslexia-Friendly Application Layout */
+:root{
+  /* Theme */
+  --bg: #000;
+  --fg: #f5f5f5;
+  --muted: #b3b3b3;
+  --accent: #8a8aff;
+  --card: #0a0a0a;
+  --border: #1b1b1b;
 
-/* Import dyslexic-friendly fonts */
-@import url('https://fonts.googleapis.com/css2?family=Open+Dyslexic:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap');
+  /* Layout */
+  --gutter: 20px;
+  --radius: 16px;
 
-:root {
-  --dyslexic-font: 'Lexend', 'Open Dyslexic', Arial, sans-serif;
-  --background: #8e2de2;  /* Unified purple background */
-  --text-light: #e8f5e8;
-  --border-radius: 12px;
-  --transition: all 0.3s ease;
-  --letter-spacing: 0.03em;
-  --line-height: 1.6;
-  
-  /* Mobile-specific variables */
-  --mobile-padding: clamp(0.75rem, 2vw, 1rem);
-  --mobile-gap: clamp(0.5rem, 1.5vw, 0.75rem);
-  --mobile-button-height: 48px; /* iOS/Android recommended minimum */
-  --mobile-font-base: clamp(16px, 4vw, 18px);
-  --mobile-header-height: 60px;
+  /* Safe area insets (for iOS notch devices) */
+  --s-top: env(safe-area-inset-top);
+  --s-right: env(safe-area-inset-right);
+  --s-bottom: env(safe-area-inset-bottom);
+  --s-left: env(safe-area-inset-left);
+
+  /* Viewport height fix: set by JS useViewportHeight() */
+  --vh: 1vh;
+
+  /* Type scale */
+  --font-sm: clamp(12px, 1.2vw, 14px);
+  --font-md: clamp(14px, 1.8vw, 16px);
+  --font-lg: clamp(18px, 2.4vw, 22px);
+  --font-xl: clamp(22px, 3.2vw, 28px);
 }
 
-/* Base reset with mobile-first approach */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
+* { box-sizing: border-box; }
+
+html, body, #root {
   height: 100%;
-  overflow: hidden;
-  background: var(--background);
-  font-family: var(--dyslexic-font);
-  line-height: var(--line-height);
-  letter-spacing: var(--letter-spacing);
-  font-size: var(--mobile-font-base);
-  color: var(--text-light);
-  
-  /* Mobile optimizations */
-  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--font-md);
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  touch-action: manipulation; /* Prevents zoom on double-tap */
-  -webkit-tap-highlight-color: transparent; /* Removes blue highlight on tap */
 }
 
-* {
-  box-sizing: border-box;
-  font-family: var(--dyslexic-font);
+.app {
+  /* Use JS-set --vh for true mobile viewport height */
+  min-height: calc(var(--vh) * 100);
+  padding: calc(var(--s-top) + 8px) calc(var(--s-right) + var(--gutter)) calc(var(--s-bottom) + 12px) calc(var(--s-left) + var(--gutter));
 }
 
-/* Main content area: mobile-first responsive */
-.main-content {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  display: flex;
+/* Containers */
+.container { width: 100%; max-width: 1120px; margin: 0 auto; }
+@media (max-width: 768px){ .container { max-width: 720px; } }
+@media (max-width: 480px){ .container { max-width: 440px; } }
+
+/* Cards & surfaces */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+/* Buttons: min 44px for touch */
+.button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-}
-
-/* Enhanced placeholder styling with mobile considerations */
-.placeholder {
-  color: var(--text-light);
-  font-size: clamp(1.5rem, 5vw, 2rem);
-  text-align: center;
-  padding: var(--mobile-padding);
-  background: rgba(255,255,255,0.1);
-  border-radius: var(--border-radius);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  animation: gentlePulse 4s ease-in-out infinite;
-  max-width: 90vw;
-  margin: var(--mobile-padding);
-}
-
-@keyframes gentlePulse {
-  0%,100% { transform: scale(1); }
-  50%    { transform: scale(1.02); }
-}
-
-/* Mobile-optimized mode switcher */
-.mode-switcher {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--mobile-header-height);
-  background: var(--background);
-  backdrop-filter: blur(20px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--mobile-gap);
-  z-index: 500;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  padding: 0 var(--mobile-padding);
-}
-
-.mode-switcher button {
-  background: transparent;
-  border: none;
-  color: #ccc;
-  font-size: clamp(1rem, 3vw, 1.2rem);
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.6rem 1rem;
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-  min-height: var(--mobile-button-height);
-  min-width: 44px; /* iOS minimum touch target */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.mode-switcher button:hover,
-.mode-switcher button:focus {
-  color: var(--text-light);
-  background: rgba(255, 255, 255, 0.1);
-  outline: none;
-}
-
-.mode-switcher button.active {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Mobile-optimized bottom dock */
-.chat-dock {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  background: var(--background);
-  backdrop-filter: blur(20px);
-  padding: var(--mobile-padding) 0;
-  z-index: 500;
-  /* Add safe area for iPhone notch */
-  padding-bottom: max(var(--mobile-padding), env(safe-area-inset-bottom));
-}
-
-.dock-btn {
-  background: transparent;
-  border: none;
-  color: #ccc;
-  font-size: clamp(1.4rem, 4vw, 1.7rem);
-  margin: 0 var(--mobile-gap);
-  cursor: pointer;
-  padding: 0.6rem 0.8rem;
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-  min-height: var(--mobile-button-height);
+  min-height: 44px;
   min-width: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #101010;
+  color: var(--fg);
+  text-decoration: none;
+  cursor: pointer;
+}
+.button:active { transform: translateY(1px); }
+.button:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Inputs (>=16px to avoid iOS zoom) */
+.input, .select, .textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #0b0b0b;
+  color: var(--fg);
+  font-size: 16px;
 }
 
-.dock-btn:hover,
-.dock-btn:focus {
-  color: var(--text-light);
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  outline: none;
-}
+/* Links: match black theme */
+a { color: var(--fg); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
-/* App container with mobile considerations */
-.app-container {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  position: relative;
-  background: var(--background);
-  /* Handle iOS safe areas */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
+/* Media */
+img, video { max-width: 100%; height: auto; }
 
-/* Mobile-specific responsive breakpoints */
+/* Layout utilities */
+.stack > * + * { margin-top: 12px; }
+.row { display: flex; gap: 12px; align-items: center; }
+.grid { display: grid; gap: 12px; }
+
+/* Mobile breakpoints */
 @media (max-width: 768px) {
-  :root {
-    --mobile-header-height: 56px;
-    --mobile-padding: 0.75rem;
-    --mobile-gap: 0.5rem;
-  }
-  
-  .placeholder { 
-    font-size: clamp(1.3rem, 4.5vw, 1.8rem); 
-    padding: var(--mobile-padding); 
-  }
-  
-  .mode-switcher button { 
-    font-size: clamp(0.9rem, 2.5vw, 1rem); 
-    padding: 0.5rem 0.8rem;
-  }
-  
-  .dock-btn { 
-    font-size: clamp(1.2rem, 3.5vw, 1.5rem); 
-    margin: 0 0.4rem;
-  }
-  
-  /* Optimize for portrait orientation */
-  @media (orientation: portrait) {
-    .main-content {
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .placeholder {
-      max-width: 85vw;
-    }
-  }
+  :root { --gutter: 16px; }
+  .row { flex-direction: column; align-items: stretch; }
+  .hide-md { display: none !important; }
 }
 
 @media (max-width: 480px) {
-  :root {
-    --mobile-header-height: 52px;
-    --mobile-padding: 0.5rem;
-    --mobile-gap: 0.4rem;
-    --mobile-font-base: 16px; /* Never go below 16px on mobile */
-  }
-  
-  .placeholder { 
-    font-size: clamp(1.2rem, 4vw, 1.6rem); 
-    padding: var(--mobile-padding); 
-  }
-  
-  .mode-switcher button { 
-    font-size: 0.9rem; 
-    padding: 0.4rem 0.6rem;
-  }
-  
-  .dock-btn { 
-    font-size: 1.2rem; 
-    margin: 0 0.3rem;
-  }
-  
-  /* Stack elements vertically on very small screens */
-  .mode-switcher {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: var(--mobile-header-height);
-    padding: 0.5rem var(--mobile-padding);
-  }
-  
-  .chat-dock {
-    flex-wrap: wrap;
-    padding: 0.5rem 0;
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-  }
+  :root { --gutter: 14px; }
+  .button { padding: 10px 12px; border-radius: 10px; }
+  .card { padding: 14px; border-radius: 14px; }
 }
 
-/* Touch-friendly enhancements */
-@media (hover: none) and (pointer: coarse) {
-  /* This targets touch devices */
-  .mode-switcher button,
-  .dock-btn {
-    min-height: 48px; /* Larger touch targets */
-    min-width: 48px;
-  }
-  
-  .mode-switcher button:active,
-  .dock-btn:active {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(0.95);
-  }
+/* Mobile bottom nav (Step 4) */
+.mobile-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 8px calc(var(--gutter));
+  padding-bottom: calc(8px + var(--s-bottom));
+  display: none;
+  background: rgba(10,10,10,0.9);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+  z-index: 50;
+}
+.mobile-nav__inner{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.mobile-nav__btn{
+  flex: 1; min-height: 44px; border: 0; background: transparent; color: var(--fg);
+  display: inline-flex; gap: 8px; align-items: center; justify-content: center;
+  border-radius: 10px; padding: 8px 10px;
+}
+.mobile-nav__btn.is-active{ background:#141414; }
+
+@media (max-width: 768px){
+  .mobile-nav { display: block; }
+  .sidebar { display: none; }
+  .app { padding-bottom: calc(var(--s-bottom) + 64px); } /* make room for bar */
 }
 
-/* Landscape orientation optimizations */
-@media (orientation: landscape) and (max-height: 500px) {
-  :root {
-    --mobile-header-height: 44px;
-  }
-  
-  .mode-switcher {
-    height: var(--mobile-header-height);
-  }
-  
-  .placeholder {
-    font-size: clamp(1rem, 3vw, 1.4rem);
-  }
-  
-  .chat-dock {
-    padding: 0.4rem 0;
-  }
-}
-
-/* High contrast and accessibility improvements */
-@media (prefers-contrast: high) {
-  .mode-switcher button,
-  .dock-btn {
-    border: 2px solid transparent;
-  }
-  
-  .mode-switcher button:focus,
-  .dock-btn:focus {
-    border-color: #ffffff;
-    outline: 2px solid #ffff00;
-    outline-offset: 2px;
-  }
-}
-
-/* Reduced motion preferences */
+/* Respect reduced motion (Step 5) */
 @media (prefers-reduced-motion: reduce) {
-  * { 
-    animation-duration: 0.01ms !important; 
-    animation-iteration-count: 1 !important; 
-    transition-duration: 0.01ms !important; 
-  }
-  
-  .placeholder { animation: none; }
-  
-  .dock-btn:hover,
-  .mode-switcher button:hover {
-    transform: none;
-  }
-}
-
-/* Print styles remain accessible */
-@media print {
-  .mode-switcher, .chat-dock { display: none !important; }
-  .main-content { 
-    top: 0; 
-    bottom: 0; 
-    position: static !important; 
-  }
-  .app-container { 
-    background: white !important; 
-    color: black !important; 
-    padding: 0;
-  }
-}
-
-/* Full-screen chat override with mobile considerations */
-.chat-area {
-  padding: 0 !important;
-}
-
-.chat-window {
-  max-width: none !important;
-  max-height: none !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  border-radius: 0 !important;
-}
-
-/* PWA and mobile browser optimizations */
-@supports (display-mode: standalone) {
-  /* When app is installed as PWA */
-  .app-container {
-    padding-top: 0; /* PWA handles safe areas differently */
-  }
-}
-
-/* iOS Safari specific fixes */
-@supports (-webkit-touch-callout: none) {
-  .app-container {
-    height: -webkit-fill-available;
-  }
-  
-  .main-content,
-  .chat-window {
-    height: -webkit-fill-available;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  /* Already optimized for dark theme */
-}
-
-/* Large text accessibility */
-@media (prefers-reduced-motion: no-preference) {
-  .placeholder {
-    animation-duration: 6s; /* Slower for better accessibility */
+  * {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
   }
 }
