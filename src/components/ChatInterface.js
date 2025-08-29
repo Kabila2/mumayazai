@@ -613,12 +613,12 @@ const ChatInterface = ({
           flexDirection: 'column',
           background: 'rgba(26, 0, 26, 0.8)',
           backdropFilter: 'blur(15px)',
-          overflow: 'hidden',
-          paddingTop: `${headerHeight}px`
+          overflow: 'hidden'
         }}
       >
         {/* Messages Area - Mobile Optimized */}
         <div 
+          className="chat-messages"
           ref={messagesRef}
           style={{
             flex: 1,
@@ -634,6 +634,8 @@ const ChatInterface = ({
             scrollBehavior: 'smooth',
             scrollPadding: '1rem',
             overscrollBehavior: 'contain',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
             ...dynamicStyles.messagesContainer
           }}
         >
