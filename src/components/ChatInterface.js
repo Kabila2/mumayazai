@@ -445,7 +445,7 @@ const ChatInterface = ({
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: reducedMotion ? 0 : 0.6, type: "spring", stiffness: 100 }}
       >
-        {/* Switch to Voice Button - Mobile Optimized */
+        {/* Switch to Voice Button - Mobile Optimized */}
         {onSwitchMode && (
           <motion.button
             onClick={onSwitchMode}
