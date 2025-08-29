@@ -310,9 +310,10 @@ const ChatInterface = ({
     }
 
     const userId = Date.now();
+    const sentImages = attachments.map(a => a.url);
     setMessages(prev => [
       ...prev,
-      { sender: "user", text, images: attachments.map(a => a.url), id: userId }
+      { sender: "user", text, images: sentImages, id: userId }
     ]);
     setAttachments([]);
     setInput("");
@@ -321,6 +322,26 @@ const ChatInterface = ({
     if (isMobile && inputRef.current) {
       inputRef.current.blur();
       setIsInputFocused(false);
+    }
+
+    // If there is no text and only images were sent, handle locally
+    if (!text && sentImages.length > 0) {
+      const prefix = (activeDisability || '').toLowerCase() === 'adhd'
+        ? '🧠 ADHD-FRIENDLY RESPONSE:'
+        : (activeDisability || '').toLowerCase() === 'autism'
+          ? '🌈 AUTISM-FRIENDLY RESPONSE:'
+          : '💚 DYSLEXIA-FRIENDLY RESPONSE:';
+      const canned = (activeDisability || '').toLowerCase() === 'adhd'
+        ? `${prefix}\n\n• I received your image(s)\n• I can’t view images directly\n• Please describe what’s inside\n• I’ll help based on your description`
+        : (activeDisability || '').toLowerCase() === 'autism'
+          ? `${prefix}\n\nI received your image(s).\n\n1. I cannot view images.\n2. Please describe the content.\n3. I will assist based on that.\n4. Be specific about key parts.`
+          : `${prefix}\n\nI got your image(s). I can’t see pictures.\n\n• Tell me what it shows\n• Share key details\n• I’ll help from your description`;
+      setMessages(prev => [
+        ...prev,
+        { sender: 'gpt', text: canned, id: Date.now() + 1 }
+      ]);
+      setIsSending(false);
+      return;
     }
 
     const loadingId = Date.now() + 1;
@@ -824,7 +845,7 @@ const ChatInterface = ({
             }}
             whileTap={{ scale: 0.95 }}
           >
-            📎
+            🖼️
           </motion.button>
           <motion.button
             onClick={handleSend}
