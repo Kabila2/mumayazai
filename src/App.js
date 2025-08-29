@@ -247,6 +247,7 @@ export default function App() {
         fromMode={mode}
         toMode={pendingMode}
         onTransitionComplete={handleTransitionComplete}
+        reducedMotion={reducedMotion}
       >
         <div style={{ position: "relative", height: "100%" }}>
           {mode === "text" ? (

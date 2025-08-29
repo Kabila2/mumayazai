@@ -7,25 +7,27 @@ const PaperAirplaneTransition = ({
   fromMode, 
   toMode, 
   onTransitionComplete,
-  children 
+  children,
+  reducedMotion = false
 }) => {
   const [stage, setStage] = useState('idle');
   const [showTransition, setShowTransition] = useState(false);
 
   useEffect(() => {
-    if (isTransitioning) {
-      setStage('launch');
-      setShowTransition(true);
-      
-      setTimeout(() => setStage('warp'), 800);
-      setTimeout(() => setStage('arrive'), 2000);
-      setTimeout(() => {
-        setShowTransition(false);
-        setStage('idle');
-        onTransitionComplete?.();
-      }, 3000);
-    }
-  }, [isTransitioning, onTransitionComplete]);
+    if (!isTransitioning) return;
+    setStage('launch');
+    setShowTransition(true);
+
+    const t1 = setTimeout(() => setStage('warp'), reducedMotion ? 250 : 500);
+    const t2 = setTimeout(() => setStage('arrive'), reducedMotion ? 600 : 1200);
+    const t3 = setTimeout(() => {
+      setShowTransition(false);
+      setStage('idle');
+      onTransitionComplete?.();
+    }, reducedMotion ? 900 : 1600);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [isTransitioning, onTransitionComplete, reducedMotion]);
 
   // Paper airplane morphing shapes
   const PlaneShape = ({ stage }) => {
@@ -59,7 +61,7 @@ const PaperAirplaneTransition = ({
   // Warp tunnel effect
   const WarpTunnel = () => (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      {Array.from({ length: 8 }, (_, i) => (
+      {Array.from({ length: 6 }, (_, i) => (
         <motion.div
           key={i}
           style={{
@@ -72,18 +74,18 @@ const PaperAirplaneTransition = ({
             borderColor: `hsl(${200 + i * 20}, 100%, 70%)`,
             borderRadius: '50%',
             transform: 'translate(-50%, -50%)',
-            opacity: 0.7 - i * 0.08
+            opacity: 0.6 - i * 0.07
           }}
           animate={{
-            scale: [0, 3],
-            opacity: [0.7 - i * 0.08, 0],
+            scale: [0, 2.2],
+            opacity: [0.6 - i * 0.07, 0],
             borderWidth: [2, 0]
           }}
           transition={{
-            duration: 1.2,
+            duration: reducedMotion ? 0.5 : 0.9,
             delay: i * 0.1,
             repeat: Infinity,
-            ease: 'easeOut'
+            ease: 'easeInOut'
           }}
         />
       ))}
@@ -205,10 +207,10 @@ const PaperAirplaneTransition = ({
           zIndex: 1
         }}
         animate={{
-          scale: stage === 'warp' ? [1, 1.2, 1] : 1,
-          y: stage === 'arrive' ? [0, -20, 0] : 0
+          scale: stage === 'warp' ? [1, 1.08, 1] : 1,
+          y: stage === 'arrive' ? [0, -10, 0] : 0
         }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: reducedMotion ? 0.25 : 0.5 }}
       >
         {/* Animated paper airplane */}
         <motion.div
@@ -218,17 +220,17 @@ const PaperAirplaneTransition = ({
             filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.5))'
           }}
           animate={{
-            rotate: stage === 'warp' ? [0, 360, 720] : 0,
-            scale: stage === 'launch' ? [1, 1.5, 1.2] : 
-                   stage === 'warp' ? [1.2, 0.8, 1.5] : 
-                   [1.5, 1],
-            y: stage === 'launch' ? [0, -30, -10] :
-               stage === 'warp' ? [-10, 20, -20] :
-               [-20, 0]
+            rotate: stage === 'warp' ? [0, 240, 480] : 0,
+            scale: stage === 'launch' ? [1, 1.2, 1.05] : 
+                   stage === 'warp' ? [1.05, 0.95, 1.1] : 
+                   [1.05, 1],
+            y: stage === 'launch' ? [0, -14, -6] :
+               stage === 'warp' ? [-6, 8, -8] :
+               [-8, 0]
           }}
           transition={{ 
-            duration: stage === 'warp' ? 1.2 : 0.8,
-            ease: stage === 'warp' ? 'easeInOut' : 'easeOut'
+            duration: reducedMotion ? 0.25 : (stage === 'warp' ? 0.6 : 0.4),
+            ease: 'easeInOut'
           }}
         >
           ✈️
@@ -244,11 +246,11 @@ const PaperAirplaneTransition = ({
           }}
           animate={{
             opacity: [0, 1, 1, 0],
-            y: [20, 0, 0, -20],
-            scale: [0.9, 1, 1, 1.1]
+            y: [10, 0, 0, -10],
+            scale: [0.98, 1, 1, 1.02]
           }}
           transition={{
-            duration: 3,
+            duration: reducedMotion ? 0.6 : 1.2,
             times: [0, 0.2, 0.8, 1],
             ease: 'easeInOut'
           }}
@@ -264,7 +266,7 @@ const PaperAirplaneTransition = ({
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: reducedMotion ? 0.2 : 0.4 }}
           >
             {stage === 'launch' ? 'Launching...' :
              stage === 'warp' ? `Warping to ${toMode === 'voice' ? '🎤 Voice' : '💬 Text'} Mode` :
@@ -295,8 +297,8 @@ const PaperAirplaneTransition = ({
               opacity: [1, 0.7, 1]
             }}
             transition={{ 
-              width: { duration: 0.8, ease: 'easeInOut' },
-              opacity: { duration: 0.5, repeat: Infinity }
+              width: { duration: reducedMotion ? 0.2 : 0.4, ease: 'easeInOut' },
+              opacity: { duration: reducedMotion ? 0.3 : 0.5, repeat: Infinity }
             }}
           />
         </motion.div>
