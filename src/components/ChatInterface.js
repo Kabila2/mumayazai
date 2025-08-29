@@ -542,13 +542,17 @@ const ChatInterface = ({
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
           <div>
-            {isMobile && isLandscape ? 
-              `${activeDisability.toUpperCase()} Chat` :
-              assistantTitle
-            }
-            {activeDisability === 'adhd' && ' 🧠'}
-            {activeDisability === 'autism' && ' 🌈'}
-            {activeDisability === 'dyslexia' && ' 💚'}
+            <span className="shiny-title">
+              {isMobile && isLandscape ? 
+                `${activeDisability.toUpperCase()} Chat` :
+                assistantTitle
+              }
+            </span>
+            <span>
+              {activeDisability === 'adhd' && ' 🧠'}
+              {activeDisability === 'autism' && ' 🌈'}
+              {activeDisability === 'dyslexia' && ' 💚'}
+            </span>
           </div>
           {(!isMobile || !isLandscape) && (
             <div style={{ 
