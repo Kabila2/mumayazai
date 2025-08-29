@@ -125,6 +125,22 @@
   padding-right: max(var(--space-md), env(safe-area-inset-right));
 }
 
+/* Shiny animated gradient title */
+.shiny-title {
+  background: linear-gradient(90deg, #ffffff, #ffe97a, #9ee6a6, #a28cff, #ffffff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shineSweep 6s linear infinite;
+  text-shadow: 0 0 20px rgba(255,255,255,0.15);
+}
+
+@keyframes shineSweep {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
 .chat-header .assistant-title {
   text-align: center;
   width: 100%;
