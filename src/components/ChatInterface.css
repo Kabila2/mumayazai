@@ -100,6 +100,23 @@
   height: -webkit-fill-available; /* iOS Safari fix */
 }
 
+/* Floating particles layer */
+.chat-window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1px);
+  background-size: 2px 2px;
+  background-position: 0 0, 50px 50px;
+  opacity: 0.06;
+  animation: parallaxDots 30s linear infinite;
+  pointer-events: none;
+}
+@keyframes parallaxDots {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100px); }
+}
+
 /* Header - mobile optimized with proper touch targets */
 .chat-header {
   padding: var(--space-sm) var(--space-md);
@@ -123,6 +140,19 @@
   padding-top: max(var(--space-sm), env(safe-area-inset-top));
   padding-left: max(var(--space-md), env(safe-area-inset-left));
   padding-right: max(var(--space-md), env(safe-area-inset-right));
+}
+
+/* Neon underline under the shiny title */
+.chat-header .neon-underline {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(120px, 40vw, 320px);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  filter: drop-shadow(0 0 6px var(--accent));
+  opacity: 0.8;
 }
 
 /* Shiny animated gradient title */
@@ -237,6 +267,22 @@
   overflow-wrap: break-word;
   hyphens: auto; /* Better text wrapping */
 }
+.chat-bubble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.35;
+}
+.chat-bubble:hover::after {
+  opacity: 0.6;
+}
 
 @keyframes gentlePopIn {
   0%   { 
@@ -262,6 +308,7 @@
   margin-left: auto;
   margin-right: 0;
 }
+.chat-bubble.user:hover { transform: translateY(-1px) scale(1.01); }
 
 .chat-bubble.gpt {
   background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
@@ -271,6 +318,7 @@
   margin-right: auto;
   margin-left: 0;
 }
+.chat-bubble.gpt:hover { transform: translateY(-1px) scale(1.01); }
 
 /* High contrast adjustments */
 .high-contrast .chat-bubble.user {
@@ -290,7 +338,7 @@
   display: flex;
   align-items: flex-end;
   padding: var(--space-md);
-  background: var(--bg-panel);
+  background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.35));
   border-top: 2px solid rgba(76, 175, 80, 0.3);
   font-family: var(--dyslexic-font);
   gap: var(--space-sm);

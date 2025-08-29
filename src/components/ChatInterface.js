@@ -553,6 +553,7 @@ const ChatInterface = ({
               {activeDisability === 'autism' && ' 🌈'}
               {activeDisability === 'dyslexia' && ' 💚'}
             </span>
+            <div className="neon-underline" />
           </div>
           {(!isMobile || !isLandscape) && (
             <div style={{ 
@@ -837,22 +838,15 @@ const ChatInterface = ({
               scale: !reducedMotion && !isMobile ? 1.01 : 1
             }}
           />
-          <motion.button
-            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            style={{
-              padding: isMobile ? 'clamp(0.75rem, 3vw, 1rem)' : '0.75rem 1rem',
-              borderRadius: '12px',
-              border: `2px solid ${theme.inputBorderColor}`,
-              background: 'rgba(26,0,26,0.6)',
-              color: theme.textColor,
-              minHeight: isMobile ? '48px' : 'auto',
-              minWidth: isMobile ? 48 : 44,
-              cursor: 'pointer'
-            }}
-            whileTap={{ scale: 0.95 }}
-          >
-            🖼️
-          </motion.button>
+          <div className="chat-input-actions">
+            <motion.button
+              className="icon-btn"
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              whileTap={{ scale: 0.95 }}
+            >
+              🖼️
+            </motion.button>
+          </div>
           <motion.button
             onClick={handleSend}
             disabled={isSending || !input.trim()}
