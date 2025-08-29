@@ -6,6 +6,7 @@ import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
 import EntryLoginPage from "./components/EntryLoginPage";
 import OnboardingSetup from "./components/OnboardingSetup";
 import PaperAirplaneTransition from "./components/PaperAirplaneTransition";
+import ImageStudio from "./components/ImageStudio";
 import { translations } from "./translations";
 import "./App.css";
 
@@ -58,7 +59,7 @@ export default function App() {
 
   // ---------- Main UI state ----------
   const [mode, setMode] = useState("text");   // "text" | "voice"
-  const [view, setView] = useState("chat");   // "chat" | "profile" | "settings"
+  const [view, setView] = useState("chat");   // "chat" | "profile" | "settings" | "images"
 
   // ---------- Transition state ----------
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -261,6 +262,7 @@ export default function App() {
               currentDisability={currentDisability}
               onSwitchMode={() => handleModeSwitch("voice")}
               onSignOut={handleSignOut}
+              onOpenImages={() => setView("images")}
             />
           ) : (
             <VoiceInterface
@@ -286,6 +288,10 @@ export default function App() {
           )}
         </div>
       </PaperAirplaneTransition>
+    );
+  } else if (view === "images") {
+    content = (
+      <ImageStudio t={t} onBack={() => setView("chat")} />
     );
   } else if (view === "profile") {
     content = (

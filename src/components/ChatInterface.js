@@ -204,7 +204,8 @@ const ChatInterface = ({
   t = {},
   language = "en",
   reducedMotion = false,
-  onSignOut
+  onSignOut,
+  onOpenImages
 }) => {
   
   const activeDisability = currentDisability || getCurrentDisability();
@@ -444,7 +445,7 @@ const ChatInterface = ({
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: reducedMotion ? 0 : 0.6, type: "spring", stiffness: 100 }}
       >
-        {/* Switch to Voice Button - Mobile Optimized */}
+        {/* Switch to Voice Button - Mobile Optimized */
         {onSwitchMode && (
           <motion.button
             onClick={onSwitchMode}
@@ -524,6 +525,42 @@ const ChatInterface = ({
             </div>
           )}
         </motion.div>
+
+        {/* Open Images */}
+        {onOpenImages && (
+          <motion.button
+            onClick={onOpenImages}
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+              border: `2px solid ${theme.borderColor}`,
+              borderRadius: '12px',
+              color: theme.textColor,
+              padding: isMobile ? '0.6rem 1rem' : '0.7rem 1.2rem',
+              cursor: 'pointer',
+              fontSize: isMobile ? '0.8rem' : '0.9rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
+              transition: 'all 0.3s ease',
+              minHeight: '44px',
+              minWidth: '44px',
+              whiteSpace: 'nowrap',
+              marginRight: '0.5rem'
+            }}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.25 }}
+          >
+            <span>🖼️</span>
+            {!isMobile || !isLandscape ? 'Images' : '🖼️'}
+          </motion.button>
+        )}
 
         {/* Sign Out Button - Mobile Optimized */}
         {onSignOut && (

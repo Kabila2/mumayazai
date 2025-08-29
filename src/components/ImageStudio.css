@@ -1,0 +1,90 @@
+/* src/components/ImageStudio.css */
+.image-studio {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #1a001a, #000020, #100018);
+  color: #e8f5e8;
+  font-family: 'Lexend', 'Open Dyslexic', Arial, sans-serif;
+}
+
+.image-studio__header {
+  position: sticky;
+  top: 0;
+  background: rgba(26, 0, 26, 0.95);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+  z-index: 5;
+}
+
+.image-studio__tabs { display: flex; gap: 0.5rem; }
+.is-tab {
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.is-tab.active { background: linear-gradient(135deg, #4CAF50, #45a049); }
+
+.is-btn { 
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.is-btn--primary { background: linear-gradient(135deg, #4CAF50, #45a049); border: none; }
+.is-btn--back { background: linear-gradient(135deg, #6b7280, #4b5563); border: none; }
+
+.image-studio__panel { padding: 1rem; }
+.is-row { display: flex; gap: 0.75rem; align-items: center; }
+.is-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  background: rgba(26,0,26,0.9);
+  color: #e8f5e8;
+}
+
+.upload-drop {
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  color: #ddd;
+  background: rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+.upload-instructions { display: grid; gap: 0.5rem; place-items: center; }
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+}
+.image-card {
+  background: rgba(26,0,26,0.75);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.image-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+.image-name { padding: 0.5rem; font-size: 0.85rem; color: #cfe9cf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.image-empty { opacity: 0.8; text-align: center; padding: 2rem; }
+
+@media (max-width: 480px) {
+  .is-row { flex-direction: column; }
+  .image-card img { height: 120px; }
+}
+
