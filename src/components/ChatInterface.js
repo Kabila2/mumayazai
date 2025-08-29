@@ -204,8 +204,7 @@ const ChatInterface = ({
   t = {},
   language = "en",
   reducedMotion = false,
-  onSignOut,
-  onOpenImages
+  onSignOut
 }) => {
   
   const activeDisability = currentDisability || getCurrentDisability();
@@ -226,6 +225,7 @@ const ChatInterface = ({
   ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [attachments, setAttachments] = useState([]); // {id, url, file}
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   
@@ -233,6 +233,7 @@ const ChatInterface = ({
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   
   // Auto-scroll to bottom with mobile optimizations
   const scrollToBottom = useCallback((smooth = true) => {
@@ -292,7 +293,7 @@ const ChatInterface = ({
   // Mobile-optimized send handler
   const handleSend = useCallback(async () => {
     const text = input.trim();
-    if (!text || isSending) return;
+    if ((!text && attachments.length === 0) || isSending) return;
 
     console.log("📤 Sending message with disability context:", activeDisability);
     console.log("💬 User message:", text);
@@ -309,7 +310,11 @@ const ChatInterface = ({
     }
 
     const userId = Date.now();
-    setMessages(prev => [...prev, { sender: "user", text, id: userId }]);
+    setMessages(prev => [
+      ...prev,
+      { sender: "user", text, images: attachments.map(a => a.url), id: userId }
+    ]);
+    setAttachments([]);
     setInput("");
     
     // Blur input to hide keyboard on mobile
@@ -359,6 +364,15 @@ const ChatInterface = ({
       setIsSending(false);
     }
   }, [input, isSending, activeDisability, controls, reducedMotion, isMobile]);
+
+  const handleFiles = (files) => {
+    const list = Array.from(files).map((f) => ({
+      id: `${f.name}-${f.size}-${Math.random()}`,
+      url: URL.createObjectURL(f),
+      file: f
+    }));
+    setAttachments(prev => [...prev, ...list]);
+  };
 
   // Mobile keyboard handlers
   const handleKeyDown = useCallback((e) => {
@@ -526,41 +540,7 @@ const ChatInterface = ({
           )}
         </motion.div>
 
-        {/* Open Images */}
-        {onOpenImages && (
-          <motion.button
-            onClick={onOpenImages}
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-              border: `2px solid ${theme.borderColor}`,
-              borderRadius: '12px',
-              color: theme.textColor,
-              padding: isMobile ? '0.6rem 1rem' : '0.7rem 1.2rem',
-              cursor: 'pointer',
-              fontSize: isMobile ? '0.8rem' : '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-              transition: 'all 0.3s ease',
-              minHeight: '44px',
-              minWidth: '44px',
-              whiteSpace: 'nowrap',
-              marginRight: '0.5rem'
-            }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.25 }}
-          >
-            <span>🖼️</span>
-            {!isMobile || !isLandscape ? 'Images' : '🖼️'}
-          </motion.button>
-        )}
+        {/* Removed Images button; upload is in input area */}
 
         {/* Sign Out Button - Mobile Optimized */}
         {onSignOut && (
@@ -698,7 +678,16 @@ const ChatInterface = ({
                     ))}
                   </div>
                 ) : (
-                  <span>{msg.text}</span>
+                  <div>
+                    {msg.text && <div style={{ marginBottom: msg.images?.length ? 8 : 0 }}>{msg.text}</div>}
+                    {Array.isArray(msg.images) && msg.images.length > 0 && (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {msg.images.map((src, i) => (
+                          <img key={i} src={src} alt={`attachment-${i}`} style={{ width: 160, height: 120, objectFit: 'cover', borderRadius: 8, border: `2px solid ${theme.borderColor}` }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </motion.div>
             ))}
@@ -762,6 +751,27 @@ const ChatInterface = ({
             stiffness: 100
           }}
         >
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: 'none' }}
+            onChange={(e) => { if (e.target.files?.length) handleFiles(e.target.files); }}
+          />
+
+          {/* Attachment thumbnails */}
+          {attachments.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto' }}>
+              {attachments.map(att => (
+                <div key={att.id} style={{ position: 'relative' }}>
+                  <img src={att.url} alt="attachment" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: `2px solid ${theme.borderColor}` }} />
+                </div>
+              ))}
+            </div>
+          )}
+
           <motion.input
             ref={inputRef}
             value={input}
@@ -801,6 +811,22 @@ const ChatInterface = ({
             }}
           />
           <motion.button
+            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            style={{
+              padding: isMobile ? 'clamp(0.75rem, 3vw, 1rem)' : '0.75rem 1rem',
+              borderRadius: '12px',
+              border: `2px solid ${theme.inputBorderColor}`,
+              background: 'rgba(26,0,26,0.6)',
+              color: theme.textColor,
+              minHeight: isMobile ? '48px' : 'auto',
+              minWidth: isMobile ? 48 : 44,
+              cursor: 'pointer'
+            }}
+            whileTap={{ scale: 0.95 }}
+          >
+            📎
+          </motion.button>
+          <motion.button
             onClick={handleSend}
             disabled={isSending || !input.trim()}
             animate={controls}
@@ -810,8 +836,8 @@ const ChatInterface = ({
               border: 'none',
               background: theme.bubbleUserBg,
               color: '#ffffff',
-              cursor: isSending || !input.trim() ? 'not-allowed' : 'pointer',
-              opacity: isSending || !input.trim() ? 0.6 : 1,
+              cursor: isSending || (!input.trim() && attachments.length === 0) ? 'not-allowed' : 'pointer',
+              opacity: isSending || (!input.trim() && attachments.length === 0) ? 0.6 : 1,
               fontWeight: '600',
               fontSize: isMobile ? 'clamp(14px, 3.5vw, 16px)' : '1rem',
               minWidth: isMobile ? '60px' : '100px',
