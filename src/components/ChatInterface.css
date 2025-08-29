@@ -52,11 +52,9 @@
 .chat-area {
   flex: 1;
   width: 100%;
-  background: radial-gradient(1200px 600px at 10% -10%, rgba(76,175,80,0.12), transparent),
-              radial-gradient(900px 500px at 90% 0%, rgba(138,43,226,0.12), transparent),
-              linear-gradient(135deg, #0b0012, #0a0020 40%, #13001e);
+  background: linear-gradient(135deg, #1a001a, #000020, #100018);
   background-size: 300% 300%;
-  animation: gentleGradient 60s ease infinite;
+  animation: gentleGradient 45s ease infinite;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,9 +73,8 @@
 
 @keyframes gentleGradient {
   0%, 100%   { background-position: 0% 50%; }
-  25%  { background-position: 100% 50%; }
-  50%  { background-position: 50% 100%; }
-  75%  { background-position: 0% 0%; }
+  33%  { background-position: 100% 50%; }
+  66%  { background-position: 50% 100%; }
 }
 
 /* Chat window - mobile responsive */
@@ -100,22 +97,7 @@
   height: -webkit-fill-available; /* iOS Safari fix */
 }
 
-/* Floating particles layer */
-.chat-window::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1px);
-  background-size: 2px 2px;
-  background-position: 0 0, 50px 50px;
-  opacity: 0.06;
-  animation: parallaxDots 30s linear infinite;
-  pointer-events: none;
-}
-@keyframes parallaxDots {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100px); }
-}
+/* revert: remove floating particles */
 
 /* Header - mobile optimized with proper touch targets */
 .chat-header {
@@ -143,33 +125,10 @@
 }
 
 /* Neon underline under the shiny title */
-.chat-header .neon-underline {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: clamp(120px, 40vw, 320px);
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  filter: drop-shadow(0 0 6px var(--accent));
-  opacity: 0.8;
-}
+/* revert: no neon underline */
 
 /* Shiny animated gradient title */
-.shiny-title {
-  background: linear-gradient(90deg, #ffffff, #ffe97a, #9ee6a6, #a28cff, #ffffff);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shineSweep 6s linear infinite;
-  text-shadow: 0 0 20px rgba(255,255,255,0.15);
-}
-
-@keyframes shineSweep {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
+/* revert: no shiny sweep */
 
 .chat-header .assistant-title {
   text-align: center;
