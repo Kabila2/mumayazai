@@ -6,8 +6,12 @@ body {
   background-color: #000;
   color: #fff;
   font-family: 'Cairo', sans-serif;
-  direction: rtl;
   overflow-y: auto;
+}
+
+/* Apply RTL only when html[dir="rtl"] is set by App.js */
+html[dir="rtl"] body {
+  direction: rtl;
 }
 /* src/index.css */
 
