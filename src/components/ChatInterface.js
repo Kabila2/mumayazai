@@ -211,6 +211,7 @@ const ChatInterface = ({
   const theme = getDisabilityTheme(activeDisability);
   const viewportHeight = useViewportHeight();
   const { isMobile, isLandscape, keyboardOpen } = useMobileDetection();
+  const headerHeight = isLandscape && isMobile ? 56 : 80;
   
   console.log("🎯 ChatInterface initialized with disability:", activeDisability);
   console.log("📱 Mobile detection:", { isMobile, isLandscape, keyboardOpen });
@@ -393,9 +394,6 @@ const ChatInterface = ({
     },
     messagesContainer: {
       paddingBottom: keyboardOpen ? '20px' : '16px',
-      maxHeight: isMobile 
-        ? `calc(${viewportHeight}px - ${isLandscape ? '140px' : '180px'} - var(--mobile-keyboard-offset))`
-        : 'calc(100vh - 180px)',
     },
     inputArea: {
       position: keyboardOpen ? 'fixed' : 'relative',
@@ -428,7 +426,7 @@ const ChatInterface = ({
           top: 0,
           left: 0,
           right: 0,
-          height: isLandscape && isMobile ? '56px' : '80px',
+          height: `${headerHeight}px`,
           background: 'rgba(26, 0, 26, 0.95)',
           backdropFilter: 'blur(20px)',
           borderBottom: `2px solid ${theme.borderColor}`,
@@ -571,14 +569,14 @@ const ChatInterface = ({
       <div
         style={{
           width: '100vw',
-          height: dynamicStyles.container.height,
+          height: isMobile ? `${Math.max(0, viewportHeight - headerHeight)}px` : `calc(100vh - ${headerHeight}px)`,
           maxWidth: '100vw',
           display: 'flex',
           flexDirection: 'column',
           background: 'rgba(26, 0, 26, 0.8)',
           backdropFilter: 'blur(15px)',
           overflow: 'hidden',
-          paddingTop: isLandscape && isMobile ? '56px' : '80px'
+          paddingTop: `${headerHeight}px`
         }}
       >
         {/* Messages Area - Mobile Optimized */}
