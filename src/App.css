@@ -1,268 +1,427 @@
-/* App.css - Mobile-Optimized Dyslexia-Friendly Application Layout */
+/* Professional App.css - Modern, Accessible Application Layout */
 
-/* Import dyslexic-friendly fonts */
-@import url('https://fonts.googleapis.com/css2?family=Open+Dyslexic:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --dyslexic-font: 'Lexend', 'Open Dyslexic', Arial, sans-serif;
-  --background: #8e2de2;  /* Unified purple background */
-  --text-light: #e8f5e8;
-  --border-radius: 12px;
-  --transition: all 0.3s ease;
-  --letter-spacing: 0.03em;
-  --line-height: 1.6;
+  /* Professional Color System */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #3b82f6;
+  --secondary: #6366f1;
+  --accent: #06b6d4;
   
-  /* Mobile-specific variables */
-  --mobile-padding: clamp(0.75rem, 2vw, 1rem);
-  --mobile-gap: clamp(0.5rem, 1.5vw, 0.75rem);
-  --mobile-button-height: 48px; /* iOS/Android recommended minimum */
+  /* Neutral Palette */
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  
+  /* Background System */
+  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-glass: rgba(255, 255, 255, 0.08);
+  --bg-card: rgba(255, 255, 255, 0.1);
+  --bg-overlay: rgba(0, 0, 0, 0.3);
+  
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+  --letter-spacing: -0.025em;
+  
+  /* Spacing */
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  
+  /* Radius */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* Shadows */
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* Animation */
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Mobile */
+  --mobile-padding: clamp(1rem, 3vw, 1.5rem);
   --mobile-font-base: clamp(16px, 4vw, 18px);
-  --mobile-header-height: 60px;
+  --mobile-button-height: 48px;
+  --mobile-header-height: 64px;
 }
 
-/* Base reset with mobile-first approach */
-html, body {
+/* Reset and Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: var(--background);
-  font-family: var(--dyslexic-font);
-  line-height: var(--line-height);
+}
+
+html {
+  font-family: var(--font-family);
+  line-height: var(--line-height-normal);
   letter-spacing: var(--letter-spacing);
-  font-size: var(--mobile-font-base);
-  color: var(--text-light);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-size: var(--font-size-base);
+  background: var(--bg-gradient);
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
   
   /* Mobile optimizations */
   -webkit-text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  touch-action: manipulation; /* Prevents zoom on double-tap */
-  -webkit-tap-highlight-color: transparent; /* Removes blue highlight on tap */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-* {
-  box-sizing: border-box;
-  font-family: var(--dyslexic-font);
-}
-
-/* Main content area: mobile-first responsive */
-.main-content {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-/* Enhanced placeholder styling with mobile considerations */
-.placeholder {
-  color: var(--text-light);
-  font-size: clamp(1.5rem, 5vw, 2rem);
-  text-align: center;
-  padding: var(--mobile-padding);
-  background: rgba(255,255,255,0.1);
-  border-radius: var(--border-radius);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  animation: gentlePulse 4s ease-in-out infinite;
-  max-width: 90vw;
-  margin: var(--mobile-padding);
-}
-
-@keyframes gentlePulse {
-  0%,100% { transform: scale(1); }
-  50%    { transform: scale(1.02); }
-}
-
-/* Mobile-optimized mode switcher */
-.mode-switcher {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--mobile-header-height);
-  background: var(--background);
-  backdrop-filter: blur(20px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--mobile-gap);
-  z-index: 500;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  padding: 0 var(--mobile-padding);
-}
-
-.mode-switcher button {
-  background: transparent;
-  border: none;
-  color: #ccc;
-  font-size: clamp(1rem, 3vw, 1.2rem);
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.6rem 1rem;
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-  min-height: var(--mobile-button-height);
-  min-width: 44px; /* iOS minimum touch target */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.mode-switcher button:hover,
-.mode-switcher button:focus {
-  color: var(--text-light);
-  background: rgba(255, 255, 255, 0.1);
-  outline: none;
-}
-
-.mode-switcher button.active {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Mobile-optimized bottom dock */
-.chat-dock {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  background: var(--background);
-  backdrop-filter: blur(20px);
-  padding: var(--mobile-padding) 0;
-  z-index: 500;
-  /* Add safe area for iPhone notch */
-  padding-bottom: max(var(--mobile-padding), env(safe-area-inset-bottom));
-}
-
-.dock-btn {
-  background: transparent;
-  border: none;
-  color: #ccc;
-  font-size: clamp(1.4rem, 4vw, 1.7rem);
-  margin: 0 var(--mobile-gap);
-  cursor: pointer;
-  padding: 0.6rem 0.8rem;
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-  min-height: var(--mobile-button-height);
-  min-width: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dock-btn:hover,
-.dock-btn:focus {
-  color: var(--text-light);
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  outline: none;
-}
-
-/* App container with mobile considerations */
+/* App Container */
 .app-container {
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
-  overflow: hidden;
   position: relative;
-  background: var(--background);
-  /* Handle iOS safe areas */
+  background: var(--bg-gradient);
+  font-family: var(--font-family);
+  overflow: hidden;
+  
+  /* Animated background overlay */
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+    animation: backgroundShift 15s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* iOS safe area handling */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
 
-/* Mobile-specific responsive breakpoints */
+@keyframes backgroundShift {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+/* Main Content Area */
+.main-content {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Enhanced Placeholder for Loading States */
+.placeholder {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-size-xl);
+  font-weight: 500;
+  max-width: 90vw;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  
+  /* Subtle animation */
+  animation: placeholderPulse 3s ease-in-out infinite;
+  
+  /* Gradient border effect */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.2), 
+      rgba(255, 255, 255, 0.05));
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+  }
+}
+
+@keyframes placeholderPulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+/* Professional Mode Switcher */
+.mode-switcher {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--mobile-header-height);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(120%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  z-index: 100;
+  padding: 0 var(--mobile-padding);
+  
+  /* Animated border */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      var(--primary) 50%, 
+      transparent 100%);
+    animation: borderGlow 2s ease-in-out infinite;
+  }
+}
+
+@keyframes borderGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.mode-switcher button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: var(--mobile-button-height);
+  min-width: 44px;
+  backdrop-filter: blur(10px);
+  
+  &:hover,
+  &:focus {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    outline: none;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &.active {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Professional Bottom Dock */
+.chat-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(120%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-4) 0;
+  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  gap: var(--space-6);
+  z-index: 100;
+}
+
+.dock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+  
+  &:hover,
+  &:focus {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: var(--shadow-lg);
+    outline: none;
+  }
+  
+  &:active {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Full-screen Chat Override */
+.chat-area {
+  padding: 0 !important;
+}
+
+.chat-window {
+  max-width: none !important;
+  max-height: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  border-radius: 0 !important;
+}
+
+/* High Contrast Support */
+.high-contrast {
+  --bg-glass: rgba(255, 255, 255, 0.15);
+  --bg-card: rgba(255, 255, 255, 0.2);
+}
+
+.high-contrast .placeholder {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
+
+.high-contrast .mode-switcher button,
+.high-contrast .dock-btn {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
+
+.high-contrast .mode-switcher button:hover,
+.high-contrast .dock-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #000000;
+}
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
   :root {
     --mobile-header-height: 56px;
-    --mobile-padding: 0.75rem;
-    --mobile-gap: 0.5rem;
+    --mobile-padding: 1rem;
   }
   
-  .placeholder { 
-    font-size: clamp(1.3rem, 4.5vw, 1.8rem); 
-    padding: var(--mobile-padding); 
+  .placeholder {
+    font-size: var(--font-size-lg);
+    padding: var(--space-6);
   }
   
-  .mode-switcher button { 
-    font-size: clamp(0.9rem, 2.5vw, 1rem); 
-    padding: 0.5rem 0.8rem;
+  .mode-switcher button {
+    font-size: var(--font-size-sm);
+    padding: var(--space-2) var(--space-3);
+    min-width: auto;
   }
   
-  .dock-btn { 
-    font-size: clamp(1.2rem, 3.5vw, 1.5rem); 
-    margin: 0 0.4rem;
-  }
-  
-  /* Optimize for portrait orientation */
-  @media (orientation: portrait) {
-    .main-content {
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .placeholder {
-      max-width: 85vw;
-    }
+  .dock-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
   }
 }
 
 @media (max-width: 480px) {
   :root {
     --mobile-header-height: 52px;
-    --mobile-padding: 0.5rem;
-    --mobile-gap: 0.4rem;
-    --mobile-font-base: 16px; /* Never go below 16px on mobile */
+    --mobile-padding: 0.75rem;
+    --mobile-button-height: 44px;
   }
   
-  .placeholder { 
-    font-size: clamp(1.2rem, 4vw, 1.6rem); 
-    padding: var(--mobile-padding); 
+  .placeholder {
+    font-size: var(--font-size-base);
+    padding: var(--space-4);
   }
   
-  .mode-switcher button { 
-    font-size: 0.9rem; 
-    padding: 0.4rem 0.6rem;
-  }
-  
-  .dock-btn { 
-    font-size: 1.2rem; 
-    margin: 0 0.3rem;
-  }
-  
-  /* Stack elements vertically on very small screens */
   .mode-switcher {
+    height: var(--mobile-header-height);
     flex-wrap: wrap;
-    height: auto;
-    min-height: var(--mobile-header-height);
-    padding: 0.5rem var(--mobile-padding);
+    gap: var(--space-2);
+  }
+  
+  .mode-switcher button {
+    font-size: var(--font-size-sm);
+    padding: var(--space-2);
+    min-height: 40px;
+    min-width: 40px;
+  }
+  
+  .dock-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.125rem;
   }
   
   .chat-dock {
-    flex-wrap: wrap;
-    padding: 0.5rem 0;
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
   }
 }
 
-/* Touch-friendly enhancements */
+/* Touch Device Optimizations */
 @media (hover: none) and (pointer: coarse) {
-  /* This targets touch devices */
   .mode-switcher button,
   .dock-btn {
-    min-height: 48px; /* Larger touch targets */
+    min-height: 48px;
     min-width: 48px;
   }
   
@@ -273,112 +432,105 @@ html, body {
   }
 }
 
-/* Landscape orientation optimizations */
+/* Landscape Orientation */
 @media (orientation: landscape) and (max-height: 500px) {
   :root {
     --mobile-header-height: 44px;
   }
   
-  .mode-switcher {
-    height: var(--mobile-header-height);
-  }
-  
   .placeholder {
-    font-size: clamp(1rem, 3vw, 1.4rem);
+    font-size: var(--font-size-base);
+    padding: var(--space-4);
   }
   
   .chat-dock {
-    padding: 0.4rem 0;
+    padding: var(--space-2) 0;
   }
 }
 
-/* High contrast and accessibility improvements */
-@media (prefers-contrast: high) {
-  .mode-switcher button,
-  .dock-btn {
-    border: 2px solid transparent;
-  }
-  
-  .mode-switcher button:focus,
-  .dock-btn:focus {
-    border-color: #ffffff;
-    outline: 2px solid #ffff00;
-    outline-offset: 2px;
-  }
-}
-
-/* Reduced motion preferences */
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  * { 
-    animation-duration: 0.01ms !important; 
-    animation-iteration-count: 1 !important; 
-    transition-duration: 0.01ms !important; 
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
   
-  .placeholder { animation: none; }
+  .app-container::before {
+    animation: none;
+  }
   
-  .dock-btn:hover,
-  .mode-switcher button:hover {
-    transform: none;
+  .mode-switcher::after {
+    animation: none;
+  }
+  
+  .placeholder {
+    animation: none;
   }
 }
 
-/* Print styles remain accessible */
+/* Focus Styles for Accessibility */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Print Styles */
 @media print {
-  .mode-switcher, .chat-dock { display: none !important; }
-  .main-content { 
-    top: 0; 
-    bottom: 0; 
-    position: static !important; 
+  .mode-switcher,
+  .chat-dock {
+    display: none !important;
   }
-  .app-container { 
-    background: white !important; 
-    color: black !important; 
+  
+  .main-content {
+    position: static !important;
+  }
+  
+  .app-container {
+    background: white !important;
+    color: black !important;
     padding: 0;
   }
-}
-
-/* Full-screen chat override with mobile considerations */
-.chat-area {
-  padding: 0 !important;
-}
-
-.chat-window {
-  max-width: none !important;
-  max-height: none !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  border-radius: 0 !important;
-}
-
-/* PWA and mobile browser optimizations */
-@supports (display-mode: standalone) {
-  /* When app is installed as PWA */
-  .app-container {
-    padding-top: 0; /* PWA handles safe areas differently */
+  
+  .placeholder {
+    background: white !important;
+    color: black !important;
+    border: 1px solid black !important;
   }
 }
 
-/* iOS Safari specific fixes */
+/* PWA Support */
+@media (display-mode: standalone) {
+  .app-container {
+    padding-top: 0;
+  }
+}
+
+/* iOS Safari Fixes */
 @supports (-webkit-touch-callout: none) {
   .app-container {
     height: -webkit-fill-available;
   }
   
-  .main-content,
-  .chat-window {
+  .main-content {
     height: -webkit-fill-available;
   }
 }
 
-/* Dark mode support */
+/* Dark Mode Preferences */
 @media (prefers-color-scheme: dark) {
   /* Already optimized for dark theme */
 }
 
-/* Large text accessibility */
-@media (prefers-reduced-motion: no-preference) {
-  .placeholder {
-    animation-duration: 6s; /* Slower for better accessibility */
+/* Battery Saving Mode */
+@media (prefers-reduced-data: reduce) {
+  .app-container::before {
+    background: none;
+    animation: none;
+  }
+  
+  .mode-switcher::after {
+    background: none;
+    animation: none;
   }
 }
