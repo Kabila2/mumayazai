@@ -27,7 +27,7 @@ function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY
 
 function getAssistantTitle(disability) {
   switch ((disability || "").toLowerCase()) {
-    case "dyslexia": return "Dyslexia-Friendly Chat Assistant";
+    case "dyslexia": return "Dyslexia-Friendly Chat Assistant"; 
     case "adhd":     return "ADHD-Friendly Chat Assistant";
     case "autism":   return "Autism-Friendly Chat Assistant";
     default:         return "Accessible Chat Assistant";
