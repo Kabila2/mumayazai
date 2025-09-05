@@ -1,6 +1,6 @@
 /* Professional ChatInterface.css - Modern, Accessible Design */
 
-@import url('https://fonts.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
   /* Professional Color Palette */
@@ -38,13 +38,13 @@
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-  --font-size-xs: 1rem;       /* Scaled Up */
-  --font-size-sm: 1.125rem;   /* Scaled Up */
-  --font-size-base: 1.25rem;  /* Scaled Up */
-  --font-size-lg: 1.5rem;     /* Scaled Up */
-  --font-size-xl: 1.75rem;    /* Scaled Up */
-  --font-size-2xl: 2rem;      /* Scaled Up */
-  --font-size-3xl: 2.5rem;    /* Scaled Up */
+  --font-size-xs: 1.25rem;    /* Scaled up */
+  --font-size-sm: 1.5rem;     /* Scaled up */
+  --font-size-base: 1.75rem;  /* Scaled up */
+  --font-size-lg: 2rem;       /* Scaled up */
+  --font-size-xl: 2.25rem;    /* Scaled up */
+  --font-size-2xl: 2.5rem;    /* Scaled up */
+  --font-size-3xl: 3rem;      /* Scaled up */
   
   /* Spacing Scale */
   --space-1: 0.25rem;
@@ -77,10 +77,10 @@
   --transition-slow: all 0.4s ease-out;
   
   /* Mobile Responsive */
-  --header-height: 5rem;    /* Scaled Up */
-  --header-height-mobile: 4.5rem; /* Scaled Up */
-  --input-height: 4rem;     /* Scaled Up */
-  --input-height-mobile: 3.5rem;  /* Scaled Up */
+  --header-height: 6rem;
+  --header-height-mobile: 5.5rem;
+  --input-height: 5rem;
+  --input-height-mobile: 4.5rem;
 }
 
 /* Base Styles */
@@ -150,7 +150,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-6);
+  padding: 0 var(--space-8);
   flex-shrink: 0;
   position: relative;
   
@@ -179,8 +179,8 @@
 .header-button {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-6); /* Scaled Up */
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
@@ -190,8 +190,8 @@
   cursor: pointer;
   transition: var(--transition-normal);
   backdrop-filter: blur(10px);
-  min-height: 3.5rem; /* Scaled Up */
-  min-width: 3.5rem; /* Scaled Up */
+  min-height: 4rem;
+  min-width: 4rem;
   
   &:hover {
     background: rgba(255, 255, 255, 0.15);
@@ -233,7 +233,7 @@
   text-align: center;
   color: rgba(255, 255, 255, 0.95);
   font-weight: 600;
-  font-size: var(--font-size-2xl); /* Scaled Up */
+  font-size: var(--font-size-2xl);
   
   .title-main {
     display: block;
@@ -241,7 +241,7 @@
   }
   
   .title-sub {
-    font-size: var(--font-size-base); /* Scaled Up */
+    font-size: var(--font-size-base);
     font-weight: 400;
     opacity: 0.7;
     text-transform: uppercase;
@@ -254,10 +254,10 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--space-8); /* Scaled Up */
+  padding: var(--space-10);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5); /* Scaled Up */
+  gap: var(--space-6);
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -294,9 +294,9 @@
 /* Message Bubbles */
 .chat-bubble {
   max-width: 75%;
-  padding: var(--space-5) var(--space-6); /* Scaled Up */
+  padding: var(--space-5) var(--space-6);
   border-radius: var(--radius-xl);
-  font-size: var(--font-size-lg); /* Scaled Up */
+  font-size: var(--font-size-lg);
   line-height: 1.6;
   position: relative;
   backdrop-filter: blur(10px);
@@ -382,8 +382,8 @@
   align-items: center;
   
   .dot {
-    width: 10px; /* Scaled Up */
-    height: 10px; /* Scaled Up */
+    width: 12px;
+    height: 12px;
     background: currentColor;
     border-radius: 50%;
     opacity: 0.4;
@@ -407,12 +407,12 @@
 
 /* Input Area */
 .chat-input-area {
-  padding: var(--space-8); /* Scaled Up */
+  padding: var(--space-8);
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  gap: var(--space-4); /* Scaled Up */
+  gap: var(--space-4);
   align-items: flex-end;
   flex-shrink: 0;
   position: relative;
@@ -439,17 +439,17 @@
 
 .chat-input {
   width: 100%;
-  padding: var(--space-4) var(--space-6); /* Scaled Up */
+  padding: var(--space-5) var(--space-6);
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   color: rgba(255, 255, 255, 0.95);
-  font-size: var(--font-size-lg); /* Scaled Up */
+  font-size: var(--font-size-lg);
   font-family: var(--font-family);
   outline: none;
   resize: none;
   min-height: var(--input-height);
-  max-height: 120px;
+  max-height: 150px;
   transition: var(--transition-normal);
   backdrop-filter: blur(10px);
   
@@ -469,7 +469,7 @@
 
 .input-actions {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-items: center;
 }
 
@@ -477,8 +477,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;  /* Scaled Up */
-  height: 3.5rem; /* Scaled Up */
+  width: 4rem;
+  height: 4rem;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
@@ -497,12 +497,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-6); /* Scaled Up */
+  padding: var(--space-4) var(--space-8);
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   border: none;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   color: white;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-normal);
@@ -535,8 +535,8 @@
 
 .attachment-item {
   position: relative;
-  width: 80px;  /* Scaled Up */
-  height: 80px; /* Scaled Up */
+  width: 100px;
+  height: 100px;
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.2);
@@ -551,8 +551,8 @@
     position: absolute;
     top: -6px;
     right: -6px;
-    width: 24px;  /* Scaled Up */
-    height: 24px; /* Scaled Up */
+    width: 28px;
+    height: 28px;
     background: var(--error);
     border: 2px solid white;
     border-radius: 50%;
@@ -560,7 +560,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 14px; /* Scaled Up */
+    font-size: 16px;
     color: white;
   }
 }
@@ -570,8 +570,8 @@
   position: fixed;
   right: var(--space-4);
   bottom: 120px;
-  width: 50px;  /* Scaled Up */
-  height: 50px; /* Scaled Up */
+  width: 60px;
+  height: 60px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
