@@ -38,13 +38,13 @@
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-  --font-size-xs: 0.8rem;
-  --font-size-sm: 1rem;
-  --font-size-base: 1.125rem; /* Increased */
-  --font-size-lg: 1.25rem;   /* Increased */
-  --font-size-xl: 1.5rem;
-  --font-size-2xl: 1.75rem;
-  --font-size-3xl: 2rem;
+  --font-size-xs: 1rem;       /* Scaled Up */
+  --font-size-sm: 1.125rem;   /* Scaled Up */
+  --font-size-base: 1.25rem;  /* Scaled Up */
+  --font-size-lg: 1.5rem;     /* Scaled Up */
+  --font-size-xl: 1.75rem;    /* Scaled Up */
+  --font-size-2xl: 2rem;      /* Scaled Up */
+  --font-size-3xl: 2.5rem;    /* Scaled Up */
   
   /* Spacing Scale */
   --space-1: 0.25rem;
@@ -77,10 +77,10 @@
   --transition-slow: all 0.4s ease-out;
   
   /* Mobile Responsive */
-  --header-height: 4.5rem; /* Increased */
-  --header-height-mobile: 4rem; /* Increased */
-  --input-height: 3.5rem;   /* Increased */
-  --input-height-mobile: 3rem;  /* Increased */
+  --header-height: 5rem;    /* Scaled Up */
+  --header-height-mobile: 4.5rem; /* Scaled Up */
+  --input-height: 4rem;     /* Scaled Up */
+  --input-height-mobile: 3.5rem;  /* Scaled Up */
 }
 
 /* Base Styles */
@@ -180,18 +180,18 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-5); /* Increased padding */
+  padding: var(--space-4) var(--space-6); /* Scaled Up */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
   color: rgba(255, 255, 255, 0.9);
-  font-size: var(--font-size-sm); /* Increased */
+  font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition-normal);
   backdrop-filter: blur(10px);
-  min-height: 3rem; /* Increased */
-  min-width: 3rem; /* Increased */
+  min-height: 3.5rem; /* Scaled Up */
+  min-width: 3.5rem; /* Scaled Up */
   
   &:hover {
     background: rgba(255, 255, 255, 0.15);
@@ -233,7 +233,7 @@
   text-align: center;
   color: rgba(255, 255, 255, 0.95);
   font-weight: 600;
-  font-size: var(--font-size-xl); /* Increased */
+  font-size: var(--font-size-2xl); /* Scaled Up */
   
   .title-main {
     display: block;
@@ -241,7 +241,7 @@
   }
   
   .title-sub {
-    font-size: var(--font-size-sm); /* Increased */
+    font-size: var(--font-size-base); /* Scaled Up */
     font-weight: 400;
     opacity: 0.7;
     text-transform: uppercase;
@@ -254,10 +254,10 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--space-6);
+  padding: var(--space-8); /* Scaled Up */
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5); /* Scaled Up */
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -294,9 +294,9 @@
 /* Message Bubbles */
 .chat-bubble {
   max-width: 75%;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5) var(--space-6); /* Scaled Up */
   border-radius: var(--radius-xl);
-  font-size: var(--font-size-base); /* Increased */
+  font-size: var(--font-size-lg); /* Scaled Up */
   line-height: 1.6;
   position: relative;
   backdrop-filter: blur(10px);
@@ -382,8 +382,8 @@
   align-items: center;
   
   .dot {
-    width: 8px;
-    height: 8px;
+    width: 10px; /* Scaled Up */
+    height: 10px; /* Scaled Up */
     background: currentColor;
     border-radius: 50%;
     opacity: 0.4;
@@ -407,12 +407,12 @@
 
 /* Input Area */
 .chat-input-area {
-  padding: var(--space-6);
+  padding: var(--space-8); /* Scaled Up */
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-4); /* Scaled Up */
   align-items: flex-end;
   flex-shrink: 0;
   position: relative;
@@ -439,12 +439,12 @@
 
 .chat-input {
   width: 100%;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-4) var(--space-6); /* Scaled Up */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-xl);
   color: rgba(255, 255, 255, 0.95);
-  font-size: var(--font-size-base); /* Increased */
+  font-size: var(--font-size-lg); /* Scaled Up */
   font-family: var(--font-family);
   outline: none;
   resize: none;
@@ -477,8 +477,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;  /* Increased */
-  height: 3rem; /* Increased */
+  width: 3.5rem;  /* Scaled Up */
+  height: 3.5rem; /* Scaled Up */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
@@ -497,12 +497,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-6); /* Increased padding */
+  padding: var(--space-4) var(--space-6); /* Scaled Up */
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   border: none;
   border-radius: var(--radius-xl);
   color: white;
-  font-size: var(--font-size-sm); /* Increased */
+  font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-normal);
@@ -535,8 +535,8 @@
 
 .attachment-item {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 80px;  /* Scaled Up */
+  height: 80px; /* Scaled Up */
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.2);
@@ -551,8 +551,8 @@
     position: absolute;
     top: -6px;
     right: -6px;
-    width: 20px;
-    height: 20px;
+    width: 24px;  /* Scaled Up */
+    height: 24px; /* Scaled Up */
     background: var(--error);
     border: 2px solid white;
     border-radius: 50%;
@@ -560,7 +560,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px; /* Scaled Up */
     color: white;
   }
 }
@@ -570,8 +570,8 @@
   position: fixed;
   right: var(--space-4);
   bottom: 120px;
-  width: 40px;
-  height: 40px;
+  width: 50px;  /* Scaled Up */
+  height: 50px; /* Scaled Up */
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -609,7 +609,7 @@
   .chat-bubble {
     max-width: 85%;
     padding: var(--space-3) var(--space-4);
-    font-size: var(--font-size-base); /* Increased */
+    font-size: var(--font-size-base);
   }
   
   .chat-input-area {
