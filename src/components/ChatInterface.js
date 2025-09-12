@@ -11,7 +11,76 @@ import {
 } from "../utils/disabilityUtils";
 import './ChatInterface.css';
 
-/** ---------- AI Integration ---------- */
+/** ---------- Memory System ---------- */
+const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
+const MAX_MEMORY_MESSAGES = 50; // Limit memory to prevent localStorage overflow
+const CONTEXT_WINDOW = 10; // Number of recent messages to include in AI context
+
+// Save conversation to localStorage
+const saveConversationMemory = (messages, disability) => {
+  try {
+    const memoryData = {
+      messages: messages.slice(-MAX_MEMORY_MESSAGES), // Keep only recent messages
+      disability,
+      timestamp: Date.now(),
+      version: "1.0"
+    };
+    localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
+  } catch (error) {
+    console.warn("Failed to save conversation memory:", error);
+  }
+};
+
+// Load conversation from localStorage
+const loadConversationMemory = (currentDisability) => {
+  try {
+    const stored = localStorage.getItem(MEMORY_STORAGE_KEY);
+    if (!stored) return null;
+    
+    const memoryData = JSON.parse(stored);
+    
+    // Check if memory matches current disability and is recent (within 7 days)
+    const isRecent = Date.now() - memoryData.timestamp < 7 * 24 * 60 * 60 * 1000;
+    const matchesDisability = memoryData.disability === currentDisability;
+    
+    if (isRecent && matchesDisability && memoryData.messages?.length) {
+      return memoryData.messages;
+    }
+  } catch (error) {
+    console.warn("Failed to load conversation memory:", error);
+  }
+  return null;
+};
+
+// Clear conversation memory
+const clearConversationMemory = () => {
+  try {
+    localStorage.removeItem(MEMORY_STORAGE_KEY);
+  } catch (error) {
+    console.warn("Failed to clear conversation memory:", error);
+  }
+};
+
+// Build context from conversation history for AI
+const buildConversationContext = (messages, disability) => {
+  if (messages.length <= 1) return "";
+  
+  // Get recent messages for context (excluding the welcome message)
+  const recentMessages = messages
+    .slice(1) // Skip welcome message
+    .slice(-CONTEXT_WINDOW) // Get last N messages
+    .filter(msg => !msg.loading) // Exclude loading messages
+    .map(msg => {
+      const role = msg.sender === "user" ? "User" : "Assistant";
+      return `${role}: ${msg.text}`;
+    });
+  
+  if (recentMessages.length === 0) return "";
+  
+  return `\n\nPrevious conversation context (${disability.toUpperCase()} mode):\n${recentMessages.join('\n')}\n\nCurrent message:\n`;
+};
+
+/** ---------- AI Integration with Memory ---------- */
 const hasPuter = () =>
   typeof window !== "undefined" &&
   window.puter &&
@@ -45,8 +114,10 @@ const aiChat = async (prompt, ms = 20000) => {
   return Promise.race([req, timeout]);
 };
 
-const mockAI = (prompt, disability) => {
-  const userInput = (prompt.split("User:").pop() || "").trim();
+const mockAI = (prompt, disability, hasContext = false) => {
+  const userInput = (prompt.split("Current message:").pop() || prompt.split("User:").pop() || "").trim();
+  
+  const contextNote = hasContext ? "\n\n(I can see our previous conversation)" : "";
   
   switch (disability.toLowerCase()) {
     case "adhd":
@@ -54,6 +125,7 @@ const mockAI = (prompt, disability) => {
 
 • You said: "${userInput}"
 • Demo mode active
+• I remember our chat history${contextNote}
 • Quick structured response
 • Clear and scannable format
 
@@ -65,6 +137,7 @@ Your message has been processed with ADHD-optimized formatting for better focus 
 Input received: "${userInput}"
 
 Status: Demo mode is currently active
+Memory: Previous conversations are stored${contextNote}
 
 Response structure:
 1. Clear communication provided
@@ -81,6 +154,7 @@ All responses are structured for autism accessibility needs.`;
 Your message: "${userInput}"
 
 Demo mode is running.
+I remember what we talked about before.${contextNote}
 
 • Simple language used
 • Clear structure provided
@@ -91,15 +165,20 @@ Text has been optimized for dyslexia-friendly reading.`;
   }
 };
 
-const getAIResponse = async (prompt, disability) => {
+const getAIResponse = async (prompt, disability, conversationContext = "") => {
   const ready = await waitForPuter(3000);
   
+  // Add conversation context to the prompt if available
+  const enhancedPrompt = conversationContext 
+    ? prompt + conversationContext 
+    : prompt;
+  
   if (!ready) {
-    return mockAI(prompt, disability);
+    return mockAI(enhancedPrompt, disability, !!conversationContext);
   }
   
   try {
-    const rawResponse = await aiChat(prompt, 20000);
+    const rawResponse = await aiChat(enhancedPrompt, 20000);
     return formatAIResponse(rawResponse, disability);
   } catch (err) {
     console.warn("[ChatInterface] AI error:", err);
@@ -153,7 +232,7 @@ const useMobileDetection = () => {
   return state;
 };
 
-/** ---------- Enhanced Chat Interface Component ---------- */
+/** ---------- Enhanced Chat Interface Component with Memory ---------- */
 const ChatInterface = ({ 
   onSwitchMode, 
   fontSize = 1, 
@@ -169,23 +248,37 @@ const ChatInterface = ({
   const activeDisability = currentDisability || getCurrentDisability();
   const { isMobile, isLandscape, keyboardOpen, viewportHeight } = useMobileDetection();
   
-  const [messages, setMessages] = useState([
-    {
+  // Initialize messages with memory or welcome message
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = loadConversationMemory(activeDisability);
+    if (savedMessages && savedMessages.length > 0) {
+      return savedMessages;
+    }
+    return [{
       sender: "gpt",
       text: getWelcomeMessage(activeDisability),
       id: Date.now()
-    }
-  ]);
+    }];
+  });
+  
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showMemoryStatus, setShowMemoryStatus] = useState(false);
   
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  
+  // Save messages to memory whenever they change
+  useEffect(() => {
+    if (messages.length > 1) { // Don't save just the welcome message
+      saveConversationMemory(messages, activeDisability);
+    }
+  }, [messages, activeDisability]);
   
   // Auto-scroll with smooth animation
   const scrollToBottom = useCallback((smooth = true) => {
@@ -224,11 +317,26 @@ const ChatInterface = ({
 
   // Update welcome message when disability changes
   useEffect(() => {
-    setMessages([{
-      sender: "gpt",
-      text: getWelcomeMessage(activeDisability),
-      id: Date.now()
-    }]);
+    const savedMessages = loadConversationMemory(activeDisability);
+    if (savedMessages && savedMessages.length > 0) {
+      setMessages(savedMessages);
+    } else {
+      setMessages([{
+        sender: "gpt",
+        text: getWelcomeMessage(activeDisability),
+        id: Date.now()
+      }]);
+    }
+  }, [activeDisability]);
+
+  // Show memory status notification
+  useEffect(() => {
+    const savedMessages = loadConversationMemory(activeDisability);
+    if (savedMessages && savedMessages.length > 1) {
+      setShowMemoryStatus(true);
+      const timer = setTimeout(() => setShowMemoryStatus(false), 3000);
+      return () => clearTimeout(timer);
+    }
   }, [activeDisability]);
 
   // Handle file uploads
@@ -253,7 +361,17 @@ const ChatInterface = ({
     });
   }, []);
 
-  // Send message handler
+  // Clear conversation and memory
+  const handleClearConversation = useCallback(() => {
+    clearConversationMemory();
+    setMessages([{
+      sender: "gpt",
+      text: getWelcomeMessage(activeDisability),
+      id: Date.now()
+    }]);
+  }, [activeDisability]);
+
+  // Send message handler with memory context
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isSending) return;
@@ -268,10 +386,8 @@ const ChatInterface = ({
     const userId = Date.now();
     const sentImages = attachments.map(a => a.url);
     
-    setMessages(prev => [
-      ...prev,
-      { sender: "user", text, images: sentImages, id: userId }
-    ]);
+    const newUserMessage = { sender: "user", text, images: sentImages, id: userId };
+    setMessages(prev => [...prev, newUserMessage]);
     
     // Clear input and attachments
     setAttachments([]);
@@ -286,10 +402,10 @@ const ChatInterface = ({
     // Handle image-only messages
     if (!text && sentImages.length > 0) {
       const imageResponse = activeDisability === 'adhd'
-        ? 'ADHD-FRIENDLY RESPONSE:\n\n• I received your image(s)\n• I cannot view images directly\n• Please describe what you see\n• I will help based on your description'
+        ? 'ADHD-FRIENDLY RESPONSE:\n\n• I received your image(s)\n• I cannot view images directly\n• Please describe what you see\n• I will help based on your description\n• I remember our previous conversation'
         : activeDisability === 'autism'
-          ? 'AUTISM-FRIENDLY RESPONSE:\n\nImage received.\n\n1. I cannot process images\n2. Please describe the content\n3. I will provide assistance\n4. Be specific about details'
-          : 'DYSLEXIA-FRIENDLY RESPONSE:\n\nI got your image(s).\n\n• I cannot see pictures\n• Tell me what it shows\n• Share key details\n• I will help from your description';
+          ? 'AUTISM-FRIENDLY RESPONSE:\n\nImage received.\n\n1. I cannot process images\n2. Please describe the content\n3. I will provide assistance\n4. Be specific about details\n5. Previous conversation context is available'
+          : 'DYSLEXIA-FRIENDLY RESPONSE:\n\nI got your image(s).\n\n• I cannot see pictures\n• Tell me what it shows\n• Share key details\n• I will help from your description\n• I remember what we talked about before';
       
       setMessages(prev => [
         ...prev,
@@ -304,8 +420,12 @@ const ChatInterface = ({
     setMessages(prev => [...prev, { sender: "gpt", loading: true, id: loadingId }]);
 
     try {
+      // Build conversation context from previous messages
+      const updatedMessages = [...messages, newUserMessage];
+      const conversationContext = buildConversationContext(updatedMessages, activeDisability);
+      
       const enhancedPrompt = createDisabilityAwarePrompt(text, activeDisability, false);
-      const response = await getAIResponse(enhancedPrompt, activeDisability);
+      const response = await getAIResponse(enhancedPrompt, activeDisability, conversationContext);
 
       setMessages(prev =>
         prev.map(m =>
@@ -333,7 +453,7 @@ const ChatInterface = ({
     } finally {
       setIsSending(false);
     }
-  }, [input, isSending, activeDisability, isMobile, attachments]);
+  }, [input, isSending, activeDisability, isMobile, attachments, messages]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback((e) => {
@@ -414,6 +534,33 @@ const ChatInterface = ({
       }}
     >
       <div className="chat-window">
+        {/* Memory Status Notification */}
+        <AnimatePresence>
+          {showMemoryStatus && (
+            <motion.div
+              style={{
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(16, 185, 129, 0.9)',
+                color: 'white',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                zIndex: 1001,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+              }}
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            >
+              💾 Previous conversation restored
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Enhanced Header */}
         <motion.header 
           className="chat-header"
@@ -448,25 +595,41 @@ const ChatInterface = ({
               {assistantTitle} {getDisabilityIcon(activeDisability)}
             </span>
             <span className="title-sub">
-              {activeDisability.toUpperCase()} Optimized
+              {activeDisability.toUpperCase()} Optimized • Memory Active
             </span>
           </motion.div>
 
-          {/* Sign Out Button */}
-          {onSignOut && (
+          {/* Clear Chat & Sign Out Buttons */}
+          <div style={{ display: 'flex', gap: '8px' }}>
             <motion.button
-              className="header-button danger"
-              onClick={onSignOut}
+              className="header-button"
+              onClick={handleClearConversation}
+              title="Clear conversation and memory"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              initial={{ x: 50, opacity: 0 }}
+              initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: reducedMotion ? 0 : 0.3 }}
+              transition={{ delay: reducedMotion ? 0 : 0.25 }}
             >
-              <span>🚪</span>
-              <span className="button-text">Sign Out</span>
+              <span>🗑️</span>
+              <span className="button-text">Clear</span>
             </motion.button>
-          )}
+
+            {onSignOut && (
+              <motion.button
+                className="header-button danger"
+                onClick={onSignOut}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: reducedMotion ? 0 : 0.3 }}
+              >
+                <span>🚪</span>
+                <span className="button-text">Sign Out</span>
+              </motion.button>
+            )}
+          </div>
         </motion.header>
 
         {/* Messages Container */}
@@ -480,7 +643,7 @@ const ChatInterface = ({
           }}
         >
           <AnimatePresence mode="popLayout">
-            {messages.map((message) => (
+            {messages.map((message, index) => (
               <motion.div
                 key={message.id}
                 className={`chat-bubble ${message.sender}`}
@@ -502,7 +665,7 @@ const ChatInterface = ({
               >
                 {message.loading ? (
                   <div className="loading-dots">
-                    <span>Thinking ({activeDisability.toUpperCase()} mode)</span>
+                    <span>Thinking ({activeDisability.toUpperCase()} mode) - Using conversation memory</span>
                     <div className="dot"></div>
                     <div className="dot"></div>
                     <div className="dot"></div>
@@ -533,11 +696,11 @@ const ChatInterface = ({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: reducedMotion ? 0 : 0.2 }}
                       >
-                        {message.images.map((src, index) => (
+                        {message.images.map((src, imgIndex) => (
                           <motion.img 
-                            key={index}
+                            key={imgIndex}
                             src={src} 
-                            alt={`attachment-${index}`}
+                            alt={`attachment-${imgIndex}`}
                             style={{ 
                               width: '120px', 
                               height: '90px', 
@@ -548,10 +711,22 @@ const ChatInterface = ({
                             whileHover={!reducedMotion ? { scale: 1.05 } : {}}
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: index * 0.1 }}
+                            transition={{ delay: imgIndex * 0.1 }}
                           />
                         ))}
                       </motion.div>
+                    )}
+                    
+                    {/* Message timestamp and index for reference */}
+                    {message.sender !== 'gpt' || index === 0 ? null : (
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        opacity: 0.6, 
+                        marginTop: '8px', 
+                        textAlign: 'right' 
+                      }}>
+                        Message #{index} • {new Date(message.id).toLocaleTimeString()}
+                      </div>
                     )}
                   </motion.div>
                 )}
@@ -660,7 +835,7 @@ const ChatInterface = ({
               onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
-              placeholder={`Type your message... (${activeDisability.toUpperCase()} optimized responses)`}
+              placeholder={`Type your message... (${activeDisability.toUpperCase()} optimized • Memory active)`}
               disabled={isSending}
               rows={1}
               style={{
