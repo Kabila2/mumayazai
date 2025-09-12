@@ -810,7 +810,7 @@ export default function VoiceInterface({
               
               <motion.button
                 className="test-btn"
-                onClick={() => speak(`This is a test of the ${disability} voice assistant with memory. Speech has been optimized for your accessibility needs and I remember our previous conversations.`)}
+                onClick={() => speak(`This is a test of the voice assistant with memory. Speech has been optimized for accessibility and I remember our previous conversations.`)}
                 whileHover={!reducedMotion ? { scale: 1.02, y: -2 } : {}}
                 whileTap={{ scale: 0.98 }}
               >

@@ -402,10 +402,10 @@ const ChatInterface = ({
     // Handle image-only messages
     if (!text && sentImages.length > 0) {
       const imageResponse = activeDisability === 'adhd'
-        ? 'ADHD-FRIENDLY RESPONSE:\n\n• I received your image(s)\n• I cannot view images directly\n• Please describe what you see\n• I will help based on your description\n• I remember our previous conversation'
+        ? 'I received your image(s). I cannot view images directly, but I can help if you describe what you see.'
         : activeDisability === 'autism'
-          ? 'AUTISM-FRIENDLY RESPONSE:\n\nImage received.\n\n1. I cannot process images\n2. Please describe the content\n3. I will provide assistance\n4. Be specific about details\n5. Previous conversation context is available'
-          : 'DYSLEXIA-FRIENDLY RESPONSE:\n\nI got your image(s).\n\n• I cannot see pictures\n• Tell me what it shows\n• Share key details\n• I will help from your description\n• I remember what we talked about before';
+          ? 'Image received. I cannot process images, but please describe the content and I will provide assistance.'
+          : 'I got your image(s). I cannot see pictures, but tell me what it shows and I will help from your description.';
       
       setMessages(prev => [
         ...prev,
