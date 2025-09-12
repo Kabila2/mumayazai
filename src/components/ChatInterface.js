@@ -50,14 +50,44 @@ const mockAI = (prompt, disability) => {
   
   switch (disability.toLowerCase()) {
     case "adhd":
-      return `ADHD-FRIENDLY RESPONSE:\n\n• You said: "${userInput}"\n• Demo mode active\n• Quick structured response\n• Clear and scannable format`;
+      return `ADHD-FRIENDLY RESPONSE:
+
+• You said: "${userInput}"
+• Demo mode active
+• Quick structured response
+• Clear and scannable format
+
+Your message has been processed with ADHD-optimized formatting for better focus and comprehension.`;
 
     case "autism":
-      return `AUTISM-FRIENDLY RESPONSE:\n\nInput: "${userInput}"\n\nDemo mode status: Active\n1. Clear communication\n2. Predictable structure\n3. Direct information\n4. Consistent format`;
+      return `AUTISM-FRIENDLY RESPONSE:
+
+Input received: "${userInput}"
+
+Status: Demo mode is currently active
+
+Response structure:
+1. Clear communication provided
+2. Predictable format maintained
+3. Direct information delivered
+4. Consistent structure followed
+
+All responses are structured for autism accessibility needs.`;
 
     case "dyslexia":
     default:
-      return `DYSLEXIA-FRIENDLY RESPONSE:\n\nYour message: "${userInput}"\n\nDemo mode is running.\n\n• Simple language\n• Clear structure\n• Easy to read\n• Helpful format`;
+      return `DYSLEXIA-FRIENDLY RESPONSE:
+
+Your message: "${userInput}"
+
+Demo mode is running.
+
+• Simple language used
+• Clear structure provided
+• Easy to read format
+• Helpful response given
+
+Text has been optimized for dyslexia-friendly reading.`;
   }
 };
 
@@ -123,7 +153,7 @@ const useMobileDetection = () => {
   return state;
 };
 
-/** ---------- Professional Chat Interface Component ---------- */
+/** ---------- Enhanced Chat Interface Component ---------- */
 const ChatInterface = ({ 
   onSwitchMode, 
   fontSize = 1, 
@@ -372,16 +402,19 @@ const ChatInterface = ({
     }
   };
 
+  // Apply dyslexia-specific class
+  const containerClasses = `chat-area ${activeDisability === 'dyslexia' ? 'dyslexia-mode' : ''}`;
+
   return (
     <div 
-      className="chat-area"
+      className={containerClasses}
       style={{
         fontSize: `${fontSize}rem`,
         height: isMobile ? `${viewportHeight}px` : '100vh'
       }}
     >
       <div className="chat-window">
-        {/* Professional Header */}
+        {/* Enhanced Header */}
         <motion.header 
           className="chat-header"
           variants={headerVariants}
@@ -442,7 +475,7 @@ const ChatInterface = ({
           ref={messagesRef}
           style={{
             height: isMobile ? 
-              `calc(${viewportHeight}px - ${isLandscape ? '3.5rem' : '4rem'} - ${keyboardOpen ? '0px' : '120px'})` : 
+              `calc(${viewportHeight}px - ${isLandscape ? '3.5rem' : '4rem'} - ${keyboardOpen ? '0px' : '140px'})` : 
               'auto'
           }}
         >
@@ -461,6 +494,11 @@ const ChatInterface = ({
                   duration: reducedMotion ? 0.1 : 0.4
                 }}
                 layout
+                whileHover={!reducedMotion ? { 
+                  y: -3, 
+                  scale: 1.01,
+                  transition: { duration: 0.2 }
+                } : {}}
               >
                 {message.loading ? (
                   <div className="loading-dots">
@@ -470,21 +508,33 @@ const ChatInterface = ({
                     <div className="dot"></div>
                   </div>
                 ) : (
-                  <div>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: reducedMotion ? 0 : 0.1 }}
+                  >
                     {message.text && (
-                      <div style={{ marginBottom: message.images?.length ? '12px' : 0 }}>
-                        {message.text}
-                      </div>
+                      <div 
+                        style={{ marginBottom: message.images?.length ? '12px' : 0 }}
+                        dangerouslySetInnerHTML={{
+                          __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
+                        }}
+                      />
                     )}
                     {message.images && message.images.length > 0 && (
-                      <div style={{ 
-                        display: 'flex', 
-                        gap: '8px', 
-                        flexWrap: 'wrap',
-                        marginTop: '8px'
-                      }}>
+                      <motion.div 
+                        style={{ 
+                          display: 'flex', 
+                          gap: '8px', 
+                          flexWrap: 'wrap',
+                          marginTop: '8px'
+                        }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: reducedMotion ? 0 : 0.2 }}
+                      >
                         {message.images.map((src, index) => (
-                          <img 
+                          <motion.img 
                             key={index}
                             src={src} 
                             alt={`attachment-${index}`}
@@ -494,12 +544,16 @@ const ChatInterface = ({
                               objectFit: 'cover', 
                               borderRadius: '8px',
                               border: '1px solid rgba(255, 255, 255, 0.2)'
-                            }} 
+                            }}
+                            whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: index * 0.1 }}
                           />
                         ))}
-                      </div>
+                      </motion.div>
                     )}
-                  </div>
+                  </motion.div>
                 )}
               </motion.div>
             ))}
@@ -508,23 +562,26 @@ const ChatInterface = ({
         </div>
 
         {/* Scroll Indicator */}
-        {isMobile && showScrollIndicator && (
-          <motion.div
-            className="scroll-indicator"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={scrollToBottom}
-            whileTap={{ scale: 0.9 }}
-            style={{
-              bottom: keyboardOpen ? '140px' : '120px'
-            }}
-          >
-            ↓
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {isMobile && showScrollIndicator && (
+            <motion.div
+              className="scroll-indicator"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={scrollToBottom}
+              whileTap={{ scale: 0.9 }}
+              whileHover={!reducedMotion ? { scale: 1.1, y: -2 } : {}}
+              style={{
+                bottom: keyboardOpen ? '140px' : '120px'
+              }}
+            >
+              ↓
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Professional Input Area */}
+        {/* Enhanced Input Area */}
         <motion.div 
           className="chat-input-area"
           variants={inputVariants}
@@ -545,26 +602,57 @@ const ChatInterface = ({
             }}
           />
 
-          {/* Attachment Preview */}
-          {attachments.length > 0 && (
-            <div className="attachment-preview">
-              {attachments.map(attachment => (
-                <div key={attachment.id} className="attachment-item">
-                  <img src={attachment.url} alt={attachment.name} />
-                  <button
-                    className="remove-attachment"
-                    onClick={() => removeAttachment(attachment.id)}
-                    title="Remove attachment"
+          {/* Enhanced Attachment Preview */}
+          <AnimatePresence>
+            {attachments.length > 0 && (
+              <motion.div 
+                className="attachment-preview"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: reducedMotion ? 0.1 : 0.3 }}
+              >
+                {attachments.map((attachment, index) => (
+                  <motion.div 
+                    key={attachment.id} 
+                    className="attachment-item"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0, rotate: 180 }}
+                    transition={{ 
+                      delay: index * 0.1,
+                      duration: reducedMotion ? 0.1 : 0.3,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    whileHover={!reducedMotion ? { 
+                      scale: 1.05, 
+                      rotate: 2,
+                      transition: { duration: 0.2 }
+                    } : {}}
                   >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                    <img src={attachment.url} alt={attachment.name} />
+                    <motion.button
+                      className="remove-attachment"
+                      onClick={() => removeAttachment(attachment.id)}
+                      title="Remove attachment"
+                      whileHover={!reducedMotion ? { 
+                        scale: 1.1, 
+                        rotate: 90,
+                        transition: { duration: 0.2 }
+                      } : {}}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      ×
+                    </motion.button>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="input-container">
-            <textarea
+            <motion.textarea
               ref={inputRef}
               className="chat-input"
               value={input}
@@ -576,20 +664,34 @@ const ChatInterface = ({
               disabled={isSending}
               rows={1}
               style={{
-                fontSize: isMobile ? 'max(16px, 1rem)' : '1rem' // Prevent iOS zoom
+                fontSize: isMobile ? 'max(16px, 1rem)' : '1rem',
+                fontFamily: activeDisability === 'dyslexia' ? 'var(--font-dyslexic)' : 'var(--font-family)'
               }}
+              whileFocus={!reducedMotion ? { 
+                scale: 1.02,
+                transition: { duration: 0.2 }
+              } : {}}
             />
           </div>
 
           <div className="input-actions">
-            <button
+            <motion.button
               className="action-button"
               onClick={() => fileInputRef.current?.click()}
               title="Attach image"
               type="button"
+              whileHover={!reducedMotion ? { 
+                scale: 1.05, 
+                y: -2,
+                transition: { duration: 0.2 }
+              } : {}}
+              whileTap={{ scale: 0.95 }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: reducedMotion ? 0 : 0.4 }}
             >
               📎
-            </button>
+            </motion.button>
 
             <motion.button
               className="send-button"
@@ -597,27 +699,45 @@ const ChatInterface = ({
               disabled={isSending || (!input.trim() && attachments.length === 0)}
               whileHover={!isSending && (input.trim() || attachments.length > 0) && !reducedMotion ? { 
                 scale: 1.05, 
-                y: -2 
+                y: -2,
+                transition: { duration: 0.2 }
               } : {}}
               whileTap={!isSending && (input.trim() || attachments.length > 0) ? { 
                 scale: 0.95 
               } : {}}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: reducedMotion ? 0 : 0.5 }}
             >
-              {isSending ? (
-                <>
-                  <div className="loading-dots">
-                    <div className="dot"></div>
-                    <div className="dot"></div>
-                    <div className="dot"></div>
-                  </div>
-                  <span>Sending...</span>
-                </>
-              ) : (
-                <>
-                  <span>✈️</span>
-                  <span>Send</span>
-                </>
-              )}
+              <AnimatePresence mode="wait">
+                {isSending ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <div className="loading-dots">
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                    </div>
+                    <span>Sending...</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="send"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <span>✈️</span>
+                    <span>Send</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.button>
           </div>
         </motion.div>
