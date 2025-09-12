@@ -59,7 +59,7 @@ const mockAI = (prompt, disability) => {
   // Generate disability-specific mock responses optimized for voice
   switch (disability.toLowerCase()) {
     case "adhd":
-      return `🧠 ADHD-FRIENDLY RESPONSE:
+      return `ADHD-FRIENDLY RESPONSE:
 
 Voice mode is offline right now, but here's how I'd help you:
 
@@ -73,7 +73,7 @@ You said: "${userInput}"
 I'd break this down into simple chunks for easy listening.`;
 
     case "autism":
-      return `🌈 AUTISM-FRIENDLY RESPONSE:
+      return `AUTISM-FRIENDLY RESPONSE:
 
 Voice system status: Currently in demo mode.
 
@@ -90,7 +90,7 @@ This ensures reliable communication.`;
 
     case "dyslexia":
     default:
-      return `💚 DYSLEXIA-FRIENDLY RESPONSE:
+      return `DYSLEXIA-FRIENDLY RESPONSE:
 
 You said: "${userInput}"
 
@@ -172,6 +172,18 @@ export default function VoiceInterface({
   const recognitionRef = useRef(null);
   const messagesRef = useRef(null);
   const buttonControls = useAnimation();
+
+  /* ---------- Mobile Detection Hook ---------- */
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 
+        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   /* ---------- Effects ---------- */
   useEffect(() => {
@@ -267,7 +279,7 @@ export default function VoiceInterface({
         const enhancedPrompt = createDisabilityAwarePrompt(text, disability, true); // true = voice mode
         
         console.log("🎯 [Voice] Enhanced prompt created for", disability);
-        console.log("📝 [Voice] Prompt preview:", enhancedPrompt.substring(0, 300) + "...");
+        console.log("🔍 [Voice] Prompt preview:", enhancedPrompt.substring(0, 300) + "...");
 
         const raw = await getAIResponse(enhancedPrompt, disability);
         
@@ -389,329 +401,214 @@ export default function VoiceInterface({
     }]);
   };
 
-  /* ---------- UI ---------- */
-  const waves = isListening ? (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        pointerEvents: "none",
-        zIndex: 0,
-        filter: "blur(1px)",
-      }}
-    >
-      {["0s", "0.4s", "0.8s"].map((delay, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 240,
-            height: 240,
-            borderRadius: "50%",
-            border: `2px solid ${theme.waveBorder}`,
-            opacity: 0,
-            animation: reducedMotion ? "none" : `ring 2.2s ease-out ${delay} infinite`,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes ring {
-          0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.0; }
-          25% { opacity: 0.6; }
-          70% { opacity: 0.15; }
-          100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
-        }
-      `}</style>
-    </div>
-  ) : null;
+  // Get disability icon
+  const getDisabilityIcon = (disability) => {
+    switch (disability.toLowerCase()) {
+      case 'adhd': return '🧠';
+      case 'autism': return '🌈';
+      case 'dyslexia': return '💚';
+      default: return '🤖';
+    }
+  };
+
+  // Animation variants
+  const headerVariants = {
+    hidden: { y: -80, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { 
+        type: "spring", 
+        stiffness: 100, 
+        damping: 15,
+        duration: reducedMotion ? 0.1 : 0.6
+      }
+    }
+  };
+
+  const contentVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: reducedMotion ? 0.1 : 0.6,
+        delay: reducedMotion ? 0 : 0.2
+      }
+    }
+  };
+
+  // Apply dyslexia-specific class
+  const containerClasses = `voice-area ${disability === 'dyslexia' ? 'dyslexia-mode' : ''}`;
+
+  /* ---------- Listening Waves Component ---------- */
+  const ListeningWaves = () => (
+    <AnimatePresence>
+      {isListening && (
+        <motion.div
+          className="voice-waves"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {["0s", "0.4s", "0.8s"].map((delay, i) => (
+            <div
+              key={i}
+              className={`wave w${i + 1}`}
+              style={{
+                animationDelay: reducedMotion ? '0s' : delay
+              }}
+            />
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <motion.div
-      className={`voice-area ${highContrast ? "high-contrast" : ""}`}
+      className={containerClasses}
       style={{
-        fontSize: `${fontSize}rem`,
-        position: "relative",
-        width: "100%",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        padding: "0",
-        background: "linear-gradient(135deg, #0a0a23 0%, #1a001a 50%, #000020 100%)",
-        color: theme.textColor,
-        overflow: "hidden",
-        fontFamily: "'Lexend','Open Dyslexic', Arial, sans-serif",
+        fontSize: `${fontSize}rem`
       }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: reducedMotion ? 0 : 0.6 }}
     >
-      {/* Top Navigation Bar */}
-      <motion.div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '80px',
-          background: 'rgba(26, 0, 26, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: `2px solid ${theme.borderColor}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 1rem',
-          zIndex: 1000
-        }}
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: reducedMotion ? 0 : 0.6, type: "spring", stiffness: 100 }}
+      {/* Top Navigation Bar - Matching ChatInterface */}
+      <motion.header
+        className="voice-header"
+        variants={headerVariants}
+        initial="hidden"
+        animate="visible"
       >
         {/* Switch to Text Chat Button */}
         {onSwitchMode && (
           <motion.button
+            className="header-button primary"
             onClick={onSwitchMode}
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-              border: `2px solid ${theme.borderColor}`,
-              borderRadius: '12px',
-              color: theme.textColor,
-              padding: '0.7rem 1.2rem',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-              transition: 'all 0.3s ease'
-            }}
-            whileHover={{ 
-              scale: 1.05, 
-              y: -2,
-              background: theme.bubbleUserBg,
-              boxShadow: `0 8px 25px ${theme.primary}30`
-            }}
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: reducedMotion ? 0 : 0.2 }}
           >
             <span>💬</span>
-            Switch to Text
+            <span className="button-text">Text Mode</span>
           </motion.button>
         )}
 
         {/* Title in center with disability indicator */}
         <motion.div
-          style={{
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            textAlign: 'center',
-            color: theme.textColor,
-            fontWeight: '700',
-            fontSize: '1.1rem',
-            letterSpacing: '0.02em'
-          }}
+          className="assistant-title"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
-          {assistantTitle}
-          {disability === 'adhd' && ' 🧠'}
-          {disability === 'autism' && ' 🌈'}
-          {disability === 'dyslexia' && ' 💚'}
-          <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '2px' }}>
+          <span className="title-main">
+            {assistantTitle} {getDisabilityIcon(disability)}
+          </span>
+          <span className="title-sub">
             {disability.toUpperCase()} Voice Mode Active
-          </div>
+          </span>
         </motion.div>
 
         {/* Sign Out Button */}
         {onSignOut && (
           <motion.button
+            className="header-button danger"
             onClick={onSignOut}
-            style={{
-              background: 'linear-gradient(135deg, #ff4757, #ff3838)',
-              border: 'none',
-              borderRadius: '12px',
-              color: '#ffffff',
-              padding: '0.7rem 1.2rem',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 15px rgba(255, 71, 87, 0.3)',
-              fontFamily: "'Lexend', 'Open Dyslexic', Arial, sans-serif",
-              transition: 'all 0.3s ease'
-            }}
-            whileHover={{ 
-              scale: 1.05, 
-              y: -2,
-              boxShadow: '0 8px 25px rgba(255, 71, 87, 0.5)',
-              background: 'linear-gradient(135deg, #ff3838, #ff2525)'
-            }}
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: reducedMotion ? 0 : 0.3 }}
           >
             <span>🚪</span>
-            Sign Out
+            <span className="button-text">Sign Out</span>
           </motion.button>
         )}
-      </motion.div>
+      </motion.header>
 
-      {/* Main Content Area with top padding */}
-      <div style={{ 
-        paddingTop: '100px', 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        padding: '100px 1rem 2rem'
-      }}>
+      {/* Main Content Area */}
+      <motion.div 
+        className="voice-content"
+        variants={contentVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Listening waves */}
-        <AnimatePresence>{isListening && waves}</AnimatePresence>
+        <ListeningWaves />
 
         {/* Voice Controls */}
         <motion.div
-          style={{
-            display: "flex",
-            gap: "1rem",
-            margin: "2rem 0",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            zIndex: 2,
-          }}
+          className="voice-controls"
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: reducedMotion ? 0 : 0.2 }}
+          transition={{ delay: reducedMotion ? 0 : 0.3 }}
         >
           <motion.button
+            className={`primary-btn ${isListening ? 'listening' : ''}`}
             onClick={startListening}
             disabled={isListening || isSpeaking}
             animate={buttonControls}
-            style={{
-              padding: "1rem 2rem",
-              fontSize: "1.1rem",
-              fontWeight: 700,
-              background: theme.headerBg,
-              border: "none",
-              borderRadius: 16,
-              color: theme.textColor,
-              cursor: isListening || isSpeaking ? "not-allowed" : "pointer",
-              minWidth: 180,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-              opacity: isListening || isSpeaking ? 0.75 : 1,
-              boxShadow: isListening && !reducedMotion ? `0 0 40px ${theme.ringGlow}` : "0 4px 15px rgba(0, 0, 0, 0.2)",
-              transition: 'all 0.3s ease'
-            }}
             whileHover={!isListening && !isSpeaking && !reducedMotion ? { 
               scale: 1.05, 
-              y: -3,
-              boxShadow: `0 8px 25px ${theme.primary}50`
+              y: -3
             } : {}}
             whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
           >
             <span>{isListening ? "🎤" : "🗣️"}</span>
-            {isListening ? "Listening..." : `Speak (${disability.toUpperCase()} mode)`}
+            <span>{isListening ? "Listening..." : `Speak (${disability.toUpperCase()} mode)`}</span>
           </motion.button>
 
-          {isSpeaking && (
-            <motion.button
-              onClick={stopSpeaking}
-              style={{
-                padding: "0.85rem 1.5rem",
-                fontSize: "1rem",
-                background: "#f44336",
-                border: "none",
-                borderRadius: 16,
-                color: "#fff",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              whileHover={!reducedMotion ? { scale: 1.05 } : {}}
-            >
-              🔇 Stop
-            </motion.button>
-          )}
+          <AnimatePresence>
+            {isSpeaking && (
+              <motion.button
+                className="secondary-btn stop-btn"
+                onClick={stopSpeaking}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+                whileTap={{ scale: 0.95 }}
+              >
+                🔇 Stop
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           <motion.button
+            className="secondary-btn"
             onClick={() => setShowSettings((v) => !v)}
-            style={{
-              padding: "0.85rem 1.5rem",
-              fontSize: "1rem",
-              background: "rgba(255,255,255,0.12)",
-              border: `2px solid ${theme.borderColor}`,
-              borderRadius: 16,
-              color: theme.textColor,
-              cursor: "pointer",
-              fontWeight: 600,
-              backdropFilter: "blur(8px)",
-            }}
             whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+            whileTap={{ scale: 0.95 }}
           >
             ⚙️ Settings
           </motion.button>
 
           <motion.button
+            className="secondary-btn"
             onClick={clearMessages}
-            style={{
-              padding: "0.85rem 1.5rem",
-              fontSize: "1rem",
-              background: "rgba(255,255,255,0.12)",
-              border: `2px solid ${theme.borderColor}`,
-              borderRadius: 16,
-              color: theme.textColor,
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
             whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+            whileTap={{ scale: 0.95 }}
           >
             🗑️ Clear
           </motion.button>
         </motion.div>
 
-        {/* Settings Panel */}
+        {/* Enhanced Settings Panel */}
         <AnimatePresence>
           {showSettings && (
             <motion.div
-              style={{
-                background: theme.panelBg,
-                backdropFilter: "blur(16px)",
-                borderRadius: 16,
-                padding: "1.25rem",
-                margin: "0.5rem 0 0.5rem",
-                minWidth: 320,
-                border: `1px solid ${theme.borderColor}`,
-              }}
+              className="quick-settings"
               initial={{ opacity: 0, y: 20, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ duration: reducedMotion ? 0.1 : 0.3 }}
             >
-              <div style={{ marginBottom: "0.85rem" }}>
-                <label style={{ display: "block", marginBottom: 6, color: theme.textColor }}>
-                  Voice Speed: {localSpeed.toFixed(1)}x
-                </label>
+              <div className="setting-group">
+                <label>Voice Speed: {localSpeed.toFixed(1)}x</label>
                 <input
                   type="range"
                   min="0.5"
@@ -723,13 +620,11 @@ export default function VoiceInterface({
                     setLocalSpeed(v);
                     setSpeed?.(v);
                   }}
-                  style={{ width: "100%" }}
                 />
               </div>
-              <div style={{ marginBottom: "0.85rem" }}>
-                <label style={{ display: "block", marginBottom: 6, color: theme.textColor }}>
-                  Voice Pitch: {localPitch.toFixed(1)}
-                </label>
+              
+              <div className="setting-group">
+                <label>Voice Pitch: {localPitch.toFixed(1)}</label>
                 <input
                   type="range"
                   min="0.5"
@@ -741,24 +636,16 @@ export default function VoiceInterface({
                     setLocalPitch(v);
                     setPitch?.(v);
                   }}
-                  style={{ width: "100%" }}
                 />
               </div>
-              <div style={{ marginBottom: "0.85rem" }}>
-                <label style={{ display: "block", marginBottom: 6, color: theme.textColor }}>Voice</label>
+              
+              <div className="setting-group">
+                <label>Voice</label>
                 <select
                   value={localVoice}
                   onChange={(e) => {
                     setLocalVoice(e.target.value);
                     setSelectedVoice?.(e.target.value);
-                  }}
-                  style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    borderRadius: 10,
-                    border: `1px solid ${theme.borderColor}`,
-                    background: "rgba(0,0,0,0.35)",
-                    color: theme.textColor,
                   }}
                 >
                   {voices.map((v) => (
@@ -768,18 +655,10 @@ export default function VoiceInterface({
                   ))}
                 </select>
               </div>
+              
               <motion.button
+                className="test-btn"
                 onClick={() => speak(`This is a test of the ${disability} voice assistant settings. Speech has been optimized for your accessibility needs.`)}
-                style={{
-                  width: "100%",
-                  padding: "0.8rem",
-                  background: theme.headerBg,
-                  border: "none",
-                  borderRadius: 10,
-                  color: theme.textColor,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
                 whileHover={!reducedMotion ? { scale: 1.02, y: -2 } : {}}
                 whileTap={{ scale: 0.98 }}
               >
@@ -789,144 +668,92 @@ export default function VoiceInterface({
           )}
         </AnimatePresence>
 
-        {/* Conversation Log */}
+        {/* Enhanced Conversation Log */}
         <motion.div
-          style={{
-            flex: 1,
-            width: "100%",
-            maxWidth: 840,
-            background: theme.panelBg,
-            border: `1px solid ${theme.borderColor}`,
-            borderRadius: 16,
-            padding: "1rem",
-            marginTop: "1rem",
-            overflowY: "auto",
-            maxHeight: "50vh",
-          }}
+          className="voice-log"
           ref={messagesRef}
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: reducedMotion ? 0 : 0.25 }}
+          transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "0.75rem",
-              paddingBottom: "0.5rem",
-              borderBottom: `1px solid ${theme.borderColor}`,
-            }}
-          >
-            <h3 style={{ margin: 0, fontSize: "1.15rem", color: theme.textColor }}>
-              🎤 Voice History ({disability.toUpperCase()} Mode)
-            </h3>
+          <div className="log-header">
+            <h3>🎤 Voice History ({disability.toUpperCase()} Mode)</h3>
+            <div className="log-controls">
+              <motion.button
+                className="clear-btn"
+                onClick={clearMessages}
+                whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+                whileTap={{ scale: 0.95 }}
+              >
+                Clear
+              </motion.button>
+            </div>
           </div>
 
           <AnimatePresence mode="popLayout">
             {messages.length === 1 ? (
               <motion.div 
-                style={{
-                  textAlign: "center",
-                  padding: "3rem 1rem",
-                  color: theme.textAlt,
-                  opacity: 0.7
-                }}
+                className="empty-state"
                 initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 0.7, scale: 1 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: reducedMotion ? 0.1 : 0.4 }}
               >
-                <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎤</div>
-                <h4 style={{ margin: "0 0 0.5rem 0" }}>Ready for voice chat!</h4>
-                <p style={{ margin: 0 }}>
+                <div className="empty-icon">🎤</div>
+                <h3>Ready for voice chat!</h3>
+                <p>
                   Press "Speak" to start a conversation in <strong>{disability.toUpperCase()}</strong> mode.
                   <br />
-                  <small>Your responses will be optimized for {disability} accessibility and spoken aloud.</small>
+                  Your responses will be optimized for {disability} accessibility and spoken aloud.
                 </p>
               </motion.div>
             ) : (
               messages.map((m) => (
                 <motion.div
                   key={m.id}
-                  style={{
-                    background: m.sender === "user"
-                      ? "rgba(255,255,255,0.06)"
-                      : m.sender === "gpt" 
-                      ? "rgba(255,255,255,0.08)"
-                      : "rgba(255,152,0,0.08)",
-                    border: `1px solid ${theme.borderColor}`,
-                    borderRadius: 12,
-                    padding: "0.85rem 1rem",
-                    marginBottom: "0.75rem",
-                    position: "relative",
-                    color: theme.textAlt,
-                  }}
+                  className={`log-message ${m.sender}`}
                   initial={{ opacity: 0, x: -40, scale: 0.98 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: 40, scale: 0.98 }}
                   transition={{ duration: reducedMotion ? 0 : 0.25 }}
                   layout
                   whileHover={!reducedMotion ? { 
-                    scale: 1.01, 
-                    background: m.sender === "user" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.1)" 
+                    scale: 1.01,
+                    transition: { duration: 0.2 }
                   } : {}}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: "1.1rem" }}>
+                  <div className="message-header">
+                    <span className="sender-icon">
                       {m.sender === "user" ? "👤" : m.sender === "gpt" ? "🤖" : "⚙️"}
                     </span>
-                    <b>
+                    <span className="sender-name">
                       {m.sender === "user" ? "You" : 
                        m.sender === "gpt" ? `${disability.toUpperCase()} Assistant` : 
                        "System"}
-                    </b>
+                    </span>
                     {typeof m.confidence === "number" && (
                       <span
-                        style={{
-                          marginLeft: "auto",
-                          padding: "0.15rem 0.45rem",
-                          borderRadius: 10,
-                          fontSize: "0.8rem",
-                          background:
-                            m.confidence > 0.8
-                              ? "rgba(76,175,80,0.22)"
-                              : m.confidence > 0.5
-                              ? "rgba(255,152,0,0.22)"
-                              : "rgba(244,67,54,0.22)",
-                          color:
-                            m.confidence > 0.8 ? "#4CAF50" : m.confidence > 0.5 ? "#FF9800" : "#F44336",
-                        }}
+                        className={`confidence ${
+                          m.confidence > 0.8 ? 'high' : 
+                          m.confidence > 0.5 ? 'medium' : 'low'
+                        }`}
                       >
                         {Math.round(m.confidence * 100)}%
                       </span>
                     )}
                   </div>
-                  <div style={{ 
-                    lineHeight: 1.6, 
-                    whiteSpace: "pre-wrap" // Allow formatted responses from AI
-                  }}>
+                  
+                  <div className="message-content">
                     {m.loading ? `Processing your request in ${disability.toUpperCase()} mode...` : m.text}
                   </div>
+                  
                   {m.sender === "gpt" && !m.loading && (
                     <motion.button
+                      className="replay-btn"
                       onClick={() => speak(m.text)}
                       title="Replay message"
-                      style={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        background: "transparent",
-                        border: "none",
-                        color: theme.textAlt,
-                        cursor: "pointer",
-                        fontSize: "1.1rem",
-                        padding: "0.3rem",
-                        borderRadius: "50%",
-                        transition: 'all 0.2s ease'
-                      }}
                       whileHover={!reducedMotion ? { 
-                        scale: 1.2, 
-                        background: `${theme.primary}20` 
+                        scale: 1.2,
+                        transition: { duration: 0.2 }
                       } : {}}
                       whileTap={{ scale: 0.9 }}
                     >
@@ -941,18 +768,12 @@ export default function VoiceInterface({
 
         {/* Status indicator */}
         <motion.div
+          className={`status-indicator ${
+            isListening ? 'listening' : 
+            isSpeaking ? 'speaking' : 'idle'
+          }`}
           title={isListening ? "Listening" : isSpeaking ? "Speaking" : "Idle"}
           aria-label={isListening ? "Listening" : isSpeaking ? "Speaking" : "Idle"}
-          style={{
-            position: "fixed",
-            bottom: 10,
-            right: 10,
-            width: 22,
-            height: 22,
-            borderRadius: "50%",
-            background: isListening ? theme.primary : isSpeaking ? "#FF9800" : "#8e2de2",
-            boxShadow: `0 0 16px ${theme.ringGlow}`,
-          }}
           initial={{ scale: 0.95, opacity: 0.9 }}
           animate={{ 
             scale: isListening && !reducedMotion ? [1, 1.2, 1] : 1, 
@@ -963,7 +784,7 @@ export default function VoiceInterface({
             repeat: isListening && !reducedMotion ? Infinity : 0 
           }}
         />
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
