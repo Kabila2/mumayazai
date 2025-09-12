@@ -1,4 +1,4 @@
-/* Professional App.css - Modern, Accessible Application Layout */
+/* Professional App.css - Modern, Accessible Application Layout - BIGGER TEXT VERSION */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -28,23 +28,23 @@
   --bg-card: rgba(255, 255, 255, 0.1);
   --bg-overlay: rgba(0, 0, 0, 0.3);
   
-  /* Typography */
+  /* Typography - SIGNIFICANTLY INCREASED SIZES */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
+  --font-size-sm: 1.25rem;      /* Was 0.875rem */
+  --font-size-base: 1.5rem;     /* Was 1rem */
+  --font-size-lg: 1.75rem;      /* Was 1.125rem */
+  --font-size-xl: 2rem;         /* Was 1.25rem */
+  --font-size-2xl: 2.5rem;      /* Was 1.5rem */
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.6;
   --letter-spacing: -0.025em;
   
-  /* Spacing */
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
+  /* Spacing - Adjusted for bigger text */
+  --space-2: 0.75rem;    /* Was 0.5rem */
+  --space-3: 1rem;       /* Was 0.75rem */
+  --space-4: 1.5rem;     /* Was 1rem */
+  --space-6: 2rem;       /* Was 1.5rem */
+  --space-8: 2.5rem;     /* Was 2rem */
   
   /* Radius */
   --radius-md: 0.5rem;
@@ -59,11 +59,11 @@
   /* Animation */
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* Mobile */
-  --mobile-padding: clamp(1rem, 3vw, 1.5rem);
-  --mobile-font-base: clamp(16px, 4vw, 18px);
-  --mobile-button-height: 48px;
-  --mobile-header-height: 64px;
+  /* Mobile - Bigger sizes */
+  --mobile-padding: clamp(1.5rem, 4vw, 2rem);    /* Was clamp(1rem, 3vw, 1.5rem) */
+  --mobile-font-base: clamp(20px, 5vw, 24px);    /* Was clamp(16px, 4vw, 18px) */
+  --mobile-button-height: 56px;                  /* Was 48px */
+  --mobile-header-height: 72px;                  /* Was 64px */
 }
 
 /* Reset and Base Styles */
@@ -82,6 +82,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  font-size: 18px; /* Base font size increased from default 16px */
 }
 
 body {
@@ -157,7 +158,7 @@ body {
   padding: var(--space-8);
   text-align: center;
   color: rgba(255, 255, 255, 0.9);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-2xl);      /* Increased from xl */
   font-weight: 500;
   max-width: 90vw;
   box-shadow: var(--shadow-xl);
@@ -240,13 +241,13 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
   color: rgba(255, 255, 255, 0.7);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);      /* Increased from sm */
   font-weight: 500;
   font-family: var(--font-family);
   cursor: pointer;
   transition: var(--transition);
   min-height: var(--mobile-button-height);
-  min-width: 44px;
+  min-width: 52px;                       /* Increased from 44px */
   backdrop-filter: blur(10px);
   
   &:hover,
@@ -291,13 +292,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 64px;                           /* Increased from 56px */
+  height: 64px;                          /* Increased from 56px */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50%;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 1.5rem;
+  font-size: 1.75rem;                    /* Increased from 1.5rem */
   cursor: pointer;
   transition: var(--transition);
   backdrop-filter: blur(10px);
@@ -358,37 +359,37 @@ body {
 /* Mobile Responsive */
 @media (max-width: 768px) {
   :root {
-    --mobile-header-height: 56px;
-    --mobile-padding: 1rem;
+    --mobile-header-height: 64px;        /* Increased from 56px */
+    --mobile-padding: 1.5rem;            /* Increased from 1rem */
   }
   
   .placeholder {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-xl);      /* Increased from lg */
     padding: var(--space-6);
   }
   
   .mode-switcher button {
-    font-size: var(--font-size-sm);
-    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-lg);      /* Increased from sm */
+    padding: var(--space-3) var(--space-4);
     min-width: auto;
   }
   
   .dock-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 1.25rem;
+    width: 56px;                          /* Increased from 48px */
+    height: 56px;                         /* Increased from 48px */
+    font-size: 1.5rem;                    /* Increased from 1.25rem */
   }
 }
 
 @media (max-width: 480px) {
   :root {
-    --mobile-header-height: 52px;
-    --mobile-padding: 0.75rem;
-    --mobile-button-height: 44px;
+    --mobile-header-height: 60px;        /* Increased from 52px */
+    --mobile-padding: 1rem;              /* Increased from 0.75rem */
+    --mobile-button-height: 52px;        /* Increased from 44px */
   }
   
   .placeholder {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);      /* Increased from base */
     padding: var(--space-4);
   }
   
@@ -399,16 +400,16 @@ body {
   }
   
   .mode-switcher button {
-    font-size: var(--font-size-sm);
-    padding: var(--space-2);
-    min-height: 40px;
-    min-width: 40px;
+    font-size: var(--font-size-base);    /* Increased from sm */
+    padding: var(--space-3);             /* Increased from space-2 */
+    min-height: 48px;                    /* Increased from 40px */
+    min-width: 48px;                     /* Increased from 40px */
   }
   
   .dock-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 1.125rem;
+    width: 52px;                          /* Increased from 44px */
+    height: 52px;                         /* Increased from 44px */
+    font-size: 1.375rem;                  /* Increased from 1.125rem */
   }
   
   .chat-dock {
@@ -421,8 +422,8 @@ body {
 @media (hover: none) and (pointer: coarse) {
   .mode-switcher button,
   .dock-btn {
-    min-height: 48px;
-    min-width: 48px;
+    min-height: 56px;                     /* Increased from 48px */
+    min-width: 56px;                      /* Increased from 48px */
   }
   
   .mode-switcher button:active,
@@ -435,11 +436,11 @@ body {
 /* Landscape Orientation */
 @media (orientation: landscape) and (max-height: 500px) {
   :root {
-    --mobile-header-height: 44px;
+    --mobile-header-height: 52px;        /* Increased from 44px */
   }
   
   .placeholder {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);      /* Increased from base */
     padding: var(--space-4);
   }
   
