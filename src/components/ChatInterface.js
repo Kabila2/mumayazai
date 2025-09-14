@@ -3,17 +3,17 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ChatInterface.css';
 
-/** ---------- Enhanced Memory System ---------- */
+/** ---------- Memory System ---------- */
 const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
-const MAX_MEMORY_MESSAGES = 100;
-const CONTEXT_WINDOW = 15;
+const MAX_MEMORY_MESSAGES = 50;
+const CONTEXT_WINDOW = 10;
 
 const saveConversationMemory = (messages) => {
   try {
     const memoryData = {
       messages: messages.slice(-MAX_MEMORY_MESSAGES),
       timestamp: Date.now(),
-      version: "1.1"
+      version: "1.0"
     };
     localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
   } catch (error) {
@@ -49,13 +49,12 @@ const clearConversationMemory = () => {
 const buildConversationContext = (messages) => {
   if (messages.length <= 1) return "";
   
-  // Get recent messages excluding the welcome message, including both user and AI responses
   const recentMessages = messages
-    .slice(1) // Skip welcome message
-    .slice(-CONTEXT_WINDOW) // Get last N messages
-    .filter(msg => !msg.loading) // Exclude loading states
+    .slice(1)
+    .slice(-CONTEXT_WINDOW)
+    .filter(msg => !msg.loading)
     .map(msg => {
-      const role = msg.sender === "user" ? "User" : "AI Response";
+      const role = msg.sender === "user" ? "User" : "Assistant";
       return `${role}: ${msg.text}`;
     });
   
@@ -64,7 +63,7 @@ const buildConversationContext = (messages) => {
   return `\n\nPrevious conversation context:\n${recentMessages.join('\n')}\n\nCurrent message:\n`;
 };
 
-/** ---------- AI Integration with Enhanced Memory ---------- */
+/** ---------- AI Integration with Memory ---------- */
 const hasPuter = () =>
   typeof window !== "undefined" &&
   window.puter &&
@@ -102,9 +101,9 @@ const mockAI = (prompt, hasContext = false) => {
   const userInput = (prompt.split("Current message:").pop() || prompt.split("User:").pop() || "").trim();
   
   const responses = [
-    `You said: "${userInput}"\n\nDemo mode is active. I can help you with various tasks, questions, and image analysis. I remember our conversation history and will provide helpful responses tailored to your needs.`,
-    `I understand you're asking about: "${userInput}"\n\nThis is a demonstration of the Chat Assistant. I maintain conversation context including both your messages and my responses, and can assist with a wide range of topics while providing clear, structured responses.`,
-    `Your message: "${userInput}"\n\nI'm currently running in demo mode with full conversation memory. I can help with questions, analyze images, provide information, assist with tasks, and maintain our conversation history for better continuity.`
+    `You said: "${userInput}"\n\nDemo mode is active. I can help you with various tasks and questions. I remember our conversation history and will provide helpful responses tailored to your needs.`,
+    `I understand you're asking about: "${userInput}"\n\nThis is a demonstration of the AI assistant. I maintain conversation context and can assist with a wide range of topics while providing clear, structured responses.`,
+    `Your message: "${userInput}"\n\nI'm currently running in demo mode. I can help with questions, provide information, assist with tasks, and maintain our conversation history for better continuity.`
   ];
   
   return responses[Math.floor(Math.random() * responses.length)];
@@ -181,7 +180,7 @@ const ChatInterface = ({
   onSwitchMode, 
   fontSize = 1, 
   highContrast = false, 
-  assistantTitle = "Chat Assistant",
+  assistantTitle = "AI Assistant",
   t = {},
   language = "en",
   reducedMotion = false,
@@ -198,7 +197,7 @@ const ChatInterface = ({
     }
     return [{
       sender: "gpt",
-      text: "Hello! I'm your Chat Assistant. I can help you with questions, provide information, analyze images, and assist with various tasks. I'll remember our entire conversation to provide better context-aware responses. How can I help you today?",
+      text: "Hello! I'm your AI assistant. I can help you with questions, provide information, and assist with various tasks. How can I help you today?",
       id: Date.now()
     }];
   });
@@ -316,12 +315,12 @@ const ChatInterface = ({
     clearConversationMemory();
     setMessages([{
       sender: "gpt",
-      text: "Hello! I'm your Chat Assistant. I can help you with questions, provide information, analyze images, and assist with various tasks. I'll remember our entire conversation to provide better context-aware responses. How can I help you today?",
+      text: "Hello! I'm your AI assistant. I can help you with questions, provide information, and assist with various tasks. How can I help you today?",
       id: Date.now()
     }]);
   }, []);
 
-  // Send message handler with enhanced auto-scroll and image analysis
+  // Send message handler with enhanced auto-scroll
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isSending) return;
@@ -349,26 +348,14 @@ const ChatInterface = ({
       setIsInputFocused(false);
     }
 
-    // Handle image-only messages with proper analysis
+    // Handle image-only messages
     if (!text && sentImages.length > 0) {
-      const imageAnalysisPrompt = `Please analyze this image that the user has shared. Describe what you see in detail, including objects, people, text, colors, composition, and any other relevant details. Be comprehensive and helpful.`;
+      const imageResponse = 'I received your image(s). I cannot view images directly, but I can help if you describe what you see.';
       
-      try {
-        const conversationContext = buildConversationContext([...messages, newUserMessage]);
-        const response = await getAIResponse(imageAnalysisPrompt, conversationContext);
-        
-        setMessages(prev => [
-          ...prev,
-          { sender: 'gpt', text: response, id: Date.now() + 1 }
-        ]);
-      } catch (err) {
-        const imageResponse = 'I can see you\'ve shared an image. While I cannot directly analyze images in this demo mode, I can help if you describe what you see or ask questions about it.';
-        setMessages(prev => [
-          ...prev,
-          { sender: 'gpt', text: imageResponse, id: Date.now() + 1 }
-        ]);
-      }
-      
+      setMessages(prev => [
+        ...prev,
+        { sender: 'gpt', text: imageResponse, id: Date.now() + 1 }
+      ]);
       setIsSending(false);
       return;
     }
@@ -378,13 +365,7 @@ const ChatInterface = ({
       const updatedMessages = [...messages, newUserMessage];
       const conversationContext = buildConversationContext(updatedMessages);
       
-      // Enhanced prompt for messages with images
-      let enhancedPrompt = text;
-      if (sentImages.length > 0) {
-        enhancedPrompt = `The user has shared ${sentImages.length} image(s) along with this message: "${text}"\n\nPlease respond to their message. If relevant to their question, describe what you can observe in the image(s) they've shared, but focus primarily on addressing their specific question or request.`;
-      }
-      
-      const response = await getAIResponse(enhancedPrompt, conversationContext);
+      const response = await getAIResponse(text, conversationContext);
 
       setMessages(prev => [
         ...prev,
@@ -536,7 +517,7 @@ const ChatInterface = ({
             transition={{ delay: reducedMotion ? 0 : 0.4 }}
           >
             <span className="title-main">
-              {assistantTitle}
+              {assistantTitle} 🤖
             </span>
             <span className="title-sub">
               AI Assistant • Memory Active
@@ -770,7 +751,7 @@ const ChatInterface = ({
               onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
-              placeholder={`Type your message... (Full memory active)`}
+              placeholder={`Type your message... (Memory active)`}
               disabled={isSending}
               rows={1}
               style={{
@@ -788,7 +769,7 @@ const ChatInterface = ({
             <motion.button
               className="action-button"
               onClick={() => fileInputRef.current?.click()}
-              title="Attach image for analysis"
+              title="Attach image"
               type="button"
               whileHover={!reducedMotion ? { 
                 scale: 1.05, 
