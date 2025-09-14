@@ -1,6 +1,7 @@
-/* Enhanced ChatInterface.css - Ultra Soft Eye-Friendly Colors */
+/* Enhanced ChatInterface.css - Ultra Soft Eye-Friendly Colors with Dyslexia Font */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css');
 
 :root {
   /* Ultra Soft Eye-Friendly Color Palette */
@@ -40,8 +41,8 @@
   --bg-glass-hover: rgba(255, 255, 255, 0.35);
   --bg-card: rgba(255, 255, 255, 0.3);
   
-  /* Typography - Enhanced for readability */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Typography - Enhanced for readability with Dyslexia Font */
+  --font-family: 'OpenDyslexic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
   
   /* Increased base font sizes */
@@ -749,114 +750,6 @@
   scroll-behavior: auto;
 }
 
-/* Continue with rest of styles... */
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  :root {
-    --header-height: var(--header-height-mobile);
-    --input-height: var(--input-height-mobile);
-    --space-6: var(--mobile-space-6);
-    --font-size-base: var(--mobile-font-base);
-    --font-size-sm: var(--mobile-font-sm);
-    --font-size-lg: var(--mobile-font-lg);
-    --font-size-xl: var(--mobile-font-xl);
-    --font-size-2xl: var(--mobile-font-2xl);
-  }
-  
-  .chat-header {
-    padding: 0 var(--mobile-space-4);
-    height: var(--header-height-mobile);
-  }
-  
-  .chat-messages {
-    padding: var(--mobile-space-4);
-    gap: var(--mobile-space-4);
-  }
-  
-  .chat-bubble {
-    max-width: 88%;
-    padding: var(--mobile-space-4) var(--mobile-space-5);
-    font-size: var(--mobile-font-base);
-  }
-  
-  .chat-input-area {
-    padding: var(--mobile-space-4);
-    gap: var(--mobile-space-3);
-  }
-  
-  .chat-input {
-    font-size: max(16px, var(--mobile-font-base));
-    padding: var(--mobile-space-4) var(--mobile-space-5);
-  }
-  
-  .header-button {
-    min-width: auto;
-    padding: var(--mobile-space-3) var(--mobile-space-4);
-    
-    .button-text {
-      display: none;
-    }
-  }
-  
-  .assistant-title {
-    font-size: var(--mobile-font-lg);
-    
-    .title-sub {
-      font-size: var(--mobile-font-xs);
-    }
-  }
-  
-  .action-button {
-    width: 3rem;
-    height: 3rem;
-    font-size: 1.1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .chat-input-area {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--mobile-space-3);
-    
-    .input-actions {
-      justify-content: space-between;
-      margin-top: var(--mobile-space-2);
-    }
-    
-    .send-button {
-      flex: 1;
-      justify-content: center;
-      min-height: 52px;
-    }
-  }
-  
-  .chat-bubble {
-    max-width: 92%;
-  }
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .header-button,
-  .action-button,
-  .send-button {
-    min-height: 50px;
-    min-width: 50px;
-  }
-  
-  .header-button:active,
-  .action-button:active,
-  .send-button:active {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(0.95);
-  }
-  
-  .chat-bubble:hover {
-    transform: none;
-  }
-}
-
 /* Attachment Preview */
 .attachment-preview {
   display: flex;
@@ -980,6 +873,113 @@
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  :root {
+    --header-height: var(--header-height-mobile);
+    --input-height: var(--input-height-mobile);
+    --space-6: var(--mobile-space-6);
+    --font-size-base: var(--mobile-font-base);
+    --font-size-sm: var(--mobile-font-sm);
+    --font-size-lg: var(--mobile-font-lg);
+    --font-size-xl: var(--mobile-font-xl);
+    --font-size-2xl: var(--mobile-font-2xl);
+  }
+  
+  .chat-header {
+    padding: 0 var(--mobile-space-4);
+    height: var(--header-height-mobile);
+  }
+  
+  .chat-messages {
+    padding: var(--mobile-space-4);
+    gap: var(--mobile-space-4);
+  }
+  
+  .chat-bubble {
+    max-width: 88%;
+    padding: var(--mobile-space-4) var(--mobile-space-5);
+    font-size: var(--mobile-font-base);
+  }
+  
+  .chat-input-area {
+    padding: var(--mobile-space-4);
+    gap: var(--mobile-space-3);
+  }
+  
+  .chat-input {
+    font-size: max(16px, var(--mobile-font-base));
+    padding: var(--mobile-space-4) var(--mobile-space-5);
+  }
+  
+  .header-button {
+    min-width: auto;
+    padding: var(--mobile-space-3) var(--mobile-space-4);
+    
+    .button-text {
+      display: none;
+    }
+  }
+  
+  .assistant-title {
+    font-size: var(--mobile-font-lg);
+    
+    .title-sub {
+      font-size: var(--mobile-font-xs);
+    }
+  }
+  
+  .action-button {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-input-area {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--mobile-space-3);
+    
+    .input-actions {
+      justify-content: space-between;
+      margin-top: var(--mobile-space-2);
+    }
+    
+    .send-button {
+      flex: 1;
+      justify-content: center;
+      min-height: 52px;
+    }
+  }
+  
+  .chat-bubble {
+    max-width: 92%;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .header-button,
+  .action-button,
+  .send-button {
+    min-height: 50px;
+    min-width: 50px;
+  }
+  
+  .header-button:active,
+  .action-button:active,
+  .send-button:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.95);
+  }
+  
+  .chat-bubble:hover {
+    transform: none;
   }
 }
 

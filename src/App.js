@@ -26,12 +26,7 @@ function closeSession() { localStorage.removeItem(SESSION_KEY); }
 function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
 function getAssistantTitle(disability) {
-  switch ((disability || "").toLowerCase()) {
-    case "dyslexia": return "Dyslexia-Friendly Chat Assistant"; 
-    case "adhd":     return "ADHD-Friendly Chat Assistant";
-    case "autism":   return "Autism-Friendly Chat Assistant";
-    default:         return "Accessible Chat Assistant";
-  }
+  return "Chat Assistant";
 }
 
 // Get current disability preference with fallback
@@ -134,7 +129,7 @@ export default function App() {
   const handleModeSwitch = (newMode) => {
     if (isTransitioning || newMode === mode) return;
     
-    console.log(`🔄 Starting transition from ${mode} to ${newMode} mode`);
+    console.log(`📄 Starting transition from ${mode} to ${newMode} mode`);
     setPendingMode(newMode);
     setIsTransitioning(true);
   };
