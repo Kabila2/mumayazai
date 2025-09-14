@@ -1,14 +1,6 @@
 /* global puter */
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  getCurrentDisability, 
-  getDisabilityTheme,
-  getWelcomeMessage,
-  createDisabilityAwarePrompt,
-  formatAIResponse,
-  getDisabilityErrorMessage
-} from "../utils/disabilityUtils";
 import './ChatInterface.css';
 
 /** ---------- Memory System ---------- */
@@ -16,11 +8,10 @@ const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
 const MAX_MEMORY_MESSAGES = 50;
 const CONTEXT_WINDOW = 10;
 
-const saveConversationMemory = (messages, disability) => {
+const saveConversationMemory = (messages) => {
   try {
     const memoryData = {
       messages: messages.slice(-MAX_MEMORY_MESSAGES),
-      disability,
       timestamp: Date.now(),
       version: "1.0"
     };
@@ -30,16 +21,15 @@ const saveConversationMemory = (messages, disability) => {
   }
 };
 
-const loadConversationMemory = (currentDisability) => {
+const loadConversationMemory = () => {
   try {
     const stored = localStorage.getItem(MEMORY_STORAGE_KEY);
     if (!stored) return null;
     
     const memoryData = JSON.parse(stored);
     const isRecent = Date.now() - memoryData.timestamp < 7 * 24 * 60 * 60 * 1000;
-    const matchesDisability = memoryData.disability === currentDisability;
     
-    if (isRecent && matchesDisability && memoryData.messages?.length) {
+    if (isRecent && memoryData.messages?.length) {
       return memoryData.messages;
     }
   } catch (error) {
@@ -56,7 +46,7 @@ const clearConversationMemory = () => {
   }
 };
 
-const buildConversationContext = (messages, disability) => {
+const buildConversationContext = (messages) => {
   if (messages.length <= 1) return "";
   
   const recentMessages = messages
@@ -107,7 +97,7 @@ const aiChat = async (prompt, ms = 20000) => {
   return Promise.race([req, timeout]);
 };
 
-const mockAI = (prompt, disability, hasContext = false) => {
+const mockAI = (prompt, hasContext = false) => {
   const userInput = (prompt.split("Current message:").pop() || prompt.split("User:").pop() || "").trim();
   
   const responses = [
@@ -119,7 +109,7 @@ const mockAI = (prompt, disability, hasContext = false) => {
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
-const getAIResponse = async (prompt, disability, conversationContext = "") => {
+const getAIResponse = async (prompt, conversationContext = "") => {
   const ready = await waitForPuter(3000);
   
   const enhancedPrompt = conversationContext 
@@ -127,15 +117,15 @@ const getAIResponse = async (prompt, disability, conversationContext = "") => {
     : prompt;
   
   if (!ready) {
-    return mockAI(enhancedPrompt, disability, !!conversationContext);
+    return mockAI(enhancedPrompt, !!conversationContext);
   }
   
   try {
     const rawResponse = await aiChat(enhancedPrompt, 20000);
-    return formatAIResponse(rawResponse, disability);
+    return rawResponse;
   } catch (err) {
     console.warn("[ChatInterface] AI error:", err);
-    return getDisabilityErrorMessage(disability);
+    return "I'm having trouble connecting right now. Please try again in a moment.";
   }
 };
 
@@ -191,25 +181,23 @@ const ChatInterface = ({
   fontSize = 1, 
   highContrast = false, 
   assistantTitle = "AI Assistant",
-  currentDisability = "none",
   t = {},
   language = "en",
   reducedMotion = false,
   onSignOut
 }) => {
   
-  const activeDisability = currentDisability || getCurrentDisability();
   const { isMobile, isLandscape, keyboardOpen, viewportHeight } = useMobileDetection();
   
   // Initialize messages with memory or welcome message
   const [messages, setMessages] = useState(() => {
-    const savedMessages = loadConversationMemory(activeDisability);
+    const savedMessages = loadConversationMemory();
     if (savedMessages && savedMessages.length > 0) {
       return savedMessages;
     }
     return [{
       sender: "gpt",
-      text: getWelcomeMessage(activeDisability),
+      text: "Hello! I'm your AI assistant. I can help you with questions, provide information, and assist with various tasks. How can I help you today?",
       id: Date.now()
     }];
   });
@@ -229,40 +217,46 @@ const ChatInterface = ({
   // Save messages to memory whenever they change
   useEffect(() => {
     if (messages.length > 1) {
-      saveConversationMemory(messages, activeDisability);
+      saveConversationMemory(messages);
     }
-  }, [messages, activeDisability]);
+  }, [messages]);
   
-  // Enhanced auto-scroll function
-  const scrollToBottom = useCallback((smooth = true, force = false) => {
+  // Enhanced auto-scroll function with immediate and smooth scroll
+  const scrollToBottom = useCallback((immediate = false) => {
     if (bottomRef.current) {
-      // Force scroll when sending message
-      if (force) {
+      if (immediate) {
+        // Immediate scroll first
         bottomRef.current.scrollIntoView({ 
           behavior: "auto",
           block: "end"
         });
-        // Follow up with smooth scroll
-        setTimeout(() => {
-          bottomRef.current?.scrollIntoView({ 
-            behavior: smooth && !reducedMotion ? "smooth" : "auto",
-            block: "end"
-          });
-        }, 50);
+        // Add smooth scroll class for next scroll
+        if (messagesRef.current) {
+          messagesRef.current.parentElement?.classList.add('auto-scroll-active');
+        }
       } else {
+        // Smooth scroll
         bottomRef.current.scrollIntoView({ 
-          behavior: smooth && !reducedMotion ? "smooth" : "auto",
+          behavior: reducedMotion ? "auto" : "smooth",
           block: "end"
         });
       }
     }
   }, [reducedMotion]);
   
-  // Auto-scroll when messages change
+  // Auto-scroll when messages change - immediate for user messages, smooth for AI responses
   useEffect(() => {
-    // Immediate scroll for new messages
-    const timeout = setTimeout(() => scrollToBottom(true, true), 100);
-    return () => clearTimeout(timeout);
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage) {
+      if (lastMessage.sender === "user" || lastMessage.loading) {
+        // Immediate scroll for user messages and loading states
+        scrollToBottom(true);
+      } else {
+        // Smooth scroll for AI responses
+        const timeout = setTimeout(() => scrollToBottom(false), 100);
+        return () => clearTimeout(timeout);
+      }
+    }
   }, [messages, scrollToBottom]);
 
   // Handle scroll indicator visibility
@@ -284,29 +278,15 @@ const ChatInterface = ({
     }
   }, [messages.length, isMobile]);
 
-  // Update messages when disability changes
-  useEffect(() => {
-    const savedMessages = loadConversationMemory(activeDisability);
-    if (savedMessages && savedMessages.length > 0) {
-      setMessages(savedMessages);
-    } else {
-      setMessages([{
-        sender: "gpt",
-        text: getWelcomeMessage(activeDisability),
-        id: Date.now()
-      }]);
-    }
-  }, [activeDisability]);
-
   // Show memory status notification
   useEffect(() => {
-    const savedMessages = loadConversationMemory(activeDisability);
+    const savedMessages = loadConversationMemory();
     if (savedMessages && savedMessages.length > 1) {
       setShowMemoryStatus(true);
       const timer = setTimeout(() => setShowMemoryStatus(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [activeDisability]);
+  }, []);
 
   // Handle file uploads
   const handleFiles = useCallback((files) => {
@@ -335,12 +315,12 @@ const ChatInterface = ({
     clearConversationMemory();
     setMessages([{
       sender: "gpt",
-      text: getWelcomeMessage(activeDisability),
+      text: "Hello! I'm your AI assistant. I can help you with questions, provide information, and assist with various tasks. How can I help you today?",
       id: Date.now()
     }]);
-  }, [activeDisability]);
+  }, []);
 
-  // Send message handler with auto-scroll
+  // Send message handler with enhanced auto-scroll
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isSending) return;
@@ -362,9 +342,6 @@ const ChatInterface = ({
     setAttachments([]);
     setInput("");
     
-    // Force scroll to show user message
-    setTimeout(() => scrollToBottom(true, true), 100);
-    
     // Blur input to hide keyboard on mobile
     if (isMobile && inputRef.current) {
       inputRef.current.blur();
@@ -383,23 +360,17 @@ const ChatInterface = ({
       return;
     }
 
-    // Add loading message
-    const loadingId = Date.now() + 1;
-    setMessages(prev => [...prev, { sender: "gpt", loading: true, id: loadingId }]);
-
     try {
       // Build conversation context from previous messages
       const updatedMessages = [...messages, newUserMessage];
-      const conversationContext = buildConversationContext(updatedMessages, activeDisability);
+      const conversationContext = buildConversationContext(updatedMessages);
       
-      const enhancedPrompt = createDisabilityAwarePrompt(text, activeDisability, false);
-      const response = await getAIResponse(enhancedPrompt, activeDisability, conversationContext);
+      const response = await getAIResponse(text, conversationContext);
 
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === loadingId ? { sender: "gpt", text: response, id: loadingId } : m
-        )
-      );
+      setMessages(prev => [
+        ...prev,
+        { sender: "gpt", text: response, id: Date.now() + 1 }
+      ]);
       
       // Success haptic feedback
       if (navigator.vibrate && isMobile) {
@@ -407,12 +378,11 @@ const ChatInterface = ({
       }
       
     } catch (err) {
-      const errorMsg = getDisabilityErrorMessage(activeDisability);
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === loadingId ? { sender: "gpt", text: errorMsg, id: loadingId } : m
-        )
-      );
+      const errorMsg = "I'm having trouble connecting right now. Please try again in a moment.";
+      setMessages(prev => [
+        ...prev,
+        { sender: "gpt", text: errorMsg, id: Date.now() + 1 }
+      ]);
       
       // Error haptic feedback
       if (navigator.vibrate && isMobile) {
@@ -421,7 +391,7 @@ const ChatInterface = ({
     } finally {
       setIsSending(false);
     }
-  }, [input, isSending, activeDisability, isMobile, attachments, messages, scrollToBottom]);
+  }, [input, isSending, isMobile, attachments, messages]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback((e) => {
@@ -449,16 +419,6 @@ const ChatInterface = ({
   const handleInputBlur = useCallback(() => {
     setIsInputFocused(false);
   }, []);
-
-  // Get disability icon (keeping for visual consistency)
-  const getDisabilityIcon = (disability) => {
-    switch (disability.toLowerCase()) {
-      case 'adhd': return '🧠';
-      case 'autism': return '🌈';
-      case 'dyslexia': return '💚';
-      default: return '🤖';
-    }
-  };
 
   // Animation variants
   const headerVariants = {
@@ -490,12 +450,9 @@ const ChatInterface = ({
     }
   };
 
-  // Apply special font class for certain disabilities
-  const containerClasses = `chat-area ${activeDisability === 'dyslexia' ? 'special-font-mode' : ''}`;
-
   return (
     <div 
-      className={containerClasses}
+      className="chat-area"
       style={{
         fontSize: `${fontSize}rem`,
         height: isMobile ? `${viewportHeight}px` : '100vh'
@@ -510,7 +467,7 @@ const ChatInterface = ({
                 position: 'fixed',
                 top: '20px',
                 right: '20px',
-                background: 'rgba(5, 150, 105, 0.9)',
+                background: 'rgba(16, 185, 129, 0.9)',
                 color: 'white',
                 padding: '12px 16px',
                 borderRadius: '12px',
@@ -518,7 +475,7 @@ const ChatInterface = ({
                 fontWeight: '500',
                 zIndex: 1001,
                 backdropFilter: 'blur(10px)',
-                boxShadow: '0 4px 15px rgba(5, 150, 105, 0.3)'
+                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
               }}
               initial={{ opacity: 0, y: -20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -560,7 +517,7 @@ const ChatInterface = ({
             transition={{ delay: reducedMotion ? 0 : 0.4 }}
           >
             <span className="title-main">
-              {assistantTitle} {getDisabilityIcon(activeDisability)}
+              {assistantTitle} 🤖
             </span>
             <span className="title-sub">
               AI Assistant • Memory Active
@@ -631,72 +588,64 @@ const ChatInterface = ({
                   transition: { duration: 0.2 }
                 } : {}}
               >
-                {message.loading ? (
-                  <div className="loading-dots">
-                    <div className="dot"></div>
-                    <div className="dot"></div>
-                    <div className="dot"></div>
-                  </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: reducedMotion ? 0 : 0.1 }}
-                  >
-                    {message.text && (
-                      <div 
-                        style={{ marginBottom: message.images?.length ? '12px' : 0 }}
-                        dangerouslySetInnerHTML={{
-                          __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
-                        }}
-                      />
-                    )}
-                    {message.images && message.images.length > 0 && (
-                      <motion.div 
-                        style={{ 
-                          display: 'flex', 
-                          gap: '8px', 
-                          flexWrap: 'wrap',
-                          marginTop: '8px'
-                        }}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: reducedMotion ? 0 : 0.2 }}
-                      >
-                        {message.images.map((src, imgIndex) => (
-                          <motion.img 
-                            key={imgIndex}
-                            src={src} 
-                            alt={`attachment-${imgIndex}`}
-                            style={{ 
-                              width: '120px', 
-                              height: '90px', 
-                              objectFit: 'cover', 
-                              borderRadius: '8px',
-                              border: '1px solid rgba(209, 213, 219, 0.3)'
-                            }}
-                            whileHover={!reducedMotion ? { scale: 1.05 } : {}}
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: imgIndex * 0.1 }}
-                          />
-                        ))}
-                      </motion.div>
-                    )}
-                    
-                    {/* Message timestamp for reference */}
-                    {message.sender !== 'gpt' || index === 0 ? null : (
-                      <div style={{ 
-                        fontSize: '0.75rem', 
-                        opacity: 0.6, 
-                        marginTop: '8px', 
-                        textAlign: 'right' 
-                      }}>
-                        Message #{index} • {new Date(message.id).toLocaleTimeString()}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: reducedMotion ? 0 : 0.1 }}
+                >
+                  {message.text && (
+                    <div 
+                      style={{ marginBottom: message.images?.length ? '12px' : 0 }}
+                      dangerouslySetInnerHTML={{
+                        __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
+                      }}
+                    />
+                  )}
+                  {message.images && message.images.length > 0 && (
+                    <motion.div 
+                      style={{ 
+                        display: 'flex', 
+                        gap: '8px', 
+                        flexWrap: 'wrap',
+                        marginTop: '8px'
+                      }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: reducedMotion ? 0 : 0.2 }}
+                    >
+                      {message.images.map((src, imgIndex) => (
+                        <motion.img 
+                          key={imgIndex}
+                          src={src} 
+                          alt={`attachment-${imgIndex}`}
+                          style={{ 
+                            width: '120px', 
+                            height: '90px', 
+                            objectFit: 'cover', 
+                            borderRadius: '8px',
+                            border: '1px solid rgba(209, 213, 219, 0.3)'
+                          }}
+                          whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: imgIndex * 0.1 }}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
+                  
+                  {/* Message timestamp for reference */}
+                  {message.sender !== 'gpt' || index === 0 ? null : (
+                    <div style={{ 
+                      fontSize: '0.75rem', 
+                      opacity: 0.6, 
+                      marginTop: '8px', 
+                      textAlign: 'right' 
+                    }}>
+                      Message #{index} • {new Date(message.id).toLocaleTimeString()}
+                    </div>
+                  )}
+                </motion.div>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -711,7 +660,7 @@ const ChatInterface = ({
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              onClick={() => scrollToBottom(true, true)}
+              onClick={() => scrollToBottom(true)}
               whileTap={{ scale: 0.9 }}
               whileHover={!reducedMotion ? { scale: 1.1, y: -2 } : {}}
               style={{
@@ -807,7 +756,7 @@ const ChatInterface = ({
               rows={1}
               style={{
                 fontSize: isMobile ? 'max(16px, 1rem)' : '1rem',
-                fontFamily: activeDisability === 'dyslexia' ? 'var(--font-dyslexic)' : 'var(--font-family)'
+                fontFamily: 'var(--font-family)'
               }}
               whileFocus={!reducedMotion ? { 
                 scale: 1.01,

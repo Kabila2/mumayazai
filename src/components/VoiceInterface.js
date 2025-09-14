@@ -3,28 +3,16 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import "./VoiceInterface.css";
 
-// Enhanced: Import disability utilities
-import { 
-  getCurrentDisability, 
-  getVoiceAssistantTitle, 
-  getDisabilityTheme,
-  createDisabilityAwarePrompt,
-  formatAIResponse,
-  getDisabilityErrorMessage,
-  getWelcomeMessage
-} from "../utils/disabilityUtils";
-
 /** ---------- Voice Memory System ---------- */
 const VOICE_MEMORY_STORAGE_KEY = "mumayaz_voice_memory";
-const MAX_VOICE_MEMORY_MESSAGES = 30; // Smaller limit for voice conversations
-const VOICE_CONTEXT_WINDOW = 8; // Fewer messages for voice context
+const MAX_VOICE_MEMORY_MESSAGES = 30;
+const VOICE_CONTEXT_WINDOW = 8;
 
 // Save voice conversation to localStorage
-const saveVoiceMemory = (messages, disability) => {
+const saveVoiceMemory = (messages) => {
   try {
     const memoryData = {
       messages: messages.slice(-MAX_VOICE_MEMORY_MESSAGES),
-      disability,
       timestamp: Date.now(),
       version: "1.0",
       mode: "voice"
@@ -36,18 +24,17 @@ const saveVoiceMemory = (messages, disability) => {
 };
 
 // Load voice conversation from localStorage
-const loadVoiceMemory = (currentDisability) => {
+const loadVoiceMemory = () => {
   try {
     const stored = localStorage.getItem(VOICE_MEMORY_STORAGE_KEY);
     if (!stored) return null;
     
     const memoryData = JSON.parse(stored);
     
-    // Check if memory matches current disability and is recent (within 7 days)
+    // Check if memory is recent (within 7 days)
     const isRecent = Date.now() - memoryData.timestamp < 7 * 24 * 60 * 60 * 1000;
-    const matchesDisability = memoryData.disability === currentDisability;
     
-    if (isRecent && matchesDisability && memoryData.messages?.length) {
+    if (isRecent && memoryData.messages?.length) {
       return memoryData.messages;
     }
   } catch (error) {
@@ -66,7 +53,7 @@ const clearVoiceMemory = () => {
 };
 
 // Build voice context from conversation history
-const buildVoiceContext = (messages, disability) => {
+const buildVoiceContext = (messages) => {
   if (messages.length <= 1) return "";
   
   // Get recent messages for context (excluding the welcome message)
@@ -81,7 +68,7 @@ const buildVoiceContext = (messages, disability) => {
   
   if (recentMessages.length === 0) return "";
   
-  return `\n\nVoice conversation history (${disability.toUpperCase()} mode):\n${recentMessages.join('\n')}\n\nCurrent voice input:\n`;
+  return `\n\nVoice conversation history:\n${recentMessages.join('\n')}\n\nCurrent voice input:\n`;
 };
 
 /* ---------- Enhanced Puter helpers ---------- */
@@ -106,7 +93,7 @@ const waitForPuter = (timeoutMs = 3000) =>
 const aiChat = async (prompt, ms = 20000) => {
   if (!hasPuter()) throw new Error("Puter AI not available");
   
-  console.log("🎯 [Voice] Sending disability-aware prompt with memory to AI:", prompt.substring(0, 200) + "...");
+  console.log("🎯 [Voice] Sending prompt with memory to AI:", prompt.substring(0, 200) + "...");
   
   const timeout = new Promise((_, rej) =>
     setTimeout(() => rej(new Error("AI request timed out")), ms)
@@ -123,68 +110,22 @@ const aiChat = async (prompt, ms = 20000) => {
 };
 
 /** Enhanced mock AI for voice mode with memory-aware responses */
-const mockAI = (prompt, disability, hasContext = false) => {
+const mockAI = (prompt, hasContext = false) => {
   const userInput = (prompt.split("Current voice input:").pop() || prompt.split("User:").pop() || "").trim();
   
   const contextNote = hasContext ? "\n\n(I remember our voice conversation)" : "";
   
-  // Generate disability-specific mock responses optimized for voice with memory context
-  switch (disability.toLowerCase()) {
-    case "adhd":
-      return `ADHD-FRIENDLY VOICE RESPONSE:
-
-Voice mode is offline right now, but here's how I'd help you:
-
-• Short, focused responses
-• Key points only  
-• No overwhelming details
-• Clear next steps
-• I remember what we discussed${contextNote}
-
-You said: "${userInput}"
-
-I'd break this down into simple chunks for easy listening, building on our previous conversation.`;
-
-    case "autism":
-      return `AUTISM-FRIENDLY VOICE RESPONSE:
-
-Voice system status: Currently in demo mode.
-Memory status: Previous conversation stored${contextNote}
-
-Your voice input was: "${userInput}"
-
-My response pattern for autism support:
-1. Direct, clear language
-2. Specific information 
-3. Consistent voice tone
-4. No figurative language
-5. Predictable structure
-6. Reference to previous context when relevant
-
-This ensures reliable communication with conversation continuity.`;
-
-    case "dyslexia":
-    default:
-      return `DYSLEXIA-FRIENDLY VOICE RESPONSE:
-
-You said: "${userInput}"
-
-Voice mode is in demo right now.
-I remember our chat from before.${contextNote}
-
-I would speak clearly and slowly for you:
-• Simple words
-• Short sentences  
-• Good pace
-• Clear pronunciation
-• Reference previous topics
-
-This helps with audio processing and conversation flow.`;
-  }
+  const responses = [
+    `You said: "${userInput}"\n\nVoice mode is currently in demo. I can help you with questions and tasks, and I'll remember our conversation for better continuity.${contextNote}`,
+    `I understand you're asking about: "${userInput}"\n\nThis is voice demonstration mode. I maintain conversation history and provide clear, spoken responses optimized for voice interaction.${contextNote}`,
+    `Your voice input: "${userInput}"\n\nI'm running in demo mode right now. I can assist with various topics while maintaining our conversation history for better context.${contextNote}`
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
 };
 
 /** Enhanced AI response handler for voice mode with memory */
-const getVoiceAIResponse = async (prompt, disability, conversationContext = "") => {
+const getVoiceAIResponse = async (prompt, conversationContext = "") => {
   const ready = await waitForPuter(3000);
   
   // Add conversation context to the prompt if available
@@ -193,18 +134,17 @@ const getVoiceAIResponse = async (prompt, disability, conversationContext = "") 
     : prompt;
   
   if (!ready) {
-    console.log("🔄 [Voice] Using mock AI response for disability:", disability);
-    return mockAI(enhancedPrompt, disability, !!conversationContext);
+    console.log("🔄 [Voice] Using mock AI response");
+    return mockAI(enhancedPrompt, !!conversationContext);
   }
   
   try {
     const rawResponse = await aiChat(enhancedPrompt, 20000);
-    const formattedResponse = formatAIResponse(rawResponse, disability);
-    console.log("✅ [Voice] Formatted response for", disability, ":", formattedResponse.substring(0, 100) + "...");
-    return formattedResponse;
+    console.log("✅ [Voice] Formatted response:", rawResponse.substring(0, 100) + "...");
+    return rawResponse;
   } catch (err) {
     console.warn("[VoiceInterface] AI error:", err);
-    return getDisabilityErrorMessage(disability);
+    return "I'm having trouble connecting right now. Please try speaking again in a moment.";
   }
 };
 
@@ -224,26 +164,23 @@ export default function VoiceInterface({
   fontSize,
   reducedMotion,
   onSwitchMode,
-  currentDisability: propDisability,
   onSignOut
 }) {
-  // Get disability from props or localStorage
-  const disability = propDisability || getCurrentDisability();
-  const theme = getDisabilityTheme(disability);
-  const assistantTitle = getVoiceAssistantTitle(disability);
 
-  console.log("🎯 [Voice] VoiceInterface initialized with disability and memory:", disability);
+  const assistantTitle = "AI Voice Assistant";
+
+  console.log("🎯 [Voice] VoiceInterface initialized with memory");
 
   /* ---------- State with Memory ---------- */
   // Initialize messages with memory or welcome message
   const [messages, setMessages] = useState(() => {
-    const savedMessages = loadVoiceMemory(disability);
+    const savedMessages = loadVoiceMemory();
     if (savedMessages && savedMessages.length > 0) {
       return savedMessages;
     }
     return [{
       sender: "gpt",
-      text: getWelcomeMessage(disability) + "\n\nSpeak whenever you're ready! I'll remember our conversation.",
+      text: "Hello! I'm your AI voice assistant. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
       id: Date.now()
     }];
   });
@@ -265,9 +202,9 @@ export default function VoiceInterface({
   // Save messages to memory whenever they change
   useEffect(() => {
     if (messages.length > 1) { // Don't save just the welcome message
-      saveVoiceMemory(messages, disability);
+      saveVoiceMemory(messages);
     }
-  }, [messages, disability]);
+  }, [messages]);
 
   /* ---------- Mobile Detection Hook ---------- */
   const [isMobile, setIsMobile] = useState(false);
@@ -308,36 +245,38 @@ export default function VoiceInterface({
     };
   }, [localVoice]);
 
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage) {
+        // Immediate scroll for user messages and loading states
+        if (lastMessage.sender === "user" || lastMessage.loading) {
+          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+        } else {
+          // Smooth scroll for AI responses
+          setTimeout(() => {
+            if (messagesRef.current) {
+              messagesRef.current.scrollTo({
+                top: messagesRef.current.scrollHeight,
+                behavior: reducedMotion ? 'auto' : 'smooth'
+              });
+            }
+          }, 100);
+        }
+      }
     }
-  }, [messages]);
-
-  // Update welcome message and load memory when disability changes
-  useEffect(() => {
-    console.log("🔄 [Voice] Disability changed to:", disability);
-    const savedMessages = loadVoiceMemory(disability);
-    if (savedMessages && savedMessages.length > 0) {
-      setMessages(savedMessages);
-    } else {
-      setMessages([{
-        sender: "gpt",
-        text: getWelcomeMessage(disability) + "\n\nSpeak whenever you're ready! I'll remember our conversation.",
-        id: Date.now()
-      }]);
-    }
-  }, [disability]);
+  }, [messages, reducedMotion]);
 
   // Show memory status notification
   useEffect(() => {
-    const savedMessages = loadVoiceMemory(disability);
+    const savedMessages = loadVoiceMemory();
     if (savedMessages && savedMessages.length > 1) {
       setShowMemoryStatus(true);
       const timer = setTimeout(() => setShowMemoryStatus(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [disability]);
+  }, []);
 
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -351,7 +290,7 @@ export default function VoiceInterface({
     recog.onstart = () => {
       setListening(true);
       if (navigator.vibrate) navigator.vibrate(80);
-      console.log("🎤 [Voice] Started listening for", disability, "mode with memory");
+      console.log("🎤 [Voice] Started listening with memory");
     };
     
     recog.onend = () => {
@@ -374,57 +313,48 @@ export default function VoiceInterface({
       const confidence = e.results[0][0].confidence;
       
       console.log("📤 [Voice] User said:", text, "with confidence:", confidence);
-      console.log("🎯 [Voice] Processing for disability with memory:", disability);
+      console.log("🎯 [Voice] Processing with memory");
       
       const newUserMessage = { sender: "user", text: text, confidence, id: Date.now() };
       setMessages((m) => [...m, newUserMessage]);
       
-      // Add loading message
-      const loadingId = Date.now() + 1;
-      setMessages((m) => [...m, { sender: "gpt", text: `Processing your voice message in ${disability.toUpperCase()} mode using conversation memory...`, loading: true, id: loadingId }]);
-      
       try {
-        // Enhanced: Use disability-aware prompting for voice mode with memory context
-        const enhancedPrompt = createDisabilityAwarePrompt(text, disability, true); // true = voice mode
-        
         // Build conversation context from previous messages
         const updatedMessages = messages.concat([newUserMessage]);
-        const conversationContext = buildVoiceContext(updatedMessages, disability);
+        const conversationContext = buildVoiceContext(updatedMessages);
         
-        console.log("🎯 [Voice] Enhanced prompt with memory created for", disability);
-        console.log("🔍 [Voice] Context preview:", conversationContext.substring(0, 200) + "...");
+        console.log("🎯 [Voice] Enhanced prompt with memory created");
+        console.log("📝 [Voice] Context preview:", conversationContext.substring(0, 200) + "...");
 
-        const raw = await getVoiceAIResponse(enhancedPrompt, disability, conversationContext);
+        const raw = await getVoiceAIResponse(text, conversationContext);
         
-        setMessages((m) => 
-          m.map(msg => 
-            msg.id === loadingId ? { sender: "gpt", text: raw, id: loadingId } : msg
-          )
-        );
+        setMessages((m) => [
+          ...m,
+          { sender: "gpt", text: raw, id: Date.now() + 1 }
+        ]);
         
-        console.log("✅ [Voice] Response with memory displayed for", disability);
+        console.log("✅ [Voice] Response with memory displayed");
         
         // Speak the response
         speak(raw);
         
       } catch (err) {
-        const errorMsg = getDisabilityErrorMessage(disability);
-        setMessages((m) => 
-          m.map(msg => 
-            msg.id === loadingId ? { sender: "gpt", text: errorMsg, id: loadingId } : msg
-          )
-        );
+        const errorMsg = "I'm having trouble connecting to the AI right now. Please try speaking again.";
+        setMessages((m) => [
+          ...m,
+          { sender: "gpt", text: errorMsg, id: Date.now() + 1 }
+        ]);
         speak("I'm having trouble connecting to the AI right now.");
         console.error("[VoiceInterface] AI error:", err);
       }
     };
 
     recognitionRef.current = recog;
-  }, [language, aiReady, disability, messages]);
+  }, [language, aiReady, messages]);
 
   /* ---------- Enhanced Speech Function ---------- */
   const speak = (text) => {
-    console.log("🔊 [Voice] Speaking response for", disability, "mode");
+    console.log("🔊 [Voice] Speaking response");
     
     // Prefer external speak if passed from App
     if (typeof extSpeak === "function") {
@@ -434,35 +364,16 @@ export default function VoiceInterface({
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     
-    // Enhanced text cleaning for disability-specific responses
+    // Enhanced text cleaning for better speech
     let cleanText = text
       .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
-      .replace(/[🔋🎯✨🧠🌈💚⚠️⚙️]/g, '') // Remove emojis
-      .replace(/(ADHD-FRIENDLY (?:VOICE )?RESPONSE:|AUTISM-FRIENDLY (?:VOICE )?RESPONSE:|DYSLEXIA-FRIENDLY (?:VOICE )?RESPONSE:)/g, '') // Remove prefixes
+      .replace(/[📋🎯✨🧠🌈💚⚠️⚙️]/g, '') // Remove emojis
       .replace(/•/g, '') // Remove bullet points for speech
       .replace(/\n+/g, '. ') // Replace line breaks with pauses
       .replace(/Memory status:[^.]+\./g, '') // Remove memory status lines
       .replace(/Voice system status:[^.]+\./g, '') // Remove system status
       .replace(/\(I remember [^)]+\)/g, '') // Remove memory notes in parentheses
       .trim();
-    
-    // Disability-specific speech adjustments
-    switch (disability.toLowerCase()) {
-      case "adhd":
-        // Slightly faster, more energetic delivery
-        localSpeed = Math.max(localSpeed, 1.1);
-        cleanText = cleanText.replace(/\.\s+/g, '. '); // Ensure pauses between points
-        break;
-      case "autism":
-        // Clear, consistent delivery
-        localSpeed = Math.min(localSpeed, 1.0); // Not too fast
-        cleanText = cleanText.replace(/(\d+\.)/g, 'Step $1'); // Make numbered lists clearer
-        break;
-      case "dyslexia":
-        // Slower, clearer pronunciation
-        localSpeed = Math.min(localSpeed, 0.9);
-        break;
-    }
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
     const voiceObj = voices.find((v) => v.name === localVoice);
@@ -514,19 +425,9 @@ export default function VoiceInterface({
     clearVoiceMemory();
     setMessages([{
       sender: "gpt",
-      text: getWelcomeMessage(disability) + "\n\nSpeak whenever you're ready! I'll remember our conversation.",
+      text: "Hello! I'm your AI voice assistant. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
       id: Date.now()
     }]);
-  };
-
-  // Get disability icon
-  const getDisabilityIcon = (disability) => {
-    switch (disability.toLowerCase()) {
-      case 'adhd': return '🧠';
-      case 'autism': return '🌈';
-      case 'dyslexia': return '💚';
-      default: return '🤖';
-    }
   };
 
   // Animation variants
@@ -556,9 +457,6 @@ export default function VoiceInterface({
     }
   };
 
-  // Apply dyslexia-specific class
-  const containerClasses = `voice-area ${disability === 'dyslexia' ? 'dyslexia-mode' : ''}`;
-
   /* ---------- Listening Waves Component ---------- */
   const ListeningWaves = () => (
     <AnimatePresence>
@@ -585,7 +483,7 @@ export default function VoiceInterface({
 
   return (
     <motion.div
-      className={containerClasses}
+      className="voice-area"
       style={{
         fontSize: `${fontSize}rem`
       }}
@@ -643,7 +541,7 @@ export default function VoiceInterface({
           </motion.button>
         )}
 
-        {/* Title in center with disability indicator */}
+        {/* Title in center */}
         <motion.div
           className="assistant-title"
           initial={{ scale: 0.8, opacity: 0 }}
@@ -651,10 +549,10 @@ export default function VoiceInterface({
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
           <span className="title-main">
-            {assistantTitle} {getDisabilityIcon(disability)}
+            {assistantTitle} 🤖
           </span>
           <span className="title-sub">
-            {disability.toUpperCase()} Voice Mode • Memory Active
+            Voice Mode • Memory Active
           </span>
         </motion.div>
 
@@ -720,7 +618,7 @@ export default function VoiceInterface({
             whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
           >
             <span>{isListening ? "🎤" : "🗣️"}</span>
-            <span>{isListening ? "Listening..." : `Speak (${disability.toUpperCase()} mode)`}</span>
+            <span>{isListening ? "Listening..." : "Speak"}</span>
           </motion.button>
 
           <AnimatePresence>
@@ -829,7 +727,7 @@ export default function VoiceInterface({
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
           <div className="log-header">
-            <h3>🎤 Voice History ({disability.toUpperCase()} Mode) • Memory Active</h3>
+            <h3>🎤 Voice History • Memory Active</h3>
             <div className="log-controls">
               <motion.button
                 className="clear-btn"
@@ -854,9 +752,9 @@ export default function VoiceInterface({
                 <div className="empty-icon">🎤</div>
                 <h3>Ready for voice chat with memory!</h3>
                 <p>
-                  Press "Speak" to start a conversation in <strong>{disability.toUpperCase()}</strong> mode.
+                  Press "Speak" to start a conversation.
                   <br />
-                  Your responses will be optimized for {disability} accessibility and I'll remember our conversation history.
+                  Your responses will be optimized for voice interaction and I'll remember our conversation history.
                 </p>
               </motion.div>
             ) : (
@@ -880,7 +778,7 @@ export default function VoiceInterface({
                     </span>
                     <span className="sender-name">
                       {m.sender === "user" ? "You" : 
-                       m.sender === "gpt" ? `${disability.toUpperCase()} Assistant` : 
+                       m.sender === "gpt" ? "AI Assistant" : 
                        "System"}
                     </span>
                     {typeof m.confidence === "number" && (
@@ -896,7 +794,7 @@ export default function VoiceInterface({
                   </div>
                   
                   <div className="message-content">
-                    {m.loading ? `Processing your voice message in ${disability.toUpperCase()} mode using conversation memory...` : m.text}
+                    {m.text}
                   </div>
                   
                   {/* Message timestamp and index for reference */}
