@@ -3,10 +3,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import "./VoiceInterface.css";
 
-/** ---------- Voice Memory System ---------- */
+/** ---------- Enhanced Voice Memory System ---------- */
 const VOICE_MEMORY_STORAGE_KEY = "mumayaz_voice_memory";
-const MAX_VOICE_MEMORY_MESSAGES = 30;
-const VOICE_CONTEXT_WINDOW = 8;
+const MAX_VOICE_MEMORY_MESSAGES = 100;
+const VOICE_CONTEXT_WINDOW = 20; // Increased for better memory
 
 // Save voice conversation to localStorage
 const saveVoiceMemory = (messages) => {
@@ -14,10 +14,11 @@ const saveVoiceMemory = (messages) => {
     const memoryData = {
       messages: messages.slice(-MAX_VOICE_MEMORY_MESSAGES),
       timestamp: Date.now(),
-      version: "1.0",
+      version: "2.0",
       mode: "voice"
     };
     localStorage.setItem(VOICE_MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
+    console.log("🎤 Voice memory saved:", messages.length, "messages");
   } catch (error) {
     console.warn("Failed to save voice memory:", error);
   }
@@ -31,10 +32,11 @@ const loadVoiceMemory = () => {
     
     const memoryData = JSON.parse(stored);
     
-    // Check if memory is recent (within 7 days)
-    const isRecent = Date.now() - memoryData.timestamp < 7 * 24 * 60 * 60 * 1000;
+    // Check if memory is recent (within 30 days)
+    const isRecent = Date.now() - memoryData.timestamp < 30 * 24 * 60 * 60 * 1000;
     
     if (isRecent && memoryData.messages?.length) {
+      console.log("🎤 Voice memory loaded:", memoryData.messages.length, "messages");
       return memoryData.messages;
     }
   } catch (error) {
@@ -47,28 +49,29 @@ const loadVoiceMemory = () => {
 const clearVoiceMemory = () => {
   try {
     localStorage.removeItem(VOICE_MEMORY_STORAGE_KEY);
+    console.log("🎤 Voice memory cleared");
   } catch (error) {
     console.warn("Failed to clear voice memory:", error);
   }
 };
 
-// Build voice context from conversation history
+// Enhanced voice context building with full conversation history
 const buildVoiceContext = (messages) => {
   if (messages.length <= 1) return "";
   
-  // Get recent messages for context (excluding the welcome message)
-  const recentMessages = messages
+  // Get ALL conversation messages (excluding welcome message)
+  const conversationMessages = messages
     .slice(1) // Skip welcome message
-    .slice(-VOICE_CONTEXT_WINDOW) // Get last N messages
-    .filter(msg => !msg.loading) // Exclude loading messages
+    .filter(msg => !msg.loading && msg.text) // Filter out loading/empty messages
+    .slice(-VOICE_CONTEXT_WINDOW) // Take most recent messages for context
     .map(msg => {
-      const role = msg.sender === "user" ? "User" : "Assistant";
+      const role = msg.sender === "user" ? "Human" : "Assistant";
       return `${role}: ${msg.text}`;
     });
   
-  if (recentMessages.length === 0) return "";
+  if (conversationMessages.length === 0) return "";
   
-  return `\n\nVoice conversation history:\n${recentMessages.join('\n')}\n\nCurrent voice input:\n`;
+  return `\n\nVoice conversation history:\n${conversationMessages.join('\n')}\n\nCurrent voice input:\n`;
 };
 
 /* ---------- Enhanced Puter helpers ---------- */
@@ -90,10 +93,10 @@ const waitForPuter = (timeoutMs = 3000) =>
     }, 100);
   });
 
-const aiChat = async (prompt, ms = 20000) => {
+const aiChat = async (prompt, ms = 30000) => {
   if (!hasPuter()) throw new Error("Puter AI not available");
   
-  console.log("🎯 [Voice] Sending prompt with memory to AI:", prompt.substring(0, 200) + "...");
+  console.log("🎯 [Voice] Sending prompt with enhanced memory to AI:", prompt.substring(0, 200) + "...");
   
   const timeout = new Promise((_, rej) =>
     setTimeout(() => rej(new Error("AI request timed out")), ms)
@@ -102,7 +105,7 @@ const aiChat = async (prompt, ms = 20000) => {
   const req = (async () => {
     const resp = await window.puter.ai.chat(prompt);
     const responseText = typeof resp === "string" ? resp : resp?.message?.content ?? "";
-    console.log("🤖 [Voice] Raw AI response:", responseText.substring(0, 200) + "...");
+    console.log("🤖 [Voice] AI response received:", responseText.substring(0, 200) + "...");
     return responseText;
   })();
   
@@ -111,20 +114,25 @@ const aiChat = async (prompt, ms = 20000) => {
 
 /** Enhanced mock AI for voice mode with memory-aware responses */
 const mockAI = (prompt, hasContext = false) => {
-  const userInput = (prompt.split("Current voice input:").pop() || prompt.split("User:").pop() || "").trim();
+  const userInput = prompt.split("Current voice input:").pop() || 
+                   prompt.split("Human:").pop() || 
+                   prompt;
+  const cleanInput = userInput.trim().substring(0, 100);
   
-  const contextNote = hasContext ? "\n\n(I remember our voice conversation)" : "";
+  const contextNote = hasContext ? " I remember our voice conversation." : "";
   
   const responses = [
-    `You said: "${userInput}"\n\nVoice mode is currently in demo. I can help you with questions and tasks, and I'll remember our conversation for better continuity.${contextNote}`,
-    `I understand you're asking about: "${userInput}"\n\nThis is voice demonstration mode. I maintain conversation history and provide clear, spoken responses optimized for voice interaction.${contextNote}`,
-    `Your voice input: "${userInput}"\n\nI'm running in demo mode right now. I can assist with various topics while maintaining our conversation history for better context.${contextNote}`
+    `Regarding "${cleanInput}"...\n\nVoice mode is currently in demo. I can help you with questions and tasks, maintaining conversation history for better responses.${contextNote}`,
+    
+    `You mentioned: "${cleanInput}"\n\nThis is voice demonstration mode. I maintain our conversation history and provide clear responses optimized for speech.${contextNote}`,
+    
+    `About "${cleanInput}"...\n\nI'm in demo mode but can provide helpful voice responses. I remember our conversation for better continuity.${contextNote}`
   ];
   
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
-/** Enhanced AI response handler for voice mode with memory */
+/** Enhanced AI response handler for voice mode with full memory */
 const getVoiceAIResponse = async (prompt, conversationContext = "") => {
   const ready = await waitForPuter(3000);
   
@@ -133,14 +141,16 @@ const getVoiceAIResponse = async (prompt, conversationContext = "") => {
     ? prompt + conversationContext 
     : prompt;
   
+  console.log("🧠 [Voice] Using enhanced prompt with memory context");
+  
   if (!ready) {
     console.log("🔄 [Voice] Using mock AI response");
     return mockAI(enhancedPrompt, !!conversationContext);
   }
   
   try {
-    const rawResponse = await aiChat(enhancedPrompt, 20000);
-    console.log("✅ [Voice] Formatted response:", rawResponse.substring(0, 100) + "...");
+    const rawResponse = await aiChat(enhancedPrompt, 30000);
+    console.log("✅ [Voice] Enhanced response ready:", rawResponse.substring(0, 100) + "...");
     return rawResponse;
   } catch (err) {
     console.warn("[VoiceInterface] AI error:", err);
@@ -167,20 +177,21 @@ export default function VoiceInterface({
   onSignOut
 }) {
 
-  const assistantTitle = "AI Voice Assistant";
+  const assistantTitle = "Chat Assistant";
 
-  console.log("🎯 [Voice] VoiceInterface initialized with memory");
+  console.log("🎯 [Voice] VoiceInterface initialized with enhanced memory");
 
-  /* ---------- State with Memory ---------- */
+  /* ---------- State with Enhanced Memory ---------- */
   // Initialize messages with memory or welcome message
   const [messages, setMessages] = useState(() => {
     const savedMessages = loadVoiceMemory();
     if (savedMessages && savedMessages.length > 0) {
+      console.log("🧠 Restored", savedMessages.length, "voice messages from memory");
       return savedMessages;
     }
     return [{
       sender: "gpt",
-      text: "Hello! I'm your AI voice assistant. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
+      text: "Hello! I'm your Chat Assistant in voice mode. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
       id: Date.now()
     }];
   });
@@ -198,12 +209,27 @@ export default function VoiceInterface({
   const recognitionRef = useRef(null);
   const messagesRef = useRef(null);
   const buttonControls = useAnimation();
+  const saveTimeoutRef = useRef(null);
 
-  // Save messages to memory whenever they change
+  // Enhanced save messages to memory with debouncing
   useEffect(() => {
     if (messages.length > 1) { // Don't save just the welcome message
-      saveVoiceMemory(messages);
+      // Clear previous timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      // Set new timeout to save after 1 second of no changes
+      saveTimeoutRef.current = setTimeout(() => {
+        saveVoiceMemory(messages);
+      }, 1000);
     }
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [messages]);
 
   /* ---------- Mobile Detection Hook ---------- */
@@ -278,6 +304,7 @@ export default function VoiceInterface({
     }
   }, []);
 
+  // Enhanced speech recognition with memory integration
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
@@ -290,7 +317,7 @@ export default function VoiceInterface({
     recog.onstart = () => {
       setListening(true);
       if (navigator.vibrate) navigator.vibrate(80);
-      console.log("🎤 [Voice] Started listening with memory");
+      console.log("🎤 [Voice] Started listening with enhanced memory");
     };
     
     recog.onend = () => {
@@ -300,11 +327,12 @@ export default function VoiceInterface({
     
     recog.onerror = (event) => {
       setListening(false);
-      const errorMsg = `⚠️ Speech recognition error: ${event.error}`;
-      setMessages((m) => [
-        ...m,
-        { sender: "system", text: errorMsg, id: Date.now() },
-      ]);
+      const errorMsg = `Speech recognition error: ${event.error}`;
+      setMessages((m) => {
+        const updated = [...m, { sender: "system", text: errorMsg, id: Date.now() }];
+        saveVoiceMemory(updated);
+        return updated;
+      });
       console.error("[Voice] Speech recognition error:", event.error);
     };
     
@@ -312,38 +340,48 @@ export default function VoiceInterface({
       const text = e.results[0][0].transcript;
       const confidence = e.results[0][0].confidence;
       
-      console.log("📤 [Voice] User said:", text, "with confidence:", confidence);
-      console.log("🎯 [Voice] Processing with memory");
+      console.log("🗣️ [Voice] User said:", text, "with confidence:", confidence);
+      console.log("🎯 [Voice] Processing with enhanced memory");
       
       const newUserMessage = { sender: "user", text: text, confidence, id: Date.now() };
-      setMessages((m) => [...m, newUserMessage]);
+      
+      // Update messages immediately with user message
+      setMessages((m) => {
+        const updated = [...m, newUserMessage];
+        // Save immediately when user speaks
+        saveVoiceMemory(updated);
+        return updated;
+      });
       
       try {
-        // Build conversation context from previous messages
-        const updatedMessages = messages.concat([newUserMessage]);
+        // Build conversation context from ALL previous messages
+        const updatedMessages = [...messages, newUserMessage];
         const conversationContext = buildVoiceContext(updatedMessages);
         
-        console.log("🎯 [Voice] Enhanced prompt with memory created");
-        console.log("📝 [Voice] Context preview:", conversationContext.substring(0, 200) + "...");
+        console.log("🧠 [Voice] Enhanced prompt with full memory created");
+        console.log("📝 [Voice] Context includes", updatedMessages.length - 1, "previous messages");
 
-        const raw = await getVoiceAIResponse(text, conversationContext);
+        const rawResponse = await getVoiceAIResponse(text, conversationContext);
         
-        setMessages((m) => [
-          ...m,
-          { sender: "gpt", text: raw, id: Date.now() + 1 }
-        ]);
+        setMessages((m) => {
+          const updated = [...m, { sender: "gpt", text: rawResponse, id: Date.now() + 1 }];
+          // Save after AI response
+          saveVoiceMemory(updated);
+          return updated;
+        });
         
-        console.log("✅ [Voice] Response with memory displayed");
+        console.log("✅ [Voice] Response with enhanced memory displayed");
         
         // Speak the response
-        speak(raw);
+        speak(rawResponse);
         
       } catch (err) {
         const errorMsg = "I'm having trouble connecting to the AI right now. Please try speaking again.";
-        setMessages((m) => [
-          ...m,
-          { sender: "gpt", text: errorMsg, id: Date.now() + 1 }
-        ]);
+        setMessages((m) => {
+          const updated = [...m, { sender: "gpt", text: errorMsg, id: Date.now() + 1 }];
+          saveVoiceMemory(updated);
+          return updated;
+        });
         speak("I'm having trouble connecting to the AI right now.");
         console.error("[VoiceInterface] AI error:", err);
       }
@@ -367,12 +405,13 @@ export default function VoiceInterface({
     // Enhanced text cleaning for better speech
     let cleanText = text
       .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
-      .replace(/[📋🎯✨🧠🌈💚⚠️⚙️]/g, '') // Remove emojis
+      .replace(/[📋🎯✨🧠🌈💚⚠️⚙️🎤🗣️🔊🔇📝✅🔄💭]/g, '') // Remove emojis
       .replace(/•/g, '') // Remove bullet points for speech
       .replace(/\n+/g, '. ') // Replace line breaks with pauses
       .replace(/Memory status:[^.]+\./g, '') // Remove memory status lines
       .replace(/Voice system status:[^.]+\./g, '') // Remove system status
       .replace(/\(I remember [^)]+\)/g, '') // Remove memory notes in parentheses
+      .replace(/Enhanced memory|Full memory|Voice memory/gi, 'memory') // Simplify memory references
       .trim();
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
@@ -425,7 +464,7 @@ export default function VoiceInterface({
     clearVoiceMemory();
     setMessages([{
       sender: "gpt",
-      text: "Hello! I'm your AI voice assistant. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
+      text: "Hello! I'm your Chat Assistant in voice mode. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
       id: Date.now()
     }]);
   };
@@ -513,12 +552,12 @@ export default function VoiceInterface({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
           >
-            🎤 Voice conversation restored
+            Voice conversation restored
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Top Navigation Bar - Matching ChatInterface */}
+      {/* Top Navigation Bar */}
       <motion.header
         className="voice-header"
         variants={headerVariants}
@@ -549,7 +588,7 @@ export default function VoiceInterface({
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
           <span className="title-main">
-            {assistantTitle} 🤖
+            {assistantTitle}
           </span>
           <span className="title-sub">
             Voice Mode • Memory Active
@@ -708,7 +747,7 @@ export default function VoiceInterface({
               
               <motion.button
                 className="test-btn"
-                onClick={() => speak(`This is a test of the voice assistant with memory. Speech has been optimized for accessibility and I remember our previous conversations.`)}
+                onClick={() => speak(`This is a test of the Chat Assistant voice system with enhanced memory. Speech has been optimized for accessibility and I remember our previous conversations.`)}
                 whileHover={!reducedMotion ? { scale: 1.02, y: -2 } : {}}
                 whileTap={{ scale: 0.98 }}
               >
@@ -727,7 +766,7 @@ export default function VoiceInterface({
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
           <div className="log-header">
-            <h3>🎤 Voice History • Memory Active</h3>
+            <h3>Voice History • Memory Active</h3>
             <div className="log-controls">
               <motion.button
                 className="clear-btn"
@@ -765,7 +804,7 @@ export default function VoiceInterface({
                   initial={{ opacity: 0, x: -40, scale: 0.98 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: 40, scale: 0.98 }}
-                  transition={{ duration: reducedMotion ? 0 : 0.25 }}
+                  transition={{ duration: reducedMotion ? 0.1 : 0.25 }}
                   layout
                   whileHover={!reducedMotion ? { 
                     scale: 1.01,
@@ -774,11 +813,11 @@ export default function VoiceInterface({
                 >
                   <div className="message-header">
                     <span className="sender-icon">
-                      {m.sender === "user" ? "👤" : m.sender === "gpt" ? "🤖" : "⚙️"}
+                      {m.sender === "user" ? "👤" : m.sender === "gpt" ? "💭" : "⚙️"}
                     </span>
                     <span className="sender-name">
                       {m.sender === "user" ? "You" : 
-                       m.sender === "gpt" ? "AI Assistant" : 
+                       m.sender === "gpt" ? "AI Response" : 
                        "System"}
                     </span>
                     {typeof m.confidence === "number" && (
@@ -798,7 +837,7 @@ export default function VoiceInterface({
                   </div>
                   
                   {/* Message timestamp and index for reference */}
-                  {m.sender !== 'gpt' || index === 0 ? null : (
+                  {index > 0 && (
                     <div style={{ 
                       fontSize: '0.7rem', 
                       opacity: 0.5, 

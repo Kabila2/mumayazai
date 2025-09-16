@@ -1,4 +1,4 @@
-// src/App.js - Enhanced with Paper Airplane Transition
+// src/App.js - Enhanced with Universal Accessibility
 import React, { useState, useEffect } from "react";
 import ChatInterface from "./components/ChatInterface";
 import VoiceInterface from "./components/VoiceInterface";
@@ -25,13 +25,9 @@ function openSession(email) { localStorage.setItem(SESSION_KEY, JSON.stringify({
 function closeSession() { localStorage.removeItem(SESSION_KEY); }
 function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
+// Universal assistant title
 function getAssistantTitle(disability) {
-  switch ((disability || "").toLowerCase()) {
-    case "dyslexia": return "Dyslexia-Friendly Chat Assistant"; 
-    case "adhd":     return "ADHD-Friendly Chat Assistant";
-    case "autism":   return "Autism-Friendly Chat Assistant";
-    default:         return "Accessible Chat Assistant";
-  }
+  return "Chat Assistant";
 }
 
 // Get current disability preference with fallback
@@ -77,7 +73,7 @@ export default function App() {
   const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // ---------- Assistant title (reactive to disability) ----------
+  // ---------- Assistant title (universal) ----------
   const [assistantTitle, setAssistantTitle] = useState(getAssistantTitle(currentDisability));
 
   // Reflect UI dir/lang on <html>
@@ -134,13 +130,13 @@ export default function App() {
   const handleModeSwitch = (newMode) => {
     if (isTransitioning || newMode === mode) return;
     
-    console.log(`🔄 Starting transition from ${mode} to ${newMode} mode`);
+    console.log(`Transitioning from ${mode} to ${newMode} mode`);
     setPendingMode(newMode);
     setIsTransitioning(true);
   };
 
   const handleTransitionComplete = () => {
-    console.log(`✅ Transition completed to ${pendingMode} mode`);
+    console.log(`Transition completed to ${pendingMode} mode`);
     setMode(pendingMode);
     setPendingMode(null);
     setIsTransitioning(false);
@@ -215,7 +211,6 @@ export default function App() {
     // Reset transition state on sign out
     setIsTransitioning(false);
     setPendingMode(null);
-    // Optional: Clear some app state but keep accessibility preferences
   };
 
   /* ===================== RENDER FLOW ===================== */
@@ -290,7 +285,6 @@ export default function App() {
   } else if (view === "profile") {
     content = (
       <div className="placeholder" style={{ position: "relative" }}>
-        {/* Sign Out Button in profile view */}
         <button
           onClick={handleSignOut}
           style={{
@@ -309,11 +303,11 @@ export default function App() {
             boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)"
           }}
         >
-          🚪 Sign Out
+          Sign Out
         </button>
         
-        <h2>👤 Profile</h2>
-        <p>Current disability preference: <strong>{currentDisability.toUpperCase()}</strong></p>
+        <h2>Profile</h2>
+        <p>Current preference: <strong>{currentDisability.toUpperCase()}</strong></p>
         <p>Manage your preferences and accessibility settings.</p>
         <button onClick={() => setView("chat")}>{t.back}</button>
       </div>
@@ -321,7 +315,6 @@ export default function App() {
   } else {
     content = (
       <div style={{ position: "relative" }}>
-        {/* Sign Out Button in settings view */}
         <button
           onClick={handleSignOut}
           style={{
@@ -340,7 +333,7 @@ export default function App() {
             boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)"
           }}
         >
-          🚪 Sign Out
+          Sign Out
         </button>
         
         <VoiceSettings

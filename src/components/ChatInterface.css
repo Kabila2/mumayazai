@@ -1,4 +1,4 @@
-/* Enhanced ChatInterface.css - Ultra Soft Eye-Friendly Colors with Dyslexia Font */
+/* Enhanced ChatInterface.css - Ultra Soft Eye-Friendly Colors with Universal OpenDyslexic Font */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css');
@@ -41,11 +41,11 @@
   --bg-glass-hover: rgba(255, 255, 255, 0.35);
   --bg-card: rgba(255, 255, 255, 0.3);
   
-  /* Typography - Enhanced for readability with Dyslexia Font */
+  /* Universal Typography - OpenDyslexic for all accessibility needs */
   --font-family: 'OpenDyslexic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  --font-mono: 'OpenDyslexic', 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
   
-  /* Increased base font sizes */
+  /* Increased base font sizes for better readability */
   --font-size-xs: 1.2rem;
   --font-size-sm: 1.45rem;
   --font-size-base: 1.7rem;
@@ -61,6 +61,17 @@
   --mobile-font-lg: 1.8rem;
   --mobile-font-xl: 2.1rem;
   --mobile-font-2xl: 2.3rem;
+  
+  /* Enhanced line height for better readability with OpenDyslexic */
+  --line-height-tight: 1.4;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.8;
+  --line-height-loose: 2.0;
+  
+  /* Letter spacing optimized for dyslexic font */
+  --letter-spacing-tight: 0.025em;
+  --letter-spacing-normal: 0.05em;
+  --letter-spacing-wide: 0.1em;
   
   /* Spacing Scale - Enhanced for mobile */
   --space-1: 0.25rem;
@@ -107,12 +118,14 @@
   --input-height-mobile: 4.5rem;
 }
 
-/* Base Styles */
+/* Base Styles with Universal OpenDyslexic Font */
 .chat-area {
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--bg-primary);
   font-family: var(--font-family);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -311,6 +324,9 @@
   color: rgba(71, 85, 105, 0.95);
   font-weight: 600;
   font-size: var(--font-size-2xl);
+  font-family: var(--font-family);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-normal);
   animation: titleFadeIn 0.8s ease-out 0.4s both;
   
   .title-main {
@@ -324,7 +340,7 @@
     font-weight: 400;
     opacity: 0.7;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: var(--letter-spacing-wide);
     text-shadow: 0 1px 5px rgba(0,0,0,0.05);
   }
 }
@@ -383,13 +399,14 @@
   }
 }
 
-/* Message Bubbles */
+/* Message Bubbles with Enhanced Typography */
 .chat-bubble {
   max-width: 78%;
   padding: var(--space-5) var(--space-6);
   border-radius: var(--radius-xl);
   font-size: var(--font-size-base);
-  line-height: 1.8;
+  line-height: var(--line-height-relaxed);
+  letter-spacing: var(--letter-spacing-normal);
   position: relative;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -400,7 +417,13 @@
   /* Enhanced entrance animation */
   animation: messageSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  /* Vertical bullet points styling */
+  /* Enhanced typography for better readability */
+  p {
+    margin: 0 0 var(--space-3) 0;
+    line-height: var(--line-height-relaxed);
+  }
+  
+  /* Vertical bullet points styling with improved spacing */
   ul {
     list-style: none;
     padding: 0;
@@ -418,6 +441,7 @@
       border-radius: var(--radius-md);
       backdrop-filter: blur(10px);
       transition: var(--transition-normal);
+      line-height: var(--line-height-relaxed);
       
       &::before {
         content: '•';
@@ -649,16 +673,18 @@
   color: rgba(71, 85, 105, 0.95);
   font-size: var(--font-size-base);
   font-family: var(--font-family);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
   outline: none;
   resize: none;
   min-height: var(--input-height);
   max-height: 140px;
   transition: var(--transition-normal);
   backdrop-filter: blur(20px);
-  line-height: 1.6;
   
   &::placeholder {
     color: rgba(107, 114, 128, 0.5);
+    font-family: var(--font-family);
   }
   
   &:focus {
@@ -691,6 +717,7 @@
   transition: var(--transition-normal);
   backdrop-filter: blur(15px);
   font-size: 1.2rem;
+  font-family: var(--font-family);
   
   &:hover {
     background: rgba(255, 255, 255, 0.98);
@@ -809,6 +836,7 @@
     font-size: 14px;
     color: white;
     font-weight: bold;
+    font-family: var(--font-family);
     transition: var(--transition-normal);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     
@@ -852,6 +880,7 @@
   transition: var(--transition-normal);
   z-index: 10;
   font-size: 1.4rem;
+  font-family: var(--font-family);
   color: rgba(75, 85, 99, 0.7);
   animation: scrollIndicatorBounce 2s ease-in-out infinite;
   
@@ -903,6 +932,7 @@
     max-width: 88%;
     padding: var(--mobile-space-4) var(--mobile-space-5);
     font-size: var(--mobile-font-base);
+    line-height: var(--line-height-relaxed);
   }
   
   .chat-input-area {

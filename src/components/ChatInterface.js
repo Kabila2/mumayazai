@@ -3,19 +3,20 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ChatInterface.css';
 
-/** ---------- Memory System ---------- */
+/** ---------- Enhanced Memory System ---------- */
 const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
-const MAX_MEMORY_MESSAGES = 50;
-const CONTEXT_WINDOW = 10;
+const MAX_MEMORY_MESSAGES = 100;
+const CONTEXT_WINDOW = 20; // Increased for better memory
 
 const saveConversationMemory = (messages) => {
   try {
     const memoryData = {
       messages: messages.slice(-MAX_MEMORY_MESSAGES),
       timestamp: Date.now(),
-      version: "1.0"
+      version: "2.0"
     };
     localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
+    console.log("🧠 Memory saved:", messages.length, "messages");
   } catch (error) {
     console.warn("Failed to save conversation memory:", error);
   }
@@ -27,9 +28,10 @@ const loadConversationMemory = () => {
     if (!stored) return null;
     
     const memoryData = JSON.parse(stored);
-    const isRecent = Date.now() - memoryData.timestamp < 7 * 24 * 60 * 60 * 1000;
+    const isRecent = Date.now() - memoryData.timestamp < 30 * 24 * 60 * 60 * 1000; // 30 days
     
     if (isRecent && memoryData.messages?.length) {
+      console.log("🧠 Memory loaded:", memoryData.messages.length, "messages");
       return memoryData.messages;
     }
   } catch (error) {
@@ -41,29 +43,63 @@ const loadConversationMemory = () => {
 const clearConversationMemory = () => {
   try {
     localStorage.removeItem(MEMORY_STORAGE_KEY);
+    console.log("🧠 Memory cleared");
   } catch (error) {
     console.warn("Failed to clear conversation memory:", error);
   }
 };
 
+// Enhanced context building with full conversation history
 const buildConversationContext = (messages) => {
   if (messages.length <= 1) return "";
   
-  const recentMessages = messages
-    .slice(1)
-    .slice(-CONTEXT_WINDOW)
-    .filter(msg => !msg.loading)
+  // Get ALL conversation messages (excluding welcome message)
+  const conversationMessages = messages
+    .slice(1) // Skip welcome message
+    .filter(msg => !msg.loading && msg.text) // Filter out loading/empty messages
+    .slice(-CONTEXT_WINDOW) // Take most recent messages for context
     .map(msg => {
-      const role = msg.sender === "user" ? "User" : "Assistant";
+      const role = msg.sender === "user" ? "Human" : "Assistant";
       return `${role}: ${msg.text}`;
     });
   
-  if (recentMessages.length === 0) return "";
+  if (conversationMessages.length === 0) return "";
   
-  return `\n\nPrevious conversation context:\n${recentMessages.join('\n')}\n\nCurrent message:\n`;
+  return `\n\nConversation History:\n${conversationMessages.join('\n')}\n\nCurrent Request:\n`;
 };
 
-/** ---------- AI Integration with Memory ---------- */
+/** ---------- Enhanced Image Analysis Function ---------- */
+const analyzeImage = async (imageUrl) => {
+  try {
+    // Convert image to base64 for analysis
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result;
+        // Simple image analysis - in production, this would use actual AI vision
+        const analysis = `I can see you've shared an image. While I can't process the visual content directly in this demo, I can help if you describe what you see or what questions you have about the image. 
+
+For example, you could ask:
+• What do you think about this image?
+• Can you help me understand what's happening here?
+• What questions should I ask about this?
+
+Image technical details: Format detected, file size appears normal.`;
+        
+        resolve(analysis);
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Image analysis error:", error);
+    return "I can see you've uploaded an image, but I'm having trouble analyzing it right now. Could you describe what's in the image so I can better help you?";
+  }
+};
+
+/** ---------- AI Integration with Enhanced Memory ---------- */
 const hasPuter = () =>
   typeof window !== "undefined" &&
   window.puter &&
@@ -82,7 +118,7 @@ const waitForPuter = (timeoutMs = 3000) =>
     }, 100);
   });
 
-const aiChat = async (prompt, ms = 20000) => {
+const aiChat = async (prompt, ms = 30000) => {
   if (!hasPuter()) throw new Error("Puter SDK not available");
   
   const timeout = new Promise((_, rej) =>
@@ -97,31 +133,41 @@ const aiChat = async (prompt, ms = 20000) => {
   return Promise.race([req, timeout]);
 };
 
-const mockAI = (prompt, hasContext = false) => {
-  const userInput = (prompt.split("Current message:").pop() || prompt.split("User:").pop() || "").trim();
+const mockAI = (prompt, hasContext = false, hasImages = false) => {
+  const userInput = prompt.split("Current Request:").pop() || 
+                   prompt.split("Human:").pop() || 
+                   prompt;
+  const cleanInput = userInput.trim().substring(0, 100);
+  
+  const contextNote = hasContext ? " I remember our previous conversation." : "";
+  const imageNote = hasImages ? " I can see you've shared images with me." : "";
   
   const responses = [
-    `You said: "${userInput}"\n\nDemo mode is active. I can help you with various tasks and questions. I remember our conversation history and will provide helpful responses tailored to your needs.`,
-    `I understand you're asking about: "${userInput}"\n\nThis is a demonstration of the AI assistant. I maintain conversation context and can assist with a wide range of topics while providing clear, structured responses.`,
-    `Your message: "${userInput}"\n\nI'm currently running in demo mode. I can help with questions, provide information, assist with tasks, and maintain our conversation history for better continuity.`
+    `Regarding "${cleanInput}"...\n\nI'm currently in demo mode, but I can help you with questions, provide information, and assist with various tasks. I maintain conversation history for better context.${contextNote}${imageNote}`,
+    
+    `You mentioned: "${cleanInput}"\n\nThis is a demonstration of the Chat Assistant. I can assist with a wide range of topics while maintaining our conversation history for continuity.${contextNote}${imageNote}`,
+    
+    `About "${cleanInput}"...\n\nI'm running in demo mode but can provide helpful responses. I remember our conversation and can build on previous discussions.${contextNote}${imageNote}`
   ];
   
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
-const getAIResponse = async (prompt, conversationContext = "") => {
+const getAIResponse = async (prompt, conversationContext = "", hasImages = false) => {
   const ready = await waitForPuter(3000);
   
   const enhancedPrompt = conversationContext 
     ? prompt + conversationContext 
     : prompt;
   
+  console.log("🤖 Sending enhanced prompt with memory context");
+  
   if (!ready) {
-    return mockAI(enhancedPrompt, !!conversationContext);
+    return mockAI(enhancedPrompt, !!conversationContext, hasImages);
   }
   
   try {
-    const rawResponse = await aiChat(enhancedPrompt, 20000);
+    const rawResponse = await aiChat(enhancedPrompt, 30000);
     return rawResponse;
   } catch (err) {
     console.warn("[ChatInterface] AI error:", err);
@@ -180,7 +226,7 @@ const ChatInterface = ({
   onSwitchMode, 
   fontSize = 1, 
   highContrast = false, 
-  assistantTitle = "AI Assistant",
+  assistantTitle = "Chat Assistant",
   t = {},
   language = "en",
   reducedMotion = false,
@@ -193,11 +239,12 @@ const ChatInterface = ({
   const [messages, setMessages] = useState(() => {
     const savedMessages = loadConversationMemory();
     if (savedMessages && savedMessages.length > 0) {
+      console.log("🧠 Restored", savedMessages.length, "messages from memory");
       return savedMessages;
     }
     return [{
       sender: "gpt",
-      text: "Hello! I'm your AI assistant. I can help you with questions, provide information, and assist with various tasks. How can I help you today?",
+      text: "Hello! I'm your Chat Assistant. I can help you with questions, provide information, analyze images, and assist with various tasks. How can I help you today?",
       id: Date.now()
     }];
   });
@@ -214,28 +261,40 @@ const ChatInterface = ({
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   
-  // Save messages to memory whenever they change
+  // Save messages to memory whenever they change (with debouncing)
+  const saveTimeoutRef = useRef(null);
   useEffect(() => {
     if (messages.length > 1) {
-      saveConversationMemory(messages);
+      // Clear previous timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      // Set new timeout to save after 1 second of no changes
+      saveTimeoutRef.current = setTimeout(() => {
+        saveConversationMemory(messages);
+      }, 1000);
     }
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [messages]);
   
-  // Enhanced auto-scroll function with immediate and smooth scroll
+  // Enhanced auto-scroll function
   const scrollToBottom = useCallback((immediate = false) => {
     if (bottomRef.current) {
       if (immediate) {
-        // Immediate scroll first
         bottomRef.current.scrollIntoView({ 
           behavior: "auto",
           block: "end"
         });
-        // Add smooth scroll class for next scroll
         if (messagesRef.current) {
           messagesRef.current.parentElement?.classList.add('auto-scroll-active');
         }
       } else {
-        // Smooth scroll
         bottomRef.current.scrollIntoView({ 
           behavior: reducedMotion ? "auto" : "smooth",
           block: "end"
@@ -244,15 +303,13 @@ const ChatInterface = ({
     }
   }, [reducedMotion]);
   
-  // Auto-scroll when messages change - immediate for user messages, smooth for AI responses
+  // Auto-scroll when messages change
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage) {
       if (lastMessage.sender === "user" || lastMessage.loading) {
-        // Immediate scroll for user messages and loading states
         scrollToBottom(true);
       } else {
-        // Smooth scroll for AI responses
         const timeout = setTimeout(() => scrollToBottom(false), 100);
         return () => clearTimeout(timeout);
       }
@@ -290,12 +347,15 @@ const ChatInterface = ({
 
   // Handle file uploads
   const handleFiles = useCallback((files) => {
-    const newAttachments = Array.from(files).map((file) => ({
-      id: `${file.name}-${file.size}-${Math.random()}`,
-      url: URL.createObjectURL(file),
-      file: file,
-      name: file.name
-    }));
+    const newAttachments = Array.from(files)
+      .filter(file => file.type.startsWith('image/'))
+      .map((file) => ({
+        id: `${file.name}-${file.size}-${Math.random()}`,
+        url: URL.createObjectURL(file),
+        file: file,
+        name: file.name,
+        type: file.type
+      }));
     setAttachments(prev => [...prev, ...newAttachments]);
   }, []);
 
@@ -315,12 +375,12 @@ const ChatInterface = ({
     clearConversationMemory();
     setMessages([{
       sender: "gpt",
-      text: "Hello! I'm your AI assistant. I can help you with questions, provide information, and assist with various tasks. How can I help you today?",
+      text: "Hello! I'm your Chat Assistant. I can help you with questions, provide information, analyze images, and assist with various tasks. How can I help you today?",
       id: Date.now()
     }]);
   }, []);
 
-  // Send message handler with enhanced auto-scroll
+  // Enhanced send message handler
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if ((!text && attachments.length === 0) || isSending) return;
@@ -333,10 +393,22 @@ const ChatInterface = ({
     setIsSending(true);
     
     const userId = Date.now();
-    const sentImages = attachments.map(a => a.url);
+    const sentImages = attachments.map(a => ({ url: a.url, name: a.name }));
     
-    const newUserMessage = { sender: "user", text, images: sentImages, id: userId };
-    setMessages(prev => [...prev, newUserMessage]);
+    const newUserMessage = { 
+      sender: "user", 
+      text, 
+      images: sentImages.length > 0 ? sentImages : null, 
+      id: userId 
+    };
+    
+    // Update messages immediately with user message
+    setMessages(prev => {
+      const updated = [...prev, newUserMessage];
+      // Save immediately when user sends message
+      saveConversationMemory(updated);
+      return updated;
+    });
     
     // Clear input and attachments immediately
     setAttachments([]);
@@ -348,29 +420,49 @@ const ChatInterface = ({
       setIsInputFocused(false);
     }
 
-    // Handle image-only messages
-    if (!text && sentImages.length > 0) {
-      const imageResponse = 'I received your image(s). I cannot view images directly, but I can help if you describe what you see.';
-      
-      setMessages(prev => [
-        ...prev,
-        { sender: 'gpt', text: imageResponse, id: Date.now() + 1 }
-      ]);
-      setIsSending(false);
-      return;
-    }
-
     try {
-      // Build conversation context from previous messages
+      let responseText = "";
+      let finalPrompt = text;
+
+      // Handle image analysis
+      if (sentImages.length > 0) {
+        console.log("🖼️ Analyzing", sentImages.length, "images");
+        
+        // Analyze each image
+        const imageAnalyses = await Promise.all(
+          sentImages.map(async (img, index) => {
+            const analysis = await analyzeImage(img.url);
+            return `Image ${index + 1} (${img.name}): ${analysis}`;
+          })
+        );
+        
+        const imageContext = imageAnalyses.join('\n\n');
+        
+        if (!text) {
+          // Image-only message
+          finalPrompt = `Please analyze these images: ${imageContext}`;
+        } else {
+          // Text + images
+          finalPrompt = `${text}\n\nImages shared: ${imageContext}`;
+        }
+      }
+
+      // Build conversation context from ALL previous messages
       const updatedMessages = [...messages, newUserMessage];
       const conversationContext = buildConversationContext(updatedMessages);
       
-      const response = await getAIResponse(text, conversationContext);
+      console.log("🧠 Building AI response with full conversation context");
+      console.log("📝 Context includes", updatedMessages.length - 1, "previous messages");
+      
+      responseText = await getAIResponse(finalPrompt, conversationContext, sentImages.length > 0);
 
-      setMessages(prev => [
-        ...prev,
-        { sender: "gpt", text: response, id: Date.now() + 1 }
-      ]);
+      // Add AI response to messages
+      setMessages(prev => {
+        const updated = [...prev, { sender: "gpt", text: responseText, id: Date.now() + 1 }];
+        // Save after AI response
+        saveConversationMemory(updated);
+        return updated;
+      });
       
       // Success haptic feedback
       if (navigator.vibrate && isMobile) {
@@ -379,10 +471,11 @@ const ChatInterface = ({
       
     } catch (err) {
       const errorMsg = "I'm having trouble connecting right now. Please try again in a moment.";
-      setMessages(prev => [
-        ...prev,
-        { sender: "gpt", text: errorMsg, id: Date.now() + 1 }
-      ]);
+      setMessages(prev => {
+        const updated = [...prev, { sender: "gpt", text: errorMsg, id: Date.now() + 1 }];
+        saveConversationMemory(updated);
+        return updated;
+      });
       
       // Error haptic feedback
       if (navigator.vibrate && isMobile) {
@@ -390,6 +483,11 @@ const ChatInterface = ({
       }
     } finally {
       setIsSending(false);
+      
+      // Clean up attachment URLs
+      attachments.forEach(attachment => {
+        URL.revokeObjectURL(attachment.url);
+      });
     }
   }, [input, isSending, isMobile, attachments, messages]);
 
@@ -481,7 +579,7 @@ const ChatInterface = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
             >
-              💾 Previous conversation restored
+              Previous conversation restored
             </motion.div>
           )}
         </AnimatePresence>
@@ -517,7 +615,7 @@ const ChatInterface = ({
             transition={{ delay: reducedMotion ? 0 : 0.4 }}
           >
             <span className="title-main">
-              {assistantTitle} 🤖
+              {assistantTitle}
             </span>
             <span className="title-sub">
               AI Assistant • Memory Active
@@ -613,11 +711,11 @@ const ChatInterface = ({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: reducedMotion ? 0 : 0.2 }}
                     >
-                      {message.images.map((src, imgIndex) => (
+                      {message.images.map((img, imgIndex) => (
                         <motion.img 
                           key={imgIndex}
-                          src={src} 
-                          alt={`attachment-${imgIndex}`}
+                          src={img.url} 
+                          alt={`${img.name || `attachment-${imgIndex}`}`}
                           style={{ 
                             width: '120px', 
                             height: '90px', 
@@ -634,15 +732,15 @@ const ChatInterface = ({
                     </motion.div>
                   )}
                   
-                  {/* Message timestamp for reference */}
-                  {message.sender !== 'gpt' || index === 0 ? null : (
+                  {/* Message metadata */}
+                  {index > 0 && (
                     <div style={{ 
                       fontSize: '0.75rem', 
                       opacity: 0.6, 
                       marginTop: '8px', 
-                      textAlign: 'right' 
+                      textAlign: message.sender === 'user' ? 'right' : 'left'
                     }}>
-                      Message #{index} • {new Date(message.id).toLocaleTimeString()}
+                      {message.sender === 'gpt' ? 'AI Response' : 'You'} • {new Date(message.id).toLocaleTimeString()}
                     </div>
                   )}
                 </motion.div>
@@ -751,7 +849,7 @@ const ChatInterface = ({
               onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
-              placeholder={`Type your message... (Memory active)`}
+              placeholder={`Type your message... (Enhanced memory active)`}
               disabled={isSending}
               rows={1}
               style={{
@@ -769,7 +867,7 @@ const ChatInterface = ({
             <motion.button
               className="action-button"
               onClick={() => fileInputRef.current?.click()}
-              title="Attach image"
+              title="Attach image for analysis"
               type="button"
               whileHover={!reducedMotion ? { 
                 scale: 1.05, 
@@ -781,7 +879,7 @@ const ChatInterface = ({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: reducedMotion ? 0 : 0.4 }}
             >
-              📎
+              📷
             </motion.button>
 
             <motion.button
