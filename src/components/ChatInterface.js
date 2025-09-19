@@ -16,7 +16,7 @@ const saveConversationMemory = (messages) => {
       version: "2.0"
     };
     localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
-    console.log("🧠 Memory saved:", messages.length, "messages");
+    console.log("💾 Memory saved:", messages.length, "messages");
   } catch (error) {
     console.warn("Failed to save conversation memory:", error);
   }
@@ -31,7 +31,7 @@ const loadConversationMemory = () => {
     const isRecent = Date.now() - memoryData.timestamp < 30 * 24 * 60 * 60 * 1000; // 30 days
     
     if (isRecent && memoryData.messages?.length) {
-      console.log("🧠 Memory loaded:", memoryData.messages.length, "messages");
+      console.log("💾 Memory loaded:", memoryData.messages.length, "messages");
       return memoryData.messages;
     }
   } catch (error) {
@@ -43,7 +43,7 @@ const loadConversationMemory = () => {
 const clearConversationMemory = () => {
   try {
     localStorage.removeItem(MEMORY_STORAGE_KEY);
-    console.log("🧠 Memory cleared");
+    console.log("💾 Memory cleared");
   } catch (error) {
     console.warn("Failed to clear conversation memory:", error);
   }
@@ -239,7 +239,7 @@ const ChatInterface = ({
   const [messages, setMessages] = useState(() => {
     const savedMessages = loadConversationMemory();
     if (savedMessages && savedMessages.length > 0) {
-      console.log("🧠 Restored", savedMessages.length, "messages from memory");
+      console.log("💾 Restored", savedMessages.length, "messages from memory");
       return savedMessages;
     }
     return [{
@@ -451,7 +451,7 @@ const ChatInterface = ({
       const updatedMessages = [...messages, newUserMessage];
       const conversationContext = buildConversationContext(updatedMessages);
       
-      console.log("🧠 Building AI response with full conversation context");
+      console.log("💾 Building AI response with full conversation context");
       console.log("📝 Context includes", updatedMessages.length - 1, "previous messages");
       
       responseText = await getAIResponse(finalPrompt, conversationContext, sentImages.length > 0);
@@ -849,7 +849,7 @@ const ChatInterface = ({
               onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
-              placeholder={`Type your message... (Enhanced memory active)`}
+              placeholder={`Type your message... (Memory active)`}
               disabled={isSending}
               rows={1}
               style={{

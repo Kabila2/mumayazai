@@ -141,7 +141,7 @@ const getVoiceAIResponse = async (prompt, conversationContext = "") => {
     ? prompt + conversationContext 
     : prompt;
   
-  console.log("🧠 [Voice] Using enhanced prompt with memory context");
+  console.log("💾 [Voice] Using enhanced prompt with memory context");
   
   if (!ready) {
     console.log("🔄 [Voice] Using mock AI response");
@@ -186,7 +186,7 @@ export default function VoiceInterface({
   const [messages, setMessages] = useState(() => {
     const savedMessages = loadVoiceMemory();
     if (savedMessages && savedMessages.length > 0) {
-      console.log("🧠 Restored", savedMessages.length, "voice messages from memory");
+      console.log("💾 Restored", savedMessages.length, "voice messages from memory");
       return savedMessages;
     }
     return [{
@@ -358,7 +358,7 @@ export default function VoiceInterface({
         const updatedMessages = [...messages, newUserMessage];
         const conversationContext = buildVoiceContext(updatedMessages);
         
-        console.log("🧠 [Voice] Enhanced prompt with full memory created");
+        console.log("💾 [Voice] Enhanced prompt with full memory created");
         console.log("📝 [Voice] Context includes", updatedMessages.length - 1, "previous messages");
 
         const rawResponse = await getVoiceAIResponse(text, conversationContext);
@@ -405,7 +405,7 @@ export default function VoiceInterface({
     // Enhanced text cleaning for better speech
     let cleanText = text
       .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
-      .replace(/[📋🎯✨🧠🌈💚⚠️⚙️🎤🗣️🔊🔇📝✅🔄💭]/g, '') // Remove emojis
+      .replace(/[📋🎯✨💾🌈💨⚠️⚙️🎤🗣️🔊🔇📝✅🔄💭]/g, '') // Remove emojis
       .replace(/•/g, '') // Remove bullet points for speech
       .replace(/\n+/g, '. ') // Replace line breaks with pauses
       .replace(/Memory status:[^.]+\./g, '') // Remove memory status lines

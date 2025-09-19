@@ -26,18 +26,18 @@ function closeSession() { localStorage.removeItem(SESSION_KEY); }
 function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
 // Universal assistant title
-function getAssistantTitle(disability) {
+function getAssistantTitle() {
   return "Chat Assistant";
 }
 
-// Get current disability preference with fallback
-function getCurrentDisability() {
-  return localStorage.getItem(DISABILITY_KEY) || "dyslexia";
+// Get current preference with fallback
+function getCurrentPreference() {
+  return localStorage.getItem(DISABILITY_KEY) || "default";
 }
 
-// Save disability preference
-function saveDisability(disability) {
-  localStorage.setItem(DISABILITY_KEY, disability);
+// Save preference
+function savePreference(preference) {
+  localStorage.setItem(DISABILITY_KEY, preference);
 }
 
 export default function App() {
@@ -60,8 +60,8 @@ export default function App() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [pendingMode, setPendingMode] = useState(null);
 
-  // ---------- Disability state ----------
-  const [currentDisability, setCurrentDisability] = useState(getCurrentDisability());
+  // ---------- User preference state ----------
+  const [currentPreference, setCurrentPreference] = useState(getCurrentPreference());
 
   // ---------- TTS & accessibility ----------
   const [voices, setVoices] = useState([]);
@@ -74,7 +74,7 @@ export default function App() {
   const [reducedMotion, setReducedMotion] = useState(false);
 
   // ---------- Assistant title (universal) ----------
-  const [assistantTitle, setAssistantTitle] = useState(getAssistantTitle(currentDisability));
+  const [assistantTitle, setAssistantTitle] = useState(getAssistantTitle());
 
   // Reflect UI dir/lang on <html>
   useEffect(() => {
@@ -82,11 +82,11 @@ export default function App() {
     document.documentElement.dir = appLanguage === "ar" ? "rtl" : "ltr";
   }, [appLanguage]);
 
-  // Initialize defaults and sync disability
+  // Initialize defaults and sync preference
   useEffect(() => {
-    const disability = getCurrentDisability();
-    setCurrentDisability(disability);
-    setAssistantTitle(getAssistantTitle(disability));
+    const preference = getCurrentPreference();
+    setCurrentPreference(preference);
+    setAssistantTitle(getAssistantTitle());
     
     // Load accessibility preferences
     const hc = localStorage.getItem("high-contrast");
@@ -97,10 +97,10 @@ export default function App() {
     if (rm === "true") setReducedMotion(true);
   }, []);
 
-  // Watch for disability changes and update title
+  // Watch for preference changes and update title
   useEffect(() => {
-    setAssistantTitle(getAssistantTitle(currentDisability));
-  }, [currentDisability]);
+    setAssistantTitle(getAssistantTitle());
+  }, [currentPreference]);
 
   // Load voices
   useEffect(() => {
@@ -165,9 +165,9 @@ export default function App() {
     if (!user || user.password !== password) {
       return { ok: false, message: "Invalid email or password." };
     }
-    const hasDisability = !!localStorage.getItem(DISABILITY_KEY);
+    const hasPreference = !!localStorage.getItem(DISABILITY_KEY);
     const hasLanguage   = !!localStorage.getItem(LANGUAGE_KEY);
-    if (!hasDisability || !hasLanguage) {
+    if (!hasPreference || !hasLanguage) {
       setPendingEmail(key);
       localStorage.setItem("mumayaz_role", user.role || "student");
       setShowSetup(true);
@@ -178,23 +178,23 @@ export default function App() {
     setIsLoggedIn(true);
     localStorage.setItem("mumayaz_role", user.role || "student");
     
-    // Sync disability on login
-    const disability = getCurrentDisability();
-    setCurrentDisability(disability);
-    setAssistantTitle(getAssistantTitle(disability));
+    // Sync preference on login
+    const preference = getCurrentPreference();
+    setCurrentPreference(preference);
+    setAssistantTitle(getAssistantTitle());
     
     return { ok: true };
   };
 
   const handleCompleteSetup = ({ disability, lang }) => {
-    // Save disability preference
-    saveDisability(disability);
+    // Save preference
+    savePreference(disability);
     localStorage.setItem(LANGUAGE_KEY, lang);
     setAppLanguage(lang);
 
-    // Update current disability state
-    setCurrentDisability(disability);
-    setAssistantTitle(getAssistantTitle(disability));
+    // Update current preference state
+    setCurrentPreference(disability);
+    setAssistantTitle(getAssistantTitle());
 
     if (pendingEmail) openSession(pendingEmail);
 
@@ -226,7 +226,7 @@ export default function App() {
   if (showSetup) {
     return (
       <OnboardingSetup
-        defaultDisability={getCurrentDisability()}
+        defaultDisability={getCurrentPreference()}
         defaultLanguage={localStorage.getItem(LANGUAGE_KEY) || "en"}
         onComplete={handleCompleteSetup}
         onCancel={() => { setShowSetup(false); setPendingEmail(null); }}
@@ -253,7 +253,7 @@ export default function App() {
               highContrast={highContrast}
               reducedMotion={reducedMotion}
               assistantTitle={assistantTitle}
-              currentDisability={currentDisability}
+              currentPreference={currentPreference}
               onSwitchMode={() => handleModeSwitch("voice")}
               onSignOut={handleSignOut}
             />
@@ -274,7 +274,7 @@ export default function App() {
               fontSize={fontSize}
               reducedMotion={reducedMotion}
               assistantTitle={assistantTitle}
-              currentDisability={currentDisability}
+              currentPreference={currentPreference}
               onSwitchMode={() => handleModeSwitch("text")}
               onSignOut={handleSignOut}
             />
@@ -307,7 +307,7 @@ export default function App() {
         </button>
         
         <h2>Profile</h2>
-        <p>Current preference: <strong>{currentDisability.toUpperCase()}</strong></p>
+        <p>Current preference: <strong>{currentPreference.toUpperCase()}</strong></p>
         <p>Manage your preferences and accessibility settings.</p>
         <button onClick={() => setView("chat")}>{t.back}</button>
       </div>
