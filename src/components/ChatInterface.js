@@ -74,28 +74,169 @@ const analyzeImage = async (imageUrl) => {
     // Convert image to base64 for analysis
     const response = await fetch(imageUrl);
     const blob = await response.blob();
-    
-    return new Promise((resolve) => {
+
+    return new Promise(async (resolve) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result;
-        // Simple image analysis - in production, this would use actual AI vision
-        const analysis = `I can see you've shared an image. While I can't process the visual content directly in this demo, I can help if you describe what you see or what questions you have about the image. 
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result;
+          const imageElement = new Image();
 
-For example, you could ask:
-• What do you think about this image?
-• Can you help me understand what's happening here?
-• What questions should I ask about this?
+          imageElement.onload = async () => {
+            // Create canvas for image processing
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = imageElement.width;
+            canvas.height = imageElement.height;
+            ctx.drawImage(imageElement, 0, 0);
 
-Image technical details: Format detected, file size appears normal.`;
-        
-        resolve(analysis);
+            let analysis = `• Image Analysis Complete\n• Dimensions: ${imageElement.width} × ${imageElement.height} pixels\n• File size: ${(blob.size / 1024).toFixed(1)} KB\n• Format: ${blob.type}\n\n`;
+
+            // Basic image characteristics
+            const aspectRatio = (imageElement.width / imageElement.height).toFixed(2);
+            if (aspectRatio > 1.5) {
+              analysis += "• Image orientation: Landscape (wide)\n";
+            } else if (aspectRatio < 0.7) {
+              analysis += "• Image orientation: Portrait (tall)\n";
+            } else {
+              analysis += "• Image orientation: Square or standard\n";
+            }
+
+            // Analyze image colors and brightness
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let totalBrightness = 0;
+            let redSum = 0, greenSum = 0, blueSum = 0;
+            const sampleSize = Math.min(10000, pixels.length / 4); // Sample pixels for performance
+
+            for (let i = 0; i < sampleSize * 4; i += 4) {
+              const r = pixels[i];
+              const g = pixels[i + 1];
+              const b = pixels[i + 2];
+
+              redSum += r;
+              greenSum += g;
+              blueSum += b;
+
+              // Calculate brightness using luminance formula
+              totalBrightness += (0.299 * r + 0.587 * g + 0.114 * b);
+            }
+
+            const avgBrightness = totalBrightness / sampleSize;
+            const avgRed = redSum / sampleSize;
+            const avgGreen = greenSum / sampleSize;
+            const avgBlue = blueSum / sampleSize;
+
+            // Brightness analysis
+            if (avgBrightness > 180) {
+              analysis += "• Brightness: Very bright/light image\n";
+            } else if (avgBrightness > 120) {
+              analysis += "• Brightness: Well-lit image\n";
+            } else if (avgBrightness > 60) {
+              analysis += "• Brightness: Moderately lit\n";
+            } else {
+              analysis += "• Brightness: Dark image\n";
+            }
+
+            // Color analysis
+            const dominantColor = Math.max(avgRed, avgGreen, avgBlue);
+            if (dominantColor === avgRed && avgRed > avgGreen + 30 && avgRed > avgBlue + 30) {
+              analysis += "• Color tone: Predominantly red/warm tones\n";
+            } else if (dominantColor === avgBlue && avgBlue > avgRed + 30 && avgBlue > avgGreen + 30) {
+              analysis += "• Color tone: Predominantly blue/cool tones\n";
+            } else if (dominantColor === avgGreen && avgGreen > avgRed + 20 && avgGreen > avgBlue + 20) {
+              analysis += "• Color tone: Predominantly green/natural tones\n";
+            } else if (Math.abs(avgRed - avgGreen) < 20 && Math.abs(avgGreen - avgBlue) < 20) {
+              analysis += "• Color tone: Balanced/neutral colors or grayscale\n";
+            } else {
+              analysis += "• Color tone: Mixed color palette\n";
+            }
+
+            // Try OCR-like text detection (basic edge detection for text regions)
+            try {
+              const grayImageData = ctx.createImageData(canvas.width, canvas.height);
+              for (let i = 0; i < pixels.length; i += 4) {
+                const gray = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+                grayImageData.data[i] = gray;
+                grayImageData.data[i + 1] = gray;
+                grayImageData.data[i + 2] = gray;
+                grayImageData.data[i + 3] = pixels[i + 3];
+              }
+
+              // Simple edge detection for text-like regions
+              let edgeCount = 0;
+              const sampleEdges = Math.min(1000, canvas.width * canvas.height / 100);
+
+              for (let i = 0; i < sampleEdges; i++) {
+                const x = Math.floor(Math.random() * (canvas.width - 1));
+                const y = Math.floor(Math.random() * (canvas.height - 1));
+                const idx = (y * canvas.width + x) * 4;
+
+                if (idx + 4 < grayImageData.data.length) {
+                  const current = grayImageData.data[idx];
+                  const right = grayImageData.data[idx + 4];
+                  const bottom = grayImageData.data[idx + canvas.width * 4];
+
+                  if (Math.abs(current - right) > 50 || Math.abs(current - bottom) > 50) {
+                    edgeCount++;
+                  }
+                }
+              }
+
+              const edgeRatio = edgeCount / sampleEdges;
+              if (edgeRatio > 0.3) {
+                analysis += "• Content: Likely contains text, diagrams, or detailed graphics\n";
+              } else if (edgeRatio > 0.15) {
+                analysis += "• Content: Moderate detail, may contain some text or structured elements\n";
+              } else {
+                analysis += "• Content: Appears to be a photo or smooth graphics with minimal text\n";
+              }
+
+            } catch (ocrError) {
+              analysis += "• Content: Unable to analyze text content\n";
+            }
+
+            // Image quality assessment
+            const resolution = canvas.width * canvas.height;
+            if (resolution > 2000000) {
+              analysis += "• Quality: High resolution image\n";
+            } else if (resolution > 500000) {
+              analysis += "• Quality: Standard resolution\n";
+            } else {
+              analysis += "• Quality: Lower resolution or thumbnail\n";
+            }
+
+            analysis += "\n• What I can help with:\n";
+            analysis += "  • Describe what you see in the image\n";
+            analysis += "  • Ask questions about specific elements\n";
+            analysis += "  • Request analysis of colors, composition, or technical aspects\n";
+            analysis += "  • Help identify potential text content or document structure\n";
+            analysis += "  • Provide suggestions for image improvement or editing\n";
+
+            resolve(analysis);
+          };
+
+          imageElement.onerror = () => {
+            resolve("• I can see you've uploaded an image\n• Having trouble processing the image format\n• Could you try a different image or describe what's in it?");
+          };
+
+          imageElement.src = base64;
+
+        } catch (processingError) {
+          console.error("Image processing error:", processingError);
+          resolve("• Image received successfully\n• Basic analysis available\n• Please describe what's in the image for more detailed help");
+        }
       };
+
+      reader.onerror = () => {
+        resolve("• I can see you've uploaded an image\n• Having trouble reading the file\n• Could you try uploading again or describe the image?");
+      };
+
       reader.readAsDataURL(blob);
     });
   } catch (error) {
     console.error("Image analysis error:", error);
-    return "I can see you've uploaded an image, but I'm having trouble analyzing it right now. Could you describe what's in the image so I can better help you?";
+    return "• I can see you've uploaded an image\n• I'm having trouble analyzing it right now\n• Could you describe what's in the image so I can better help you?";
   }
 };
 
@@ -134,44 +275,59 @@ const aiChat = async (prompt, ms = 30000) => {
 };
 
 const mockAI = (prompt, hasContext = false, hasImages = false) => {
-  const userInput = prompt.split("Current Request:").pop() || 
-                   prompt.split("Human:").pop() || 
+  const userInput = prompt.split("Current Request:").pop() ||
+                   prompt.split("Human:").pop() ||
                    prompt;
   const cleanInput = userInput.trim().substring(0, 100);
-  
-  const contextNote = hasContext ? " I remember our previous conversation." : "";
-  const imageNote = hasImages ? " I can see you've shared images with me." : "";
-  
+
+  const contextNote = hasContext ? "\n• I remember our previous conversation" : "";
+  const imageNote = hasImages ? "\n• I can see you've shared images with me" : "";
+
+  // Check for common reference patterns
+  const hasReference = /\b(that|it|the .+ (I|you) (mentioned|said|talked about)|what (I|you) (said|mentioned)|summarize|explain .+ (mentioned|said))\b/i.test(cleanInput);
+
+  if (hasContext && hasReference) {
+    return `• I can see you're referring to something from our conversation${contextNote}\n• In demo mode, I can detect references but need the real AI for full context analysis\n• Your request: "${cleanInput}"\n• The memory system is active and ready for the full AI response\n• Try this with the real AI for complete context awareness${imageNote}`;
+  }
+
   const responses = [
-    `Regarding "${cleanInput}"...\n\nI'm currently in demo mode, but I can help you with questions, provide information, and assist with various tasks. I maintain conversation history for better context.${contextNote}${imageNote}`,
-    
-    `You mentioned: "${cleanInput}"\n\nThis is a demonstration of the Chat Assistant. I can assist with a wide range of topics while maintaining our conversation history for continuity.${contextNote}${imageNote}`,
-    
-    `About "${cleanInput}"...\n\nI'm running in demo mode but can provide helpful responses. I remember our conversation and can build on previous discussions.${contextNote}${imageNote}`
+    `• Regarding "${cleanInput}"\n• I'm currently in demo mode with full memory system active\n• I can help you with questions and provide information\n• I maintain conversation history for context-aware responses${contextNote}${imageNote}`,
+
+    `• You mentioned: "${cleanInput}"\n• This is a demonstration of the Chat Assistant with memory\n• I can assist with a wide range of topics\n• I maintain our conversation history for continuity and reference handling${contextNote}${imageNote}`,
+
+    `• About "${cleanInput}"\n• I'm running in demo mode but with full memory capabilities\n• I remember our conversation and can build on previous discussions\n• Ready to assist with context-aware responses${contextNote}${imageNote}`
   ];
-  
+
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
 const getAIResponse = async (prompt, conversationContext = "", hasImages = false) => {
   const ready = await waitForPuter(3000);
-  
-  const enhancedPrompt = conversationContext 
-    ? prompt + conversationContext 
-    : prompt;
-  
-  console.log("🤖 Sending enhanced prompt with memory context");
-  
+
+  // Enhanced memory and context instructions
+  const memoryInstruction = conversationContext
+    ? "\n\nIMPORTANT MEMORY CONTEXT: You have access to our full conversation history above. When the user refers to something they mentioned before (like 'the book I mentioned', 'what I said earlier', 'that thing from before'), look back through the conversation history to find what they're referring to and respond accordingly. Use this context to provide more relevant and connected responses."
+    : "";
+
+  // Add bullet point formatting instruction
+  const bulletPointInstruction = "\n\nIMPORTANT: Please format your response using bullet points. Start each main point with • and use clear, concise bullet points throughout your response.";
+
+  const enhancedPrompt = conversationContext
+    ? prompt + conversationContext + memoryInstruction + bulletPointInstruction
+    : prompt + bulletPointInstruction;
+
+  console.log("🧠 Sending enhanced prompt with full memory context and reference handling");
+
   if (!ready) {
     return mockAI(enhancedPrompt, !!conversationContext, hasImages);
   }
-  
+
   try {
     const rawResponse = await aiChat(enhancedPrompt, 30000);
     return rawResponse;
   } catch (err) {
     console.warn("[ChatInterface] AI error:", err);
-    return "I'm having trouble connecting right now. Please try again in a moment.";
+    return "• I'm having trouble connecting right now\n• Please try again in a moment";
   }
 };
 
@@ -222,11 +378,11 @@ const useMobileDetection = () => {
 };
 
 /** ---------- Enhanced Chat Interface Component ---------- */
-const ChatInterface = ({ 
-  onSwitchMode, 
-  fontSize = 1, 
-  highContrast = false, 
-  assistantTitle = "Chat Assistant",
+const ChatInterface = ({
+  onSwitchMode,
+  fontSize = 1,
+  highContrast = false,
+  assistantTitle,
   t = {},
   language = "en",
   reducedMotion = false,
@@ -244,14 +400,13 @@ const ChatInterface = ({
     }
     return [{
       sender: "gpt",
-      text: "Hello! I'm your Chat Assistant. I can help you with questions, provide information, analyze images, and assist with various tasks. How can I help you today?",
+      text: t.welcomeMessage || "• Hello! I'm your Chat Assistant\n• I can help you with questions and provide information\n• How can I help you today?",
       id: Date.now()
     }];
   });
   
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [attachments, setAttachments] = useState([]);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showMemoryStatus, setShowMemoryStatus] = useState(false);
@@ -259,7 +414,6 @@ const ChatInterface = ({
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
-  const fileInputRef = useRef(null);
   
   // Save messages to memory whenever they change (with debouncing)
   const saveTimeoutRef = useRef(null);
@@ -345,45 +499,21 @@ const ChatInterface = ({
     }
   }, []);
 
-  // Handle file uploads
-  const handleFiles = useCallback((files) => {
-    const newAttachments = Array.from(files)
-      .filter(file => file.type.startsWith('image/'))
-      .map((file) => ({
-        id: `${file.name}-${file.size}-${Math.random()}`,
-        url: URL.createObjectURL(file),
-        file: file,
-        name: file.name,
-        type: file.type
-      }));
-    setAttachments(prev => [...prev, ...newAttachments]);
-  }, []);
-
-  // Remove attachment
-  const removeAttachment = useCallback((id) => {
-    setAttachments(prev => {
-      const attachment = prev.find(att => att.id === id);
-      if (attachment) {
-        URL.revokeObjectURL(attachment.url);
-      }
-      return prev.filter(att => att.id !== id);
-    });
-  }, []);
 
   // Clear conversation and memory
   const handleClearConversation = useCallback(() => {
     clearConversationMemory();
     setMessages([{
       sender: "gpt",
-      text: "Hello! I'm your Chat Assistant. I can help you with questions, provide information, analyze images, and assist with various tasks. How can I help you today?",
+      text: t.welcomeMessage || "• Hello! I'm your Chat Assistant\n• I can help you with questions and provide information\n• How can I help you today?",
       id: Date.now()
     }]);
-  }, []);
+  }, [t]);
 
   // Enhanced send message handler
   const handleSend = useCallback(async () => {
     const text = input.trim();
-    if ((!text && attachments.length === 0) || isSending) return;
+    if (!text || isSending) return;
 
     // Haptic feedback for mobile
     if (navigator.vibrate && isMobile) {
@@ -391,17 +521,15 @@ const ChatInterface = ({
     }
 
     setIsSending(true);
-    
+
     const userId = Date.now();
-    const sentImages = attachments.map(a => ({ url: a.url, name: a.name }));
-    
-    const newUserMessage = { 
-      sender: "user", 
-      text, 
-      images: sentImages.length > 0 ? sentImages : null, 
-      id: userId 
+
+    const newUserMessage = {
+      sender: "user",
+      text,
+      id: userId
     };
-    
+
     // Update messages immediately with user message
     setMessages(prev => {
       const updated = [...prev, newUserMessage];
@@ -409,11 +537,10 @@ const ChatInterface = ({
       saveConversationMemory(updated);
       return updated;
     });
-    
-    // Clear input and attachments immediately
-    setAttachments([]);
+
+    // Clear input immediately
     setInput("");
-    
+
     // Blur input to hide keyboard on mobile
     if (isMobile && inputRef.current) {
       inputRef.current.blur();
@@ -421,40 +548,14 @@ const ChatInterface = ({
     }
 
     try {
-      let responseText = "";
-      let finalPrompt = text;
-
-      // Handle image analysis
-      if (sentImages.length > 0) {
-        console.log("🖼️ Analyzing", sentImages.length, "images");
-        
-        // Analyze each image
-        const imageAnalyses = await Promise.all(
-          sentImages.map(async (img, index) => {
-            const analysis = await analyzeImage(img.url);
-            return `Image ${index + 1} (${img.name}): ${analysis}`;
-          })
-        );
-        
-        const imageContext = imageAnalyses.join('\n\n');
-        
-        if (!text) {
-          // Image-only message
-          finalPrompt = `Please analyze these images: ${imageContext}`;
-        } else {
-          // Text + images
-          finalPrompt = `${text}\n\nImages shared: ${imageContext}`;
-        }
-      }
-
       // Build conversation context from ALL previous messages
       const updatedMessages = [...messages, newUserMessage];
       const conversationContext = buildConversationContext(updatedMessages);
-      
+
       console.log("💾 Building AI response with full conversation context");
       console.log("📝 Context includes", updatedMessages.length - 1, "previous messages");
-      
-      responseText = await getAIResponse(finalPrompt, conversationContext, sentImages.length > 0);
+
+      const responseText = await getAIResponse(text, conversationContext, false);
 
       // Add AI response to messages
       setMessages(prev => {
@@ -463,12 +564,12 @@ const ChatInterface = ({
         saveConversationMemory(updated);
         return updated;
       });
-      
+
       // Success haptic feedback
       if (navigator.vibrate && isMobile) {
         navigator.vibrate([50, 50, 50]);
       }
-      
+
     } catch (err) {
       const errorMsg = "I'm having trouble connecting right now. Please try again in a moment.";
       setMessages(prev => {
@@ -476,20 +577,15 @@ const ChatInterface = ({
         saveConversationMemory(updated);
         return updated;
       });
-      
+
       // Error haptic feedback
       if (navigator.vibrate && isMobile) {
         navigator.vibrate([100, 50, 100]);
       }
     } finally {
       setIsSending(false);
-      
-      // Clean up attachment URLs
-      attachments.forEach(attachment => {
-        URL.revokeObjectURL(attachment.url);
-      });
     }
-  }, [input, isSending, isMobile, attachments, messages]);
+  }, [input, isSending, isMobile, messages]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback((e) => {
@@ -549,52 +645,72 @@ const ChatInterface = ({
   };
 
   return (
-    <div 
-      className="chat-area"
+    <div
+      className="chat-container"
       style={{
         fontSize: `${fontSize}rem`,
-        height: isMobile ? `${viewportHeight}px` : '100vh'
+        height: isMobile ? `${viewportHeight}px` : '100vh',
+        direction: language === 'ar' ? 'rtl' : 'ltr'
       }}
     >
-      <div className="chat-window">
-        {/* Memory Status Notification */}
-        <AnimatePresence>
-          {showMemoryStatus && (
-            <motion.div
-              style={{
-                position: 'fixed',
-                top: '20px',
-                right: '20px',
-                background: 'rgba(16, 185, 129, 0.9)',
-                color: 'white',
-                padding: '12px 16px',
-                borderRadius: '12px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                zIndex: 1001,
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-              }}
-              initial={{ opacity: 0, y: -20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            >
-              Previous conversation restored
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Floating Particles */}
+      <div className="floating-particles">
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className="particle"></div>
+        ))}
+      </div>
 
-        {/* Enhanced Header */}
-        <motion.header 
-          className="chat-header"
-          variants={headerVariants}
-          initial="hidden"
-          animate="visible"
+      {/* Memory Status Notification */}
+      <AnimatePresence>
+        {showMemoryStatus && (
+          <motion.div
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              background: 'rgba(16, 185, 129, 0.9)',
+              color: 'white',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              zIndex: 1001,
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+            }}
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+          >
+            {t.memoryRestored || "Previous conversation restored!"}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Professional Header */}
+      <motion.header
+        className="chat-header"
+        variants={headerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Assistant Title */}
+        <motion.div
+          className="assistant-title"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
-          {/* Voice Mode Button */}
+          <span className="title-main">
+            {assistantTitle || t.chatAssistant || "Chat Assistant"}
+          </span>
+        </motion.div>
+
+        {/* Header Actions */}
+        <div className="header-actions">
           {onSwitchMode && (
             <motion.button
-              className="header-button primary"
+              className="header-button"
               onClick={onSwitchMode}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
@@ -603,85 +719,82 @@ const ChatInterface = ({
               transition={{ delay: reducedMotion ? 0 : 0.2 }}
             >
               <span>🎤</span>
-              <span className="button-text">Voice Mode</span>
+              <span className="button-text">{t.voiceMode || "Voice"}</span>
             </motion.button>
           )}
 
-          {/* Assistant Title */}
-          <motion.div
-            className="assistant-title"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.4 }}
+          <motion.button
+            className="header-button"
+            onClick={handleClearConversation}
+            title="Clear conversation and memory"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: 30, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.25 }}
           >
-            <span className="title-main">
-              {assistantTitle}
-            </span>
-            <span className="title-sub">
-              AI Assistant • Memory Active
-            </span>
-          </motion.div>
+            <span>🗑️</span>
+            <span className="button-text">{t.clear || "Clear"}</span>
+          </motion.button>
 
-          {/* Clear Chat & Sign Out Buttons */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          {onSignOut && (
             <motion.button
-              className="header-button"
-              onClick={handleClearConversation}
-              title="Clear conversation and memory"
+              className="header-button danger"
+              onClick={onSignOut}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              initial={{ x: 30, opacity: 0 }}
+              initial={{ x: 50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: reducedMotion ? 0 : 0.25 }}
+              transition={{ delay: reducedMotion ? 0 : 0.3 }}
             >
-              <span>🗑️</span>
-              <span className="button-text">Clear</span>
+              <span>🚪</span>
+              <span className="button-text">{t.signOut || "Sign Out"}</span>
             </motion.button>
+          )}
+        </div>
+      </motion.header>
 
-            {onSignOut && (
-              <motion.button
-                className="header-button danger"
-                onClick={onSignOut}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: reducedMotion ? 0 : 0.3 }}
-              >
-                <span>🚪</span>
-                <span className="button-text">Sign Out</span>
-              </motion.button>
-            )}
-          </div>
-        </motion.header>
-
-        {/* Messages Container */}
-        <div 
-          className="chat-messages"
-          ref={messagesRef}
-          style={{
-            height: isMobile ? 
-              `calc(${viewportHeight}px - ${isLandscape ? '3.5rem' : '4rem'} - ${keyboardOpen ? '0px' : '140px'})` : 
-              'auto'
-          }}
-        >
-          <AnimatePresence mode="popLayout">
-            {messages.map((message, index) => (
+      {/* Messages Container */}
+      <div 
+        className="chat-messages"
+        ref={messagesRef}
+        style={{
+          height: isMobile ? 
+            `calc(${viewportHeight}px - ${isLandscape ? '3.5rem' : '4rem'} - ${keyboardOpen ? '0px' : '140px'})` : 
+            'auto'
+        }}
+      >
+        <AnimatePresence mode="popLayout">
+          {messages.map((message, index) => (
+            <motion.div
+              key={message.id}
+              className={`message-container ${message.sender}`}
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{
+                type: "spring",
+                stiffness: 200,
+                damping: 20,
+                duration: reducedMotion ? 0.1 : 0.4
+              }}
+              layout
+            >
+              {/* Message Avatar */}
               <motion.div
-                key={message.id}
-                className={`chat-bubble ${message.sender}`}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 20,
-                  duration: reducedMotion ? 0.1 : 0.4
-                }}
-                layout
-                whileHover={!reducedMotion ? { 
-                  y: -2, 
+                className="message-avatar"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: reducedMotion ? 0 : 0.2, type: "spring" }}
+              >
+                {message.sender === 'user' ? '👤' : '🤖'}
+              </motion.div>
+
+              {/* Message Bubble */}
+              <motion.div
+                className="chat-bubble"
+                whileHover={!reducedMotion ? {
+                  y: -2,
                   scale: 1.01,
                   transition: { duration: 0.2 }
                 } : {}}
@@ -691,246 +804,168 @@ const ChatInterface = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: reducedMotion ? 0 : 0.1 }}
                 >
-                  {message.text && (
-                    <div 
-                      style={{ marginBottom: message.images?.length ? '12px' : 0 }}
-                      dangerouslySetInnerHTML={{
-                        __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
-                      }}
-                    />
-                  )}
-                  {message.images && message.images.length > 0 && (
-                    <motion.div 
-                      style={{ 
-                        display: 'flex', 
-                        gap: '8px', 
-                        flexWrap: 'wrap',
-                        marginTop: '8px'
-                      }}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: reducedMotion ? 0 : 0.2 }}
-                    >
-                      {message.images.map((img, imgIndex) => (
-                        <motion.img 
-                          key={imgIndex}
-                          src={img.url} 
-                          alt={`${img.name || `attachment-${imgIndex}`}`}
-                          style={{ 
-                            width: '120px', 
-                            height: '90px', 
-                            objectFit: 'cover', 
-                            borderRadius: '8px',
-                            border: '1px solid rgba(209, 213, 219, 0.3)'
-                          }}
-                          whileHover={!reducedMotion ? { scale: 1.05 } : {}}
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: imgIndex * 0.1 }}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-                  
-                  {/* Message metadata */}
-                  {index > 0 && (
-                    <div style={{ 
-                      fontSize: '0.75rem', 
-                      opacity: 0.6, 
-                      marginTop: '8px', 
-                      textAlign: message.sender === 'user' ? 'right' : 'left'
-                    }}>
-                      {message.sender === 'gpt' ? 'AI Response' : 'You'} • {new Date(message.id).toLocaleTimeString()}
-                    </div>
-                  )}
+                {message.text && (
+                  <div 
+                    style={{ marginBottom: message.images?.length ? '12px' : 0 }}
+                    dangerouslySetInnerHTML={{
+                      __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
+                    }}
+                  />
+                )}
+                {message.images && message.images.length > 0 && (
+                  <motion.div 
+                    style={{ 
+                      display: 'flex', 
+                      gap: '8px', 
+                      flexWrap: 'wrap',
+                      marginTop: '8px'
+                    }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: reducedMotion ? 0 : 0.2 }}
+                  >
+                    {message.images.map((img, imgIndex) => (
+                      <motion.img 
+                        key={imgIndex}
+                        src={img.url} 
+                        alt={`${img.name || `attachment-${imgIndex}`}`}
+                        style={{ 
+                          width: '120px', 
+                          height: '90px', 
+                          objectFit: 'cover', 
+                          borderRadius: '8px',
+                          border: '1px solid rgba(209, 213, 219, 0.3)'
+                        }}
+                        whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: imgIndex * 0.1 }}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+                
+                {/* Message metadata */}
+                {index > 0 && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    opacity: 0.6,
+                    marginTop: '8px',
+                    textAlign: message.sender === 'user' ? 'right' : 'left'
+                  }}>
+                    {message.sender === 'gpt' ? 'AI Response' : 'You'} • {new Date(message.id).toLocaleTimeString()}
+                  </div>
+                )}
                 </motion.div>
               </motion.div>
-            ))}
-          </AnimatePresence>
-          <div ref={bottomRef} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Scroll Indicator */}
+      <AnimatePresence>
+        {isMobile && showScrollIndicator && (
+          <motion.div
+            className="scroll-indicator"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => scrollToBottom(true)}
+            whileTap={{ scale: 0.9 }}
+            whileHover={!reducedMotion ? { scale: 1.1, y: -2 } : {}}
+            style={{
+              bottom: keyboardOpen ? '140px' : '120px'
+            }}
+          >
+            ↓
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Professional Input Area */}
+      <motion.div
+        className="chat-input-area"
+        variants={inputVariants}
+        initial="hidden"
+        animate="visible"
+      >
+
+
+        <div className="input-container">
+          <motion.textarea
+            ref={inputRef}
+            className="chat-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            placeholder={messages.length > 1 ?
+              (t.typeMessage && t.memoryActive ? `${t.typeMessage} (${t.memoryActive})` : "Type your message... (Memory active - I remember our conversation)") :
+              (t.typeMessage && t.memoryReady ? `${t.typeMessage} (${t.memoryReady})` : "Type your message... (Memory ready)")}
+            disabled={isSending}
+            rows={1}
+            style={{
+              fontSize: isMobile ? 'max(16px, 1rem)' : '1rem',
+              fontFamily: 'var(--font-family)'
+            }}
+            whileFocus={!reducedMotion ? { 
+              scale: 1.01,
+              transition: { duration: 0.2 }
+            } : {}}
+          />
         </div>
 
-        {/* Scroll Indicator */}
-        <AnimatePresence>
-          {isMobile && showScrollIndicator && (
-            <motion.div
-              className="scroll-indicator"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              onClick={() => scrollToBottom(true)}
-              whileTap={{ scale: 0.9 }}
-              whileHover={!reducedMotion ? { scale: 1.1, y: -2 } : {}}
-              style={{
-                bottom: keyboardOpen ? '140px' : '120px'
-              }}
-            >
-              ↓
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Enhanced Input Area */}
-        <motion.div 
-          className="chat-input-area"
-          variants={inputVariants}
-          initial="hidden"
-          animate="visible"
+        <motion.button
+          className="send-button"
+          onClick={handleSend}
+          disabled={isSending || !input.trim()}
+          whileHover={!isSending && input.trim() && !reducedMotion ? {
+            scale: 1.05,
+            y: -2,
+            transition: { duration: 0.2 }
+          } : {}}
+          whileTap={!isSending && input.trim() ? { 
+            scale: 0.95 
+          } : {}}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: reducedMotion ? 0 : 0.5 }}
         >
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              if (e.target.files?.length) {
-                handleFiles(e.target.files);
-              }
-            }}
-          />
-
-          {/* Enhanced Attachment Preview */}
-          <AnimatePresence>
-            {attachments.length > 0 && (
-              <motion.div 
-                className="attachment-preview"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: reducedMotion ? 0.1 : 0.3 }}
+          <AnimatePresence mode="wait">
+            {isSending ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >
-                {attachments.map((attachment, index) => (
-                  <motion.div 
-                    key={attachment.id} 
-                    className="attachment-item"
-                    initial={{ scale: 0, rotate: -90 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0, rotate: 90 }}
-                    transition={{ 
-                      delay: index * 0.1,
-                      duration: reducedMotion ? 0.1 : 0.3,
-                      type: "spring",
-                      stiffness: 200
-                    }}
-                    whileHover={!reducedMotion ? { 
-                      scale: 1.05, 
-                      rotate: 1,
-                      transition: { duration: 0.2 }
-                    } : {}}
-                  >
-                    <img src={attachment.url} alt={attachment.name} />
-                    <motion.button
-                      className="remove-attachment"
-                      onClick={() => removeAttachment(attachment.id)}
-                      title="Remove attachment"
-                      whileHover={!reducedMotion ? { 
-                        scale: 1.1, 
-                        rotate: 90,
-                        transition: { duration: 0.2 }
-                      } : {}}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      ×
-                    </motion.button>
-                  </motion.div>
-                ))}
+                <div className="loading-dots">
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                </div>
+                <span>{t.sending || "Sending..."}</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="send"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <span>✈️</span>
+                <span>{t.send || "Send"}</span>
               </motion.div>
             )}
           </AnimatePresence>
-
-          <div className="input-container">
-            <motion.textarea
-              ref={inputRef}
-              className="chat-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              placeholder={`Type your message... (Memory active)`}
-              disabled={isSending}
-              rows={1}
-              style={{
-                fontSize: isMobile ? 'max(16px, 1rem)' : '1rem',
-                fontFamily: 'var(--font-family)'
-              }}
-              whileFocus={!reducedMotion ? { 
-                scale: 1.01,
-                transition: { duration: 0.2 }
-              } : {}}
-            />
-          </div>
-
-          <div className="input-actions">
-            <motion.button
-              className="action-button"
-              onClick={() => fileInputRef.current?.click()}
-              title="Attach image for analysis"
-              type="button"
-              whileHover={!reducedMotion ? { 
-                scale: 1.05, 
-                y: -2,
-                transition: { duration: 0.2 }
-              } : {}}
-              whileTap={{ scale: 0.95 }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: reducedMotion ? 0 : 0.4 }}
-            >
-              📷
-            </motion.button>
-
-            <motion.button
-              className="send-button"
-              onClick={handleSend}
-              disabled={isSending || (!input.trim() && attachments.length === 0)}
-              whileHover={!isSending && (input.trim() || attachments.length > 0) && !reducedMotion ? { 
-                scale: 1.05, 
-                y: -2,
-                transition: { duration: 0.2 }
-              } : {}}
-              whileTap={!isSending && (input.trim() || attachments.length > 0) ? { 
-                scale: 0.95 
-              } : {}}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: reducedMotion ? 0 : 0.5 }}
-            >
-              <AnimatePresence mode="wait">
-                {isSending ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <div className="loading-dots">
-                      <div className="dot"></div>
-                      <div className="dot"></div>
-                      <div className="dot"></div>
-                    </div>
-                    <span>Sending...</span>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="send"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <span>✈️</span>
-                    <span>Send</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
+        </motion.button>
+      </motion.div>
     </div>
   );
 };

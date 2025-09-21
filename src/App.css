@@ -342,6 +342,28 @@ body {
   color: #ffffff;
 }
 
+/* Dyslexia Support - Heavy Font Weight */
+.dyslexia-friendly {
+  font-weight: 700 !important;
+}
+
+.dyslexia-friendly * {
+  font-weight: 700 !important;
+}
+
+.dyslexia-friendly input,
+.dyslexia-friendly textarea,
+.dyslexia-friendly button,
+.dyslexia-friendly select,
+.dyslexia-friendly .message-text,
+.dyslexia-friendly .chat-input,
+.dyslexia-friendly .send-button,
+.dyslexia-friendly .placeholder,
+.dyslexia-friendly .mode-switcher button,
+.dyslexia-friendly .dock-btn {
+  font-weight: 700 !important;
+}
+
 .high-contrast .mode-switcher button,
 .high-contrast .dock-btn {
   background: rgba(0, 0, 0, 0.8);

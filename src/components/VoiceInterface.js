@@ -114,47 +114,47 @@ const aiChat = async (prompt, ms = 30000) => {
 
 /** Enhanced mock AI for voice mode with memory-aware responses */
 const mockAI = (prompt, hasContext = false) => {
-  const userInput = prompt.split("Current voice input:").pop() || 
-                   prompt.split("Human:").pop() || 
+  const userInput = prompt.split("Current voice input:").pop() ||
+                   prompt.split("Human:").pop() ||
                    prompt;
   const cleanInput = userInput.trim().substring(0, 100);
-  
-  const contextNote = hasContext ? " I remember our voice conversation." : "";
-  
+
+  const contextNote = hasContext ? "\n• I remember our voice conversation" : "";
+
   const responses = [
-    `Regarding "${cleanInput}"...\n\nVoice mode is currently in demo. I can help you with questions and tasks, maintaining conversation history for better responses.${contextNote}`,
-    
-    `You mentioned: "${cleanInput}"\n\nThis is voice demonstration mode. I maintain our conversation history and provide clear responses optimized for speech.${contextNote}`,
-    
-    `About "${cleanInput}"...\n\nI'm in demo mode but can provide helpful voice responses. I remember our conversation for better continuity.${contextNote}`
+    `• Regarding "${cleanInput}"\n• Voice mode is currently in demo\n• I can help you with questions and tasks\n• Maintaining conversation history for better responses${contextNote}`,
+
+    `• You mentioned: "${cleanInput}"\n• This is voice demonstration mode\n• I maintain our conversation history\n• Providing clear responses optimized for speech${contextNote}`,
+
+    `• About "${cleanInput}"\n• I'm in demo mode but can provide helpful responses\n• I remember our conversation for better continuity\n• Ready to assist with your questions${contextNote}`
   ];
-  
+
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
 /** Enhanced AI response handler for voice mode with full memory */
 const getVoiceAIResponse = async (prompt, conversationContext = "") => {
   const ready = await waitForPuter(3000);
-  
-  // Add conversation context to the prompt if available
-  const enhancedPrompt = conversationContext 
-    ? prompt + conversationContext 
+
+  // Add conversation context to the prompt
+  const enhancedPrompt = conversationContext
+    ? prompt + conversationContext
     : prompt;
-  
-  console.log("💾 [Voice] Using enhanced prompt with memory context");
-  
+
+  console.log("💾 [Voice] Using enhanced prompt with memory context and bullet point formatting");
+
   if (!ready) {
     console.log("🔄 [Voice] Using mock AI response");
     return mockAI(enhancedPrompt, !!conversationContext);
   }
-  
+
   try {
     const rawResponse = await aiChat(enhancedPrompt, 30000);
     console.log("✅ [Voice] Enhanced response ready:", rawResponse.substring(0, 100) + "...");
     return rawResponse;
   } catch (err) {
     console.warn("[VoiceInterface] AI error:", err);
-    return "I'm having trouble connecting right now. Please try speaking again in a moment.";
+    return "• I'm having trouble connecting right now\n• Please try speaking again in a moment";
   }
 };
 
@@ -177,7 +177,7 @@ export default function VoiceInterface({
   onSignOut
 }) {
 
-  const assistantTitle = "Chat Assistant";
+  const assistantTitle = t.voiceAssistant || "Voice Assistant";
 
   console.log("🎯 [Voice] VoiceInterface initialized with enhanced memory");
 
@@ -191,7 +191,7 @@ export default function VoiceInterface({
     }
     return [{
       sender: "gpt",
-      text: "Hello! I'm your Chat Assistant in voice mode. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
+      text: t.voiceWelcomeMessage || "• Hello! I'm your Chat Assistant in voice mode\n• I can help you with questions and provide information\n• I assist with various tasks\n• Speak whenever you're ready!\n• I'll remember our conversation",
       id: Date.now()
     }];
   });
@@ -357,11 +357,14 @@ export default function VoiceInterface({
         // Build conversation context from ALL previous messages
         const updatedMessages = [...messages, newUserMessage];
         const conversationContext = buildVoiceContext(updatedMessages);
-        
+
         console.log("💾 [Voice] Enhanced prompt with full memory created");
         console.log("📝 [Voice] Context includes", updatedMessages.length - 1, "previous messages");
 
-        const rawResponse = await getVoiceAIResponse(text, conversationContext);
+        // Add bullet point instruction directly to the user's text
+        const bulletFormattedText = `${text}\n\nIMPORTANT: Please format your response using bullet points. Start each main point with • and use clear, concise bullet points throughout your response.`;
+
+        const rawResponse = await getVoiceAIResponse(bulletFormattedText, conversationContext);
         
         setMessages((m) => {
           const updated = [...m, { sender: "gpt", text: rawResponse, id: Date.now() + 1 }];
@@ -405,9 +408,12 @@ export default function VoiceInterface({
     // Enhanced text cleaning for better speech
     let cleanText = text
       .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
-      .replace(/[📋🎯✨💾🌈💨⚠️⚙️🎤🗣️🔊🔇📝✅🔄💭]/g, '') // Remove emojis
-      .replace(/•/g, '') // Remove bullet points for speech
+      .replace(/[📋🎯✨💾🌈💨⚠️⚙️🎤🗣️🔊🔇📝✅🔄💭🧠]/g, '') // Remove emojis including brain
+      .replace(/• /g, '') // Remove bullet points for speech
+      .replace(/•/g, '') // Remove any remaining bullet points
       .replace(/\n+/g, '. ') // Replace line breaks with pauses
+      .replace(/\. \. /g, '. ') // Clean up double periods
+      .replace(/DYSLEXIA-FRIENDLY RESPONSE:/gi, '') // Remove dyslexia response headers
       .replace(/Memory status:[^.]+\./g, '') // Remove memory status lines
       .replace(/Voice system status:[^.]+\./g, '') // Remove system status
       .replace(/\(I remember [^)]+\)/g, '') // Remove memory notes in parentheses
@@ -464,7 +470,7 @@ export default function VoiceInterface({
     clearVoiceMemory();
     setMessages([{
       sender: "gpt",
-      text: "Hello! I'm your Chat Assistant in voice mode. I can help you with questions, provide information, and assist with various tasks. Speak whenever you're ready! I'll remember our conversation.",
+      text: t.voiceWelcomeMessage || "• Hello! I'm your Chat Assistant in voice mode\n• I can help you with questions and provide information\n• I assist with various tasks\n• Speak whenever you're ready!\n• I'll remember our conversation",
       id: Date.now()
     }]);
   };
@@ -530,6 +536,13 @@ export default function VoiceInterface({
       animate={{ opacity: 1 }}
       transition={{ duration: reducedMotion ? 0 : 0.6 }}
     >
+      {/* Floating Particles */}
+      <div className="floating-particles">
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className="particle"></div>
+        ))}
+      </div>
+
       {/* Memory Status Notification */}
       <AnimatePresence>
         {showMemoryStatus && (
@@ -576,7 +589,7 @@ export default function VoiceInterface({
             transition={{ delay: reducedMotion ? 0 : 0.2 }}
           >
             <span>💬</span>
-            <span className="button-text">Text Mode</span>
+            <span className="button-text">{t.textMode || "Text Mode"}</span>
           </motion.button>
         )}
 
@@ -589,9 +602,6 @@ export default function VoiceInterface({
         >
           <span className="title-main">
             {assistantTitle}
-          </span>
-          <span className="title-sub">
-            Voice Mode • Memory Active
           </span>
         </motion.div>
 
@@ -608,7 +618,7 @@ export default function VoiceInterface({
             transition={{ delay: reducedMotion ? 0 : 0.25 }}
           >
             <span>🗑️</span>
-            <span className="button-text">Clear</span>
+            <span className="button-text">{t.clear || "Clear"}</span>
           </motion.button>
 
           {onSignOut && (
@@ -622,7 +632,7 @@ export default function VoiceInterface({
               transition={{ delay: reducedMotion ? 0 : 0.3 }}
             >
               <span>🚪</span>
-              <span className="button-text">Sign Out</span>
+              <span className="button-text">{t.signOut || "Sign Out"}</span>
             </motion.button>
           )}
         </div>
@@ -657,7 +667,7 @@ export default function VoiceInterface({
             whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
           >
             <span>{isListening ? "🎤" : "🗣️"}</span>
-            <span>{isListening ? "Listening..." : "Speak"}</span>
+            <span>{isListening ? (t.listening || "Listening...") : (t.speak || "Speak")}</span>
           </motion.button>
 
           <AnimatePresence>
@@ -671,7 +681,7 @@ export default function VoiceInterface({
                 whileHover={!reducedMotion ? { scale: 1.05 } : {}}
                 whileTap={{ scale: 0.95 }}
               >
-                🔇 Stop
+{t.stopSpeaking || "🔇 Stop"}
               </motion.button>
             )}
           </AnimatePresence>
@@ -682,7 +692,7 @@ export default function VoiceInterface({
             whileHover={!reducedMotion ? { scale: 1.05 } : {}}
             whileTap={{ scale: 0.95 }}
           >
-            ⚙️ Settings
+{t.settings || "⚙️ Settings"}
           </motion.button>
         </motion.div>
 
@@ -697,7 +707,7 @@ export default function VoiceInterface({
               transition={{ duration: reducedMotion ? 0.1 : 0.3 }}
             >
               <div className="setting-group">
-                <label>Voice Speed: {localSpeed.toFixed(1)}x</label>
+                <label>{t.speed || "Speed"}: {localSpeed.toFixed(1)}x</label>
                 <input
                   type="range"
                   min="0.5"
@@ -713,7 +723,7 @@ export default function VoiceInterface({
               </div>
               
               <div className="setting-group">
-                <label>Voice Pitch: {localPitch.toFixed(1)}</label>
+                <label>{t.pitch || "Pitch"}: {localPitch.toFixed(1)}</label>
                 <input
                   type="range"
                   min="0.5"
@@ -729,7 +739,7 @@ export default function VoiceInterface({
               </div>
               
               <div className="setting-group">
-                <label>Voice</label>
+                <label>{t.voice || "Voice"}</label>
                 <select
                   value={localVoice}
                   onChange={(e) => {
@@ -751,7 +761,7 @@ export default function VoiceInterface({
                 whileHover={!reducedMotion ? { scale: 1.02, y: -2 } : {}}
                 whileTap={{ scale: 0.98 }}
               >
-                🔊 Test Voice
+{t.testVoice || "🔊 Test Voice"}
               </motion.button>
             </motion.div>
           )}
@@ -766,7 +776,7 @@ export default function VoiceInterface({
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
         >
           <div className="log-header">
-            <h3>Voice History • Memory Active</h3>
+            <h3>{t.voiceHistory || "Voice History"}</h3>
             <div className="log-controls">
               <motion.button
                 className="clear-btn"
@@ -775,7 +785,7 @@ export default function VoiceInterface({
                 whileHover={!reducedMotion ? { scale: 1.05 } : {}}
                 whileTap={{ scale: 0.95 }}
               >
-                Clear All
+{t.clearAll || "Clear All"}
               </motion.button>
             </div>
           </div>
@@ -789,11 +799,11 @@ export default function VoiceInterface({
                 transition={{ duration: reducedMotion ? 0.1 : 0.4 }}
               >
                 <div className="empty-icon">🎤</div>
-                <h3>Ready for voice chat with memory!</h3>
+                <h3>{t.readyForVoiceChat || "Ready for voice chat with memory!"}</h3>
                 <p>
-                  Press "Speak" to start a conversation.
+                  {t.pressSpeak || 'Press "Speak" to start a conversation.'}
                   <br />
-                  Your responses will be optimized for voice interaction and I'll remember our conversation history.
+                  {t.responsesOptimized || "Your responses will be optimized for voice interaction and I'll remember our conversation history."}
                 </p>
               </motion.div>
             ) : (
@@ -816,8 +826,8 @@ export default function VoiceInterface({
                       {m.sender === "user" ? "👤" : m.sender === "gpt" ? "💭" : "⚙️"}
                     </span>
                     <span className="sender-name">
-                      {m.sender === "user" ? "You" : 
-                       m.sender === "gpt" ? "AI Response" : 
+                      {m.sender === "user" ? (t.you || "You") :
+                       m.sender === "gpt" ? (t.aiResponse || "AI Response") :
                        "System"}
                     </span>
                     {typeof m.confidence === "number" && (
@@ -875,14 +885,14 @@ export default function VoiceInterface({
             isSpeaking ? 'speaking' : 'idle'
           }`}
           title={
-            isListening ? "Listening - Memory Active" : 
-            isSpeaking ? "Speaking" : 
-            "Idle - Ready with Memory"
+            isListening ? (t.listening || "Listening") :
+            isSpeaking ? (t.speaking || "Speaking") :
+            "Ready"
           }
           aria-label={
-            isListening ? "Listening with memory active" : 
-            isSpeaking ? "Speaking" : 
-            "Idle and ready with conversation memory"
+            isListening ? (t.listening || "Listening") :
+            isSpeaking ? (t.speaking || "Speaking") :
+            "Ready"
           }
           initial={{ scale: 0.95, opacity: 0.9 }}
           animate={{ 

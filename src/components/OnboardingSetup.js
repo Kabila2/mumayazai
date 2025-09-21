@@ -2,34 +2,34 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const OnboardingSetup = ({ 
-  defaultDisability = "dyslexia", 
-  defaultLanguage = "en", 
-  onComplete, 
-  onCancel 
+const OnboardingSetup = ({
+  defaultLanguage = "en",
+  onComplete,
+  onCancel
 }) => {
-  const [disability, setDisability] = useState(defaultDisability);
   const [language, setLanguage] = useState(defaultLanguage);
   const [error, setError] = useState("");
 
+  // Set initial direction on component mount
+  React.useEffect(() => {
+    document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = language;
+  }, [language]);
+
   const handleSubmit = () => {
-    if (!disability || !language) {
-      setError("Please select both options.");
+    if (!language) {
+      setError("Please select a language.");
       return;
     }
     setError("");
+    // Auto-set disability preference based on language
+    const disability = language === "ar" ? "default" : "default";
     onComplete({ disability, lang: language });
   };
 
-  const disabilityOptions = [
-    { value: "dyslexia", label: "Dyslexia", icon: "💚", description: "Clear formatting, simple language" },
-    { value: "adhd", label: "ADHD", icon: "🧠", description: "Focused, bite-sized responses" },
-    { value: "autism", label: "Autism", icon: "🌈", description: "Direct, literal communication" }
-  ];
-
   const languageOptions = [
-    { value: "en", label: "English", flag: "🇺🇸" },
-    { value: "ar", label: "العربية", flag: "🇸🇦" }
+    { value: "en", label: "English", flag: "EN" },
+    { value: "ar", label: "العربية", flag: "AR" }
   ];
 
   return (
@@ -125,14 +125,17 @@ const OnboardingSetup = ({
           background: "rgba(255, 255, 255, 0.95)",
           backdropFilter: "blur(20px)",
           borderRadius: "24px",
-          padding: "2rem",
-          width: "90%",
+          padding: window.innerWidth <= 480 ? "1.5rem" : "2rem",
+          width: "95%",
           maxWidth: "500px",
+          minHeight: window.innerWidth <= 480 ? "auto" : "auto",
           color: "#333333",
           boxShadow: "0 25px 50px rgba(0, 0, 0, 0.3)",
           border: "1px solid rgba(255, 255, 255, 0.3)",
           position: "relative",
-          zIndex: 10
+          zIndex: 10,
+          direction: language === "ar" ? "rtl" : "ltr",
+          margin: window.innerWidth <= 480 ? "1rem" : "2rem"
         }}
         initial={{ opacity: 0, y: 50, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -145,135 +148,67 @@ const OnboardingSetup = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <h2 style={{ 
-            margin: "0 0 0.5rem 0", 
-            fontSize: "1.8rem", 
+          <h2 style={{
+            margin: "0 0 0.5rem 0",
+            fontSize: window.innerWidth <= 480 ? "1.5rem" : "1.8rem",
             fontWeight: "700",
             background: "linear-gradient(135deg, #667eea, #764ba2)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            backgroundClip: "text"
+            backgroundClip: "text",
+            lineHeight: "1.2"
           }}>
-            Welcome! Let's Set You Up
+            {language === "ar" ? "مرحباً! دعنا نعدك" : "Welcome! Let's Set You Up"}
           </h2>
-          <p style={{ 
-            margin: "0", 
-            color: "#666", 
-            fontSize: "1rem" 
+          <p style={{
+            margin: "0",
+            color: "#666",
+            fontSize: window.innerWidth <= 480 ? "0.9rem" : "1rem",
+            direction: language === "ar" ? "rtl" : "ltr",
+            lineHeight: "1.4"
           }}>
-            Choose your preferences for the best experience
+            {language === "ar" ? "اختر لغتك المفضلة للحصول على أفضل تجربة" : "Choose your preferred language for the best experience"}
           </p>
-        </motion.div>
-
-        {/* Disability Selection */}
-        <motion.div
-          style={{ marginBottom: "1.5rem" }}
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <label style={{ 
-            display: "block", 
-            marginBottom: "0.75rem", 
-            fontWeight: "600", 
-            fontSize: "1.1rem",
-            color: "#444"
-          }}>
-            Accessibility Support
-          </label>
-          <div style={{ display: "grid", gap: "0.75rem" }}>
-            {disabilityOptions.map((option) => (
-              <motion.div
-                key={option.value}
-                onClick={() => setDisability(option.value)}
-                style={{
-                  padding: "1rem",
-                  borderRadius: "16px",
-                  border: disability === option.value 
-                    ? "3px solid #667eea" 
-                    : "2px solid rgba(0, 0, 0, 0.1)",
-                  background: disability === option.value 
-                    ? "linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))"
-                    : "rgba(0, 0, 0, 0.02)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  transition: "all 0.3s ease",
-                  transform: disability === option.value ? "scale(1.02)" : "scale(1)"
-                }}
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div style={{ fontSize: "2rem" }}>{option.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ 
-                    fontWeight: "600", 
-                    fontSize: "1.1rem",
-                    color: disability === option.value ? "#667eea" : "#333"
-                  }}>
-                    {option.label}
-                  </div>
-                  <div style={{ 
-                    fontSize: "0.9rem", 
-                    color: "#666",
-                    marginTop: "0.25rem"
-                  }}>
-                    {option.description}
-                  </div>
-                </div>
-                {disability === option.value && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "50%",
-                      background: "#667eea",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                      fontSize: "0.8rem"
-                    }}
-                  >
-                    ✓
-                  </motion.div>
-                )}
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
 
         {/* Language Selection */}
         <motion.div
           style={{ marginBottom: "1.5rem" }}
-          initial={{ opacity: 0, x: 30 }}
+          initial={{ opacity: 0, x: language === "ar" ? -30 : 30 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <label style={{ 
-            display: "block", 
-            marginBottom: "0.75rem", 
-            fontWeight: "600", 
+          <label style={{
+            display: "block",
+            marginBottom: "0.75rem",
+            fontWeight: "600",
             fontSize: "1.1rem",
-            color: "#444"
+            color: "#444",
+            direction: language === "ar" ? "rtl" : "ltr"
           }}>
-            Preferred Language
+            {language === "ar" ? "اللغة المفضلة" : "Preferred Language"}
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: window.innerWidth <= 480 ? "1fr" : "1fr 1fr",
+            gap: "0.75rem"
+          }}>
             {languageOptions.map((option) => (
               <motion.div
                 key={option.value}
-                onClick={() => setLanguage(option.value)}
+                onClick={() => {
+                  setLanguage(option.value);
+                  // Update UI direction immediately when language changes
+                  document.documentElement.dir = option.value === "ar" ? "rtl" : "ltr";
+                  document.documentElement.lang = option.value;
+                }}
                 style={{
-                  padding: "1rem",
+                  padding: window.innerWidth <= 480 ? "1.25rem" : "1rem",
                   borderRadius: "16px",
-                  border: language === option.value 
-                    ? "3px solid #667eea" 
+                  border: language === option.value
+                    ? "3px solid #667eea"
                     : "2px solid rgba(0, 0, 0, 0.1)",
-                  background: language === option.value 
+                  background: language === option.value
                     ? "linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))"
                     : "rgba(0, 0, 0, 0.02)",
                   cursor: "pointer",
@@ -283,7 +218,8 @@ const OnboardingSetup = ({
                   gap: "0.5rem",
                   transition: "all 0.3s ease",
                   transform: language === option.value ? "scale(1.02)" : "scale(1)",
-                  textAlign: "center"
+                  textAlign: "center",
+                  minHeight: window.innerWidth <= 480 ? "100px" : "auto"
                 }}
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
@@ -337,17 +273,18 @@ const OnboardingSetup = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              {error}
+              {language === "ar" ? "يرجى اختيار لغة." : error}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Buttons */}
         <motion.div
-          style={{ 
-            display: "flex", 
-            gap: "1rem", 
-            justifyContent: "space-between"
+          style={{
+            display: "flex",
+            gap: window.innerWidth <= 480 ? "0.75rem" : "1rem",
+            justifyContent: "space-between",
+            flexDirection: window.innerWidth <= 480 ? "column" : "row"
           }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -357,16 +294,17 @@ const OnboardingSetup = ({
             <motion.button
               onClick={onCancel}
               style={{
-                padding: "0.75rem 1.5rem",
+                padding: window.innerWidth <= 480 ? "1rem 1.5rem" : "0.75rem 1.5rem",
                 borderRadius: "12px",
                 border: "2px solid rgba(0, 0, 0, 0.1)",
                 background: "transparent",
                 color: "#666",
                 cursor: "pointer",
                 fontWeight: "600",
-                fontSize: "1rem",
+                fontSize: window.innerWidth <= 480 ? "1.1rem" : "1rem",
                 transition: "all 0.3s ease",
-                flex: 1
+                flex: window.innerWidth <= 480 ? "none" : 1,
+                minHeight: window.innerWidth <= 480 ? "50px" : "auto"
               }}
               whileHover={{ 
                 scale: 1.02, 
@@ -375,24 +313,25 @@ const OnboardingSetup = ({
               }}
               whileTap={{ scale: 0.98 }}
             >
-              Cancel
+              {language === "ar" ? "إلغاء" : "Cancel"}
             </motion.button>
           )}
           
           <motion.button
             onClick={handleSubmit}
             style={{
-              padding: "0.75rem 2rem",
+              padding: window.innerWidth <= 480 ? "1rem 2rem" : "0.75rem 2rem",
               borderRadius: "12px",
               border: "none",
               background: "linear-gradient(135deg, #667eea, #764ba2)",
               color: "white",
               cursor: "pointer",
               fontWeight: "700",
-              fontSize: "1rem",
+              fontSize: window.innerWidth <= 480 ? "1.1rem" : "1rem",
               boxShadow: "0 8px 25px rgba(102, 126, 234, 0.4)",
               transition: "all 0.3s ease",
-              flex: 2
+              flex: window.innerWidth <= 480 ? "none" : 2,
+              minHeight: window.innerWidth <= 480 ? "50px" : "auto"
             }}
             whileHover={{ 
               scale: 1.05, 
@@ -401,7 +340,7 @@ const OnboardingSetup = ({
             }}
             whileTap={{ scale: 0.95 }}
           >
-            Continue
+            {language === "ar" ? "متابعة" : "Continue"}
           </motion.button>
         </motion.div>
       </motion.div>

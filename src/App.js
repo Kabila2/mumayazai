@@ -25,9 +25,9 @@ function openSession(email) { localStorage.setItem(SESSION_KEY, JSON.stringify({
 function closeSession() { localStorage.removeItem(SESSION_KEY); }
 function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
-// Universal assistant title
-function getAssistantTitle() {
-  return "Chat Assistant";
+// Universal assistant title - now uses translations
+function getAssistantTitle(t) {
+  return t.chatAssistant || "Chat Assistant";
 }
 
 // Get current preference with fallback
@@ -74,20 +74,21 @@ export default function App() {
   const [reducedMotion, setReducedMotion] = useState(false);
 
   // ---------- Assistant title (universal) ----------
-  const [assistantTitle, setAssistantTitle] = useState(getAssistantTitle());
+  const [assistantTitle, setAssistantTitle] = useState(getAssistantTitle(t));
 
   // Reflect UI dir/lang on <html>
   useEffect(() => {
     document.documentElement.lang = appLanguage;
     document.documentElement.dir = appLanguage === "ar" ? "rtl" : "ltr";
-  }, [appLanguage]);
+    setAssistantTitle(getAssistantTitle(t));
+  }, [appLanguage, t]);
 
   // Initialize defaults and sync preference
   useEffect(() => {
     const preference = getCurrentPreference();
     setCurrentPreference(preference);
-    setAssistantTitle(getAssistantTitle());
-    
+    setAssistantTitle(getAssistantTitle(t));
+
     // Load accessibility preferences
     const hc = localStorage.getItem("high-contrast");
     const fs = localStorage.getItem("font-size");
@@ -99,8 +100,8 @@ export default function App() {
 
   // Watch for preference changes and update title
   useEffect(() => {
-    setAssistantTitle(getAssistantTitle());
-  }, [currentPreference]);
+    setAssistantTitle(getAssistantTitle(t));
+  }, [currentPreference, t]);
 
   // Load voices
   useEffect(() => {
@@ -181,8 +182,8 @@ export default function App() {
     // Sync preference on login
     const preference = getCurrentPreference();
     setCurrentPreference(preference);
-    setAssistantTitle(getAssistantTitle());
-    
+    setAssistantTitle(getAssistantTitle(t));
+
     return { ok: true };
   };
 
@@ -194,7 +195,11 @@ export default function App() {
 
     // Update current preference state
     setCurrentPreference(disability);
-    setAssistantTitle(getAssistantTitle());
+    setAssistantTitle(getAssistantTitle(t));
+
+    // Ensure proper direction is set immediately
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
 
     if (pendingEmail) openSession(pendingEmail);
 
@@ -226,7 +231,6 @@ export default function App() {
   if (showSetup) {
     return (
       <OnboardingSetup
-        defaultDisability={getCurrentPreference()}
         defaultLanguage={localStorage.getItem(LANGUAGE_KEY) || "en"}
         onComplete={handleCompleteSetup}
         onCancel={() => { setShowSetup(false); setPendingEmail(null); }}
@@ -243,6 +247,8 @@ export default function App() {
         toMode={pendingMode}
         onTransitionComplete={handleTransitionComplete}
         reducedMotion={reducedMotion}
+        t={t}
+        language={appLanguage}
       >
         <div style={{ position: "relative", height: "100%" }}>
           {mode === "text" ? (
@@ -355,7 +361,7 @@ export default function App() {
 
   return (
     <div
-      className={`app-container ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""}`}
+      className={`app-container ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""} ${currentPreference === "dyslexia" ? "dyslexia-friendly" : ""}`}
       style={{ fontSize: `${fontSize}rem` }}
     >
       {content}

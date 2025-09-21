@@ -27,10 +27,8 @@ export default function VoiceSettings({
       <div className="control-group">
         <label>Disability</label>
         <select value={disability} onChange={e => setDisability(e.target.value)}>
-          <option value="none">None</option>
-          <option value="adhd">ADHD</option>
+          <option value="default">Default</option>
           <option value="dyslexia">Dyslexia</option>
-          <option value="autism">Autism</option>
           <option value="visual_impairment">Visual Impairment</option>
         </select>
       </div>

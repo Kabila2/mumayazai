@@ -4,10 +4,9 @@ export const translations = {
     chooseRole: "Are you a student or a parent?",
     student: "Student",
     parent: "Parent",
-    selectDisability: "Select your disability",
-    adhd: "ADHD",
-    autism: "Autism",
+    selectDisability: "Select your preference",
     dyslexia: "Dyslexia",
+    default: "Default",
     welcome: "Welcome to Mumayaz!",
     start: "Start",
     chooseSubject: "Choose a subject",
@@ -40,15 +39,44 @@ export const translations = {
     dyslexiaUI: "Dyslexia UI",
     resetProgress: "Reset",
     promptIntro: {
-      adhd:
-        "As an assistant tailored for children with ADHD, please respond clearly and simply",
-      autism:
-        "As an assistant supporting autistic learners, provide structured and predictable information",
       dyslexia:
         "As a dyslexia-friendly assistant, make your explanation easy to read and free from long paragraphs",
+      default:
+        "As an accessible assistant, provide clear and helpful responses",
     },
 
+    // ChatInterface keys
+    chatAssistant: "Chat Assistant",
+    voiceMode: "Voice Mode",
+    textMode: "Text Mode",
+    clear: "Clear",
+    signOut: "Sign Out",
+    typeMessage: "Type your message...",
+    memoryActive: "Memory active - I remember our conversation",
+    memoryReady: "Memory ready",
+    send: "Send",
+    sending: "Sending...",
+    attachImage: "Attach image for analysis",
+    welcomeMessage: "Hello! I'm your Chat Assistant\n• I can help you with questions and provide information\n• How can I help you today?",
+    memoryRestored: "Previous conversation restored!",
+
     // VoiceInterface keys
+    voiceAssistant: "Voice Assistant",
+    voiceMode: "Voice Mode",
+    memoryActive: "Memory Active",
+    textMode: "Text Mode",
+    listening: "Listening...",
+    stopSpeaking: "Stop",
+    voiceHistory: "Voice History",
+    clearAll: "Clear All",
+    voiceMemoryActive: "Voice History • Memory Active",
+    voiceConversationRestored: "Voice conversation restored",
+    readyForVoiceChat: "Ready for voice chat with memory!",
+    pressSpeak: "Press \"Speak\" to start a conversation.",
+    responsesOptimized: "Your responses will be optimized for voice interaction and I'll remember our conversation history.",
+    testVoice: "Test Voice",
+    aiResponse: "AI Response",
+    voiceWelcomeMessage: "• Hello! I'm your Chat Assistant in voice mode\n• I can help you with questions and provide information\n• I assist with various tasks\n• Speak whenever you're ready!\n• I'll remember our conversation",
     settings: "Settings",
     back: "Back",
     voice: "Voice",
@@ -57,19 +85,26 @@ export const translations = {
     test: "Test Voice",
     welcome_ai: "Welcome To Mumayaz AI",
     speak: "Speak",
-    listening: "Listening…",
     summary: "Summary",
     you: "You",
+
+    // Plane transition keys
+    launching: "Launching...",
+    warpingToVoice: "Warping to 🎤 Voice Mode",
+    warpingToText: "Warping to 💬 Text Mode",
+    welcomeAboard: "Welcome aboard!",
+
+    // Additional voice interface keys
+    speaking: "Speaking",
   },
   ar: {
     // Mumayaz UI keys
     chooseRole: "هل أنت طالب أم ولي أمر؟",
     student: "طالب",
     parent: "ولي الأمر",
-    selectDisability: "اختر نوع الإعاقة",
-    adhd: "فرط الحركة (ADHD)",
-    autism: "التوحد",
+    selectDisability: "اختر التفضيل",
     dyslexia: "عسر القراءة",
+    default: "افتراضي",
     welcome: "مرحبًا بك في مميز!",
     start: "ابدأ",
     chooseSubject: "اختر المادة",
@@ -102,15 +137,44 @@ export const translations = {
     dyslexiaUI: "واجهة لذوي عسر القراءة",
     resetProgress: "إعادة التعيين",
     promptIntro: {
-      adhd:
-        "كمساعد مخصص للأطفال ذوي فرط الحركة، يرجى الرد بوضوح وببساطة",
-      autism:
-        "كمساعد يدعم الأطفال المصابين بالتوحد، قدم معلومات منظمة وقابلة للتنبؤ",
       dyslexia:
         "كمساعد مناسب لعسر القراءة، اجعل الشرح سهل القراءة وخالٍ من الفقرات الطويلة",
+      default:
+        "كمساعد يمكن الوصول إليه، قدم ردود واضحة ومفيدة",
     },
 
+    // ChatInterface keys
+    chatAssistant: "مساعد المحادثة",
+    voiceMode: "الوضع الصوتي",
+    textMode: "الوضع النصي",
+    clear: "مسح",
+    signOut: "تسجيل الخروج",
+    typeMessage: "اكتب رسالتك...",
+    memoryActive: "الذاكرة نشطة - أتذكر محادثتنا",
+    memoryReady: "الذاكرة جاهزة",
+    send: "إرسال",
+    sending: "جاري الإرسال...",
+    attachImage: "إرفاق صورة للتحليل",
+    welcomeMessage: "مرحباً! أنا مساعد المحادثة الخاص بك\n• يمكنني مساعدتك في الأسئلة وتقديم المعلومات\n• كيف يمكنني مساعدتك اليوم؟",
+    memoryRestored: "تم استعادة المحادثة السابقة!",
+
     // VoiceInterface keys
+    voiceAssistant: "مساعد صوتي",
+    voiceMode: "الوضع الصوتي",
+    memoryActive: "الذاكرة نشطة",
+    textMode: "الوضع النصي",
+    listening: "جاري الاستماع...",
+    stopSpeaking: "إيقاف",
+    voiceHistory: "السجل الصوتي",
+    clearAll: "مسح الكل",
+    voiceMemoryActive: "السجل الصوتي • الذاكرة نشطة",
+    voiceConversationRestored: "تم استعادة المحادثة الصوتية",
+    readyForVoiceChat: "جاهز للمحادثة الصوتية مع الذاكرة!",
+    pressSpeak: 'اضغط على "تحدث" لبدء محادثة.',
+    responsesOptimized: "سيتم تحسين ردودك للتفاعل الصوتي وسأتذكر تاريخ محادثتنا.",
+    testVoice: "اختبار الصوت",
+    aiResponse: "رد الذكاء الاصطناعي",
+    voiceWelcomeMessage: "• مرحباً! أنا مساعد المحادثة في الوضع الصوتي\n• يمكنني مساعدتك في الأسئلة وتقديم المعلومات\n• أساعد في مهام مختلفة\n• تحدث عندما تكون جاهزاً!\n• سأتذكر محادثتنا",
     settings: "الإعدادات",
     back: "رجوع",
     voice: "الصوت",
@@ -119,8 +183,16 @@ export const translations = {
     test: "اختبار الصوت",
     welcome_ai: "مرحبًا بك في Mumayaz AI",
     speak: "تحدث",
-    listening: "جاري الاستماع…",
     summary: "الملخص",
     you: "أنت",
+
+    // Plane transition keys
+    launching: "جاري الإطلاق...",
+    warpingToVoice: "الانتقال إلى الوضع الصوتي 🎤",
+    warpingToText: "الانتقال إلى الوضع النصي 💬",
+    welcomeAboard: "مرحباً بك على متن الطائرة!",
+
+    // Additional voice interface keys
+    speaking: "يتحدث",
   },
 };

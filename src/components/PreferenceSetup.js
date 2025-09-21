@@ -33,7 +33,7 @@ export default function PreferenceSetup({ onComplete }) {
       disability,
       tts: disability === "dyslexia",
       dyslexiaUI: disability === "dyslexia",
-      adhdMode: disability === "adhd",
+      adhdMode: false,
       role: role || "child"
     };
     Cookies.set("mumayaz_preferences", JSON.stringify(prefs), { expires: 7 });
@@ -73,9 +73,8 @@ export default function PreferenceSetup({ onComplete }) {
           }}
         >
           <option value="">--Select--</option>
-          <option value="adhd">ADHD</option>
           <option value="dyslexia">Dyslexia</option>
-          <option value="autism">Autism</option>
+          <option value="default">Default</option>
         </select>
       </motion.div>
 
