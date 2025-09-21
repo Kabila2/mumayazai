@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ChatInterface.css';
+import SaveChatModal from './SaveChatModal';
+import SavedChatsModal from './SavedChatsModal';
 
 /** ---------- Enhanced Memory System ---------- */
 const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
@@ -410,6 +412,8 @@ const ChatInterface = ({
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showMemoryStatus, setShowMemoryStatus] = useState(false);
+  const [showSaveChatModal, setShowSaveChatModal] = useState(false);
+  const [showSavedChatsModal, setShowSavedChatsModal] = useState(false);
   
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
@@ -614,6 +618,23 @@ const ChatInterface = ({
     setIsInputFocused(false);
   }, []);
 
+  // Save chat handlers
+  const handleSaveChat = useCallback(() => {
+    if (messages.length > 1) { // Only save if there are actual messages beyond the welcome
+      setShowSaveChatModal(true);
+    }
+  }, [messages.length]);
+
+  const handleViewSavedChats = useCallback(() => {
+    setShowSavedChatsModal(true);
+  }, []);
+
+  const handleLoadSavedChat = useCallback((savedMessages) => {
+    setMessages(savedMessages);
+    saveConversationMemory(savedMessages);
+    setShowSavedChatsModal(false);
+  }, []);
+
   // Animation variants
   const headerVariants = {
     hidden: { y: -80, opacity: 0 },
@@ -659,6 +680,9 @@ const ChatInterface = ({
           <div key={i} className="particle"></div>
         ))}
       </div>
+
+      {/* Shimmer Effect */}
+      <div className="chat-shimmer"></div>
 
       {/* Memory Status Notification */}
       <AnimatePresence>
@@ -725,13 +749,42 @@ const ChatInterface = ({
 
           <motion.button
             className="header-button"
+            onClick={handleSaveChat}
+            disabled={messages.length <= 1}
+            title="Save current chat"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.22 }}
+          >
+            <span>💾</span>
+            <span className="button-text">{t.saveChat || "Save"}</span>
+          </motion.button>
+
+          <motion.button
+            className="header-button"
+            onClick={handleViewSavedChats}
+            title="View saved chats"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: 10, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.24 }}
+          >
+            <span>📚</span>
+            <span className="button-text">{t.savedChats || "Saved"}</span>
+          </motion.button>
+
+          <motion.button
+            className="header-button"
             onClick={handleClearConversation}
             title="Clear conversation and memory"
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             initial={{ x: 30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.25 }}
+            transition={{ delay: reducedMotion ? 0 : 0.26 }}
           >
             <span>🗑️</span>
             <span className="button-text">{t.clear || "Clear"}</span>
@@ -966,6 +1019,20 @@ const ChatInterface = ({
           </AnimatePresence>
         </motion.button>
       </motion.div>
+
+      {/* Save Chat Modal */}
+      <SaveChatModal
+        isOpen={showSaveChatModal}
+        onClose={() => setShowSaveChatModal(false)}
+        messages={messages}
+      />
+
+      {/* Saved Chats Modal */}
+      <SavedChatsModal
+        isOpen={showSavedChatsModal}
+        onClose={() => setShowSavedChatsModal(false)}
+        onLoadChat={handleLoadSavedChat}
+      />
     </div>
   );
 };
