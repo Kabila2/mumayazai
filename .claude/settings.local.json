@@ -1,17 +1,24 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(npm run lint)",
-      "Bash(npm run:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(rm:*)",
-      "Bash(npm start)",
-      "Bash(PORT=3001 npm start)",
-      "Bash(npx eslint:*)"
-    ],
-    "deny": [],
-    "ask": []
+ {
+    "permissions": {
+      "allow": [
+        "Bash(npm run lint)",
+        "Bash(npm run:*)",
+        "Bash(git add:*)",
+        "Bash(git commit:*)",
+        "Bash(git push:*)",
+        "Bash(rm:*)",
+        "Bash(npm start)",
+        "Bash(PORT=3001 npm start)",
+        "Bash(npx eslint:*)",
+        "Bash(node:*)",
+        "Read(*)",
+        "Write(*)",
+        "Edit(*)",
+        "MultiEdit(*)",
+        "Glob(*)",
+        "Grep(*)"
+      ],
+      "deny": [],
+      "ask": []
+    }
   }
-}

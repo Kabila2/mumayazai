@@ -1,6 +1,8 @@
 /* Professional App.css - Modern, Accessible Application Layout */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
 
 :root {
   /* Professional Color System */
@@ -30,6 +32,7 @@
   
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-dyslexia: 'Atkinson Hyperlegible', 'Comic Neue', 'Verdana', sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
@@ -37,7 +40,10 @@
   --font-size-2xl: 1.5rem;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.6;
+  --line-height-loose: 1.8;
   --letter-spacing: -0.025em;
+  --letter-spacing-wide: 0.05em;
+  --word-spacing-wide: 0.16em;
   
   /* Spacing */
   --space-2: 0.5rem;
@@ -106,7 +112,59 @@ body {
   background: var(--bg-gradient);
   font-family: var(--font-family);
   overflow: hidden;
-  
+}
+
+/* Dyslexia-Friendly Global Styles */
+.app-container.dyslexia-friendly {
+  font-family: var(--font-family-dyslexia);
+  line-height: var(--line-height-loose);
+  letter-spacing: var(--letter-spacing-wide);
+  word-spacing: var(--word-spacing-wide);
+}
+
+.app-container.dyslexia-friendly * {
+  font-family: var(--font-family-dyslexia) !important;
+  line-height: var(--line-height-loose) !important;
+  letter-spacing: var(--letter-spacing-wide) !important;
+  word-spacing: var(--word-spacing-wide) !important;
+}
+
+.app-container.dyslexia-friendly button,
+.app-container.dyslexia-friendly input,
+.app-container.dyslexia-friendly textarea {
+  font-size: calc(var(--font-size-base) * 1.1) !important;
+  padding: calc(var(--space-3) * 1.2) calc(var(--space-4) * 1.2) !important;
+}
+
+.app-container.dyslexia-friendly h1,
+.app-container.dyslexia-friendly h2,
+.app-container.dyslexia-friendly h3 {
+  margin-bottom: var(--space-6) !important;
+  line-height: 1.4 !important;
+}
+
+/* High Contrast Global Styles */
+.app-container.high-contrast {
+  --bg-gradient: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+  color: #ffffff !important;
+}
+
+.app-container.high-contrast * {
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.app-container.high-contrast button {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+.app-container.high-contrast button:hover {
+  background: #333333 !important;
+}
+
+.app-container {
   /* Animated background overlay */
   &::before {
     content: '';

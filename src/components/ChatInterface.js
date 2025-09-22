@@ -4,6 +4,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import './ChatInterface.css';
 import SaveChatModal from './SaveChatModal';
 import SavedChatsModal from './SavedChatsModal';
+import LeaderboardModal from './LeaderboardModal';
+import {
+  isChildLinkedToParent,
+  startChildSession,
+  endChildSession,
+  updateChildSession,
+  isWithinAllowedHours,
+  hasExceededDailyLimit
+} from '../utils/parentTrackingUtils';
+import {
+  initializeUserStats,
+  recordMessage,
+  recordChatSession
+} from '../utils/leaderboardUtils';
 
 /** ---------- Enhanced Memory System ---------- */
 const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
@@ -388,7 +402,8 @@ const ChatInterface = ({
   t = {},
   language = "en",
   reducedMotion = false,
-  onSignOut
+  onSignOut,
+  currentPreference = "default"
 }) => {
   
   const { isMobile, isLandscape, keyboardOpen, viewportHeight } = useMobileDetection();
@@ -414,6 +429,16 @@ const ChatInterface = ({
   const [showMemoryStatus, setShowMemoryStatus] = useState(false);
   const [showSaveChatModal, setShowSaveChatModal] = useState(false);
   const [showSavedChatsModal, setShowSavedChatsModal] = useState(false);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [isChildLinked, setIsChildLinked] = useState(false);
+  const [sessionActive, setSessionActive] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
+
+  // Accessibility states
+  const [readingGuideActive, setReadingGuideActive] = useState(false);
+  const [customFontSize, setCustomFontSize] = useState(fontSize);
+  const [textToSpeechEnabled, setTextToSpeechEnabled] = useState(false);
+  const [showAccessibilityPanel, setShowAccessibilityPanel] = useState(false);
   
   const bottomRef = useRef(null);
   const messagesRef = useRef(null);
@@ -503,16 +528,90 @@ const ChatInterface = ({
     }
   }, []);
 
+  // Initialize child tracking
+  useEffect(() => {
+    const initChildTracking = () => {
+      try {
+        // Get user email from session
+        const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+        if (session.email) {
+          setUserEmail(session.email);
+
+          // Initialize user stats for leaderboard
+          const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+          const user = users[session.email.toLowerCase()];
+          if (user) {
+            initializeUserStats(session.email, user.name);
+          }
+
+          // Check if this child is linked to a parent
+          const linkInfo = isChildLinkedToParent(session.email);
+          if (linkInfo) {
+            setIsChildLinked(true);
+
+            // Check time restrictions
+            const withinHours = isWithinAllowedHours(session.email);
+            const exceedsLimit = hasExceededDailyLimit(session.email);
+
+            if (withinHours && !exceedsLimit) {
+              // Start session tracking
+              const result = startChildSession(session.email);
+              if (result.success) {
+                setSessionActive(true);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing child tracking:", error);
+      }
+    };
+
+    initChildTracking();
+
+    // End session on page unload
+    const handleBeforeUnload = () => {
+      if (sessionActive && userEmail) {
+        endChildSession(userEmail);
+      }
+      // Record chat session for leaderboard
+      if (userEmail && messages.length > 1) {
+        const userMessages = messages.filter(msg => msg.sender === "user").length;
+        recordChatSession(userEmail, 0, userMessages); // Duration will be calculated elsewhere
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (sessionActive && userEmail) {
+        endChildSession(userEmail);
+      }
+      // Record chat session for leaderboard on cleanup
+      if (userEmail && messages.length > 1) {
+        const userMessages = messages.filter(msg => msg.sender === "user").length;
+        recordChatSession(userEmail, 0, userMessages);
+      }
+    };
+  }, [sessionActive, userEmail, messages]);
+
 
   // Clear conversation and memory
   const handleClearConversation = useCallback(() => {
+    // Record chat session before clearing if there were messages
+    if (userEmail && messages.length > 1) {
+      const userMessages = messages.filter(msg => msg.sender === "user").length;
+      recordChatSession(userEmail, 0, userMessages);
+    }
+
     clearConversationMemory();
     setMessages([{
       sender: "gpt",
       text: t.welcomeMessage || "• Hello! I'm your Chat Assistant\n• I can help you with questions and provide information\n• How can I help you today?",
       id: Date.now()
     }]);
-  }, [t]);
+  }, [t, userEmail, messages]);
 
   // Enhanced send message handler
   const handleSend = useCallback(async () => {
@@ -542,6 +641,19 @@ const ChatInterface = ({
       return updated;
     });
 
+    // Track message for leaderboard
+    if (userEmail) {
+      recordMessage(userEmail);
+    }
+
+    // Track activity for child users
+    if (sessionActive && userEmail) {
+      updateChildSession(userEmail, {
+        type: 'message_sent',
+        content: text.substring(0, 100) // First 100 chars for topic analysis
+      });
+    }
+
     // Clear input immediately
     setInput("");
 
@@ -569,6 +681,14 @@ const ChatInterface = ({
         return updated;
       });
 
+      // Track chat completion for child users
+      if (sessionActive && userEmail) {
+        updateChildSession(userEmail, {
+          type: 'chat_completed',
+          responseLength: responseText.length
+        });
+      }
+
       // Success haptic feedback
       if (navigator.vibrate && isMobile) {
         navigator.vibrate([50, 50, 50]);
@@ -589,7 +709,7 @@ const ChatInterface = ({
     } finally {
       setIsSending(false);
     }
-  }, [input, isSending, isMobile, messages]);
+  }, [input, isSending, isMobile, messages, sessionActive, userEmail]);
 
   // Handle keyboard events
   const handleKeyDown = useCallback((e) => {
@@ -605,9 +725,9 @@ const ChatInterface = ({
     if (isMobile) {
       setTimeout(() => {
         if (inputRef.current) {
-          inputRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
+          inputRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
           });
         }
       }, 300);
@@ -616,6 +736,59 @@ const ChatInterface = ({
 
   const handleInputBlur = useCallback(() => {
     setIsInputFocused(false);
+  }, []);
+
+  // Text-to-speech functionality
+  const [currentSpeakingId, setCurrentSpeakingId] = useState(null);
+
+  const speakText = useCallback((text, messageId = null) => {
+    if (!textToSpeechEnabled || !window.speechSynthesis) return;
+
+    window.speechSynthesis.cancel();
+    setCurrentSpeakingId(null);
+
+    const cleanText = text.replace(/•/g, '').replace(/\n/g, ' ').replace(/\*/g, '');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.8;
+    utterance.pitch = 1;
+    utterance.volume = 0.8;
+    utterance.lang = language === 'ar' ? 'ar-SA' : 'en-US';
+
+    if (messageId) {
+      setCurrentSpeakingId(messageId);
+      utterance.onend = () => setCurrentSpeakingId(null);
+      utterance.onerror = () => setCurrentSpeakingId(null);
+    }
+
+    window.speechSynthesis.speak(utterance);
+  }, [textToSpeechEnabled, language]);
+
+  // Reading guide functionality
+  const handleMouseMove = useCallback((e) => {
+    if (!readingGuideActive) return;
+
+    const messagesContainer = messagesRef.current;
+    if (messagesContainer) {
+      const rect = messagesContainer.getBoundingClientRect();
+      const relativeY = e.clientY - rect.top;
+      messagesContainer.style.setProperty('--guide-position', `${relativeY}px`);
+    }
+  }, [readingGuideActive]);
+
+  // Toggle accessibility features
+  const toggleReadingGuide = useCallback(() => {
+    setReadingGuideActive(prev => !prev);
+  }, []);
+
+  const toggleTextToSpeech = useCallback(() => {
+    setTextToSpeechEnabled(prev => !prev);
+    if (textToSpeechEnabled) {
+      window.speechSynthesis?.cancel();
+    }
+  }, [textToSpeechEnabled]);
+
+  const adjustFontSize = useCallback((delta) => {
+    setCustomFontSize(prev => Math.max(0.8, Math.min(2.5, prev + delta)));
   }, []);
 
   // Save chat handlers
@@ -653,6 +826,7 @@ const ChatInterface = ({
     setShowSavedChatsModal(false);
   }, []);
 
+
   // Animation variants
   const headerVariants = {
     hidden: { y: -80, opacity: 0 },
@@ -683,15 +857,34 @@ const ChatInterface = ({
     }
   };
 
+  // Determine CSS classes for accessibility
+  const containerClasses = [
+    'chat-container',
+    currentPreference === 'dyslexia' ? 'dyslexia-friendly' : '',
+    highContrast ? 'high-contrast' : '',
+    readingGuideActive ? 'reading-guide active' : '',
+    reducedMotion ? 'reduced-motion' : ''
+  ].filter(Boolean).join(' ');
+
   return (
     <div
-      className="chat-container"
+      className={containerClasses}
       style={{
-        fontSize: `${fontSize}rem`,
+        fontSize: `${customFontSize}rem`,
         height: isMobile ? `${viewportHeight}px` : '100vh',
         direction: language === 'ar' ? 'rtl' : 'ltr'
       }}
+      onMouseMove={handleMouseMove}
+      role="main"
+      aria-label={t.chatInterface || "Chat Interface"}
     >
+      {/* Skip Navigation Links */}
+      <a href="#chat-messages" className="skip-link">
+        {t.skipToMessages || "Skip to messages"}
+      </a>
+      <a href="#chat-input" className="skip-link">
+        {t.skipToInput || "Skip to input"}
+      </a>
       {/* Floating Particles */}
       <div className="floating-particles">
         {[...Array(9)].map((_, i) => (
@@ -749,89 +942,261 @@ const ChatInterface = ({
         </motion.div>
 
         {/* Header Actions */}
-        <div className="header-actions">
-          {onSwitchMode && (
+        <div className="header-actions" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          {/* Left side - Mode buttons */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {onSignOut && (
+              <motion.button
+                className="header-button danger"
+                onClick={onSignOut}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ x: -60, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: reducedMotion ? 0 : 0.2 }}
+              >
+                <span>🚪</span>
+                <span className="button-text">{t.signOut || "Sign Out"}</span>
+              </motion.button>
+            )}
+
+            {onSwitchMode && (
+              <motion.button
+                className="header-button"
+                onClick={onSwitchMode}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ x: -30, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: reducedMotion ? 0 : 0.24 }}
+              >
+                <span>🎤</span>
+                <span className="button-text">{t.voiceMode || "Voice"}</span>
+              </motion.button>
+            )}
+          </div>
+
+          {/* Right side - Chat management buttons */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
             <motion.button
               className="header-button"
-              onClick={onSwitchMode}
+              onClick={() => setShowAccessibilityPanel(!showAccessibilityPanel)}
+              title="Accessibility options"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              initial={{ x: -50, opacity: 0 }}
+              initial={{ x: 10, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: reducedMotion ? 0 : 0.2 }}
+              transition={{ delay: reducedMotion ? 0 : 0.18 }}
             >
-              <span>🎤</span>
-              <span className="button-text">{t.voiceMode || "Voice"}</span>
+              <span>♿</span>
+              <span className="button-text">{t.accessibility || "A11y"}</span>
             </motion.button>
-          )}
 
-          <motion.button
-            className="header-button"
-            onClick={handleSaveChat}
-            disabled={messages.length <= 1}
-            title="Save current chat"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.22 }}
-          >
-            <span>💾</span>
-            <span className="button-text">{t.saveChat || "Save"}</span>
-          </motion.button>
-
-          <motion.button
-            className="header-button"
-            onClick={handleViewSavedChats}
-            title="View saved chats"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: 10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.24 }}
-          >
-            <span>📚</span>
-            <span className="button-text">{t.savedChats || "Saved"}</span>
-          </motion.button>
-
-          <motion.button
-            className="header-button"
-            onClick={handleClearConversation}
-            title="Clear conversation and memory"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.26 }}
-          >
-            <span>🗑️</span>
-            <span className="button-text">{t.clear || "Clear"}</span>
-          </motion.button>
-
-          {onSignOut && (
             <motion.button
-              className="header-button danger"
-              onClick={onSignOut}
+              className="header-button"
+              onClick={handleSaveChat}
+              disabled={messages.length <= 1}
+              title="Save current chat"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              initial={{ x: 50, opacity: 0 }}
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: reducedMotion ? 0 : 0.22 }}
+            >
+              <span>💾</span>
+              <span className="button-text">{t.saveChat || "Save"}</span>
+            </motion.button>
+
+            <motion.button
+              className="header-button"
+              onClick={handleViewSavedChats}
+              title="View saved chats"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ x: 40, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: reducedMotion ? 0 : 0.26 }}
+            >
+              <span>📚</span>
+              <span className="button-text">{t.savedChats || "Saved"}</span>
+            </motion.button>
+
+            <motion.button
+              className="header-button"
+              onClick={handleClearConversation}
+              title="Clear conversation and memory"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ x: 60, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: reducedMotion ? 0 : 0.3 }}
             >
-              <span>🚪</span>
-              <span className="button-text">{t.signOut || "Sign Out"}</span>
+              <span>🗑️</span>
+              <span className="button-text">{t.clear || "Clear"}</span>
             </motion.button>
-          )}
+
+            <motion.button
+              className="header-button"
+              onClick={() => setShowLeaderboardModal(true)}
+              title="View leaderboard"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ x: 80, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: reducedMotion ? 0 : 0.34 }}
+            >
+              <span>🏆</span>
+              <span className="button-text">{t.leaderboard || "Leaderboard"}</span>
+            </motion.button>
+          </div>
         </div>
       </motion.header>
 
+      {/* Accessibility Panel */}
+      <AnimatePresence>
+        {showAccessibilityPanel && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(20px)',
+              borderBottom: '1px solid var(--glass-border)',
+              padding: '1rem',
+              zIndex: 99
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {/* Font Size Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>
+                  {t.fontSize || "Font Size"}:
+                </span>
+                <button
+                  onClick={() => adjustFontSize(-0.1)}
+                  style={{
+                    background: 'var(--glass-bg)',
+                    border: '1px solid var(--glass-border)',
+                    color: 'var(--text-light)',
+                    padding: '0.3rem 0.6rem',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '1.2rem'
+                  }}
+                  aria-label="Decrease font size"
+                >
+                  A-
+                </button>
+                <span style={{
+                  color: 'var(--text-light)',
+                  minWidth: '3rem',
+                  textAlign: 'center',
+                  fontSize: '0.9rem'
+                }}>
+                  {Math.round(customFontSize * 100)}%
+                </span>
+                <button
+                  onClick={() => adjustFontSize(0.1)}
+                  style={{
+                    background: 'var(--glass-bg)',
+                    border: '1px solid var(--glass-border)',
+                    color: 'var(--text-light)',
+                    padding: '0.3rem 0.6rem',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '1.2rem'
+                  }}
+                  aria-label="Increase font size"
+                >
+                  A+
+                </button>
+              </div>
+
+              {/* Text-to-Speech Toggle */}
+              <button
+                onClick={toggleTextToSpeech}
+                style={{
+                  background: textToSpeechEnabled ? 'var(--primary-solid)' : 'var(--glass-bg)',
+                  border: '1px solid var(--glass-border)',
+                  color: textToSpeechEnabled ? '#000' : 'var(--text-light)',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9rem'
+                }}
+                aria-label={`${textToSpeechEnabled ? 'Disable' : 'Enable'} text-to-speech`}
+              >
+                <span>🔊</span>
+                {t.textToSpeech || "Text-to-Speech"}
+              </button>
+
+              {/* Reading Guide Toggle */}
+              <button
+                onClick={toggleReadingGuide}
+                style={{
+                  background: readingGuideActive ? 'var(--primary-solid)' : 'var(--glass-bg)',
+                  border: '1px solid var(--glass-border)',
+                  color: readingGuideActive ? '#000' : 'var(--text-light)',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9rem'
+                }}
+                aria-label={`${readingGuideActive ? 'Disable' : 'Enable'} reading guide`}
+              >
+                <span>📏</span>
+                {t.readingGuide || "Reading Guide"}
+              </button>
+
+              {/* Current Preference Display */}
+              <div style={{
+                background: currentPreference === 'dyslexia' ? 'rgba(255, 215, 0, 0.2)' : 'var(--glass-bg)',
+                border: '1px solid var(--glass-border)',
+                color: 'var(--text-light)',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span>
+                  {currentPreference === 'dyslexia' ? '🧠' : '👤'}
+                </span>
+                {currentPreference === 'dyslexia'
+                  ? (t.dyslexiaMode || "Dyslexia Mode")
+                  : (t.standardMode || "Standard Mode")
+                }
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Messages Container */}
-      <div 
+      <div
+        id="chat-messages"
         className="chat-messages"
         ref={messagesRef}
+        role="log"
+        aria-live="polite"
+        aria-label={t.messagesArea || "Chat messages"}
         style={{
-          height: isMobile ? 
-            `calc(${viewportHeight}px - ${isLandscape ? '3.5rem' : '4rem'} - ${keyboardOpen ? '0px' : '140px'})` : 
+          height: isMobile ?
+            `calc(${viewportHeight}px - ${isLandscape ? '3.5rem' : '4rem'} - ${keyboardOpen ? '0px' : '140px'})` :
             'auto'
         }}
       >
@@ -864,11 +1229,25 @@ const ChatInterface = ({
               {/* Message Bubble */}
               <motion.div
                 className="chat-bubble"
+                data-speaking={currentSpeakingId === message.id}
                 whileHover={!reducedMotion ? {
                   y: -2,
                   scale: 1.01,
                   transition: { duration: 0.2 }
                 } : {}}
+                onClick={() => textToSpeechEnabled && speakText(message.text, message.id)}
+                style={{
+                  cursor: textToSpeechEnabled ? 'pointer' : 'default'
+                }}
+                role="region"
+                aria-label={`Message from ${message.sender === 'user' ? 'you' : 'assistant'}${textToSpeechEnabled ? '. Click to read aloud.' : ''}`}
+                tabIndex={textToSpeechEnabled ? 0 : -1}
+                onKeyDown={(e) => {
+                  if (textToSpeechEnabled && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    speakText(message.text, message.id);
+                  }
+                }}
               >
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -966,6 +1345,7 @@ const ChatInterface = ({
 
         <div className="input-container">
           <motion.textarea
+            id="chat-input"
             ref={inputRef}
             className="chat-input"
             value={input}
@@ -978,15 +1358,22 @@ const ChatInterface = ({
               (t.typeMessage && t.memoryReady ? `${t.typeMessage} (${t.memoryReady})` : "Type your message... (Memory ready)")}
             disabled={isSending}
             rows={1}
+            aria-label={t.messageInput || "Type your message"}
+            aria-describedby={textToSpeechEnabled ? "tts-hint" : undefined}
             style={{
               fontSize: isMobile ? 'max(16px, 1rem)' : '1rem',
-              fontFamily: 'var(--font-family)'
+              fontFamily: currentPreference === 'dyslexia' ? 'var(--font-family-dyslexia)' : 'var(--font-family)'
             }}
-            whileFocus={!reducedMotion ? { 
+            whileFocus={!reducedMotion ? {
               scale: 1.01,
               transition: { duration: 0.2 }
             } : {}}
           />
+          {textToSpeechEnabled && (
+            <div id="tts-hint" className="sr-only">
+              {t.ttsHint || "Text-to-speech is enabled. Click on messages to hear them read aloud."}
+            </div>
+          )}
         </div>
 
 
@@ -1050,6 +1437,15 @@ const ChatInterface = ({
         isOpen={showSavedChatsModal}
         onClose={() => setShowSavedChatsModal(false)}
         onLoadChat={handleLoadSavedChat}
+      />
+
+      {/* Leaderboard Modal */}
+      <LeaderboardModal
+        isOpen={showLeaderboardModal}
+        onClose={() => setShowLeaderboardModal(false)}
+        currentUserEmail={userEmail}
+        t={t}
+        language={language}
       />
     </div>
   );

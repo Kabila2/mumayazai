@@ -7,6 +7,7 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
+  const [parentEmail, setParentEmail] = useState("");
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
   const [serverError, setServerError] = useState("");
@@ -18,6 +19,13 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
     if (mode === "signup" && /\d/.test(name)) newErrors.name = "Name cannot contain numbers.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "Invalid email address.";
     if (password.length < 6) newErrors.password = "Password must be at least 6 characters.";
+
+    // Validate parent email for student accounts
+    if (mode === "signup" && role === "student" && parentEmail &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(parentEmail)) {
+      newErrors.parentEmail = "Invalid parent email address.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -28,7 +36,7 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
     setSuccess(null);
 
     try {
-      const res = await onSubmit(mode, { name, email, password, role });
+      const res = await onSubmit(mode, { name, email, password, role, parentEmail });
       if (res && res.ok) {
         setSuccess("🎉 Success! Redirecting...");
         setTimeout(() => onClose(), 900); // close modal -> App shows main UI
@@ -129,6 +137,28 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
               /> {lang === "en" ? "Child" : "طفل"}
             </label>
           </div>
+        )}
+
+        {mode === "signup" && role === "student" && (
+          <>
+            <AnimatePresence mode="wait">
+              <motion.input
+                key={lang + "-parentemail"}
+                type="email"
+                value={parentEmail}
+                placeholder={lang === "en" ? "Parent's Email (Optional)" : "بريد ولي الأمر (اختياري)"}
+                className="modal-input"
+                onFocus={stopLangToggle}
+                onChange={(e) => setParentEmail(e.target.value)}
+                variants={textVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                style={{ marginTop: 10 }}
+              />
+            </AnimatePresence>
+            {errors.parentEmail && <div className="error-text">{errors.parentEmail}</div>}
+          </>
         )}
 
         {success && <div className="success-message success">{success}</div>}

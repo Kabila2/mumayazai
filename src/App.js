@@ -6,7 +6,15 @@ import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
 import EntryLoginPage from "./components/EntryLoginPage";
 import OnboardingSetup from "./components/OnboardingSetup";
 import PaperAirplaneTransition from "./components/PaperAirplaneTransition";
+import ParentDashboard from "./components/ParentDashboard";
 import { translations } from "./translations";
+import {
+  initializeParentAccount,
+  linkChildToParent,
+  isChildLinkedToParent,
+  startChildSession,
+  endChildSession
+} from "./utils/parentTrackingUtils";
 import "./App.css";
 
 /* ---------- LocalStorage keys ---------- */
@@ -144,13 +152,30 @@ export default function App() {
   };
 
   /* ===================== AUTH HANDLERS ===================== */
-  const handleSignUp = async ({ name, email, password, role }) => {
+  const handleSignUp = async ({ name, email, password, role, parentEmail }) => {
     const users = loadUsers();
     const key = email.trim().toLowerCase();
     if (users[key]) return { ok: false, message: "This email is already registered." };
 
-    users[key] = { name, email: key, password, role };
+    users[key] = { name, email: key, password, role, parentEmail };
     saveUsers(users);
+
+    // If this is a parent account, initialize parent data
+    if (role === "parent") {
+      const result = initializeParentAccount(key, name);
+      if (!result.success) {
+        return { ok: false, message: "Failed to initialize parent account." };
+      }
+    }
+
+    // If this is a child and has parent email, try to link
+    if (role === "student" && parentEmail) {
+      const result = linkChildToParent(key, name, parentEmail.trim().toLowerCase());
+      if (!result.success) {
+        console.warn("Failed to link child to parent:", result.error);
+        // Don't fail registration, just log the issue
+      }
+    }
 
     setPendingEmail(key);
     localStorage.setItem("mumayaz_role", role || "student");
@@ -234,6 +259,19 @@ export default function App() {
         defaultLanguage={localStorage.getItem(LANGUAGE_KEY) || "en"}
         onComplete={handleCompleteSetup}
         onCancel={() => { setShowSetup(false); setPendingEmail(null); }}
+      />
+    );
+  }
+
+  // Check if user is a parent and route to parent dashboard
+  const userRole = localStorage.getItem("mumayaz_role");
+  if (userRole === "parent") {
+    return (
+      <ParentDashboard
+        onSignOut={handleSignOut}
+        t={t}
+        language={appLanguage}
+        reducedMotion={reducedMotion}
       />
     );
   }
