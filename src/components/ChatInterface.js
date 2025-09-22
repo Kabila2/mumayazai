@@ -629,9 +629,27 @@ const ChatInterface = ({
     setShowSavedChatsModal(true);
   }, []);
 
-  const handleLoadSavedChat = useCallback((savedMessages) => {
-    setMessages(savedMessages);
-    saveConversationMemory(savedMessages);
+  const handleLoadSavedChat = useCallback((savedChat, mode = 'replace') => {
+    if (mode === 'replace') {
+      // Replace current conversation
+      setMessages(savedChat.messages);
+      saveConversationMemory(savedChat.messages);
+    } else if (mode === 'continue') {
+      // Continue from saved conversation
+      setMessages(prevMessages => {
+        // Remove the welcome message if it's the only message
+        const currentMessages = prevMessages.length === 1 &&
+          prevMessages[0].sender === 'gpt' &&
+          prevMessages[0].text.includes('Hello! I\'m your Chat Assistant')
+          ? []
+          : prevMessages;
+
+        // Combine messages and save
+        const combinedMessages = [...savedChat.messages, ...currentMessages];
+        saveConversationMemory(combinedMessages);
+        return combinedMessages;
+      });
+    }
     setShowSavedChatsModal(false);
   }, []);
 

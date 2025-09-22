@@ -86,8 +86,8 @@ const SavedChatsModal = ({
     }
   };
 
-  const handleLoadChat = (chat) => {
-    onLoadChat(chat);
+  const handleLoadChat = (chat, mode = 'replace') => {
+    onLoadChat(chat, mode);
     onClose();
   };
 
@@ -385,11 +385,9 @@ const SavedChatsModal = ({
                     border: '1px solid rgba(0, 0, 0, 0.1)',
                     borderRadius: '16px',
                     padding: '1rem',
-                    cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     position: 'relative'
                   }}
-                  onClick={() => handleLoadChat(chat)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, marginRight: language === 'ar' ? 0 : '1rem', marginLeft: language === 'ar' ? '1rem' : 0 }}>
@@ -471,7 +469,47 @@ const SavedChatsModal = ({
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLoadChat(chat, 'replace');
+                        }}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                          color: 'white',
+                          border: 'none',
+                          cursor: 'pointer',
+                          borderRadius: '8px',
+                          fontSize: '0.8rem',
+                          fontWeight: '600'
+                        }}
+                        title={language === 'ar' ? 'تحميل (استبدال المحادثة الحالية)' : 'Load (replace current chat)'}
+                      >
+                        📂 {language === 'ar' ? 'تحميل' : 'Load'}
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLoadChat(chat, 'continue');
+                        }}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          color: 'white',
+                          border: 'none',
+                          cursor: 'pointer',
+                          borderRadius: '8px',
+                          fontSize: '0.8rem',
+                          fontWeight: '600'
+                        }}
+                        title={language === 'ar' ? 'متابعة (إضافة إلى المحادثة الحالية)' : 'Continue (add to current chat)'}
+                      >
+                        ➕ {language === 'ar' ? 'متابعة' : 'Continue'}
+                      </button>
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
