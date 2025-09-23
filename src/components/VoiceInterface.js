@@ -640,113 +640,53 @@ export default function VoiceInterface({
         )}
       </AnimatePresence>
 
-      {/* Top Navigation Bar */}
-      <motion.header
-        className="voice-header"
-        variants={headerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Switch to Text Chat Button */}
-        {onSwitchMode && (
-          <motion.button
-            className="header-button primary"
-            onClick={onSwitchMode}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.2 }}
-          >
-            <span>💬</span>
-            <span className="button-text">{t.textMode || "Text Mode"}</span>
-          </motion.button>
-        )}
-
-        {/* Title in center */}
-        <motion.div
-          className="assistant-title"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: reducedMotion ? 0 : 0.4 }}
-        >
-          <span className="title-main">
-            {assistantTitle}
-          </span>
-        </motion.div>
-
-        {/* Explore, Clear & Sign Out Buttons */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <motion.button
-            className="header-button explore-button"
-            onClick={() => setShowExploreModal(true)}
-            title="Explore features"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.2 }}
-          >
-            <span>🌟</span>
-            <span className="button-text">{language === 'ar' ? 'استكشف' : 'Explore'}</span>
-          </motion.button>
-
-          <motion.button
-            className="header-button"
-            onClick={handleSaveVoiceChat}
-            title="Save voice conversation"
-            disabled={messages.length <= 1}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.2 }}
+      {/* Responsive Navigation */}
+      <MobileNavigation
+        buttons={navigationButtons}
+        title={assistantTitle}
+        centerContent={
+          <motion.div
+            className="assistant-title"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.4 }}
             style={{
-              opacity: messages.length <= 1 ? 0.5 : 1,
-              cursor: messages.length <= 1 ? 'not-allowed' : 'pointer'
+              position: 'static',
+              transform: 'none',
+              textAlign: 'center'
             }}
           >
-            <span>💾</span>
-            <span className="button-text">{language === 'ar' ? 'حفظ' : 'Save'}</span>
-          </motion.button>
-
-          <motion.button
-            className="header-button"
-            onClick={clearMessages}
-            title="Clear voice conversation and memory"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.25 }}
-          >
-            <span>🗑️</span>
-            <span className="button-text">{language === 'ar' ? 'مسح' : (t.clear || "Clear")}</span>
-          </motion.button>
-
-          {onSignOut && language !== 'ar' && language !== 'en' && language !== 'en-US' && (
-            <motion.button
-              className="header-button danger"
-              onClick={onSignOut}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: reducedMotion ? 0 : 0.3 }}
-            >
-              <span>🚪</span>
-              <span className="button-text">{t.signOut || "Sign Out"}</span>
-            </motion.button>
-          )}
-        </div>
-      </motion.header>
+            <span className="title-main" style={{
+              fontSize: isMobile ? (isCompact ? '1.1rem' : '1.3rem') : '1.5rem',
+              display: 'block',
+              marginBottom: '0.25rem'
+            }}>
+              {assistantTitle}
+            </span>
+            <span className="title-sub" style={{
+              fontSize: isMobile ? '0.8rem' : '0.9rem'
+            }}>
+              {t.voiceMode || "Voice Mode"}
+            </span>
+          </motion.div>
+        }
+        onMenuToggle={setIsMobileMenuOpen}
+        language={language}
+        reducedMotion={reducedMotion}
+      />
 
       {/* Main Content Area */}
-      <motion.div 
+      <motion.div
         className="voice-content"
         variants={contentVariants}
         initial="hidden"
         animate="visible"
+        style={{
+          paddingTop: `calc(${isCompact ? '56px' : '64px'} + ${getSpacing(1.5, 2, 2)})`,
+          paddingLeft: getSpacing(1, 1.5, 2),
+          paddingRight: getSpacing(1, 1.5, 2),
+          paddingBottom: getSpacing(1.5, 2, 2)
+        }}
       >
         {/* Listening waves */}
         <ListeningWaves />
@@ -757,20 +697,44 @@ export default function VoiceInterface({
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: reducedMotion ? 0 : 0.3 }}
+          style={{
+            display: 'flex',
+            gap: isMobile ? '0.75rem' : '1rem',
+            margin: `${getSpacing(1, 1.5, 2)} 0`,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: isMobile ? '1rem' : '0'
+          }}
         >
           <motion.button
             className={`primary-btn ${isListening ? 'listening' : ''}`}
             onClick={startListening}
             disabled={isListening || isSpeaking}
             animate={buttonControls}
-            whileHover={!isListening && !isSpeaking && !reducedMotion ? { 
-              scale: 1.05, 
+            whileHover={!isListening && !isSpeaking && !reducedMotion ? {
+              scale: 1.05,
               y: -3
             } : {}}
             whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
+            style={{
+              width: isMobile ? (isCompact ? '68px' : '76px') : '200px',
+              height: isMobile ? (isCompact ? '68px' : '76px') : '4rem',
+              minWidth: isMobile ? (isCompact ? '68px' : '76px') : '200px',
+              minHeight: isMobile ? (isCompact ? '68px' : '76px') : '4rem',
+              borderRadius: isMobile ? '50%' : 'var(--radius-xl)',
+              fontSize: isMobile ? '1.2rem' : 'var(--font-size-base)',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '0.25rem' : '0.5rem',
+              flexShrink: 0
+            }}
           >
-            <span>{isListening ? "🎤" : "🗣️"}</span>
-            <span>{isListening ? (t.listening || "Listening...") : (t.speak || "Speak")}</span>
+            <span style={{ fontSize: isMobile ? '1.5rem' : '1.2rem' }}>
+              {isListening ? "🎤" : "🗣️"}
+            </span>
+            {!isMobile && (
+              <span>{isListening ? (t.listening || "Listening...") : (t.speak || "Speak")}</span>
+            )}
           </motion.button>
 
           <AnimatePresence>
@@ -783,20 +747,36 @@ export default function VoiceInterface({
                 exit={{ scale: 0, opacity: 0 }}
                 whileHover={!reducedMotion ? { scale: 1.05 } : {}}
                 whileTap={{ scale: 0.95 }}
+                style={{
+                  width: isMobile ? (isCompact ? '52px' : '60px') : 'auto',
+                  height: isMobile ? (isCompact ? '52px' : '60px') : '3rem',
+                  minWidth: isMobile ? (isCompact ? '52px' : '60px') : 'auto',
+                  minHeight: isMobile ? (isCompact ? '52px' : '60px') : '3rem',
+                  borderRadius: isMobile ? '50%' : 'var(--radius-lg)',
+                  fontSize: isMobile ? '1.1rem' : 'var(--font-size-sm)',
+                  flexShrink: 0,
+                  padding: isMobile ? '0' : '0.75rem 1rem'
+                }}
               >
-{t.stopSpeaking || "🔇 Stop"}
+                {isMobile ? "🔇" : (t.stopSpeaking || "🔇 Stop")}
               </motion.button>
             )}
           </AnimatePresence>
 
-          <motion.button
-            className="secondary-btn"
-            onClick={() => setShowSettings((v) => !v)}
-            whileHover={!reducedMotion ? { scale: 1.05 } : {}}
-            whileTap={{ scale: 0.95 }}
-          >
-{t.settings || "⚙️ Settings"}
-          </motion.button>
+          {!isMobile && (
+            <motion.button
+              className="secondary-btn"
+              onClick={() => setShowSettings((v) => !v)}
+              whileHover={!reducedMotion ? { scale: 1.05 } : {}}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                minHeight: '3rem',
+                padding: '0.75rem 1rem'
+              }}
+            >
+              {t.settings || "⚙️ Settings"}
+            </motion.button>
+          )}
         </motion.div>
 
         {/* Enhanced Settings Panel */}
@@ -808,6 +788,13 @@ export default function VoiceInterface({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.98 }}
               transition={{ duration: reducedMotion ? 0.1 : 0.3 }}
+              style={{
+                width: isMobile ? 'calc(100% - 2rem)' : '350px',
+                maxWidth: isMobile ? '100%' : '90vw',
+                margin: isMobile ? '1rem' : '1rem auto',
+                padding: getSpacing(1, 1.5, 2),
+                minWidth: 'auto'
+              }}
             >
               <div className="setting-group">
                 <label>{t.speed || "Speed"}: {localSpeed.toFixed(1)}x</label>
@@ -888,6 +875,14 @@ export default function VoiceInterface({
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
+          style={{
+            width: isMobile ? 'calc(100% - 2rem)' : '100%',
+            maxWidth: '900px',
+            margin: isMobile ? '1rem auto' : '1.5rem auto 0',
+            padding: getSpacing(1, 1.5, 2),
+            maxHeight: isMobile ? (isCompact ? '30vh' : '35vh') : '50vh',
+            fontSize: isMobile ? '0.9rem' : 'var(--font-size-sm)'
+          }}
         >
           <div className="log-header">
             <h3>{t.voiceHistory || "Voice History"}</h3>

@@ -1082,7 +1082,7 @@
   }
 }
 
-/* Mobile Responsive - Enhanced */
+/* Enhanced Mobile Responsive */
 @media (max-width: 768px) {
   :root {
     --header-height: 64px;
@@ -1100,10 +1100,9 @@
     font-size: 1.1rem;
   }
 
+  /* Hide original header elements in favor of MobileNavigation */
   .voice-header {
-    padding: 0 1rem;
-    height: 64px;
-    min-height: 64px;
+    display: none;
   }
 
   .voice-content {
@@ -1113,6 +1112,7 @@
     padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   }
 
+  /* Mobile voice controls - circular buttons */
   .voice-controls {
     flex-direction: row;
     justify-content: center;
@@ -1131,6 +1131,11 @@
     font-size: 1.3rem;
     flex-shrink: 0;
     min-width: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
   }
 
   .secondary-btn {
@@ -1141,29 +1146,30 @@
     font-size: 1.2rem;
     flex-shrink: 0;
     min-width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .header-button {
-    min-width: 52px;
-    min-height: 52px;
-    padding: 0.6rem 0.9rem;
-    white-space: nowrap;
-    font-size: 1.1rem;
-    flex-shrink: 0;
+  /* Hide text in mobile secondary buttons */
+  .secondary-btn .button-text {
+    display: none;
   }
 
+  /* Assistant title adjustments for MobileNavigation */
   .assistant-title {
     font-size: 1.3rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 50vw;
+    max-width: 60vw;
 
     .title-sub {
       font-size: 0.9rem;
     }
   }
 
+  /* Mobile settings panel */
   .quick-settings {
     width: calc(100% - 2rem);
     max-width: 100%;
@@ -1172,6 +1178,7 @@
     min-width: auto;
   }
 
+  /* Mobile voice log */
   .voice-log {
     max-height: 35vh;
     padding: 1rem;
@@ -1193,6 +1200,7 @@
     justify-content: space-between;
   }
 
+  /* Mobile voice waves */
   .voice-waves {
     top: 35%;
   }
@@ -1201,6 +1209,18 @@
     width: 200px;
     height: 200px;
     margin: 1rem auto;
+  }
+
+  /* Mobile message styles */
+  .log-message {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .message-content {
+    line-height: 1.6;
+    font-size: 0.9rem;
   }
 }
 

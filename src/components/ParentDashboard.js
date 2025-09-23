@@ -9,6 +9,17 @@ import {
   removeChildFromParent,
   linkChildToParent
 } from '../utils/parentTrackingUtils';
+import {
+  analyzeAreasForImprovement,
+  calculateImprovementScore,
+  generateLearningRecommendations,
+  getLearningInsights
+} from '../utils/improvementAnalysisUtils';
+import {
+  TimeSpentGraph,
+  TasksCompletedGraph,
+  LearningDistributionChart
+} from './ProgressGraphs';
 
 const ParentDashboard = ({
   onSignOut,
@@ -386,7 +397,7 @@ const ParentDashboard = ({
                 gap: '1rem',
                 marginBottom: '2rem'
               }}>
-                {['overview', 'activity', 'achievements'].map(tab => (
+                {['overview', 'activity', 'progress', 'improvements', 'achievements'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -424,6 +435,19 @@ const ParentDashboard = ({
                     child={selectedChild}
                     stats={childStats[selectedChild.email]}
                     formatTime={formatTime}
+                  />
+                )}
+                {activeTab === 'progress' && (
+                  <ProgressTab
+                    child={selectedChild}
+                    stats={childStats[selectedChild.email]}
+                    formatTime={formatTime}
+                  />
+                )}
+                {activeTab === 'improvements' && (
+                  <ImprovementsTab
+                    child={selectedChild}
+                    stats={childStats[selectedChild.email]}
                   />
                 )}
                 {activeTab === 'achievements' && (
@@ -609,6 +633,247 @@ const ActivityTab = ({ child, stats, formatTime }) => (
     )}
   </motion.div>
 );
+
+// Progress Tab Component
+const ProgressTab = ({ child, stats, formatTime }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+  >
+    <h3 style={{ margin: '0 0 1.5rem 0', color: '#333' }}>📊 Progress Analytics</h3>
+
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+      gap: '1.5rem',
+      marginBottom: '2rem'
+    }}>
+      {/* Time Spent Graph */}
+      <TimeSpentGraph
+        dailyActivity={stats?.dailyActivity}
+        formatTime={formatTime}
+      />
+
+      {/* Tasks Completed Graph */}
+      <TasksCompletedGraph
+        dailyActivity={stats?.dailyActivity}
+      />
+    </div>
+
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: '1.5rem'
+    }}>
+      {/* Learning Distribution */}
+      <LearningDistributionChart stats={stats} />
+
+      {/* Learning Insights */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: '16px',
+        padding: '1.5rem',
+        border: '1px solid rgba(0, 0, 0, 0.1)'
+      }}>
+        <h4 style={{ margin: '0 0 1rem 0', color: '#333' }}>💡 Learning Insights</h4>
+        {getLearningInsights(stats).length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {getLearningInsights(stats).map((insight, index) => (
+              <div
+                key={index}
+                style={{
+                  padding: '0.75rem',
+                  background: insight.type === 'positive' ? 'rgba(16, 185, 129, 0.1)' :
+                            insight.type === 'concern' ? 'rgba(239, 68, 68, 0.1)' :
+                            'rgba(59, 130, 246, 0.1)',
+                  border: `1px solid ${insight.type === 'positive' ? 'rgba(16, 185, 129, 0.3)' :
+                                     insight.type === 'concern' ? 'rgba(239, 68, 68, 0.3)' :
+                                     'rgba(59, 130, 246, 0.3)'}`,
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.75rem'
+                }}
+              >
+                <span style={{ fontSize: '1.2rem' }}>{insight.icon}</span>
+                <div>
+                  <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '600' }}>
+                    {insight.title}
+                  </h5>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
+                    {insight.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: '#666', margin: 0 }}>
+            Keep tracking to see learning insights!
+          </p>
+        )}
+      </div>
+    </div>
+  </motion.div>
+);
+
+// Improvements Tab Component
+const ImprovementsTab = ({ child, stats }) => {
+  const improvements = analyzeAreasForImprovement(stats, child);
+  const improvementScore = calculateImprovementScore(stats, child);
+  const recommendations = generateLearningRecommendations(stats, child);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <h3 style={{ margin: '0 0 1.5rem 0', color: '#333' }}>🎯 Areas for Improvement</h3>
+
+      {/* Improvement Score */}
+      <div style={{
+        background: `linear-gradient(135deg, ${improvementScore >= 80 ? '#10b981' : improvementScore >= 60 ? '#f59e0b' : '#ef4444'}, ${improvementScore >= 80 ? '#059669' : improvementScore >= 60 ? '#d97706' : '#dc2626'})`,
+        color: 'white',
+        padding: '2rem',
+        borderRadius: '16px',
+        textAlign: 'center',
+        marginBottom: '2rem'
+      }}>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+          {improvementScore >= 80 ? '🌟' : improvementScore >= 60 ? '📈' : '🎯'}
+        </div>
+        <h2 style={{ margin: '0 0 0.5rem 0' }}>Learning Score: {improvementScore}/100</h2>
+        <p style={{ margin: 0, opacity: 0.9 }}>
+          {improvementScore >= 80 ? 'Excellent progress! Keep it up!' :
+           improvementScore >= 60 ? 'Good progress with room for improvement' :
+           'Several areas need attention for better learning outcomes'}
+        </p>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '1.5rem'
+      }}>
+        {/* Areas for Improvement */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '16px',
+          padding: '1.5rem',
+          border: '1px solid rgba(0, 0, 0, 0.1)'
+        }}>
+          <h4 style={{ margin: '0 0 1rem 0', color: '#333' }}>⚠️ Focus Areas</h4>
+          {improvements.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {improvements.map((improvement, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  style={{
+                    padding: '1rem',
+                    background: 'rgba(0, 0, 0, 0.02)',
+                    border: `2px solid ${improvement.color}20`,
+                    borderLeft: `4px solid ${improvement.color}`,
+                    borderRadius: '12px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{improvement.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <h5 style={{
+                        margin: '0 0 0.25rem 0',
+                        color: improvement.color,
+                        fontSize: '1rem',
+                        fontWeight: '600'
+                      }}>
+                        {improvement.issue}
+                      </h5>
+                      <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#666' }}>
+                        {improvement.description}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#333', fontWeight: '500' }}>
+                        💡 {improvement.suggestion}
+                      </p>
+                    </div>
+                    <span style={{
+                      padding: '0.25rem 0.5rem',
+                      background: improvement.color,
+                      color: 'white',
+                      borderRadius: '8px',
+                      fontSize: '0.7rem',
+                      fontWeight: '600',
+                      textTransform: 'uppercase'
+                    }}>
+                      {improvement.severity}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+              <h4>Great job!</h4>
+              <p>No major areas for improvement detected. Keep up the excellent work!</p>
+            </div>
+          )}
+        </div>
+
+        {/* Learning Recommendations */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '16px',
+          padding: '1.5rem',
+          border: '1px solid rgba(0, 0, 0, 0.1)'
+        }}>
+          <h4 style={{ margin: '0 0 1rem 0', color: '#333' }}>🚀 Recommendations</h4>
+          {recommendations.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {recommendations.map((rec, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                  style={{
+                    padding: '1rem',
+                    background: rec.priority === 'high' ? 'rgba(239, 68, 68, 0.1)' :
+                              rec.priority === 'medium' ? 'rgba(245, 158, 11, 0.1)' :
+                              'rgba(59, 130, 246, 0.1)',
+                    border: `1px solid ${rec.priority === 'high' ? 'rgba(239, 68, 68, 0.3)' :
+                                        rec.priority === 'medium' ? 'rgba(245, 158, 11, 0.3)' :
+                                        'rgba(59, 130, 246, 0.3)'}`,
+                    borderRadius: '12px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '1.2rem' }}>{rec.icon}</span>
+                    <div>
+                      <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '600' }}>
+                        {rec.title}
+                      </h5>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
+                        {rec.description}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: '#666', margin: 0 }}>
+              Recommendations will appear as we gather more learning data.
+            </p>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 // Achievements Tab Component
 const AchievementsTab = ({ child }) => (
