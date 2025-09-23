@@ -1,6 +1,8 @@
 /* global puter */
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import ExploreModal from './ExploreModal';
+import SaveVoiceChatModal from './SaveVoiceChatModal';
 import "./VoiceInterface.css";
 
 /** ---------- Enhanced Voice Memory System ---------- */
@@ -199,10 +201,21 @@ export default function VoiceInterface({
   const [isListening, setListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState(extVoices || []);
-  const [localVoice, setLocalVoice] = useState(selectedVoice || "");
-  const [localSpeed, setLocalSpeed] = useState(speed || 1);
-  const [localPitch, setLocalPitch] = useState(pitch || 1);
+  const [localVoice, setLocalVoice] = useState(() => {
+    const saved = localStorage.getItem('voice-selected');
+    return saved || selectedVoice || "";
+  });
+  const [localSpeed, setLocalSpeed] = useState(() => {
+    const saved = localStorage.getItem('voice-speed');
+    return saved ? parseFloat(saved) : (speed || 1);
+  });
+  const [localPitch, setLocalPitch] = useState(() => {
+    const saved = localStorage.getItem('voice-pitch');
+    return saved ? parseFloat(saved) : (pitch || 1);
+  });
   const [showSettings, setShowSettings] = useState(false);
+  const [showExploreModal, setShowExploreModal] = useState(false);
+  const [showSaveVoiceChatModal, setShowSaveVoiceChatModal] = useState(false);
   const [aiReady, setAiReady] = useState(hasPuter());
   const [showMemoryStatus, setShowMemoryStatus] = useState(false);
 
@@ -260,16 +273,52 @@ export default function VoiceInterface({
     const synth = window.speechSynthesis;
     const loadVoices = () => {
       const all = synth.getVoices();
-      const filtered = all.filter((v) => v.lang?.startsWith("en"));
+      console.log(`🎤 Total voices available: ${all.length}`);
+
+      // Filter voices based on selected language
+      const languagePrefix = language === 'ar' ? 'ar' : 'en';
+      let filtered = all.filter((v) => v.lang?.startsWith(languagePrefix));
+
+      if (language === 'ar') {
+        console.log(`🎤 Arabic voices found: ${filtered.length}`);
+        if (filtered.length > 0) {
+          filtered.forEach(voice => {
+            console.log(`   - ${voice.name} (${voice.lang})`);
+          });
+        }
+        // If no Arabic voices found, fallback to English voices
+        if (filtered.length === 0) {
+          console.log("⚠️ No Arabic voices found, falling back to English voices");
+          filtered = all.filter((v) => v.lang?.startsWith("en"));
+        }
+      }
+
       setVoices(filtered);
-      if (!localVoice && filtered.length) setLocalVoice(filtered[0].name);
+
+      // Auto-select best voice for the language
+      if (!localVoice || !filtered.find(v => v.name === localVoice)) {
+        if (filtered.length > 0) {
+          // For Arabic, prefer Saudi Arabia, Egypt, or UAE voices
+          let bestVoice = filtered[0];
+          if (language === 'ar') {
+            const preferredVoice = filtered.find(v =>
+              v.lang.includes('SA') || v.lang.includes('EG') || v.lang.includes('AE') || v.lang.includes('ar-')
+            );
+            if (preferredVoice) bestVoice = preferredVoice;
+          }
+
+          setLocalVoice(bestVoice.name);
+          setSelectedVoice?.(bestVoice.name);
+          console.log(`🎤 Auto-selected voice: ${bestVoice.name} (${bestVoice.lang})`);
+        }
+      }
     };
     loadVoices();
     synth.onvoiceschanged = loadVoices;
     return () => {
       synth.onvoiceschanged = null;
     };
-  }, [localVoice]);
+  }, [language, localVoice, setSelectedVoice]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -419,6 +468,15 @@ export default function VoiceInterface({
       .replace(/\(I remember [^)]+\)/g, '') // Remove memory notes in parentheses
       .replace(/Enhanced memory|Full memory|Voice memory/gi, 'memory') // Simplify memory references
       .trim();
+
+    // Arabic-specific text improvements
+    if (language === 'ar') {
+      cleanText = cleanText
+        .replace(/\s+/g, ' ') // Normalize whitespace for Arabic
+        .replace(/([.!?])/g, '$1 ') // Add space after punctuation for Arabic speech
+        .replace(/\s+([.!?])/g, '$1') // Remove space before punctuation
+        .trim();
+    }
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
     const voiceObj = voices.find((v) => v.name === localVoice);
@@ -426,7 +484,12 @@ export default function VoiceInterface({
       utterance.voice = voiceObj;
       utterance.lang = voiceObj.lang;
     } else {
-      utterance.lang = language || "en-US";
+      // Set language based on user preference
+      if (language === 'ar') {
+        utterance.lang = "ar-SA"; // Arabic (Saudi Arabia) - most common
+      } else {
+        utterance.lang = "en-US";
+      }
     }
     utterance.rate = localSpeed;
     utterance.pitch = localPitch;
@@ -464,6 +527,13 @@ export default function VoiceInterface({
     }
     recognitionRef.current.start();
   };
+
+  // Save voice chat handler
+  const handleSaveVoiceChat = useCallback(() => {
+    if (messages.length > 1) { // Don't save if only welcome message
+      setShowSaveVoiceChatModal(true);
+    }
+  }, [messages]);
 
   // Clear conversation and memory
   const clearMessages = () => {
@@ -605,8 +675,41 @@ export default function VoiceInterface({
           </span>
         </motion.div>
 
-        {/* Clear & Sign Out Buttons */}
+        {/* Explore, Clear & Sign Out Buttons */}
         <div style={{ display: 'flex', gap: '8px' }}>
+          <motion.button
+            className="header-button explore-button"
+            onClick={() => setShowExploreModal(true)}
+            title="Explore features"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.2 }}
+          >
+            <span>🌟</span>
+            <span className="button-text">{language === 'ar' ? 'استكشف' : 'Explore'}</span>
+          </motion.button>
+
+          <motion.button
+            className="header-button"
+            onClick={handleSaveVoiceChat}
+            title="Save voice conversation"
+            disabled={messages.length <= 1}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: reducedMotion ? 0 : 0.2 }}
+            style={{
+              opacity: messages.length <= 1 ? 0.5 : 1,
+              cursor: messages.length <= 1 ? 'not-allowed' : 'pointer'
+            }}
+          >
+            <span>💾</span>
+            <span className="button-text">{language === 'ar' ? 'حفظ' : 'Save'}</span>
+          </motion.button>
+
           <motion.button
             className="header-button"
             onClick={clearMessages}
@@ -618,10 +721,10 @@ export default function VoiceInterface({
             transition={{ delay: reducedMotion ? 0 : 0.25 }}
           >
             <span>🗑️</span>
-            <span className="button-text">{t.clear || "Clear"}</span>
+            <span className="button-text">{language === 'ar' ? 'مسح' : (t.clear || "Clear")}</span>
           </motion.button>
 
-          {onSignOut && (
+          {onSignOut && language !== 'ar' && language !== 'en' && language !== 'en-US' && (
             <motion.button
               className="header-button danger"
               onClick={onSignOut}
@@ -718,6 +821,8 @@ export default function VoiceInterface({
                     const v = parseFloat(e.target.value);
                     setLocalSpeed(v);
                     setSpeed?.(v);
+                    // Save to localStorage for persistence
+                    localStorage.setItem('voice-speed', v.toString());
                   }}
                 />
               </div>
@@ -734,6 +839,8 @@ export default function VoiceInterface({
                     const v = parseFloat(e.target.value);
                     setLocalPitch(v);
                     setPitch?.(v);
+                    // Save to localStorage for persistence
+                    localStorage.setItem('voice-pitch', v.toString());
                   }}
                 />
               </div>
@@ -745,6 +852,8 @@ export default function VoiceInterface({
                   onChange={(e) => {
                     setLocalVoice(e.target.value);
                     setSelectedVoice?.(e.target.value);
+                    // Save to localStorage for persistence
+                    localStorage.setItem('voice-selected', e.target.value);
                   }}
                 >
                   {voices.map((v) => (
@@ -757,7 +866,12 @@ export default function VoiceInterface({
               
               <motion.button
                 className="test-btn"
-                onClick={() => speak(`This is a test of the Chat Assistant voice system with enhanced memory. Speech has been optimized for accessibility and I remember our previous conversations.`)}
+                onClick={() => {
+                  const testMessage = language === 'ar' || language === 'en' || language === 'en-US'
+                    ? (language === 'ar' ? 'مرحباً بك في مميز' : 'Welcome to Mumayaz')
+                    : 'Welcome to Mumayaz';
+                  speak(testMessage);
+                }}
                 whileHover={!reducedMotion ? { scale: 1.02, y: -2 } : {}}
                 whileTap={{ scale: 0.98 }}
               >
@@ -905,6 +1019,36 @@ export default function VoiceInterface({
           }}
         />
       </motion.div>
+
+      {/* Save Voice Chat Modal */}
+      <SaveVoiceChatModal
+        isOpen={showSaveVoiceChatModal}
+        onClose={() => setShowSaveVoiceChatModal(false)}
+        onSave={(result) => {
+          if (result.success) {
+            console.log('Voice chat saved successfully:', result.title);
+            // Could show a success notification here
+          }
+        }}
+        messages={messages}
+        t={t}
+        language={language}
+        reducedMotion={reducedMotion}
+      />
+
+      {/* Explore Modal */}
+      <ExploreModal
+        isOpen={showExploreModal}
+        onClose={() => setShowExploreModal(false)}
+        currentUserEmail={null} // Voice interface doesn't have user email context
+        t={t}
+        language={language}
+        onSignOut={onSignOut}
+        onLoadVoiceChat={(voiceChatMessages) => {
+          setMessages(voiceChatMessages);
+          setShowExploreModal(false);
+        }}
+      />
     </motion.div>
   );
 }

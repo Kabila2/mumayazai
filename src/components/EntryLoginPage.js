@@ -7,23 +7,9 @@ import "./EntryLoginPage.css";
 import { FaUserPlus, FaSignInAlt } from "react-icons/fa";
 
 export default function EntryLoginPage({ onSignIn, onSignUp }) {
-  const [lang, setLang] = useState("en");
-  const [langEnabled, setLangEnabled] = useState(true);
-  const intervalRef = useRef(null);
-
   const [showModal, setShowModal] = useState(false);
   const [mode, setMode] = useState("signin");
-
-  useEffect(() => {
-    if (langEnabled) {
-      intervalRef.current = setInterval(() => {
-        setLang((l) => (l === "en" ? "ar" : "en"));
-      }, 3000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [langEnabled]);
+  const [selectedLang, setSelectedLang] = useState("en");
 
   const textVariants = {
     enter: { opacity: 0, y: 10 },
@@ -34,38 +20,27 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
   return (
     <>
       <div className="entry-container">
-        <div className="auth-container">
-          <button className="auth-btn" onClick={() => { setMode("signup"); setShowModal(true); }}>
+        {/* Arabic buttons on the left */}
+        <div className="auth-container left-auth">
+          <button className="auth-btn arabic-btn" onClick={() => { setMode("signup"); setSelectedLang("ar"); setShowModal(true); }}>
             <FaUserPlus />
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={lang + "-signup"}
-                variants={textVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.4 }}
-                style={{ display: "inline-block", marginLeft: 4 }}
-              >
-                {lang === "en" ? "Sign Up" : "إنشاء حساب"}
-              </motion.span>
-            </AnimatePresence>
+            <span>إنشاء حساب</span>
           </button>
-          <button className="auth-btn" onClick={() => { setMode("signin"); setShowModal(true); }}>
+          <button className="auth-btn arabic-btn" onClick={() => { setMode("signin"); setSelectedLang("ar"); setShowModal(true); }}>
             <FaSignInAlt />
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={lang + "-signin"}
-                variants={textVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.4 }}
-                style={{ display: "inline-block", marginLeft: 4 }}
-              >
-                {lang === "en" ? "Sign In" : "تسجيل الدخول"}
-              </motion.span>
-            </AnimatePresence>
+            <span>تسجيل الدخول</span>
+          </button>
+        </div>
+
+        {/* English buttons on the right */}
+        <div className="auth-container right-auth">
+          <button className="auth-btn english-btn" onClick={() => { setMode("signup"); setSelectedLang("en"); setShowModal(true); }}>
+            <FaUserPlus />
+            <span>Sign Up</span>
+          </button>
+          <button className="auth-btn english-btn" onClick={() => { setMode("signin"); setSelectedLang("en"); setShowModal(true); }}>
+            <FaSignInAlt />
+            <span>Sign In</span>
           </button>
         </div>
 
@@ -77,8 +52,7 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
 
       {showModal && (
         <AuthModal
-          lang={lang}
-          onToggleLang={setLangEnabled}
+          lang={selectedLang}
           mode={mode}
           setMode={setMode}
           onClose={() => setShowModal(false)}

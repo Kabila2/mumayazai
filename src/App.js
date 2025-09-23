@@ -104,6 +104,14 @@ export default function App() {
     if (hc === "true") setHighContrast(true);
     if (fs) setFontSize(parseFloat(fs));
     if (rm === "true") setReducedMotion(true);
+
+    // Load voice settings
+    const savedSpeed = localStorage.getItem("voice-speed");
+    const savedPitch = localStorage.getItem("voice-pitch");
+    const savedVoice = localStorage.getItem("voice-selected");
+    if (savedSpeed) setSpeed(parseFloat(savedSpeed));
+    if (savedPitch) setPitch(parseFloat(savedPitch));
+    if (savedVoice) setSelectedVoice(savedVoice);
   }, []);
 
   // Watch for preference changes and update title

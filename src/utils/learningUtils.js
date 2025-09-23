@@ -1,5 +1,7 @@
 // src/utils/learningUtils.js - Learning content and points system
 
+import { recordLearningPoints, recordDailyTaskPoints } from './leaderboardUtils';
+
 const LEARNING_PROGRESS_KEY = "mumayaz_learning_progress";
 const DAILY_TASKS_KEY = "mumayaz_daily_tasks";
 const USER_POINTS_KEY = "mumayaz_user_points";
@@ -370,6 +372,9 @@ export const updateTaskProgress = (userEmail, taskId, progress = 1) => {
       // Add points
       const pointsResult = addUserPoints(userEmail, task.points, `daily_task_${taskId}`);
 
+      // Also record in leaderboard system
+      recordDailyTaskPoints(userEmail, task.points, taskId);
+
       allTasks[userKey] = userTasks;
       localStorage.setItem(DAILY_TASKS_KEY, JSON.stringify(allTasks));
 
@@ -433,6 +438,9 @@ export const completeLesson = (userEmail, categoryId, lessonId) => {
 
     // Add points for lesson completion
     const pointsResult = addUserPoints(userEmail, lesson.points, `lesson_${lessonKey}`);
+
+    // Also record in leaderboard system
+    recordLearningPoints(userEmail, lesson.points, `lesson_${categoryId}_${lessonId}`);
 
     // Update daily task progress
     updateTaskProgress(userEmail, "lesson_complete", 1);

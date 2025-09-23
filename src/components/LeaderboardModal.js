@@ -5,7 +5,7 @@ import "./LeaderboardModal.css";
 
 export default function LeaderboardModal({ isOpen, onClose, currentUserEmail, t, language }) {
   const [leaderboardData, setLeaderboardData] = useState(null);
-  const [activeTab, setActiveTab] = useState("time");
+  const [activeTab, setActiveTab] = useState("points");
   const [userRanks, setUserRanks] = useState({});
 
   useEffect(() => {
@@ -28,14 +28,22 @@ export default function LeaderboardModal({ isOpen, onClose, currentUserEmail, t,
   if (!isOpen || !leaderboardData) return null;
 
   const tabs = [
+    { id: "points", label: language === "en" ? "Top Points" : "أعلى النقاط", icon: "🏆" },
+    { id: "learning", label: language === "en" ? "Learning Stars" : "نجوم التعلم", icon: "📚" },
+    { id: "tasks", label: language === "en" ? "Task Masters" : "أساتذة المهام", icon: "✅" },
+    { id: "streaks", label: language === "en" ? "Fire Streaks" : "سلاسل النار", icon: "🔥" },
     { id: "time", label: language === "en" ? "Most Active" : "الأكثر نشاطاً", icon: "⏱️" },
     { id: "chats", label: language === "en" ? "Most Chats" : "أكثر محادثات", icon: "💬" },
     { id: "messages", label: language === "en" ? "Most Messages" : "أكثر رسائل", icon: "📝" },
-    { id: "recent", label: language === "en" ? "Recently Active" : "نشاط حديث", icon: "🔥" }
+    { id: "recent", label: language === "en" ? "Recently Active" : "نشاط حديث", icon: "🌟" }
   ];
 
   const getCurrentList = () => {
     switch (activeTab) {
+      case "points": return leaderboardData.topPointsTotal;
+      case "learning": return leaderboardData.topLearningPoints;
+      case "tasks": return leaderboardData.topDailyTaskPoints;
+      case "streaks": return leaderboardData.topStreaks;
       case "time": return leaderboardData.mostActiveUsers;
       case "chats": return leaderboardData.mostChats;
       case "messages": return leaderboardData.mostMessages;
@@ -46,6 +54,12 @@ export default function LeaderboardModal({ isOpen, onClose, currentUserEmail, t,
 
   const getStatValue = (user, tab) => {
     switch (tab) {
+      case "points":
+        const totalPoints = (user.totalPoints || 0) + (user.learningPoints || 0) + (user.dailyTaskPoints || 0);
+        return totalPoints.toLocaleString();
+      case "learning": return (user.learningPoints || 0).toLocaleString();
+      case "tasks": return (user.dailyTaskPoints || 0).toLocaleString();
+      case "streaks": return `${user.taskStreak || 0} days`;
       case "time": return formatDuration(user.totalTimeSpent);
       case "chats": return user.totalChats.toLocaleString();
       case "messages": return user.totalMessages.toLocaleString();
@@ -56,6 +70,10 @@ export default function LeaderboardModal({ isOpen, onClose, currentUserEmail, t,
 
   const getStatLabel = (tab) => {
     switch (tab) {
+      case "points": return language === "en" ? "Total Points" : "إجمالي النقاط";
+      case "learning": return language === "en" ? "Learning Points" : "نقاط التعلم";
+      case "tasks": return language === "en" ? "Task Points" : "نقاط المهام";
+      case "streaks": return language === "en" ? "Streak" : "السلسلة";
       case "time": return language === "en" ? "Time Spent" : "الوقت المستغرق";
       case "chats": return language === "en" ? "Chats" : "محادثات";
       case "messages": return language === "en" ? "Messages" : "رسائل";

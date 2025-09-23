@@ -13,11 +13,23 @@ import {
   importSavedChats,
   getChatStatistics
 } from '../utils/savedChatsUtils';
+import {
+  getSavedVoiceChats,
+  deleteSavedVoiceChat,
+  updateSavedVoiceChat,
+  searchSavedVoiceChats,
+  getVoiceChatsByTag,
+  getAllVoiceTags,
+  exportSavedVoiceChats,
+  getVoiceChatStatistics
+} from '../utils/savedVoiceChatsUtils';
 
 const SavedChatsModal = ({
   isOpen,
   onClose,
   onLoadChat,
+  onLoadVoiceChat,
+  chatType = "text", // "text" or "voice"
   t = {},
   language = "en",
   reducedMotion = false
@@ -36,17 +48,17 @@ const SavedChatsModal = ({
   const loadChats = useCallback(() => {
     setIsLoading(true);
     try {
-      const chats = getSavedChats();
+      const chats = chatType === "voice" ? getSavedVoiceChats() : getSavedChats();
       setSavedChats(chats);
       setFilteredChats(chats);
-      setAllTags(getAllTags());
-      setStats(getChatStatistics());
+      setAllTags(chatType === "voice" ? getAllVoiceTags() : getAllTags());
+      setStats(chatType === "voice" ? getVoiceChatStatistics() : getChatStatistics());
     } catch (error) {
       console.error('Error loading chats:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [chatType]);
 
   useEffect(() => {
     if (isOpen) {
@@ -59,7 +71,7 @@ const SavedChatsModal = ({
     let filtered = savedChats;
 
     if (searchQuery.trim()) {
-      filtered = searchSavedChats(searchQuery);
+      filtered = chatType === "voice" ? searchSavedVoiceChats(searchQuery) : searchSavedChats(searchQuery);
     }
 
     if (selectedTag) {
@@ -70,8 +82,12 @@ const SavedChatsModal = ({
   }, [searchQuery, selectedTag, savedChats]);
 
   const handleDeleteChat = async (chatId) => {
-    if (window.confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذه المحادثة؟' : 'Are you sure you want to delete this chat?')) {
-      const result = deleteSavedChat(chatId);
+    const confirmMessage = chatType === "voice"
+      ? (language === 'ar' ? 'هل أنت متأكد من حذف هذه المحادثة الصوتية؟' : 'Are you sure you want to delete this voice chat?')
+      : (language === 'ar' ? 'هل أنت متأكد من حذف هذه المحادثة؟' : 'Are you sure you want to delete this chat?');
+
+    if (window.confirm(confirmMessage)) {
+      const result = chatType === "voice" ? deleteSavedVoiceChat(chatId) : deleteSavedChat(chatId);
       if (result.success) {
         loadChats();
       }
@@ -79,7 +95,9 @@ const SavedChatsModal = ({
   };
 
   const handleRenameChat = (chatId, newTitle) => {
-    const result = updateSavedChat(chatId, { title: newTitle });
+    const result = chatType === "voice"
+      ? updateSavedVoiceChat(chatId, { title: newTitle })
+      : updateSavedChat(chatId, { title: newTitle });
     if (result.success) {
       loadChats();
       setEditingChat(null);
@@ -87,16 +105,25 @@ const SavedChatsModal = ({
   };
 
   const handleLoadChat = (chat, mode = 'replace') => {
-    onLoadChat(chat, mode);
+    if (chatType === "voice" && onLoadVoiceChat) {
+      onLoadVoiceChat(chat.messages);
+    } else if (onLoadChat) {
+      onLoadChat(chat, mode);
+    }
     onClose();
   };
 
   const handleExport = () => {
-    const result = exportSavedChats();
+    const result = chatType === "voice" ? exportSavedVoiceChats() : exportSavedChats();
+    const successMessage = chatType === "voice"
+      ? (language === 'ar' ? 'تم تصدير المحادثات الصوتية بنجاح!' : 'Voice chats exported successfully!')
+      : (language === 'ar' ? 'تم تصدير المحادثات بنجاح!' : 'Chats exported successfully!');
+    const errorMessage = language === 'ar' ? 'حدث خطأ في التصدير' : 'Error exporting chats';
+
     if (result.success) {
-      alert(language === 'ar' ? 'تم تصدير المحادثات بنجاح!' : 'Chats exported successfully!');
+      alert(successMessage);
     } else {
-      alert(language === 'ar' ? 'حدث خطأ في التصدير' : 'Error exporting chats');
+      alert(errorMessage);
     }
   };
 
@@ -199,9 +226,16 @@ const SavedChatsModal = ({
               margin: 0,
               fontSize: '1.5rem',
               fontWeight: '700',
-              color: '#333'
+              color: '#333',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}>
-              {language === 'ar' ? 'المحادثات المحفوظة' : 'Saved Chats'}
+              {chatType === "voice" ? "🎤" : "💬"}
+              {chatType === "voice"
+                ? (language === 'ar' ? 'المحادثات الصوتية المحفوظة' : 'Saved Voice Chats')
+                : (language === 'ar' ? 'المحادثات المحفوظة' : 'Saved Chats')
+              }
             </h2>
 
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -322,7 +356,10 @@ const SavedChatsModal = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={language === 'ar' ? 'البحث في المحادثات...' : 'Search chats...'}
+              placeholder={chatType === "voice"
+                ? (language === 'ar' ? 'البحث في المحادثات الصوتية...' : 'Search voice chats...')
+                : (language === 'ar' ? 'البحث في المحادثات...' : 'Search chats...')
+              }
               style={{
                 flex: 1,
                 padding: '0.75rem',
@@ -370,8 +407,14 @@ const SavedChatsModal = ({
             ) : filteredChats.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                 {searchQuery || selectedTag ?
-                  (language === 'ar' ? 'لا توجد محادثات مطابقة' : 'No matching chats found') :
-                  (language === 'ar' ? 'لا توجد محادثات محفوظة' : 'No saved chats yet')
+                  (chatType === "voice"
+                    ? (language === 'ar' ? 'لا توجد محادثات صوتية مطابقة' : 'No matching voice chats found')
+                    : (language === 'ar' ? 'لا توجد محادثات مطابقة' : 'No matching chats found')
+                  ) :
+                  (chatType === "voice"
+                    ? (language === 'ar' ? 'لا توجد محادثات صوتية محفوظة' : 'No saved voice chats yet')
+                    : (language === 'ar' ? 'لا توجد محادثات محفوظة' : 'No saved chats yet')
+                  )
                 }
               </div>
             ) : (

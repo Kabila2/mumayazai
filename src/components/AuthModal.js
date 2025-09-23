@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "./AuthModal.css";
 
-export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, onSubmit }) {
+export default function AuthModal({ lang, mode, setMode, onClose, onSubmit }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,8 +11,6 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
   const [serverError, setServerError] = useState("");
-
-  const stopLangToggle = () => onToggleLang(false);
 
   const validate = () => {
     const newErrors = {};
@@ -70,7 +68,6 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
                 value={name}
                 placeholder={lang === "en" ? "Name" : "الاسم"}
                 className="modal-input"
-                onFocus={stopLangToggle}
                 onChange={(e) => setName(e.target.value)}
                 variants={textVariants}
                 initial="enter"
@@ -89,7 +86,6 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
             value={email}
             placeholder={lang === "en" ? "Email" : "البريد الإلكتروني"}
             className="modal-input"
-            onFocus={stopLangToggle}
             onChange={(e) => setEmail(e.target.value)}
             variants={textVariants}
             initial="enter"
@@ -106,7 +102,6 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
             value={password}
             placeholder={lang === "en" ? "Password" : "كلمة المرور"}
             className="modal-input"
-            onFocus={stopLangToggle}
             onChange={(e) => setPassword(e.target.value)}
             variants={textVariants}
             initial="enter"
@@ -148,7 +143,6 @@ export default function AuthModal({ lang, onToggleLang, mode, setMode, onClose, 
                 value={parentEmail}
                 placeholder={lang === "en" ? "Parent's Email (Optional)" : "بريد ولي الأمر (اختياري)"}
                 className="modal-input"
-                onFocus={stopLangToggle}
                 onChange={(e) => setParentEmail(e.target.value)}
                 variants={textVariants}
                 initial="enter"

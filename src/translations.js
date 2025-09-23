@@ -88,6 +88,10 @@ export const translations = {
     summary: "Summary",
     you: "You",
 
+    // Save voice chat keys
+    saveVoiceChat: "Save Voice Chat",
+    savedVoiceChats: "Saved Voice Chats",
+
     // Plane transition keys
     launching: "Launching...",
     warpingToVoice: "Warping to 🎤 Voice Mode",
@@ -185,6 +189,10 @@ export const translations = {
     speak: "تحدث",
     summary: "الملخص",
     you: "أنت",
+
+    // Save voice chat keys
+    saveVoiceChat: "حفظ المحادثة الصوتية",
+    savedVoiceChats: "المحادثات الصوتية المحفوظة",
 
     // Plane transition keys
     launching: "جاري الإطلاق...",

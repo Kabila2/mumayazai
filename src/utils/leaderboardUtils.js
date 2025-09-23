@@ -113,6 +113,14 @@ export const getLeaderboardData = () => {
     const allStats = JSON.parse(localStorage.getItem(USER_STATS_KEY)) || {};
     const users = Object.values(allStats);
 
+    // Calculate total points for each user
+    const usersWithTotalPoints = users.map(user => ({
+      ...user,
+      totalPoints: (user.totalPoints || 0) +
+                  (user.learningPoints || 0) +
+                  (user.dailyTaskPoints || 0)
+    }));
+
     // Sort by different criteria
     const mostActiveUsers = [...users]
       .sort((a, b) => b.totalTimeSpent - a.totalTimeSpent)
@@ -131,12 +139,35 @@ export const getLeaderboardData = () => {
       .sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive))
       .slice(0, 10);
 
+    // New leaderboards for points
+    const topPointsTotal = [...usersWithTotalPoints]
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .slice(0, 10);
+
+    const topLearningPoints = [...users]
+      .sort((a, b) => (b.learningPoints || 0) - (a.learningPoints || 0))
+      .slice(0, 10);
+
+    const topDailyTaskPoints = [...users]
+      .sort((a, b) => (b.dailyTaskPoints || 0) - (a.dailyTaskPoints || 0))
+      .slice(0, 10);
+
+    const topStreaks = [...users]
+      .sort((a, b) => (b.taskStreak || 0) - (a.taskStreak || 0))
+      .filter(user => (user.taskStreak || 0) > 0)
+      .slice(0, 10);
+
     return {
       totalUsers: users.length,
       mostActiveUsers,
       mostChats,
       mostMessages,
-      recentlyActive
+      recentlyActive,
+      // New categories
+      topPointsTotal,
+      topLearningPoints,
+      topDailyTaskPoints,
+      topStreaks
     };
   } catch (error) {
     console.error("Error getting leaderboard data:", error);
@@ -145,7 +176,11 @@ export const getLeaderboardData = () => {
       mostActiveUsers: [],
       mostChats: [],
       mostMessages: [],
-      recentlyActive: []
+      recentlyActive: [],
+      topPointsTotal: [],
+      topLearningPoints: [],
+      topDailyTaskPoints: [],
+      topStreaks: []
     };
   }
 };
@@ -204,6 +239,104 @@ export const getUserRank = (userEmail, category = "totalTimeSpent") => {
 };
 
 /**
+ * Record learning points
+ */
+export const recordLearningPoints = (userEmail, points, activityType = "general") => {
+  try {
+    const currentStats = getUserStats(userEmail);
+    if (!currentStats) return { success: false };
+
+    const updates = {
+      learningPoints: (currentStats.learningPoints || 0) + points,
+      totalPoints: ((currentStats.totalPoints || 0) + points),
+      totalMessages: currentStats.totalMessages + 1 // Count as engagement
+    };
+
+    // Track activity type
+    if (!currentStats.learningActivities) {
+      updates.learningActivities = {};
+    } else {
+      updates.learningActivities = { ...currentStats.learningActivities };
+    }
+
+    if (!updates.learningActivities[activityType]) {
+      updates.learningActivities[activityType] = 0;
+    }
+    updates.learningActivities[activityType] += points;
+
+    return updateUserStats(userEmail, updates);
+  } catch (error) {
+    console.error("Error recording learning points:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Record daily task points
+ */
+export const recordDailyTaskPoints = (userEmail, points, taskType = "general") => {
+  try {
+    const currentStats = getUserStats(userEmail);
+    if (!currentStats) return { success: false };
+
+    const today = new Date().toDateString();
+
+    const updates = {
+      dailyTaskPoints: (currentStats.dailyTaskPoints || 0) + points,
+      totalPoints: ((currentStats.totalPoints || 0) + points),
+      totalMessages: currentStats.totalMessages + 1 // Count as engagement
+    };
+
+    // Track daily points by date
+    if (!currentStats.dailyPointsByDate) {
+      updates.dailyPointsByDate = {};
+    } else {
+      updates.dailyPointsByDate = { ...currentStats.dailyPointsByDate };
+    }
+
+    if (!updates.dailyPointsByDate[today]) {
+      updates.dailyPointsByDate[today] = 0;
+    }
+    updates.dailyPointsByDate[today] += points;
+
+    return updateUserStats(userEmail, updates);
+  } catch (error) {
+    console.error("Error recording daily task points:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get comprehensive user rank including all point types
+ */
+export const getComprehensiveUserRank = (userEmail) => {
+  try {
+    const allStats = JSON.parse(localStorage.getItem(USER_STATS_KEY)) || {};
+    const users = Object.values(allStats);
+
+    // Calculate total points for each user
+    const usersWithTotalPoints = users.map(user => ({
+      ...user,
+      totalPoints: (user.totalPoints || 0) +
+                  (user.learningPoints || 0) +
+                  (user.dailyTaskPoints || 0)
+    }));
+
+    const sortedUsers = usersWithTotalPoints.sort((a, b) => b.totalPoints - a.totalPoints);
+    const userIndex = sortedUsers.findIndex(user => user.email === userEmail.toLowerCase());
+
+    return {
+      rank: userIndex >= 0 ? userIndex + 1 : null,
+      totalUsers: users.length,
+      userStats: sortedUsers.find(user => user.email === userEmail.toLowerCase())
+    };
+  } catch (error) {
+    console.error("Error getting comprehensive user rank:", error);
+    return { rank: null, totalUsers: 0, userStats: null };
+  }
+};
+
+/**
  * Initialize user stats if not exists
  */
 export const initializeUserStats = (userEmail, userName) => {
@@ -220,7 +353,14 @@ export const initializeUserStats = (userEmail, userName) => {
         lastActive: new Date().toISOString(),
         joinedAt: new Date().toISOString(),
         achievements: [],
-        streak: 0
+        streak: 0,
+        // New point tracking fields
+        learningPoints: 0,
+        dailyTaskPoints: 0,
+        totalPoints: 0,
+        learningActivities: {},
+        dailyPointsByDate: {},
+        taskStreak: 0
       };
 
       localStorage.setItem(USER_STATS_KEY, JSON.stringify(allStats));

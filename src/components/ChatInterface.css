@@ -1,7 +1,5 @@
 /* Professional ChatInterface - Modern Design with Animations */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
 
 :root {
   /* Professional Color System */
@@ -38,7 +36,6 @@
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-family-dyslexia: 'Atkinson Hyperlegible', 'Comic Neue', 'Verdana', sans-serif;
   --font-size-xs: 0.875rem;
   --font-size-sm: 1rem;
   --font-size-base: 1.125rem;
@@ -46,14 +43,6 @@
   --font-size-xl: 1.5rem;
   --font-size-2xl: 1.875rem;
   --font-size-3xl: 2.25rem;
-
-  /* Dyslexia-friendly spacing */
-  --line-height-tight: 1.4;
-  --line-height-normal: 1.6;
-  --line-height-relaxed: 1.8;
-  --line-height-loose: 2.0;
-  --letter-spacing-wide: 0.05em;
-  --word-spacing-wide: 0.16em;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -1088,182 +1077,45 @@ html, body {
   }
 }
 
-/* Dyslexia-Friendly Styling */
-.dyslexia-friendly {
-  --font-family: var(--font-family-dyslexia);
-  --line-height-base: var(--line-height-relaxed);
-  --letter-spacing-base: var(--letter-spacing-wide);
-  --word-spacing-base: var(--word-spacing-wide);
-}
-
-.dyslexia-friendly .chat-container {
-  font-family: var(--font-family-dyslexia);
-  line-height: var(--line-height-relaxed);
-  letter-spacing: var(--letter-spacing-wide);
-  word-spacing: var(--word-spacing-wide);
-}
-
-.dyslexia-friendly .chat-bubble {
-  padding: var(--space-6) var(--space-8);
-  line-height: var(--line-height-loose);
-  font-size: calc(var(--font-size-base) * 1.1);
-  letter-spacing: var(--letter-spacing-wide);
-  word-spacing: var(--word-spacing-wide);
-  text-align: left;
-}
-
-.dyslexia-friendly .chat-input {
-  line-height: var(--line-height-relaxed);
-  letter-spacing: var(--letter-spacing-wide);
-  word-spacing: var(--word-spacing-wide);
-  font-family: var(--font-family-dyslexia);
-  font-size: calc(var(--font-size-base) * 1.1);
-}
-
-.dyslexia-friendly .header-button,
-.dyslexia-friendly .send-button {
-  font-family: var(--font-family-dyslexia);
-  letter-spacing: var(--letter-spacing-wide);
-  padding: var(--space-4) var(--space-6);
-}
-
-.dyslexia-friendly .assistant-title {
-  font-family: var(--font-family-dyslexia);
-  letter-spacing: var(--letter-spacing-wide);
-}
-
-/* High Contrast Mode */
-.high-contrast {
-  --glass-bg: rgba(0, 0, 0, 0.95);
-  --glass-border: rgba(255, 255, 255, 0.9);
-  --glass-hover: rgba(255, 255, 255, 0.1);
-  --glass-strong: rgba(0, 0, 0, 0.9);
-  --text-light: #ffffff;
-  --primary-solid: #00ff00;
-  --bg-main: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
-}
-
-.high-contrast .chat-bubble {
-  background: rgba(0, 0, 0, 0.9) !important;
-  border: 2px solid #ffffff !important;
-  color: #ffffff !important;
-}
-
-.high-contrast .message-container.user .chat-bubble {
-  background: rgba(0, 50, 150, 0.9) !important;
-  border: 2px solid #00ff00 !important;
-}
-
-.high-contrast .message-container.assistant .chat-bubble {
-  background: rgba(0, 100, 0, 0.9) !important;
-  border: 2px solid #ffffff !important;
-}
-
-.high-contrast .chat-input {
-  background: rgba(0, 0, 0, 0.9) !important;
-  border: 2px solid #ffffff !important;
-  color: #ffffff !important;
-}
-
-.high-contrast .send-button {
-  background: #00ff00 !important;
-  color: #000000 !important;
-  border: 2px solid #ffffff !important;
-}
-
-.high-contrast .header-button {
-  background: rgba(0, 0, 0, 0.9) !important;
-  border: 2px solid #ffffff !important;
-  color: #ffffff !important;
-}
-
-/* Combined Dyslexia + High Contrast */
-.dyslexia-friendly.high-contrast .chat-bubble {
-  padding: var(--space-8) var(--space-10);
-  line-height: 2.2;
-  font-size: calc(var(--font-size-base) * 1.2);
-}
-
-/* Reading Guide/Ruler */
-.reading-guide {
+/* Explore Button Special Styling */
+.header-button.explore-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   position: relative;
+  overflow: hidden;
 }
 
-.reading-guide::before {
+.header-button.explore-button::before {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg,
-    rgba(255, 255, 0, 0.8) 0%,
-    rgba(255, 215, 0, 0.9) 50%,
-    rgba(255, 255, 0, 0.8) 100%);
-  pointer-events: none;
-  z-index: 1000;
-  transition: top 0.1s ease;
-  display: none;
-  box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
-  top: var(--guide-position, 50%);
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
 }
 
-.reading-guide.active::before {
-  display: block;
+.header-button.explore-button:hover::before {
+  left: 100%;
 }
 
-.reading-guide.active .chat-messages {
-  position: relative;
+.header-button.explore-button span:first-child {
+  animation: exploreGlow 2s infinite;
 }
 
-/* Enhanced focus styles for better navigation */
-.dyslexia-friendly *:focus-visible {
-  outline: 3px solid #FFD700;
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-/* Additional text-to-speech visual feedback */
-.chat-bubble[data-speaking="true"] {
-  animation: speakingPulse 1.5s ease-in-out infinite;
-  border-color: #FFD700 !important;
-}
-
-@keyframes speakingPulse {
+@keyframes exploreGlow {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
   }
   50% {
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 255, 255, 0.6);
   }
 }
 
-/* Focus indicators for screen readers */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 6px;
-  background: var(--primary-solid);
-  color: white;
-  padding: 8px;
-  text-decoration: none;
-  border-radius: 4px;
-  z-index: 10000;
-}
-
-.skip-link:focus {
-  top: 6px;
+.header-button.explore-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 /* Print Styles */
