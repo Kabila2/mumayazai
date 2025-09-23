@@ -1,163 +1,131 @@
 /* global puter */
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import MobileNavigation from './MobileNavigation';
 import ExploreModal from './ExploreModal';
 import SaveVoiceChatModal from './SaveVoiceChatModal';
+import { useResponsive } from '../hooks/useResponsive';
 import "./VoiceInterface.css";
+import "./ChatInterface.css";
 
-/** ---------- Enhanced Voice Memory System ---------- */
-const VOICE_MEMORY_STORAGE_KEY = "mumayaz_voice_memory";
-const MAX_VOICE_MEMORY_MESSAGES = 100;
-const VOICE_CONTEXT_WINDOW = 20; // Increased for better memory
+/** ---------- Advanced Voice System ---------- */
+const VOICE_STORAGE_KEY = "mumayaz_voice_data";
+const MAX_CONVERSATION_LENGTH = 150;
+const CONTEXT_WINDOW = 25;
+const AUTO_SAVE_DELAY = 800;
 
-// Save voice conversation to localStorage
-const saveVoiceMemory = (messages) => {
-  try {
-    const memoryData = {
-      messages: messages.slice(-MAX_VOICE_MEMORY_MESSAGES),
-      timestamp: Date.now(),
-      version: "2.0",
-      mode: "voice"
-    };
-    localStorage.setItem(VOICE_MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
-    console.log("🎤 Voice memory saved:", messages.length, "messages");
-  } catch (error) {
-    console.warn("Failed to save voice memory:", error);
-  }
+// Voice Commands System
+const VOICE_COMMANDS = {
+  'clear chat': { action: 'clearChat', response: 'Chat cleared' },
+  'open settings': { action: 'openSettings', response: 'Settings opened' },
+  'close settings': { action: 'closeSettings', response: 'Settings closed' },
+  'save conversation': { action: 'saveChat', response: 'Saving conversation' },
+  'switch to chat': { action: 'switchMode', response: 'Switching to chat mode' },
+  'stop speaking': { action: 'stopSpeaking', response: null },
+  'repeat that': { action: 'repeatLast', response: 'Repeating last message' },
+  'help': { action: 'showHelp', response: 'Here are available voice commands' }
 };
 
-// Load voice conversation from localStorage
-const loadVoiceMemory = () => {
-  try {
-    const stored = localStorage.getItem(VOICE_MEMORY_STORAGE_KEY);
-    if (!stored) return null;
-    
-    const memoryData = JSON.parse(stored);
-    
-    // Check if memory is recent (within 30 days)
-    const isRecent = Date.now() - memoryData.timestamp < 30 * 24 * 60 * 60 * 1000;
-    
-    if (isRecent && memoryData.messages?.length) {
-      console.log("🎤 Voice memory loaded:", memoryData.messages.length, "messages");
-      return memoryData.messages;
+// Enhanced Voice Memory Management
+class VoiceMemoryManager {
+  static save(conversations, currentSession) {
+    try {
+      const data = {
+        conversations,
+        currentSession,
+        timestamp: Date.now(),
+        version: "3.0"
+      };
+      localStorage.setItem(VOICE_STORAGE_KEY, JSON.stringify(data));
+      console.log("🔄 Voice memory saved:", conversations.length, "conversations");
+    } catch (error) {
+      console.warn("Failed to save voice memory:", error);
     }
-  } catch (error) {
-    console.warn("Failed to load voice memory:", error);
   }
-  return null;
-};
 
-// Clear voice conversation memory
-const clearVoiceMemory = () => {
-  try {
-    localStorage.removeItem(VOICE_MEMORY_STORAGE_KEY);
-    console.log("🎤 Voice memory cleared");
-  } catch (error) {
-    console.warn("Failed to clear voice memory:", error);
-  }
-};
+  static load() {
+    try {
+      const stored = localStorage.getItem(VOICE_STORAGE_KEY);
+      if (!stored) return null;
 
-// Enhanced voice context building with full conversation history
-const buildVoiceContext = (messages) => {
-  if (messages.length <= 1) return "";
-  
-  // Get ALL conversation messages (excluding welcome message)
-  const conversationMessages = messages
-    .slice(1) // Skip welcome message
-    .filter(msg => !msg.loading && msg.text) // Filter out loading/empty messages
-    .slice(-VOICE_CONTEXT_WINDOW) // Take most recent messages for context
-    .map(msg => {
-      const role = msg.sender === "user" ? "Human" : "Assistant";
-      return `${role}: ${msg.text}`;
-    });
-  
-  if (conversationMessages.length === 0) return "";
-  
-  return `\n\nVoice conversation history:\n${conversationMessages.join('\n')}\n\nCurrent voice input:\n`;
-};
+      const data = JSON.parse(stored);
+      const isRecent = Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000; // 7 days
 
-/* ---------- Enhanced Puter helpers ---------- */
-const hasPuter = () =>
-  typeof window !== "undefined" &&
-  window.puter &&
-  window.puter.ai &&
-  typeof window.puter.ai.chat === "function";
-
-const waitForPuter = (timeoutMs = 3000) =>
-  new Promise((resolve) => {
-    if (hasPuter()) return resolve(true);
-    const t0 = Date.now();
-    const id = setInterval(() => {
-      if (hasPuter() || Date.now() - t0 > timeoutMs) {
-        clearInterval(id);
-        resolve(hasPuter());
+      if (isRecent && data.version === "3.0") {
+        console.log("📂 Voice memory loaded:", data.conversations?.length || 0, "conversations");
+        return data;
       }
-    }, 100);
-  });
+    } catch (error) {
+      console.warn("Failed to load voice memory:", error);
+    }
+    return null;
+  }
 
-const aiChat = async (prompt, ms = 30000) => {
-  if (!hasPuter()) throw new Error("Puter AI not available");
-  
-  console.log("🎯 [Voice] Sending prompt with enhanced memory to AI:", prompt.substring(0, 200) + "...");
-  
-  const timeout = new Promise((_, rej) =>
-    setTimeout(() => rej(new Error("AI request timed out")), ms)
-  );
-  
-  const req = (async () => {
-    const resp = await window.puter.ai.chat(prompt);
-    const responseText = typeof resp === "string" ? resp : resp?.message?.content ?? "";
-    console.log("🤖 [Voice] AI response received:", responseText.substring(0, 200) + "...");
+  static clear() {
+    localStorage.removeItem(VOICE_STORAGE_KEY);
+    console.log("🗑️ Voice memory cleared");
+  }
+
+  static buildContext(messages) {
+    return messages
+      .slice(-CONTEXT_WINDOW)
+      .filter(m => m.text && !m.isCommand)
+      .map(m => `${m.sender === 'user' ? 'Human' : 'Assistant'}: ${m.text}`)
+      .join('\n');
+  }
+}
+
+// Enhanced Puter Integration
+class PuterVoiceAPI {
+  static isAvailable() {
+    return typeof window !== "undefined" &&
+           window.puter?.ai?.chat &&
+           typeof window.puter.ai.chat === "function";
+  }
+
+  static async waitForConnection(timeout = 5000) {
+    if (this.isAvailable()) return true;
+
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      const checkInterval = setInterval(() => {
+        if (this.isAvailable() || Date.now() - startTime > timeout) {
+          clearInterval(checkInterval);
+          resolve(this.isAvailable());
+        }
+      }, 100);
+    });
+  }
+
+  static async sendMessage(prompt, context = "") {
+    if (!this.isAvailable()) {
+      throw new Error("Puter AI not available");
+    }
+
+    const enhancedPrompt = context
+      ? `${prompt}\n\nContext:\n${context}\n\nPlease provide a conversational response optimized for voice interaction.`
+      : `${prompt}\n\nPlease provide a conversational response optimized for voice interaction.`;
+
+    console.log("🚀 Sending enhanced voice prompt");
+
+    const response = await window.puter.ai.chat(enhancedPrompt);
+    const responseText = typeof response === "string" ? response : response?.message?.content ?? "";
+
+    console.log("✅ Received AI response");
     return responseText;
-  })();
-  
-  return Promise.race([req, timeout]);
-};
+  }
+}
 
-/** Enhanced mock AI for voice mode with memory-aware responses */
-const mockAI = (prompt, hasContext = false) => {
-  const userInput = prompt.split("Current voice input:").pop() ||
-                   prompt.split("Human:").pop() ||
-                   prompt;
-  const cleanInput = userInput.trim().substring(0, 100);
-
-  const contextNote = hasContext ? "\n• I remember our voice conversation" : "";
-
+// Mock AI for development
+const mockAIResponse = (input, hasContext) => {
   const responses = [
-    `• Regarding "${cleanInput}"\n• Voice mode is currently in demo\n• I can help you with questions and tasks\n• Maintaining conversation history for better responses${contextNote}`,
-
-    `• You mentioned: "${cleanInput}"\n• This is voice demonstration mode\n• I maintain our conversation history\n• Providing clear responses optimized for speech${contextNote}`,
-
-    `• About "${cleanInput}"\n• I'm in demo mode but can provide helpful responses\n• I remember our conversation for better continuity\n• Ready to assist with your questions${contextNote}`
+    `I understand you said: "${input.substring(0, 50)}...". This is a demonstration of the new voice interface with enhanced features.`,
+    `Regarding "${input.substring(0, 50)}...", I'm running in demo mode with advanced voice capabilities and conversation management.`,
+    `You mentioned "${input.substring(0, 50)}...". The new voice system includes smart command recognition and contextual responses.`
   ];
 
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
-/** Enhanced AI response handler for voice mode with full memory */
-const getVoiceAIResponse = async (prompt, conversationContext = "") => {
-  const ready = await waitForPuter(3000);
-
-  // Add conversation context to the prompt
-  const enhancedPrompt = conversationContext
-    ? prompt + conversationContext
-    : prompt;
-
-  console.log("💾 [Voice] Using enhanced prompt with memory context and bullet point formatting");
-
-  if (!ready) {
-    console.log("🔄 [Voice] Using mock AI response");
-    return mockAI(enhancedPrompt, !!conversationContext);
-  }
-
-  try {
-    const rawResponse = await aiChat(enhancedPrompt, 30000);
-    console.log("✅ [Voice] Enhanced response ready:", rawResponse.substring(0, 100) + "...");
-    return rawResponse;
-  } catch (err) {
-    console.warn("[VoiceInterface] AI error:", err);
-    return "• I'm having trouble connecting right now\n• Please try speaking again in a moment";
-  }
+  const contextNote = hasContext ? " I'm maintaining our conversation history for better continuity." : "";
+  return responses[Math.floor(Math.random() * responses.length)] + contextNote;
 };
 
 export default function VoiceInterface({
@@ -178,869 +146,1004 @@ export default function VoiceInterface({
   onSwitchMode,
   onSignOut
 }) {
+  console.log("🎯 New VoiceInterface initialized");
 
-  const assistantTitle = t.voiceAssistant || "Voice Assistant";
-
-  console.log("🎯 [Voice] VoiceInterface initialized with enhanced memory");
-
-  /* ---------- State with Enhanced Memory ---------- */
-  // Initialize messages with memory or welcome message
-  const [messages, setMessages] = useState(() => {
-    const savedMessages = loadVoiceMemory();
-    if (savedMessages && savedMessages.length > 0) {
-      console.log("💾 Restored", savedMessages.length, "voice messages from memory");
-      return savedMessages;
-    }
-    return [{
-      sender: "gpt",
-      text: t.voiceWelcomeMessage || "• Hello! I'm your Chat Assistant in voice mode\n• I can help you with questions and provide information\n• I assist with various tasks\n• Speak whenever you're ready!\n• I'll remember our conversation",
-      id: Date.now()
-    }];
+  // Core State
+  const [conversations, setConversations] = useState(() => {
+    const saved = VoiceMemoryManager.load();
+    return saved?.conversations || [];
   });
-  
-  const [isListening, setListening] = useState(false);
+
+  const [currentSession, setCurrentSession] = useState(() => {
+    const saved = VoiceMemoryManager.load();
+    return saved?.currentSession || {
+      id: Date.now(),
+      messages: [{
+        id: Date.now(),
+        sender: "assistant",
+        text: "🎙️ Welcome to the new Mumayaz Voice Assistant! I'm equipped with advanced features including voice commands, conversation management, and enhanced AI interactions. Try saying 'help' to see what I can do!",
+        timestamp: new Date().toISOString()
+      }],
+      title: "New Voice Session",
+      createdAt: new Date().toISOString()
+    };
+  });
+
+  // Voice System State
+  const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [voices, setVoices] = useState(extVoices || []);
-  const [localVoice, setLocalVoice] = useState(() => {
-    const saved = localStorage.getItem('voice-selected');
-    return saved || selectedVoice || "";
-  });
-  const [localSpeed, setLocalSpeed] = useState(() => {
-    const saved = localStorage.getItem('voice-speed');
-    return saved ? parseFloat(saved) : (speed || 1);
-  });
-  const [localPitch, setLocalPitch] = useState(() => {
-    const saved = localStorage.getItem('voice-pitch');
-    return saved ? parseFloat(saved) : (pitch || 1);
-  });
-  const [showSettings, setShowSettings] = useState(false);
-  const [showExploreModal, setShowExploreModal] = useState(false);
-  const [showSaveVoiceChatModal, setShowSaveVoiceChatModal] = useState(false);
-  const [aiReady, setAiReady] = useState(hasPuter());
-  const [showMemoryStatus, setShowMemoryStatus] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [voiceLevel, setVoiceLevel] = useState(0);
+  const [lastTranscript, setLastTranscript] = useState("");
+  const [confidence, setConfidence] = useState(0);
 
+  // UI State
+  const [showSettings, setShowSettings] = useState(false);
+  const [showCommands, setShowCommands] = useState(false);
+  const [showConversations, setShowConversations] = useState(false);
+  const [showExploreModal, setShowExploreModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  // Voice Settings
+  const [voices, setVoices] = useState(extVoices || []);
+  const [selectedVoiceLocal, setSelectedVoiceLocal] = useState(selectedVoice || "");
+  const [speedLocal, setSpeedLocal] = useState(speed || 1.0);
+  const [pitchLocal, setPitchLocal] = useState(pitch || 1.0);
+  const [volumeLocal, setVolumeLocal] = useState(0.9);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+  const [commandMode, setCommandMode] = useState(true);
+
+  // Refs
   const recognitionRef = useRef(null);
   const messagesRef = useRef(null);
-  const buttonControls = useAnimation();
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const animationFrameRef = useRef(null);
   const saveTimeoutRef = useRef(null);
 
-  // Enhanced save messages to memory with debouncing
+  // Responsive
+  const { isMobile, isTablet, shouldUseHamburgerMenu, isCompact } = useResponsive();
+
+  // Auto-save conversations
   useEffect(() => {
-    if (messages.length > 1) { // Don't save just the welcome message
-      // Clear previous timeout
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-      
-      // Set new timeout to save after 1 second of no changes
+    if (currentSession.messages.length > 1) {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
-        saveVoiceMemory(messages);
-      }, 1000);
+        const updatedConversations = conversations.some(c => c.id === currentSession.id)
+          ? conversations.map(c => c.id === currentSession.id ? currentSession : c)
+          : [...conversations, currentSession];
+
+        VoiceMemoryManager.save(updatedConversations, currentSession);
+        setConversations(updatedConversations);
+      }, AUTO_SAVE_DELAY);
     }
-    
+
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [messages]);
+  }, [currentSession, conversations]);
 
-  /* ---------- Mobile Detection Hook ---------- */
-  const [isMobile, setIsMobile] = useState(false);
+  // Voice Recognition Setup
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768 || 
-        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  /* ---------- Effects ---------- */
-  useEffect(() => {
-    const check = () => setAiReady(hasPuter());
-    check();
-    const id = setInterval(check, 1500);
-    window.addEventListener("focus", check);
-    return () => {
-      clearInterval(id);
-      window.removeEventListener("focus", check);
-    };
-  }, []);
-
-  useEffect(() => {
-    const synth = window.speechSynthesis;
-    const loadVoices = () => {
-      const all = synth.getVoices();
-      console.log(`🎤 Total voices available: ${all.length}`);
-
-      // Filter voices based on selected language
-      const languagePrefix = language === 'ar' ? 'ar' : 'en';
-      let filtered = all.filter((v) => v.lang?.startsWith(languagePrefix));
-
-      if (language === 'ar') {
-        console.log(`🎤 Arabic voices found: ${filtered.length}`);
-        if (filtered.length > 0) {
-          filtered.forEach(voice => {
-            console.log(`   - ${voice.name} (${voice.lang})`);
-          });
-        }
-        // If no Arabic voices found, fallback to English voices
-        if (filtered.length === 0) {
-          console.log("⚠️ No Arabic voices found, falling back to English voices");
-          filtered = all.filter((v) => v.lang?.startsWith("en"));
-        }
-      }
-
-      setVoices(filtered);
-
-      // Auto-select best voice for the language
-      if (!localVoice || !filtered.find(v => v.name === localVoice)) {
-        if (filtered.length > 0) {
-          // For Arabic, prefer Saudi Arabia, Egypt, or UAE voices
-          let bestVoice = filtered[0];
-          if (language === 'ar') {
-            const preferredVoice = filtered.find(v =>
-              v.lang.includes('SA') || v.lang.includes('EG') || v.lang.includes('AE') || v.lang.includes('ar-')
-            );
-            if (preferredVoice) bestVoice = preferredVoice;
-          }
-
-          setLocalVoice(bestVoice.name);
-          setSelectedVoice?.(bestVoice.name);
-          console.log(`🎤 Auto-selected voice: ${bestVoice.name} (${bestVoice.lang})`);
-        }
-      }
-    };
-    loadVoices();
-    synth.onvoiceschanged = loadVoices;
-    return () => {
-      synth.onvoiceschanged = null;
-    };
-  }, [language, localVoice, setSelectedVoice]);
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesRef.current) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage) {
-        // Immediate scroll for user messages and loading states
-        if (lastMessage.sender === "user" || lastMessage.loading) {
-          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-        } else {
-          // Smooth scroll for AI responses
-          setTimeout(() => {
-            if (messagesRef.current) {
-              messagesRef.current.scrollTo({
-                top: messagesRef.current.scrollHeight,
-                behavior: reducedMotion ? 'auto' : 'smooth'
-              });
-            }
-          }, 100);
-        }
-      }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showNotification("Speech recognition not supported in this browser", "error");
+      return;
     }
-  }, [messages, reducedMotion]);
 
-  // Show memory status notification
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = language === 'ar' ? 'ar-SA' : 'en-US';
+    recognition.maxAlternatives = 3;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setLastTranscript("");
+      setConfidence(0);
+      console.log("🎤 Voice recognition started");
+    };
+
+    recognition.onresult = (event) => {
+      const result = event.results[event.results.length - 1];
+      const transcript = result[0].transcript;
+      const confidence = result[0].confidence;
+
+      setLastTranscript(transcript);
+      setConfidence(confidence);
+
+      if (result.isFinal) {
+        handleVoiceInput(transcript, confidence);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      setVoiceLevel(0);
+      console.log("🔇 Voice recognition ended");
+    };
+
+    recognition.onerror = (event) => {
+      setIsListening(false);
+      setVoiceLevel(0);
+      console.error("Speech recognition error:", event.error);
+      showNotification(`Voice recognition error: ${event.error}`, "error");
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognition) {
+        recognition.onstart = null;
+        recognition.onresult = null;
+        recognition.onend = null;
+        recognition.onerror = null;
+      }
+    };
+  }, [language]);
+
+  // Audio Level Monitoring
   useEffect(() => {
-    const savedMessages = loadVoiceMemory();
-    if (savedMessages && savedMessages.length > 1) {
-      setShowMemoryStatus(true);
-      const timer = setTimeout(() => setShowMemoryStatus(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+    if (!isListening) return;
 
-  // Enhanced speech recognition with memory integration
-  useEffect(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-
-    const recog = new SR();
-    recog.lang = language || "en-US";
-    recog.interimResults = false;
-    recog.continuous = false;
-
-    recog.onstart = () => {
-      setListening(true);
-      if (navigator.vibrate) navigator.vibrate(80);
-      console.log("🎤 [Voice] Started listening with enhanced memory");
-    };
-    
-    recog.onend = () => {
-      setListening(false);
-      console.log("🔇 [Voice] Stopped listening");
-    };
-    
-    recog.onerror = (event) => {
-      setListening(false);
-      const errorMsg = `Speech recognition error: ${event.error}`;
-      setMessages((m) => {
-        const updated = [...m, { sender: "system", text: errorMsg, id: Date.now() }];
-        saveVoiceMemory(updated);
-        return updated;
-      });
-      console.error("[Voice] Speech recognition error:", event.error);
-    };
-    
-    recog.onresult = async (e) => {
-      const text = e.results[0][0].transcript;
-      const confidence = e.results[0][0].confidence;
-      
-      console.log("🗣️ [Voice] User said:", text, "with confidence:", confidence);
-      console.log("🎯 [Voice] Processing with enhanced memory");
-      
-      const newUserMessage = { sender: "user", text: text, confidence, id: Date.now() };
-      
-      // Update messages immediately with user message
-      setMessages((m) => {
-        const updated = [...m, newUserMessage];
-        // Save immediately when user speaks
-        saveVoiceMemory(updated);
-        return updated;
-      });
-      
+    const setupAudioContext = async () => {
       try {
-        // Build conversation context from ALL previous messages
-        const updatedMessages = [...messages, newUserMessage];
-        const conversationContext = buildVoiceContext(updatedMessages);
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        analyserRef.current = audioContextRef.current.createAnalyser();
 
-        console.log("💾 [Voice] Enhanced prompt with full memory created");
-        console.log("📝 [Voice] Context includes", updatedMessages.length - 1, "previous messages");
+        const source = audioContextRef.current.createMediaStreamSource(stream);
+        source.connect(analyserRef.current);
 
-        // Add bullet point instruction directly to the user's text
-        const bulletFormattedText = `${text}\n\nIMPORTANT: Please format your response using bullet points. Start each main point with • and use clear, concise bullet points throughout your response.`;
+        analyserRef.current.fftSize = 256;
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
 
-        const rawResponse = await getVoiceAIResponse(bulletFormattedText, conversationContext);
-        
-        setMessages((m) => {
-          const updated = [...m, { sender: "gpt", text: rawResponse, id: Date.now() + 1 }];
-          // Save after AI response
-          saveVoiceMemory(updated);
-          return updated;
-        });
-        
-        console.log("✅ [Voice] Response with enhanced memory displayed");
-        
-        // Speak the response
-        speak(rawResponse);
-        
-      } catch (err) {
-        const errorMsg = "I'm having trouble connecting to the AI right now. Please try speaking again.";
-        setMessages((m) => {
-          const updated = [...m, { sender: "gpt", text: errorMsg, id: Date.now() + 1 }];
-          saveVoiceMemory(updated);
-          return updated;
-        });
-        speak("I'm having trouble connecting to the AI right now.");
-        console.error("[VoiceInterface] AI error:", err);
+        const updateLevel = () => {
+          if (!isListening) return;
+
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+          setVoiceLevel(Math.min(average / 128, 1));
+
+          animationFrameRef.current = requestAnimationFrame(updateLevel);
+        };
+
+        updateLevel();
+      } catch (error) {
+        console.warn("Failed to setup audio monitoring:", error);
       }
     };
 
-    recognitionRef.current = recog;
-  }, [language, aiReady, messages]);
+    setupAudioContext();
 
-  /* ---------- Enhanced Speech Function ---------- */
-  const speak = (text) => {
-    console.log("🔊 [Voice] Speaking response");
-    
-    // Prefer external speak if passed from App
-    if (typeof extSpeak === "function") {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, [isListening]);
+
+  // Voice Synthesis
+  const speak = useCallback((text) => {
+    if (!text || !autoSpeak) return;
+
+    if (extSpeak) {
       extSpeak(text);
       return;
     }
+
     if (!window.speechSynthesis) return;
+
     window.speechSynthesis.cancel();
-    
-    // Enhanced text cleaning for better speech
-    let cleanText = text
-      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove **bold**
-      .replace(/[📋🎯✨💾🌈💨⚠️⚙️🎤🗣️🔊🔇📝✅🔄💭🧠]/g, '') // Remove emojis including brain
-      .replace(/• /g, '') // Remove bullet points for speech
-      .replace(/•/g, '') // Remove any remaining bullet points
-      .replace(/\n+/g, '. ') // Replace line breaks with pauses
-      .replace(/\. \. /g, '. ') // Clean up double periods
-      .replace(/DYSLEXIA-FRIENDLY RESPONSE:/gi, '') // Remove dyslexia response headers
-      .replace(/Memory status:[^.]+\./g, '') // Remove memory status lines
-      .replace(/Voice system status:[^.]+\./g, '') // Remove system status
-      .replace(/\(I remember [^)]+\)/g, '') // Remove memory notes in parentheses
-      .replace(/Enhanced memory|Full memory|Voice memory/gi, 'memory') // Simplify memory references
+    setIsSpeaking(true);
+
+    // Clean text for better speech
+    const cleanText = text
+      .replace(/🎙️|📱|⚙️|🔊|🎯|✨|💬|📋|🗑️|💾|🧭/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\n+/g, '. ')
+      .replace(/\. \. +/g, '. ')
       .trim();
 
-    // Arabic-specific text improvements
-    if (language === 'ar') {
-      cleanText = cleanText
-        .replace(/\s+/g, ' ') // Normalize whitespace for Arabic
-        .replace(/([.!?])/g, '$1 ') // Add space after punctuation for Arabic speech
-        .replace(/\s+([.!?])/g, '$1') // Remove space before punctuation
-        .trim();
-    }
-    
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    const voiceObj = voices.find((v) => v.name === localVoice);
-    if (voiceObj) {
-      utterance.voice = voiceObj;
-      utterance.lang = voiceObj.lang;
-    } else {
-      // Set language based on user preference
-      if (language === 'ar') {
-        utterance.lang = "ar-SA"; // Arabic (Saudi Arabia) - most common
-      } else {
-        utterance.lang = "en-US";
-      }
-    }
-    utterance.rate = localSpeed;
-    utterance.pitch = localPitch;
-    utterance.volume = 0.92;
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      console.log("🗣️ [Voice] Started speaking");
-    };
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      console.log("🔇 [Voice] Finished speaking");
-    };
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      console.error("[Voice] Speech synthesis error");
-    };
-    window.speechSynthesis.speak(utterance);
-  };
 
-  const stopSpeaking = () => {
+    const voice = voices.find(v => v.name === selectedVoiceLocal);
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    }
+
+    utterance.rate = speedLocal;
+    utterance.pitch = pitchLocal;
+    utterance.volume = volumeLocal;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  }, [extSpeak, autoSpeak, voices, selectedVoiceLocal, speedLocal, pitchLocal, volumeLocal]);
+
+  const stopSpeaking = useCallback(() => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+  }, []);
+
+  // Voice Command Processing
+  const processVoiceCommand = useCallback((text) => {
+    const lowerText = text.toLowerCase().trim();
+
+    for (const [command, config] of Object.entries(VOICE_COMMANDS)) {
+      if (lowerText.includes(command)) {
+        if (config.response) {
+          showNotification(config.response, "success");
+        }
+
+        switch (config.action) {
+          case 'clearChat':
+            clearCurrentSession();
+            break;
+          case 'openSettings':
+            setShowSettings(true);
+            break;
+          case 'closeSettings':
+            setShowSettings(false);
+            break;
+          case 'saveChat':
+            setShowSaveModal(true);
+            break;
+          case 'switchMode':
+            onSwitchMode?.('chat');
+            break;
+          case 'stopSpeaking':
+            stopSpeaking();
+            break;
+          case 'repeatLast':
+            repeatLastMessage();
+            break;
+          case 'showHelp':
+            showVoiceCommands();
+            break;
+        }
+        return true;
+      }
+    }
+    return false;
+  }, [onSwitchMode, stopSpeaking]);
+
+  // Handle Voice Input
+  const handleVoiceInput = useCallback(async (transcript, confidence) => {
+    if (!transcript.trim()) return;
+
+    console.log("🗣️ Voice input:", transcript, "confidence:", confidence);
+
+    const userMessage = {
+      id: Date.now(),
+      sender: "user",
+      text: transcript,
+      confidence: confidence,
+      timestamp: new Date().toISOString()
+    };
+
+    // Update current session with user message
+    setCurrentSession(prev => ({
+      ...prev,
+      messages: [...prev.messages, userMessage]
+    }));
+
+    // Check for voice commands
+    if (commandMode && processVoiceCommand(transcript)) {
+      const commandMessage = {
+        id: Date.now() + 1,
+        sender: "assistant",
+        text: "Voice command executed successfully.",
+        isCommand: true,
+        timestamp: new Date().toISOString()
+      };
+
+      setCurrentSession(prev => ({
+        ...prev,
+        messages: [...prev.messages, commandMessage]
+      }));
+      return;
+    }
+
+    // Process as AI query
+    setIsProcessing(true);
+
+    try {
+      const context = VoiceMemoryManager.buildContext(currentSession.messages);
+      const isReady = await PuterVoiceAPI.waitForConnection(3000);
+
+      let response;
+      if (isReady) {
+        response = await PuterVoiceAPI.sendMessage(transcript, context);
+      } else {
+        response = mockAIResponse(transcript, !!context);
+      }
+
+      const assistantMessage = {
+        id: Date.now() + 2,
+        sender: "assistant",
+        text: response,
+        timestamp: new Date().toISOString()
+      };
+
+      setCurrentSession(prev => ({
+        ...prev,
+        messages: [...prev.messages, assistantMessage]
+      }));
+
+      if (autoSpeak) {
+        speak(response);
+      }
+
+    } catch (error) {
+      console.error("AI processing error:", error);
+      const errorMessage = {
+        id: Date.now() + 2,
+        sender: "assistant",
+        text: "I'm having trouble processing your request right now. Please try again in a moment.",
+        timestamp: new Date().toISOString()
+      };
+
+      setCurrentSession(prev => ({
+        ...prev,
+        messages: [...prev.messages, errorMessage]
+      }));
+
+      showNotification("Failed to process voice input", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [currentSession.messages, commandMode, processVoiceCommand, speak, autoSpeak]);
+
+  // Utility Functions
+  const showNotification = (message, type = "info") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const clearCurrentSession = () => {
+    setCurrentSession({
+      id: Date.now(),
+      messages: [{
+        id: Date.now(),
+        sender: "assistant",
+        text: "New voice session started. How can I help you today?",
+        timestamp: new Date().toISOString()
+      }],
+      title: "New Voice Session",
+      createdAt: new Date().toISOString()
+    });
+    showNotification("Chat cleared", "success");
+  };
+
+  const repeatLastMessage = () => {
+    const lastAssistantMessage = [...currentSession.messages]
+      .reverse()
+      .find(m => m.sender === "assistant" && !m.isCommand);
+
+    if (lastAssistantMessage) {
+      speak(lastAssistantMessage.text);
+    }
+  };
+
+  const showVoiceCommands = () => {
+    setShowCommands(true);
   };
 
   const startListening = () => {
     if (!recognitionRef.current) {
-      alert("Speech recognition not supported. Try Chrome, Edge, or Safari.");
+      showNotification("Speech recognition not available", "error");
       return;
     }
-    if (!reducedMotion) {
-      buttonControls.start({
-        scale: [1, 0.95, 1.1, 1],
-        transition: { duration: 0.3 },
-      });
+
+    if (isSpeaking) {
+      stopSpeaking();
     }
+
     recognitionRef.current.start();
   };
 
-  // Save voice chat handler
-  const handleSaveVoiceChat = useCallback(() => {
-    if (messages.length > 1) { // Don't save if only welcome message
-      setShowSaveVoiceChatModal(true);
+  // Navigation Configuration
+  const navigationButtons = [
+    {
+      id: 'settings',
+      icon: '⚙️',
+      label: 'Settings',
+      onClick: () => setShowSettings(!showSettings),
+      variant: 'secondary'
+    },
+    {
+      id: 'commands',
+      icon: '🎯',
+      label: 'Commands',
+      onClick: () => setShowCommands(true),
+      variant: 'secondary'
+    },
+    {
+      id: 'save',
+      icon: '💾',
+      label: 'Save',
+      onClick: () => setShowSaveModal(true),
+      variant: 'secondary',
+      disabled: currentSession.messages.length <= 1
+    },
+    {
+      id: 'chat-mode',
+      icon: '💬',
+      label: 'Chat Mode',
+      onClick: () => onSwitchMode?.('chat'),
+      variant: 'tertiary'
     }
-  }, [messages]);
-
-  // Clear conversation and memory
-  const clearMessages = () => {
-    clearVoiceMemory();
-    setMessages([{
-      sender: "gpt",
-      text: t.voiceWelcomeMessage || "• Hello! I'm your Chat Assistant in voice mode\n• I can help you with questions and provide information\n• I assist with various tasks\n• Speak whenever you're ready!\n• I'll remember our conversation",
-      id: Date.now()
-    }]);
-  };
-
-  // Animation variants
-  const headerVariants = {
-    hidden: { y: -80, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 100, 
-        damping: 15,
-        duration: reducedMotion ? 0.1 : 0.6
-      }
-    }
-  };
-
-  const contentVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: reducedMotion ? 0.1 : 0.6,
-        delay: reducedMotion ? 0 : 0.2
-      }
-    }
-  };
-
-  /* ---------- Listening Waves Component ---------- */
-  const ListeningWaves = () => (
-    <AnimatePresence>
-      {isListening && (
-        <motion.div
-          className="voice-waves"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {["0s", "0.4s", "0.8s"].map((delay, i) => (
-            <div
-              key={i}
-              className={`wave w${i + 1}`}
-              style={{
-                animationDelay: reducedMotion ? '0s' : delay
-              }}
-            />
-          ))}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  ];
 
   return (
     <motion.div
       className="voice-area"
-      style={{
-        fontSize: `${fontSize}rem`
-      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: reducedMotion ? 0 : 0.6 }}
     >
-      {/* Floating Particles */}
-      <div className="floating-particles">
-        {[...Array(9)].map((_, i) => (
-          <div key={i} className="particle"></div>
-        ))}
-      </div>
-
-      {/* Memory Status Notification */}
+      {/* Notification System */}
       <AnimatePresence>
-        {showMemoryStatus && (
+        {notification && (
           <motion.div
+            className={`voice-notification ${notification.type}`}
             style={{
               position: 'fixed',
               top: '20px',
               right: '20px',
-              background: 'rgba(16, 185, 129, 0.9)',
-              color: 'white',
+              zIndex: 1000,
               padding: '12px 16px',
-              borderRadius: '12px',
-              fontSize: '0.9rem',
+              borderRadius: '8px',
+              color: 'white',
               fontWeight: '500',
-              zIndex: 1001,
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+              background: notification.type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(16, 185, 129, 0.9)'
             }}
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
           >
-            Voice conversation restored
+            {notification.message}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Responsive Navigation */}
-      <MobileNavigation
-        buttons={navigationButtons}
-        title={assistantTitle}
-        centerContent={
-          <motion.div
-            className="assistant-title"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: reducedMotion ? 0 : 0.4 }}
-            style={{
-              position: 'static',
-              transform: 'none',
-              textAlign: 'center'
-            }}
-          >
-            <span className="title-main" style={{
-              fontSize: isMobile ? (isCompact ? '1.1rem' : '1.3rem') : '1.5rem',
-              display: 'block',
-              marginBottom: '0.25rem'
-            }}>
-              {assistantTitle}
-            </span>
-            <span className="title-sub" style={{
-              fontSize: isMobile ? '0.8rem' : '0.9rem'
-            }}>
-              {t.voiceMode || "Voice Mode"}
-            </span>
-          </motion.div>
-        }
-        onMenuToggle={setIsMobileMenuOpen}
-        language={language}
-        reducedMotion={reducedMotion}
-      />
-
-      {/* Main Content Area */}
-      <motion.div
-        className="voice-content"
-        variants={contentVariants}
-        initial="hidden"
-        animate="visible"
-        style={{
-          paddingTop: `calc(${isCompact ? '56px' : '64px'} + ${getSpacing(1.5, 2, 2)})`,
-          paddingLeft: getSpacing(1, 1.5, 2),
-          paddingRight: getSpacing(1, 1.5, 2),
-          paddingBottom: getSpacing(1.5, 2, 2)
-        }}
+      {/* Navigation Header - Matching ChatInterface */}
+      <motion.header
+        className="chat-header"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: reducedMotion ? 0.1 : 0.6, ease: 'easeOut' }}
       >
-        {/* Listening waves */}
-        <ListeningWaves />
-
-        {/* Voice Controls */}
+        {/* Large Centered Title */}
         <motion.div
-          className="voice-controls"
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: reducedMotion ? 0 : 0.3 }}
+          className="assistant-title"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: reducedMotion ? 0 : 0.4 }}
           style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
             display: 'flex',
-            gap: isMobile ? '0.75rem' : '1rem',
-            margin: `${getSpacing(1, 1.5, 2)} 0`,
-            flexWrap: 'wrap',
-            justifyContent: 'center',
+            flexDirection: 'column',
             alignItems: 'center',
-            padding: isMobile ? '1rem' : '0'
+            justifyContent: 'center',
+            textAlign: 'center',
+            width: '100%',
+            zIndex: 10
           }}
         >
-          <motion.button
-            className={`primary-btn ${isListening ? 'listening' : ''}`}
-            onClick={startListening}
-            disabled={isListening || isSpeaking}
-            animate={buttonControls}
-            whileHover={!isListening && !isSpeaking && !reducedMotion ? {
-              scale: 1.05,
-              y: -3
-            } : {}}
-            whileTap={!isListening && !isSpeaking ? { scale: 0.95 } : {}}
-            style={{
-              width: isMobile ? (isCompact ? '68px' : '76px') : '200px',
-              height: isMobile ? (isCompact ? '68px' : '76px') : '4rem',
-              minWidth: isMobile ? (isCompact ? '68px' : '76px') : '200px',
-              minHeight: isMobile ? (isCompact ? '68px' : '76px') : '4rem',
-              borderRadius: isMobile ? '50%' : 'var(--radius-xl)',
-              fontSize: isMobile ? '1.2rem' : 'var(--font-size-base)',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? '0.25rem' : '0.5rem',
-              flexShrink: 0
-            }}
-          >
-            <span style={{ fontSize: isMobile ? '1.5rem' : '1.2rem' }}>
-              {isListening ? "🎤" : "🗣️"}
-            </span>
-            {!isMobile && (
-              <span>{isListening ? (t.listening || "Listening...") : (t.speak || "Speak")}</span>
-            )}
-          </motion.button>
+          <span className="title-main" style={{
+            fontSize: 'clamp(2rem, 5.5vw, 4rem)',
+            fontWeight: '900',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 20%, #e2e8f0 40%, #cbd5e1 60%, #94a3b8 80%, #64748b 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundSize: '200% 200%',
+            animation: 'shimmer 3s ease-in-out infinite',
+            display: 'block',
+            letterSpacing: '-0.03em',
+            lineHeight: '0.95',
+            textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4)',
+            filter: 'drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3))'
+          }}>
+            Voice Assistant
+          </span>
+          <span style={{
+            fontSize: shouldUseHamburgerMenu ? '0.8rem' : '0.9rem',
+            color: 'var(--text-light)',
+            fontWeight: '500',
+            opacity: 0.8,
+            marginTop: '0.5rem'
+          }}>
+            {isListening ? "🎤 Listening..." :
+             isSpeaking ? "🔊 Speaking..." :
+             isProcessing ? "⚡ Processing..." : "Ready"}
+          </span>
+          {isListening && (
+            <motion.div
+              style={{
+                width: shouldUseHamburgerMenu ? '120px' : '200px',
+                height: '3px',
+                background: 'rgba(255,255,255,0.3)',
+                borderRadius: '2px',
+                overflow: 'hidden',
+                marginTop: '0.5rem'
+              }}
+            >
+              <motion.div
+                style={{
+                  width: `${voiceLevel * 100}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #10b981, #3b82f6)',
+                  borderRadius: '2px'
+                }}
+                animate={{ width: `${voiceLevel * 100}%` }}
+                transition={{ duration: 0.1 }}
+              />
+            </motion.div>
+          )}
+        </motion.div>
 
-          <AnimatePresence>
-            {isSpeaking && (
+        {/* Header Actions - Same as ChatInterface */}
+        <div className="header-actions" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          {/* Left side - spacer */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}></div>
+
+          {/* Right side - Navigation buttons */}
+          <div style={{
+            display: 'flex',
+            gap: shouldUseHamburgerMenu ? '0.5rem' : '0.75rem',
+            alignItems: 'center'
+          }}>
+            {!shouldUseHamburgerMenu && navigationButtons.map((button, index) => (
               <motion.button
-                className="secondary-btn stop-btn"
-                onClick={stopSpeaking}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
+                key={button.id}
+                className="header-button"
+                onClick={button.onClick}
+                disabled={button.disabled}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: (index + 1) * 0.1, duration: reducedMotion ? 0.1 : 0.3 }}
+                whileHover={!button.disabled && !reducedMotion ? { scale: 1.02, y: -1 } : {}}
+                whileTap={!button.disabled ? { scale: 0.98 } : {}}
+                style={{
+                  opacity: button.disabled ? 0.5 : 1
+                }}
+              >
+                <span>{button.icon}</span>
+                <span>{button.label}</span>
+              </motion.button>
+            ))}
+
+            {shouldUseHamburgerMenu && (
+              <motion.button
+                className="hamburger-btn"
+                onClick={() => setShowSettings(!showSettings)}
                 whileHover={!reducedMotion ? { scale: 1.05 } : {}}
                 whileTap={{ scale: 0.95 }}
                 style={{
-                  width: isMobile ? (isCompact ? '52px' : '60px') : 'auto',
-                  height: isMobile ? (isCompact ? '52px' : '60px') : '3rem',
-                  minWidth: isMobile ? (isCompact ? '52px' : '60px') : 'auto',
-                  minHeight: isMobile ? (isCompact ? '52px' : '60px') : '3rem',
-                  borderRadius: isMobile ? '50%' : 'var(--radius-lg)',
-                  fontSize: isMobile ? '1.1rem' : 'var(--font-size-sm)',
-                  flexShrink: 0,
-                  padding: isMobile ? '0' : '0.75rem 1rem'
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: isCompact ? '40px' : '44px',
+                  height: isCompact ? '40px' : '44px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  gap: '3px',
+                  padding: 0
                 }}
               >
-                {isMobile ? "🔇" : (t.stopSpeaking || "🔇 Stop")}
+                <div style={{ width: '18px', height: '2px', background: 'var(--text-light)', borderRadius: '1px' }} />
+                <div style={{ width: '18px', height: '2px', background: 'var(--text-light)', borderRadius: '1px' }} />
+                <div style={{ width: '18px', height: '2px', background: 'var(--text-light)', borderRadius: '1px' }} />
               </motion.button>
             )}
-          </AnimatePresence>
+          </div>
+        </div>
+      </motion.header>
 
-          {!isMobile && (
+      {/* Main Voice Controls */}
+      <motion.div
+        className="voice-main-controls"
+        style={{
+          padding: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1.5rem',
+          marginTop: '80px'
+        }}
+      >
+        <motion.button
+          className="voice-main-button"
+          onClick={startListening}
+          disabled={isListening || isProcessing}
+          style={{
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            border: 'none',
+            background: isListening
+              ? 'linear-gradient(45deg, #ef4444, #dc2626)'
+              : 'linear-gradient(45deg, #10b981, #059669)',
+            color: 'white',
+            fontSize: '2.5rem',
+            cursor: isListening || isProcessing ? 'not-allowed' : 'pointer',
+            boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+            transition: 'all 0.3s ease'
+          }}
+          whileHover={!isListening && !isProcessing ? { scale: 1.05 } : {}}
+          whileTap={!isListening && !isProcessing ? { scale: 0.95 } : {}}
+          animate={isListening ? {
+            scale: [1, 1.1, 1],
+            boxShadow: [
+              '0 8px 25px rgba(0,0,0,0.3)',
+              '0 12px 35px rgba(239, 68, 68, 0.4)',
+              '0 8px 25px rgba(0,0,0,0.3)'
+            ]
+          } : {}}
+          transition={{ repeat: isListening ? Infinity : 0, duration: 1.5 }}
+        >
+          {isListening ? '🎤' : isProcessing ? '⚡' : '🗣️'}
+        </motion.button>
+
+        <div className="voice-controls-row" style={{
+          display: 'flex',
+          gap: '1rem',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          {isSpeaking && (
             <motion.button
-              className="secondary-btn"
-              onClick={() => setShowSettings((v) => !v)}
-              whileHover={!reducedMotion ? { scale: 1.05 } : {}}
-              whileTap={{ scale: 0.95 }}
+              onClick={stopSpeaking}
               style={{
-                minHeight: '3rem',
-                padding: '0.75rem 1rem'
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                border: '2px solid rgba(239, 68, 68, 0.3)',
+                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                color: 'white',
+                cursor: 'pointer'
               }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
             >
-              {t.settings || "⚙️ Settings"}
+              🔇 Stop
             </motion.button>
           )}
-        </motion.div>
 
-        {/* Enhanced Settings Panel */}
-        <AnimatePresence>
-          {showSettings && (
-            <motion.div
-              className="quick-settings"
-              initial={{ opacity: 0, y: 20, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.98 }}
-              transition={{ duration: reducedMotion ? 0.1 : 0.3 }}
-              style={{
-                width: isMobile ? 'calc(100% - 2rem)' : '350px',
-                maxWidth: isMobile ? '100%' : '90vw',
-                margin: isMobile ? '1rem' : '1rem auto',
-                padding: getSpacing(1, 1.5, 2),
-                minWidth: 'auto'
-              }}
-            >
-              <div className="setting-group">
-                <label>{t.speed || "Speed"}: {localSpeed.toFixed(1)}x</label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={localSpeed}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value);
-                    setLocalSpeed(v);
-                    setSpeed?.(v);
-                    // Save to localStorage for persistence
-                    localStorage.setItem('voice-speed', v.toString());
-                  }}
-                />
-              </div>
-              
-              <div className="setting-group">
-                <label>{t.pitch || "Pitch"}: {localPitch.toFixed(1)}</label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={localPitch}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value);
-                    setLocalPitch(v);
-                    setPitch?.(v);
-                    // Save to localStorage for persistence
-                    localStorage.setItem('voice-pitch', v.toString());
-                  }}
-                />
-              </div>
-              
-              <div className="setting-group">
-                <label>{t.voice || "Voice"}</label>
-                <select
-                  value={localVoice}
-                  onChange={(e) => {
-                    setLocalVoice(e.target.value);
-                    setSelectedVoice?.(e.target.value);
-                    // Save to localStorage for persistence
-                    localStorage.setItem('voice-selected', e.target.value);
-                  }}
-                >
-                  {voices.map((v) => (
-                    <option key={v.name} value={v.name}>
-                      {v.name} ({v.lang})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <motion.button
-                className="test-btn"
-                onClick={() => {
-                  const testMessage = language === 'ar' || language === 'en' || language === 'en-US'
-                    ? (language === 'ar' ? 'مرحباً بك في مميز' : 'Welcome to Mumayaz')
-                    : 'Welcome to Mumayaz';
-                  speak(testMessage);
-                }}
-                whileHover={!reducedMotion ? { scale: 1.02, y: -2 } : {}}
-                whileTap={{ scale: 0.98 }}
-              >
-{t.testVoice || "🔊 Test Voice"}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Enhanced Conversation Log with Memory */}
-        <motion.div
-          className="voice-log"
-          ref={messagesRef}
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: reducedMotion ? 0 : 0.4 }}
-          style={{
-            width: isMobile ? 'calc(100% - 2rem)' : '100%',
-            maxWidth: '900px',
-            margin: isMobile ? '1rem auto' : '1.5rem auto 0',
-            padding: getSpacing(1, 1.5, 2),
-            maxHeight: isMobile ? (isCompact ? '30vh' : '35vh') : '50vh',
-            fontSize: isMobile ? '0.9rem' : 'var(--font-size-sm)'
-          }}
-        >
-          <div className="log-header">
-            <h3>{t.voiceHistory || "Voice History"}</h3>
-            <div className="log-controls">
-              <motion.button
-                className="clear-btn"
-                onClick={clearMessages}
-                title="Clear voice conversation and memory"
-                whileHover={!reducedMotion ? { scale: 1.05 } : {}}
-                whileTap={{ scale: 0.95 }}
-              >
-{t.clearAll || "Clear All"}
-              </motion.button>
-            </div>
-          </div>
-
-          <AnimatePresence mode="popLayout">
-            {messages.length === 1 ? (
-              <motion.div 
-                className="empty-state"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: reducedMotion ? 0.1 : 0.4 }}
-              >
-                <div className="empty-icon">🎤</div>
-                <h3>{t.readyForVoiceChat || "Ready for voice chat with memory!"}</h3>
-                <p>
-                  {t.pressSpeak || 'Press "Speak" to start a conversation.'}
-                  <br />
-                  {t.responsesOptimized || "Your responses will be optimized for voice interaction and I'll remember our conversation history."}
-                </p>
-              </motion.div>
-            ) : (
-              messages.map((m, index) => (
-                <motion.div
-                  key={m.id}
-                  className={`log-message ${m.sender}`}
-                  initial={{ opacity: 0, x: -40, scale: 0.98 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: 40, scale: 0.98 }}
-                  transition={{ duration: reducedMotion ? 0.1 : 0.25 }}
-                  layout
-                  whileHover={!reducedMotion ? { 
-                    scale: 1.01,
-                    transition: { duration: 0.2 }
-                  } : {}}
-                >
-                  <div className="message-header">
-                    <span className="sender-icon">
-                      {m.sender === "user" ? "👤" : m.sender === "gpt" ? "💭" : "⚙️"}
-                    </span>
-                    <span className="sender-name">
-                      {m.sender === "user" ? (t.you || "You") :
-                       m.sender === "gpt" ? (t.aiResponse || "AI Response") :
-                       "System"}
-                    </span>
-                    {typeof m.confidence === "number" && (
-                      <span
-                        className={`confidence ${
-                          m.confidence > 0.8 ? 'high' : 
-                          m.confidence > 0.5 ? 'medium' : 'low'
-                        }`}
-                      >
-                        {Math.round(m.confidence * 100)}%
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="message-content">
-                    {m.text}
-                  </div>
-                  
-                  {/* Message timestamp and index for reference */}
-                  {index > 0 && (
-                    <div style={{ 
-                      fontSize: '0.7rem', 
-                      opacity: 0.5, 
-                      marginTop: '6px', 
-                      textAlign: 'right' 
-                    }}>
-                      Voice #{index} • {new Date(m.id).toLocaleTimeString()}
-                    </div>
-                  )}
-                  
-                  {m.sender === "gpt" && !m.loading && (
-                    <motion.button
-                      className="replay-btn"
-                      onClick={() => speak(m.text)}
-                      title="Replay message"
-                      whileHover={!reducedMotion ? { 
-                        scale: 1.2,
-                        transition: { duration: 0.2 }
-                      } : {}}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      🔄
-                    </motion.button>
-                  )}
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Status indicator */}
-        <motion.div
-          className={`status-indicator ${
-            isListening ? 'listening' : 
-            isSpeaking ? 'speaking' : 'idle'
-          }`}
-          title={
-            isListening ? (t.listening || "Listening") :
-            isSpeaking ? (t.speaking || "Speaking") :
-            "Ready"
-          }
-          aria-label={
-            isListening ? (t.listening || "Listening") :
-            isSpeaking ? (t.speaking || "Speaking") :
-            "Ready"
-          }
-          initial={{ scale: 0.95, opacity: 0.9 }}
-          animate={{ 
-            scale: isListening && !reducedMotion ? [1, 1.2, 1] : 1, 
-            opacity: 1 
-          }}
-          transition={{ 
-            duration: isListening && !reducedMotion ? 1.5 : 0.3, 
-            repeat: isListening && !reducedMotion ? Infinity : 0 
-          }}
-        />
+          <motion.button
+            onClick={clearCurrentSession}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: '2px solid rgba(156, 163, 175, 0.3)',
+              background: 'rgba(156, 163, 175, 0.1)',
+              color: 'var(--text-color)',
+              cursor: 'pointer'
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            🗑️ Clear
+          </motion.button>
+        </div>
       </motion.div>
 
-      {/* Save Voice Chat Modal */}
+      {/* Enhanced Settings Panel */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            className="voice-settings-panel"
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: '16px',
+              padding: '2rem',
+              width: '90vw',
+              maxWidth: '500px',
+              zIndex: 1000,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+            }}
+            initial={{ opacity: 0, scale: 0.9, y: '-40%' }}
+            animate={{ opacity: 1, scale: 1, y: '-50%' }}
+            exit={{ opacity: 0, scale: 0.9, y: '-40%' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3>Voice Settings</h3>
+              <button
+                onClick={() => setShowSettings(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: 'var(--text-color)'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="settings-grid" style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <label>Auto Speak Responses</label>
+                <input
+                  type="checkbox"
+                  checked={autoSpeak}
+                  onChange={(e) => setAutoSpeak(e.target.checked)}
+                  style={{ marginLeft: '0.5rem' }}
+                />
+              </div>
+
+              <div>
+                <label>Voice Command Mode</label>
+                <input
+                  type="checkbox"
+                  checked={commandMode}
+                  onChange={(e) => setCommandMode(e.target.checked)}
+                  style={{ marginLeft: '0.5rem' }}
+                />
+              </div>
+
+              <div>
+                <label>Speech Speed: {speedLocal.toFixed(1)}x</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={speedLocal}
+                  onChange={(e) => setSpeedLocal(parseFloat(e.target.value))}
+                  style={{ width: '100%', marginTop: '0.5rem' }}
+                />
+              </div>
+
+              <div>
+                <label>Speech Pitch: {pitchLocal.toFixed(1)}</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={pitchLocal}
+                  onChange={(e) => setPitchLocal(parseFloat(e.target.value))}
+                  style={{ width: '100%', marginTop: '0.5rem' }}
+                />
+              </div>
+
+              <div>
+                <label>Volume: {Math.round(volumeLocal * 100)}%</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={volumeLocal}
+                  onChange={(e) => setVolumeLocal(parseFloat(e.target.value))}
+                  style={{ width: '100%', marginTop: '0.5rem' }}
+                />
+              </div>
+
+              <button
+                onClick={() => speak("This is a test of the voice settings")}
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '2px solid var(--glass-border)',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  cursor: 'pointer',
+                  marginTop: '1rem'
+                }}
+              >
+                🔊 Test Voice
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Voice Commands Help */}
+      <AnimatePresence>
+        {showCommands && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 999,
+                backdropFilter: 'blur(4px)'
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCommands(false)}
+            />
+
+            <motion.div
+              className="voice-commands-panel"
+              style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: '16px',
+                padding: '2rem',
+                width: '90vw',
+                maxWidth: '600px',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                zIndex: 1000,
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+              }}
+              initial={{ opacity: 0, scale: 0.8, y: '-40%' }}
+              animate={{ opacity: 1, scale: 1, y: '-50%' }}
+              exit={{ opacity: 0, scale: 0.8, y: '-40%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3>Voice Commands</h3>
+              <button
+                onClick={() => setShowCommands(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: 'var(--text-color)'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="commands-list" style={{ display: 'grid', gap: '0.75rem' }}>
+              {Object.entries(VOICE_COMMANDS).map(([command, config]) => (
+                <div key={command} style={{
+                  padding: '0.75rem',
+                  background: 'rgba(255,255,255,0.05)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  <strong>"{command}"</strong>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                    {config.response || `Executes ${config.action}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </>
+        )}
+      </AnimatePresence>
+
+      {/* Conversation History */}
+      <motion.div
+        className="voice-conversation"
+        ref={messagesRef}
+        style={{
+          margin: '2rem',
+          maxHeight: '40vh',
+          overflowY: 'auto',
+          padding: '1rem',
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '12px',
+          border: '1px solid var(--glass-border)'
+        }}
+      >
+        <AnimatePresence mode="popLayout">
+          {currentSession.messages.map((message, index) => (
+            <motion.div
+              key={message.id}
+              className={`message ${message.sender}`}
+              style={{
+                padding: '0.75rem',
+                margin: '0.5rem 0',
+                borderRadius: '8px',
+                background: message.sender === 'user'
+                  ? 'rgba(59, 130, 246, 0.1)'
+                  : 'rgba(16, 185, 129, 0.1)',
+                border: `1px solid ${message.sender === 'user' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              layout
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                  {message.sender === 'user' ? '👤 You' : '🤖 Assistant'}
+                </span>
+                {message.confidence && (
+                  <span style={{
+                    fontSize: '0.8rem',
+                    opacity: 0.7,
+                    padding: '0.25rem 0.5rem',
+                    background: 'rgba(255,255,255,0.1)',
+                    borderRadius: '4px'
+                  }}>
+                    {Math.round(message.confidence * 100)}%
+                  </span>
+                )}
+              </div>
+              <div>{message.text}</div>
+              {message.sender === 'assistant' && !message.isCommand && (
+                <button
+                  onClick={() => speak(message.text)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '1.2rem',
+                    opacity: 0.7,
+                    marginTop: '0.5rem'
+                  }}
+                  title="Replay message"
+                >
+                  🔄
+                </button>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Modals */}
       <SaveVoiceChatModal
-        isOpen={showSaveVoiceChatModal}
-        onClose={() => setShowSaveVoiceChatModal(false)}
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
         onSave={(result) => {
           if (result.success) {
-            console.log('Voice chat saved successfully:', result.title);
-            // Could show a success notification here
+            showNotification('Conversation saved successfully!', 'success');
           }
         }}
-        messages={messages}
+        messages={currentSession.messages}
         t={t}
         language={language}
         reducedMotion={reducedMotion}
       />
 
-      {/* Explore Modal */}
       <ExploreModal
         isOpen={showExploreModal}
         onClose={() => setShowExploreModal(false)}
-        currentUserEmail={null} // Voice interface doesn't have user email context
+        currentUserEmail={null}
         t={t}
         language={language}
         onSignOut={onSignOut}
-        onLoadVoiceChat={(voiceChatMessages) => {
-          setMessages(voiceChatMessages);
+        onLoadVoiceChat={(messages) => {
+          setCurrentSession(prev => ({ ...prev, messages }));
           setShowExploreModal(false);
         }}
       />

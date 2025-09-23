@@ -236,14 +236,19 @@ html, body {
   gap: var(--space-3);
   color: var(--text-light);
   font-weight: 600;
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-3xl);
   animation: titleFade 1s var(--transition-smooth) 0.5s both;
 }
 
-.assistant-title::before {
-  content: '✨';
-  font-size: var(--font-size-lg);
-  animation: sparkle 2s ease-in-out infinite;
+/* Removed star from title */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes sparkle {
@@ -273,40 +278,49 @@ html, body {
   padding: var(--space-3) var(--space-5);
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-md);
   color: var(--text-light);
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: var(--transition-fast);
   position: relative;
   overflow: hidden;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-button::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: var(--transition-smooth);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0;
+  transition: var(--transition-fast);
 }
 
 .header-button:hover::before {
-  left: 100%;
+  opacity: 1;
 }
 
 .header-button:hover {
   background: var(--glass-hover);
-  transform: translateY(-2px) scale(1.05);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 
 .header-button:active {
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 @keyframes buttonsFade {
@@ -587,51 +601,57 @@ html, body {
 /* Professional Send Button */
 .send-button {
   padding: var(--space-4) var(--space-6);
-  background: var(--primary);
-  border: none;
-  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: var(--radius-md);
   color: var(--text-light);
   font-size: var(--font-size-base);
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: var(--transition-fast);
   position: relative;
   overflow: hidden;
   min-height: 60px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .send-button::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: var(--transition-smooth);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0;
+  transition: var(--transition-fast);
 }
 
 .send-button:hover::before {
-  left: 100%;
+  opacity: 1;
 }
 
 .send-button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .send-button:active {
-  transform: translateY(-1px) scale(1.02);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .send-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Action Buttons in Input Area */
@@ -645,17 +665,18 @@ html, body {
   height: 48px;
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-md);
   color: var(--text-light);
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--font-size-lg);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .action-button::before {
@@ -665,18 +686,25 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-  transform: scale(0);
-  transition: var(--transition-smooth);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  opacity: 0;
+  transition: var(--transition-fast);
 }
 
 .action-button:hover::before {
-  transform: scale(1);
+  opacity: 1;
 }
 
 .action-button:hover {
-  transform: translateY(-2px) scale(1.1);
+  background: var(--glass-hover);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.action-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Loading Animation */
@@ -1080,24 +1108,7 @@ html, body {
 /* Explore Button Special Styling */
 .header-button.explore-button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.header-button.explore-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.header-button.explore-button:hover::before {
-  left: 100%;
+  border: 2px solid rgba(102, 126, 234, 0.4);
 }
 
 .header-button.explore-button span:first-child {
@@ -1114,8 +1125,8 @@ html, body {
 }
 
 .header-button.explore-button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+  border-color: rgba(102, 126, 234, 0.6);
 }
 
 /* Print Styles */

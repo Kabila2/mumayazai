@@ -15,14 +15,14 @@ const MobileNavigation = ({
   className = ''
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isMobile, isCompact, getSpacing } = useResponsive();
+  const { isMobile, isCompact, getSpacing, shouldUseHamburgerMenu } = useResponsive();
 
   // Close menu when screen size changes to desktop
   useEffect(() => {
-    if (!isMobile && isMenuOpen) {
+    if (!shouldUseHamburgerMenu && isMenuOpen) {
       setIsMenuOpen(false);
     }
-  }, [isMobile, isMenuOpen]);
+  }, [shouldUseHamburgerMenu, isMenuOpen]);
 
   // Handle menu toggle
   const handleMenuToggle = () => {
@@ -120,7 +120,7 @@ const MobileNavigation = ({
       >
         {/* Left side - Primary action or hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {isMobile ? (
+          {shouldUseHamburgerMenu ? (
             // Hamburger menu for mobile
             <motion.button
               className="hamburger-btn"
@@ -250,7 +250,7 @@ const MobileNavigation = ({
 
         {/* Right side - Secondary actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {!isMobile && secondaryButtons.slice(0, 2).map((button, index) => (
+          {!shouldUseHamburgerMenu && secondaryButtons.slice(0, 2).map((button, index) => (
             <motion.button
               key={button.key || `secondary-${index}`}
               className={`nav-button secondary ${button.className || ''}`}

@@ -7,7 +7,7 @@ export const breakpoints = {
   xs: 0,        // Extra small devices (phones)
   sm: 576,      // Small devices (landscape phones)
   md: 768,      // Medium devices (tablets)
-  lg: 992,      // Large devices (desktops)
+  lg: 1024,     // Large devices (desktops) - increased from 992 to 1024
   xl: 1200,     // Extra large devices (large desktops)
   xxl: 1400     // Extra extra large devices
 };
@@ -105,6 +105,9 @@ export const useResponsive = () => {
   const isMobile = width < breakpoints.md;
   const isTablet = width >= breakpoints.md && width < breakpoints.lg;
   const isDesktop = width >= breakpoints.lg;
+
+  // Navigation breakpoint - hamburger menu appears below this width
+  const shouldUseHamburgerMenu = width < 1000;
   const isXs = width < breakpoints.sm;
   const isSm = width >= breakpoints.sm && width < breakpoints.md;
   const isMd = width >= breakpoints.md && width < breakpoints.lg;
@@ -175,6 +178,7 @@ export const useResponsive = () => {
     isMobile,
     isTablet,
     isDesktop,
+    shouldUseHamburgerMenu,
     isXs,
     isSm,
     isMd,

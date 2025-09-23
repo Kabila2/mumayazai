@@ -822,14 +822,39 @@ const ChatInterface = ({
         initial="hidden"
         animate="visible"
       >
-        {/* Assistant Title */}
+        {/* Large Centered Assistant Title */}
         <motion.div
           className="assistant-title"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center',
+            width: '100%',
+            zIndex: 10,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
         >
-          <span className="title-main">
+          <span className="title-main" style={{
+            fontSize: 'clamp(2rem, 5.5vw, 4rem)',
+            fontWeight: '900',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 20%, #e2e8f0 40%, #cbd5e1 60%, #94a3b8 80%, #64748b 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundSize: '200% 200%',
+            animation: 'shimmer 3s ease-in-out infinite',
+            display: 'block',
+            letterSpacing: '-0.03em',
+            lineHeight: '0.95',
+            textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4)',
+            filter: 'drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3))'
+          }}>
             {assistantTitle || t.chatAssistant || "Chat Assistant"}
           </span>
         </motion.div>
