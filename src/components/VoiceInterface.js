@@ -963,7 +963,7 @@ export default function VoiceInterface({
             setShowSaveModal(true);
             break;
           case 'switchMode':
-            handleTextTransition();
+            onSwitchMode?.('chat');
             break;
           case 'stopSpeaking':
             stopSpeaking();
@@ -977,44 +977,6 @@ export default function VoiceInterface({
     }
     return false;
   }, [onSwitchMode, stopSpeaking, language]);
-
-  // Simple text transition handler
-  const handleTextTransition = useCallback(() => {
-    if (!onSwitchMode) return;
-
-    // Create simple transition overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'text-transition-overlay';
-    overlay.innerHTML = `
-      <div class="text-transition-content">
-        <div class="text-transition-text">${t.lang === 'ar' ? 'التبديل...' : 'Switching...'}</div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    // Animate the transition
-    setTimeout(() => {
-      overlay.classList.add('active');
-    }, 50);
-
-    // Complete transition after brief display
-    setTimeout(() => {
-      onSwitchMode?.('chat');
-      setTimeout(() => {
-        overlay.classList.add('fade-out');
-        setTimeout(() => {
-          try {
-            if (document.body.contains(overlay)) {
-              document.body.removeChild(overlay);
-            }
-          } catch (error) {
-            console.warn('Failed to remove text transition overlay:', error);
-          }
-        }, 300);
-      }, 100);
-    }, 800);
-  }, [onSwitchMode, t]);
 
   // Handle Voice Input (rewritten to match working chat interface pattern)
   const handleVoiceInput = useCallback(async (transcript, confidence) => {
@@ -1150,7 +1112,7 @@ export default function VoiceInterface({
       id: 'chat-mode',
       icon: '💬',
       label: t.chatMode,
-      onClick: () => handleTextTransition(),
+      onClick: () => onSwitchMode?.('chat'),
       variant: 'white'
     }
   ];
