@@ -200,12 +200,29 @@ export default function VoiceInterface({
 
   const [currentSession, setCurrentSession] = useState(() => {
     const saved = VoiceMemoryManager.load();
-    return saved?.currentSession || {
+    const welcomeMsg = language === 'ar'
+      ? "مرحباً! كيف يمكنني مساعدتك اليوم؟"
+      : "Hello! How can I help you today?";
+
+    // Check if saved session has valid messages
+    if (saved?.currentSession && saved.currentSession.messages?.length > 0) {
+      // Validate the messages to ensure they're clean
+      const cleanMessages = saved.currentSession.messages.filter(msg =>
+        msg && msg.text && typeof msg.text === 'string' && msg.text.trim().length > 0
+      );
+
+      if (cleanMessages.length > 1) {
+        return { ...saved.currentSession, messages: cleanMessages };
+      }
+    }
+
+    // Start with a fresh session with just the welcome message
+    return {
       id: Date.now(),
       messages: [{
         id: Date.now(),
         sender: "assistant",
-        text: t.welcomeMessage,
+        text: welcomeMsg,
         timestamp: new Date().toISOString()
       }],
       title: language === 'ar' ? "جلسة صوتية جديدة" : "New Voice Session",
@@ -226,6 +243,7 @@ export default function VoiceInterface({
   const [showExploreModal, setShowExploreModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
 
   // Voice Settings
   const [voices, setVoices] = useState(extVoices || []);
@@ -263,6 +281,18 @@ export default function VoiceInterface({
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
   }, [currentSession, conversations]);
+
+  // Initialize user email from session
+  useEffect(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+      if (session.email) {
+        setUserEmail(session.email);
+      }
+    } catch (error) {
+      console.error("Error loading user session:", error);
+    }
+  }, []);
 
   // Voice Recognition Setup
   useEffect(() => {
@@ -544,12 +574,16 @@ export default function VoiceInterface({
   };
 
   const clearCurrentSession = () => {
+    const welcomeMsg = language === 'ar'
+      ? "مرحباً! كيف يمكنني مساعدتك اليوم؟"
+      : "Hello! How can I help you today?";
+
     setCurrentSession({
       id: Date.now(),
       messages: [{
         id: Date.now(),
         sender: "assistant",
-        text: t.newSession,
+        text: welcomeMsg,
         timestamp: new Date().toISOString()
       }],
       title: language === 'ar' ? "جلسة صوتية جديدة" : "New Voice Session",
@@ -582,16 +616,18 @@ export default function VoiceInterface({
     recognitionRef.current.start();
   };
 
-  // Navigation Configuration
-  const navigationButtons = [
+  // Navigation Configuration - Split into left and right groups
+  const leftButtons = [
     {
-      id: 'explore',
-      icon: '🌟',
-      label: t.explore || 'Explore',
-      onClick: () => setShowExploreModal(true),
-      variant: 'white',
-      className: 'explore-button'
-    },
+      id: 'chat-mode',
+      icon: '💬',
+      label: t.chatMode,
+      onClick: () => onSwitchMode?.('chat'),
+      variant: 'white'
+    }
+  ];
+
+  const rightButtons = [
     {
       id: 'save',
       icon: '💾',
@@ -601,11 +637,12 @@ export default function VoiceInterface({
       disabled: currentSession.messages.length <= 1
     },
     {
-      id: 'chat-mode',
-      icon: '💬',
-      label: t.chatMode,
-      onClick: () => onSwitchMode?.('chat'),
-      variant: 'white'
+      id: 'explore',
+      icon: '🌟',
+      label: t.explore || 'Explore',
+      onClick: () => setShowExploreModal(true),
+      variant: 'white',
+      className: 'explore-button'
     }
   ];
 
@@ -641,15 +678,15 @@ export default function VoiceInterface({
         )}
       </AnimatePresence>
 
-      {/* Floating Navigation Buttons - Top Left */}
+      {/* Left Navigation Buttons */}
       <motion.div
-        className="floating-nav-buttons"
+        className="floating-nav-buttons-left"
         style={{
           position: 'fixed',
           top: '20px',
           left: '20px',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
           gap: '12px',
           zIndex: 1000,
           direction: language === 'ar' ? 'rtl' : 'ltr'
@@ -658,7 +695,7 @@ export default function VoiceInterface({
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: reducedMotion ? 0.1 : 0.6, ease: 'easeOut' }}
       >
-        {navigationButtons.map((button, index) => (
+        {leftButtons.map((button, index) => (
           <motion.button
             key={button.id}
             className={`header-button ${button.variant || ''} ${button.className || ''}`}
@@ -667,12 +704,54 @@ export default function VoiceInterface({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: (index + 1) * 0.1, duration: reducedMotion ? 0.1 : 0.3 }}
-            whileHover={!button.disabled && !reducedMotion ? { scale: 1.05, x: 3 } : {}}
+            whileHover={!button.disabled && !reducedMotion ? { scale: 1.05, y: -2 } : {}}
             whileTap={!button.disabled ? { scale: 0.95 } : {}}
             style={{
               opacity: button.disabled ? 0.5 : 1,
-              minWidth: '120px',
-              justifyContent: 'flex-start'
+              minWidth: '100px',
+              justifyContent: 'center',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span>{button.icon}</span>
+            <span>{button.label}</span>
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* Right Navigation Buttons */}
+      <motion.div
+        className="floating-nav-buttons-right"
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '12px',
+          zIndex: 1000,
+          direction: language === 'ar' ? 'rtl' : 'ltr'
+        }}
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: reducedMotion ? 0.1 : 0.6, ease: 'easeOut' }}
+      >
+        {rightButtons.map((button, index) => (
+          <motion.button
+            key={button.id}
+            className={`header-button ${button.variant || ''} ${button.className || ''}`}
+            onClick={button.onClick}
+            disabled={button.disabled}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: (index + 1) * 0.1, duration: reducedMotion ? 0.1 : 0.3 }}
+            whileHover={!button.disabled && !reducedMotion ? { scale: 1.05, y: -2 } : {}}
+            whileTap={!button.disabled ? { scale: 0.95 } : {}}
+            style={{
+              opacity: button.disabled ? 0.5 : 1,
+              minWidth: '100px',
+              justifyContent: 'center',
+              whiteSpace: 'nowrap'
             }}
           >
             <span>{button.icon}</span>
@@ -923,7 +1002,7 @@ export default function VoiceInterface({
       <ExploreModal
         isOpen={showExploreModal}
         onClose={() => setShowExploreModal(false)}
-        currentUserEmail={null}
+        currentUserEmail={userEmail}
         t={t}
         language={language}
         onSignOut={onSignOut}

@@ -1229,3 +1229,88 @@
     page-break-inside: avoid;
   }
 }
+
+/* Floating Navigation Buttons - Left and Right Layout */
+.floating-nav-buttons-left,
+.floating-nav-buttons-right {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .floating-nav-buttons-left,
+  .floating-nav-buttons-right {
+    gap: 8px;
+  }
+
+  .floating-nav-buttons-left .header-button,
+  .floating-nav-buttons-right .header-button {
+    min-width: 80px;
+    font-size: var(--font-size-xs);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* On very small screens, stack right buttons vertically to prevent overlap */
+  @media (max-width: 480px) {
+    .floating-nav-buttons-right {
+      flex-direction: column;
+      gap: 6px;
+    }
+  }
+}
+
+/* Enhanced Button Shine Effects for Voice Interface */
+.header-button,
+.primary-btn,
+.secondary-btn,
+.test-btn,
+.summary-btn,
+.clear-btn,
+.voice-main-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.header-button::before,
+.primary-btn::before,
+.secondary-btn::before,
+.test-btn::before,
+.summary-btn::before,
+.clear-btn::before,
+.voice-main-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transition: left 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.header-button:hover::before,
+.primary-btn:hover::before,
+.secondary-btn:hover::before,
+.test-btn:hover::before,
+.summary-btn:hover::before,
+.clear-btn:hover::before,
+.voice-main-button:hover::before {
+  left: 100%;
+}
+
+/* Ensure button content stays above shine effect */
+.header-button > *,
+.primary-btn > *,
+.secondary-btn > *,
+.test-btn > *,
+.summary-btn > *,
+.clear-btn > *,
+.voice-main-button > * {
+  position: relative;
+  z-index: 2;
+}

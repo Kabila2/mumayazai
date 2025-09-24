@@ -898,3 +898,36 @@ html, body {
   will-change: transform;
   transform: translateZ(0);
 }
+
+/* Enhanced Button Shine Effects for Chat Interface */
+.header-button,
+.send-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.header-button::before,
+.send-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.header-button:hover::before,
+.send-button:hover::before {
+  left: 100%;
+}
+
+/* Ensure button content stays above shine effect */
+.header-button > *,
+.send-button > * {
+  position: relative;
+  z-index: 2;
+}
