@@ -403,6 +403,48 @@ const ChatInterface = ({
   reducedMotion = false,
   onSignOut
 }) => {
+
+  // Enhanced translations
+  const translations = {
+    en: {
+      chatAssistant: "Mumayaz Chat Assistant",
+      welcomeMessage: "Welcome to Mumayaz Chat Assistant! I'm here to help answer questions, provide information, and assist with various tasks. How can I help you today?",
+      placeholder: "Type your message here...",
+      send: "Send Message",
+      saveChat: "Save Conversation",
+      clearChat: "Clear History",
+      explore: "Explore Features",
+      voiceMode: "Switch to Voice",
+      thinking: "Thinking...",
+      memoryEnabled: "Context memory is active",
+      chatSaved: "Conversation saved successfully!",
+      chatCleared: "Conversation history cleared",
+      errorMessage: "I apologize, but I'm experiencing technical difficulties. Please try again in a moment.",
+      retrying: "Retrying...",
+      connectingMsg: "Connecting to AI service...",
+      shortcutHint: "Press Ctrl+Enter to send"
+    },
+    ar: {
+      chatAssistant: "مساعد مميز للمحادثة",
+      welcomeMessage: "مرحباً بك في مساعد مميز للمحادثة! أنا هنا لمساعدتك في الإجابة على الأسئلة وتقديم المعلومات والمساعدة في مختلف المهام. كيف يمكنني مساعدتك اليوم؟",
+      placeholder: "اكتب رسالتك هنا...",
+      send: "إرسال الرسالة",
+      saveChat: "حفظ المحادثة",
+      clearChat: "مسح المحفوظات",
+      explore: "استكشاف الميزات",
+      voiceMode: "التبديل للصوت",
+      thinking: "أفكر...",
+      memoryEnabled: "ذاكرة السياق نشطة",
+      chatSaved: "تم حفظ المحادثة بنجاح!",
+      chatCleared: "تم مسح محفوظات المحادثة",
+      errorMessage: "أعتذر، ولكنني أواجه صعوبات تقنية. يرجى المحاولة مرة أخرى بعد قليل.",
+      retrying: "إعادة المحاولة...",
+      connectingMsg: "الاتصال بخدمة الذكاء الاصطناعي...",
+      shortcutHint: "اضغط Ctrl+Enter للإرسال"
+    }
+  };
+
+  const tr = { ...translations[language] || translations.en, ...t };
   
   const { isMobile, isLandscape, keyboardOpen, viewportHeight } = useMobileDetection();
   
@@ -415,7 +457,7 @@ const ChatInterface = ({
     }
     return [{
       sender: "gpt",
-      text: t.welcomeMessage || "• Hello! I'm your Chat Assistant\n• I can help you with questions and provide information\n• How can I help you today?",
+      text: tr.welcomeMessage,
       id: Date.now()
     }];
   });
@@ -599,7 +641,7 @@ const ChatInterface = ({
     clearConversationMemory();
     setMessages([{
       sender: "gpt",
-      text: t.welcomeMessage || "• Hello! I'm your Chat Assistant\n• I can help you with questions and provide information\n• How can I help you today?",
+      text: tr.welcomeMessage,
       id: Date.now()
     }]);
   }, [t, userEmail, messages]);
@@ -822,42 +864,6 @@ const ChatInterface = ({
         initial="hidden"
         animate="visible"
       >
-        {/* Large Centered Assistant Title */}
-        <motion.div
-          className="assistant-title"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: reducedMotion ? 0 : 0.4 }}
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            textAlign: 'center',
-            width: '100%',
-            zIndex: 10,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          <span className="title-main" style={{
-            fontSize: 'clamp(2rem, 5.5vw, 4rem)',
-            fontWeight: '900',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 20%, #e2e8f0 40%, #cbd5e1 60%, #94a3b8 80%, #64748b 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundSize: '200% 200%',
-            animation: 'shimmer 3s ease-in-out infinite',
-            display: 'block',
-            letterSpacing: '-0.03em',
-            lineHeight: '0.95',
-            textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4)',
-            filter: 'drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3))'
-          }}>
-            {assistantTitle || t.chatAssistant || "Chat Assistant"}
-          </span>
-        </motion.div>
 
         {/* Header Actions */}
         <div className="header-actions" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
@@ -866,7 +872,7 @@ const ChatInterface = ({
 
             {onSwitchMode && (
               <motion.button
-                className="header-button"
+                className="header-button white"
                 onClick={onSwitchMode}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
@@ -875,7 +881,7 @@ const ChatInterface = ({
                 transition={{ delay: reducedMotion ? 0 : 0.24 }}
               >
                 <span>🎤</span>
-                <span className="button-text">{t.voiceMode || "Voice"}</span>
+                <span className="button-text">{tr.voiceMode}</span>
               </motion.button>
             )}
           </div>
@@ -883,37 +889,36 @@ const ChatInterface = ({
           {/* Right side - Chat management buttons */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <motion.button
-              className="header-button"
-              onClick={handleSaveChat}
-              disabled={messages.length <= 1}
-              title="Save current chat"
+              className="header-button white"
+              onClick={handleClearConversation}
+              title="Clear conversation and memory"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: reducedMotion ? 0 : 0.22 }}
             >
-              <span>💾</span>
-              <span className="button-text">{language === 'ar' ? 'حفظ' : (t.saveChat || "Save")}</span>
+              <span>🗑️</span>
+              <span className="button-text">{tr.clearChat}</span>
             </motion.button>
 
-
             <motion.button
-              className="header-button"
-              onClick={handleClearConversation}
-              title="Clear conversation and memory"
+              className="header-button white"
+              onClick={handleSaveChat}
+              disabled={messages.length <= 1}
+              title="Save current chat"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               initial={{ x: 60, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: reducedMotion ? 0 : 0.3 }}
             >
-              <span>🗑️</span>
-              <span className="button-text">{t.clear || "Clear"}</span>
+              <span>💾</span>
+              <span className="button-text">{tr.saveChat}</span>
             </motion.button>
 
             <motion.button
-              className="header-button explore-button"
+              className="header-button white explore-button"
               onClick={() => setShowExploreModal(true)}
               title="Explore features, leaderboard, tasks and learning"
               whileHover={{ scale: 1.05, y: -2 }}
@@ -923,7 +928,7 @@ const ChatInterface = ({
               transition={{ delay: reducedMotion ? 0 : 0.34 }}
             >
               <span>🌟</span>
-              <span className="button-text">{language === 'ar' ? 'استكشف' : (t.explore || "Explore")}</span>
+              <span className="button-text">{tr.explore}</span>
             </motion.button>
           </div>
         </div>
@@ -1078,8 +1083,8 @@ const ChatInterface = ({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             placeholder={messages.length > 1 ?
-              (t.typeMessage && t.memoryActive ? `${t.typeMessage} (${t.memoryActive})` : "Type your message... (Memory active - I remember our conversation)") :
-              (t.typeMessage && t.memoryReady ? `${t.typeMessage} (${t.memoryReady})` : "Type your message... (Memory ready)")}
+              `${tr.placeholder} (${tr.memoryEnabled})` :
+              tr.placeholder}
             disabled={isSending}
             rows={1}
             style={{
@@ -1134,8 +1139,8 @@ const ChatInterface = ({
                 exit={{ opacity: 0 }}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >
-                <span>✈️</span>
-                <span>{t.send || "Send"}</span>
+                <span>🚀</span>
+                <span>{tr.send}</span>
               </motion.div>
             )}
           </AnimatePresence>

@@ -439,63 +439,6 @@
   box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .learn-modal {
-    max-width: 95vw;
-    margin: 10px;
-  }
-
-  .learn-content {
-    flex-direction: column;
-  }
-
-  .categories-sidebar {
-    width: 100%;
-    max-height: 200px;
-    padding: 15px;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .category-item {
-    padding: 12px;
-  }
-
-  .category-icon {
-    font-size: 1.5rem;
-    min-width: 35px;
-    height: 35px;
-  }
-
-  .lessons-content {
-    padding: 20px;
-  }
-
-  .lessons-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .lesson-card {
-    min-height: 180px;
-    padding: 15px;
-  }
-
-  .category-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .lesson-detail-modal {
-    max-width: 95vw;
-  }
-
-  .lesson-detail-content {
-    padding: 20px;
-  }
-}
 
 /* RTL Support */
 [dir="rtl"] .learn-modal {

@@ -60,28 +60,16 @@
   --font-size-2xl: 2.6rem;
   --font-size-3xl: 3.2rem;
 
-  /* Mobile Typography */
-  --mobile-font-xs: 1.1rem;
-  --mobile-font-sm: 1.3rem;
-  --mobile-font-base: 1.5rem;
-  --mobile-font-lg: 1.8rem;
-  --mobile-font-xl: 2.1rem;
-  --mobile-font-2xl: 2.3rem;
-
-  /* Spacing - Matching ChatInterface */
+  /* Spacing - Professional Design */
+  --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-8: 2.5rem;
-
-  /* Mobile Spacing */
-  --mobile-space-2: 0.4rem;
-  --mobile-space-3: 0.6rem;
-  --mobile-space-4: 0.8rem;
-  --mobile-space-5: 1.2rem;
-  --mobile-space-6: 1.6rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
 
   /* Border Radius */
   --radius-md: 0.5rem;
@@ -100,9 +88,10 @@
   --transition-normal: all 0.25s ease-out;
   --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-  /* Mobile heights */
-  --header-height: 6rem;
-  --header-height-mobile: 5.5rem;
+  /* Layout Heights */
+  --header-height: 5rem;
+  --button-height: 3rem;
+  --button-height-large: 4rem;
 }
 
 /* Main Container - Professional Theme Matching ChatInterface */
@@ -307,10 +296,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-3) var(--space-4);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   color: rgba(255, 255, 255, 0.95);
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -318,7 +307,8 @@
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(20px);
-  min-height: 4rem;
+  min-height: var(--button-height);
+  height: var(--button-height);
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -374,6 +364,22 @@
       transform: translateY(-3px) scale(1.05);
     }
   }
+
+  &.white {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.5));
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #1a1a2e;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.7));
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.25);
+      transform: translateY(-3px) scale(1.05);
+      color: #0f3460;
+    }
+  }
 }
 
 /* Professional Assistant Title - Matching ChatInterface */
@@ -406,16 +412,16 @@
 
 /* Main Content Area */
 .voice-content {
-  padding-top: calc(var(--header-height) + 2rem);
+  padding-top: calc(var(--header-height) + var(--space-8));
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-left: var(--space-4);
-  padding-right: var(--space-4);
-  padding-bottom: var(--space-6);
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  padding-bottom: var(--space-8);
   z-index: 1;
 }
 
@@ -456,8 +462,8 @@
 /* Voice Controls */
 .voice-controls {
   display: flex;
-  gap: var(--space-4);
-  margin: var(--space-6) 0;
+  gap: var(--space-5);
+  margin: var(--space-8) 0;
   flex-wrap: wrap;
   justify-content: center;
   z-index: 2;
@@ -475,8 +481,8 @@
   transition: var(--transition-fast);
   position: relative;
   overflow: hidden;
-  min-width: 200px;
-  min-height: 4rem;
+  min-width: 180px;
+  min-height: var(--button-height-large);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -554,7 +560,7 @@
   transition: var(--transition-fast);
   position: relative;
   overflow: hidden;
-  min-height: 3rem;
+  min-height: var(--button-height);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1087,313 +1093,9 @@
   }
 }
 
-/* Enhanced Mobile Responsive */
-@media (max-width: 768px) {
-  :root {
-    --header-height: 64px;
-    --font-size-base: 1.1rem;
-    --font-size-sm: 1rem;
-    --font-size-lg: 1.3rem;
-    --font-size-xl: 1.5rem;
-    --font-size-2xl: 1.7rem;
-  }
 
-  .voice-area {
-    height: 100vh;
-    height: 100dvh;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    font-size: 1.1rem;
-  }
 
-  /* Hide original header elements in favor of MobileNavigation */
-  .voice-header {
-    display: none;
-  }
 
-  .voice-content {
-    padding-top: calc(64px + 1.5rem);
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-  }
-
-  /* Mobile voice controls - circular buttons */
-  .voice-controls {
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    flex-wrap: wrap;
-    margin: 1rem 0;
-  }
-
-  .primary-btn {
-    width: 76px;
-    height: 76px;
-    min-height: 76px;
-    border-radius: 50%;
-    font-size: 1.3rem;
-    flex-shrink: 0;
-    min-width: 76px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-  }
-
-  .secondary-btn {
-    width: 60px;
-    height: 60px;
-    min-height: 60px;
-    border-radius: 50%;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-    min-width: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Hide text in mobile secondary buttons */
-  .secondary-btn .button-text {
-    display: none;
-  }
-
-  /* Assistant title adjustments for MobileNavigation */
-  .assistant-title {
-    font-size: 1.3rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 60vw;
-
-    .title-sub {
-      font-size: 0.9rem;
-    }
-  }
-
-  /* Mobile settings panel */
-  .quick-settings {
-    width: calc(100% - 2rem);
-    max-width: 100%;
-    margin: 1rem;
-    padding: 1rem;
-    min-width: auto;
-  }
-
-  /* Mobile voice log */
-  .voice-log {
-    max-height: 35vh;
-    padding: 1rem;
-    margin-top: 1rem;
-    font-size: 1rem;
-    width: calc(100% - 2rem);
-    margin-left: 1rem;
-    margin-right: 1rem;
-  }
-
-  .log-header {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: flex-start;
-  }
-
-  .log-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  /* Mobile voice waves */
-  .voice-waves {
-    top: 35%;
-  }
-
-  .wave {
-    width: 200px;
-    height: 200px;
-    margin: 1rem auto;
-  }
-
-  /* Mobile message styles */
-  .log-message {
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .message-content {
-    line-height: 1.6;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .voice-area {
-    padding: env(safe-area-inset-top) 0.5rem env(safe-area-inset-bottom) 0.5rem;
-    font-size: 1rem;
-  }
-
-  .voice-header {
-    height: 60px;
-    padding: 0 0.75rem;
-  }
-
-  .voice-content {
-    padding-top: calc(60px + 1rem);
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  }
-
-  .voice-controls {
-    gap: 0.75rem;
-    padding: 0.75rem;
-    margin: 0.75rem 0;
-  }
-
-  .primary-btn {
-    width: 68px;
-    height: 68px;
-    min-height: 68px;
-    min-width: 68px;
-    font-size: 1.2rem;
-  }
-
-  .secondary-btn {
-    width: 52px;
-    height: 52px;
-    min-height: 52px;
-    min-width: 52px;
-    font-size: 1.1rem;
-  }
-
-  .header-button {
-    min-width: 48px;
-    min-height: 48px;
-    padding: 0.5rem 0.75rem;
-    font-size: 1rem;
-  }
-
-  .assistant-title {
-    font-size: 1.1rem;
-    max-width: 60vw;
-
-    .title-sub {
-      font-size: 0.8rem;
-    }
-  }
-
-  .voice-waves {
-    top: 30%;
-  }
-
-  .wave {
-    width: 160px;
-    height: 160px;
-  }
-
-  .voice-log {
-    max-height: 30vh;
-    padding: 0.75rem;
-    margin: 0.75rem;
-    font-size: 0.9rem;
-    width: calc(100% - 1.5rem);
-  }
-
-  .quick-settings {
-    padding: 0.75rem;
-    margin: 0.75rem;
-    width: calc(100% - 1.5rem);
-  }
-
-  .log-message {
-    padding: 0.75rem;
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .log-header h3 {
-    font-size: 1.1rem;
-  }
-
-  .summary-btn,
-  .clear-btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-  }
-}
-
-/* Landscape Mobile Optimization for VoiceInterface */
-@media (max-height: 500px) and (orientation: landscape) {
-  .voice-header {
-    height: 48px;
-    padding: 0 var(--mobile-space-2);
-  }
-
-  .voice-content {
-    padding-top: calc(48px + 0.5rem);
-    padding-left: var(--mobile-space-2);
-    padding-right: var(--mobile-space-2);
-  }
-
-  .voice-controls {
-    gap: var(--mobile-space-2);
-    padding: var(--mobile-space-2);
-  }
-
-  .primary-btn {
-    width: 48px;
-    height: 48px;
-    min-height: 48px;
-    font-size: var(--mobile-font-sm);
-  }
-
-  .secondary-btn {
-    width: 40px;
-    height: 40px;
-    min-height: 40px;
-    font-size: var(--mobile-font-xs);
-  }
-
-  .wave {
-    width: 120px;
-    height: 120px;
-  }
-
-  .voice-log {
-    max-height: 20vh;
-    padding: var(--mobile-space-2);
-  }
-
-  .quick-settings {
-    padding: var(--mobile-space-2);
-    margin: var(--mobile-space-1) 0;
-  }
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .header-button,
-  .primary-btn,
-  .secondary-btn {
-    min-height: 50px;
-    min-width: 50px;
-  }
-
-  .header-button:active,
-  .primary-btn:active,
-  .secondary-btn:active {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(0.95);
-  }
-
-  .log-message:hover {
-    transform: none;
-    background: rgba(255, 255, 255, 0.95);
-  }
-}
 
 /* High Contrast Mode */
 @media (prefers-contrast: high) {

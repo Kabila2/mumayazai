@@ -1,10 +1,8 @@
 /* global puter */
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
-import MobileNavigation from './MobileNavigation';
 import ExploreModal from './ExploreModal';
 import SaveVoiceChatModal from './SaveVoiceChatModal';
-import { useResponsive } from '../hooks/useResponsive';
 import "./VoiceInterface.css";
 import "./ChatInterface.css";
 
@@ -15,15 +13,24 @@ const CONTEXT_WINDOW = 25;
 const AUTO_SAVE_DELAY = 800;
 
 // Voice Commands System
-const VOICE_COMMANDS = {
-  'clear chat': { action: 'clearChat', response: 'Chat cleared' },
-  'open settings': { action: 'openSettings', response: 'Settings opened' },
-  'close settings': { action: 'closeSettings', response: 'Settings closed' },
-  'save conversation': { action: 'saveChat', response: 'Saving conversation' },
-  'switch to chat': { action: 'switchMode', response: 'Switching to chat mode' },
-  'stop speaking': { action: 'stopSpeaking', response: null },
-  'repeat that': { action: 'repeatLast', response: 'Repeating last message' },
-  'help': { action: 'showHelp', response: 'Here are available voice commands' }
+const getVoiceCommands = (language) => {
+  if (language === 'ar') {
+    return {
+      'مسح المحادثة': { action: 'clearChat', response: 'تم مسح المحادثة' },
+      'حفظ المحادثة': { action: 'saveChat', response: 'جاري حفظ المحادثة' },
+      'التبديل للمحادثة': { action: 'switchMode', response: 'التبديل إلى وضع المحادثة' },
+      'توقف عن الكلام': { action: 'stopSpeaking', response: null },
+      'كرر ذلك': { action: 'repeatLast', response: 'إعادة الرسالة الأخيرة' }
+    };
+  }
+
+  return {
+    'clear chat': { action: 'clearChat', response: 'Chat cleared' },
+    'save conversation': { action: 'saveChat', response: 'Saving conversation' },
+    'switch to chat': { action: 'switchMode', response: 'Switching to chat mode' },
+    'stop speaking': { action: 'stopSpeaking', response: null },
+    'repeat that': { action: 'repeatLast', response: 'Repeating last message' }
+  };
 };
 
 // Enhanced Voice Memory Management
@@ -129,7 +136,6 @@ const mockAIResponse = (input, hasContext) => {
 };
 
 export default function VoiceInterface({
-  t,
   language,
   voices: extVoices,
   selectedVoice,
@@ -148,6 +154,44 @@ export default function VoiceInterface({
 }) {
   console.log("🎯 New VoiceInterface initialized");
 
+  // Translations for Arabic/English
+  const translations = {
+    en: {
+      voiceAssistant: "Mumayaz Voice Assistant",
+      listening: "Listening...",
+      speaking: "Speaking...",
+      processing: "Processing...",
+      ready: "Ready to Listen",
+      save: "Save Conversation",
+      explore: "Explore",
+      chatMode: "Switch to Chat",
+      stop: "Stop Speaking",
+      clear: "Clear History",
+      welcomeMessage: "Welcome to Mumayaz Voice Assistant! I'm ready to help with voice-powered conversations. You can speak naturally and I'll respond to your questions.",
+      newSession: "Voice session started. What would you like to discuss today?",
+      chatCleared: "Conversation history cleared",
+      conversationSaved: "Your conversation has been saved successfully!"
+    },
+    ar: {
+      voiceAssistant: "مساعد مميز الصوتي",
+      listening: "جاري الاستماع...",
+      speaking: "أتحدث الآن...",
+      processing: "جاري المعالجة...",
+      ready: "جاهز للاستماع",
+      save: "حفظ المحادثة",
+      explore: "استكشاف",
+      chatMode: "التبديل للمحادثة",
+      stop: "إيقاف التحدث",
+      clear: "مسح المحادثات",
+      welcomeMessage: "مرحباً بك في مساعد مميز الصوتي! أنا جاهز للمساعدة في المحادثات الصوتية. يمكنك التحدث بشكل طبيعي وسأجيب على أسئلتك.",
+      newSession: "تم بدء جلسة صوتية جديدة. ما الذي تود مناقشته اليوم؟",
+      chatCleared: "تم مسح محفوظات المحادثة",
+      conversationSaved: "تم حفظ محادثتك بنجاح!"
+    }
+  };
+
+  const t = translations[language] || translations.en;
+
   // Core State
   const [conversations, setConversations] = useState(() => {
     const saved = VoiceMemoryManager.load();
@@ -161,10 +205,10 @@ export default function VoiceInterface({
       messages: [{
         id: Date.now(),
         sender: "assistant",
-        text: "🎙️ Welcome to the new Mumayaz Voice Assistant! I'm equipped with advanced features including voice commands, conversation management, and enhanced AI interactions. Try saying 'help' to see what I can do!",
+        text: t.welcomeMessage,
         timestamp: new Date().toISOString()
       }],
-      title: "New Voice Session",
+      title: language === 'ar' ? "جلسة صوتية جديدة" : "New Voice Session",
       createdAt: new Date().toISOString()
     };
   });
@@ -178,8 +222,6 @@ export default function VoiceInterface({
   const [confidence, setConfidence] = useState(0);
 
   // UI State
-  const [showSettings, setShowSettings] = useState(false);
-  const [showCommands, setShowCommands] = useState(false);
   const [showConversations, setShowConversations] = useState(false);
   const [showExploreModal, setShowExploreModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -202,8 +244,6 @@ export default function VoiceInterface({
   const animationFrameRef = useRef(null);
   const saveTimeoutRef = useRef(null);
 
-  // Responsive
-  const { isMobile, isTablet, shouldUseHamburgerMenu, isCompact } = useResponsive();
 
   // Auto-save conversations
   useEffect(() => {
@@ -237,6 +277,8 @@ export default function VoiceInterface({
     recognition.interimResults = true;
     recognition.lang = language === 'ar' ? 'ar-SA' : 'en-US';
     recognition.maxAlternatives = 3;
+
+    console.log(`🎤 Voice recognition set to: ${recognition.lang}`);
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -328,7 +370,7 @@ export default function VoiceInterface({
     };
   }, [isListening]);
 
-  // Voice Synthesis
+  // Enhanced Voice Synthesis for Arabic/English
   const speak = useCallback((text) => {
     if (!text || !autoSpeak) return;
 
@@ -352,10 +394,22 @@ export default function VoiceInterface({
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    const voice = voices.find(v => v.name === selectedVoiceLocal);
+    // Find appropriate voice for current language
+    const voice = voices.find(v => {
+      if (language === 'ar') {
+        return v.lang?.startsWith('ar') && v.name === selectedVoiceLocal;
+      }
+      return v.lang?.startsWith('en') && v.name === selectedVoiceLocal;
+    });
+
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
+      console.log(`🔊 Using voice: ${voice.name} (${voice.lang})`);
+    } else {
+      // Fallback to language setting
+      utterance.lang = language === 'ar' ? 'ar-SA' : 'en-US';
+      console.log(`🔊 Using fallback language: ${utterance.lang}`);
     }
 
     utterance.rate = speedLocal;
@@ -367,7 +421,7 @@ export default function VoiceInterface({
     utterance.onerror = () => setIsSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
-  }, [extSpeak, autoSpeak, voices, selectedVoiceLocal, speedLocal, pitchLocal, volumeLocal]);
+  }, [extSpeak, autoSpeak, voices, selectedVoiceLocal, speedLocal, pitchLocal, volumeLocal, language]);
 
   const stopSpeaking = useCallback(() => {
     window.speechSynthesis.cancel();
@@ -377,9 +431,10 @@ export default function VoiceInterface({
   // Voice Command Processing
   const processVoiceCommand = useCallback((text) => {
     const lowerText = text.toLowerCase().trim();
+    const voiceCommands = getVoiceCommands(language);
 
-    for (const [command, config] of Object.entries(VOICE_COMMANDS)) {
-      if (lowerText.includes(command)) {
+    for (const [command, config] of Object.entries(voiceCommands)) {
+      if (lowerText.includes(command.toLowerCase())) {
         if (config.response) {
           showNotification(config.response, "success");
         }
@@ -387,12 +442,6 @@ export default function VoiceInterface({
         switch (config.action) {
           case 'clearChat':
             clearCurrentSession();
-            break;
-          case 'openSettings':
-            setShowSettings(true);
-            break;
-          case 'closeSettings':
-            setShowSettings(false);
             break;
           case 'saveChat':
             setShowSaveModal(true);
@@ -406,21 +455,23 @@ export default function VoiceInterface({
           case 'repeatLast':
             repeatLastMessage();
             break;
-          case 'showHelp':
-            showVoiceCommands();
-            break;
         }
         return true;
       }
     }
     return false;
-  }, [onSwitchMode, stopSpeaking]);
+  }, [onSwitchMode, stopSpeaking, language]);
 
   // Handle Voice Input
   const handleVoiceInput = useCallback(async (transcript, confidence) => {
     if (!transcript.trim()) return;
 
     console.log("🗣️ Voice input:", transcript, "confidence:", confidence);
+
+    // Check for voice commands first
+    if (commandMode && processVoiceCommand(transcript)) {
+      return;
+    }
 
     const userMessage = {
       id: Date.now(),
@@ -435,23 +486,6 @@ export default function VoiceInterface({
       ...prev,
       messages: [...prev.messages, userMessage]
     }));
-
-    // Check for voice commands
-    if (commandMode && processVoiceCommand(transcript)) {
-      const commandMessage = {
-        id: Date.now() + 1,
-        sender: "assistant",
-        text: "Voice command executed successfully.",
-        isCommand: true,
-        timestamp: new Date().toISOString()
-      };
-
-      setCurrentSession(prev => ({
-        ...prev,
-        messages: [...prev.messages, commandMessage]
-      }));
-      return;
-    }
 
     // Process as AI query
     setIsProcessing(true);
@@ -515,13 +549,13 @@ export default function VoiceInterface({
       messages: [{
         id: Date.now(),
         sender: "assistant",
-        text: "New voice session started. How can I help you today?",
+        text: t.newSession,
         timestamp: new Date().toISOString()
       }],
-      title: "New Voice Session",
+      title: language === 'ar' ? "جلسة صوتية جديدة" : "New Voice Session",
       createdAt: new Date().toISOString()
     });
-    showNotification("Chat cleared", "success");
+    showNotification(t.chatCleared, "success");
   };
 
   const repeatLastMessage = () => {
@@ -534,9 +568,6 @@ export default function VoiceInterface({
     }
   };
 
-  const showVoiceCommands = () => {
-    setShowCommands(true);
-  };
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -554,33 +585,27 @@ export default function VoiceInterface({
   // Navigation Configuration
   const navigationButtons = [
     {
-      id: 'settings',
-      icon: '⚙️',
-      label: 'Settings',
-      onClick: () => setShowSettings(!showSettings),
-      variant: 'secondary'
-    },
-    {
-      id: 'commands',
-      icon: '🎯',
-      label: 'Commands',
-      onClick: () => setShowCommands(true),
-      variant: 'secondary'
+      id: 'explore',
+      icon: '🌟',
+      label: t.explore || 'Explore',
+      onClick: () => setShowExploreModal(true),
+      variant: 'white',
+      className: 'explore-button'
     },
     {
       id: 'save',
       icon: '💾',
-      label: 'Save',
+      label: t.save,
       onClick: () => setShowSaveModal(true),
-      variant: 'secondary',
+      variant: 'white',
       disabled: currentSession.messages.length <= 1
     },
     {
       id: 'chat-mode',
       icon: '💬',
-      label: 'Chat Mode',
+      label: t.chatMode,
       onClick: () => onSwitchMode?.('chat'),
-      variant: 'tertiary'
+      variant: 'white'
     }
   ];
 
@@ -616,146 +641,105 @@ export default function VoiceInterface({
         )}
       </AnimatePresence>
 
-      {/* Navigation Header - Matching ChatInterface */}
-      <motion.header
-        className="chat-header"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+      {/* Floating Navigation Buttons - Top Left */}
+      <motion.div
+        className="floating-nav-buttons"
+        style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          zIndex: 1000,
+          direction: language === 'ar' ? 'rtl' : 'ltr'
+        }}
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
         transition={{ duration: reducedMotion ? 0.1 : 0.6, ease: 'easeOut' }}
       >
-        {/* Large Centered Title */}
+        {navigationButtons.map((button, index) => (
+          <motion.button
+            key={button.id}
+            className={`header-button ${button.variant || ''} ${button.className || ''}`}
+            onClick={button.onClick}
+            disabled={button.disabled}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: (index + 1) * 0.1, duration: reducedMotion ? 0.1 : 0.3 }}
+            whileHover={!button.disabled && !reducedMotion ? { scale: 1.05, x: 3 } : {}}
+            whileTap={!button.disabled ? { scale: 0.95 } : {}}
+            style={{
+              opacity: button.disabled ? 0.5 : 1,
+              minWidth: '120px',
+              justifyContent: 'flex-start'
+            }}
+          >
+            <span>{button.icon}</span>
+            <span>{button.label}</span>
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* Status Indicator - Centered */}
+      {(isListening || isSpeaking || isProcessing) && (
         <motion.div
-          className="assistant-title"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: reducedMotion ? 0 : 0.4 }}
           style={{
-            position: 'absolute',
-            left: '50%',
+            position: 'fixed',
             top: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            left: '50%',
+            transform: 'translate(-50%, -200%)',
+            fontSize: '1.2rem',
+            color: 'var(--text-light)',
+            fontWeight: '600',
+            opacity: 0.9,
             textAlign: 'center',
-            width: '100%',
-            zIndex: 10
+            background: 'rgba(255, 255, 255, 0.1)',
+            padding: '12px 24px',
+            borderRadius: '25px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
           }}
         >
-          <span className="title-main" style={{
-            fontSize: 'clamp(2rem, 5.5vw, 4rem)',
-            fontWeight: '900',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 20%, #e2e8f0 40%, #cbd5e1 60%, #94a3b8 80%, #64748b 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundSize: '200% 200%',
-            animation: 'shimmer 3s ease-in-out infinite',
-            display: 'block',
-            letterSpacing: '-0.03em',
-            lineHeight: '0.95',
-            textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4)',
-            filter: 'drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3))'
-          }}>
-            Voice Assistant
-          </span>
-          <span style={{
-            fontSize: shouldUseHamburgerMenu ? '0.8rem' : '0.9rem',
-            color: 'var(--text-light)',
-            fontWeight: '500',
-            opacity: 0.8,
-            marginTop: '0.5rem'
-          }}>
-            {isListening ? "🎤 Listening..." :
-             isSpeaking ? "🔊 Speaking..." :
-             isProcessing ? "⚡ Processing..." : "Ready"}
-          </span>
-          {isListening && (
-            <motion.div
-              style={{
-                width: shouldUseHamburgerMenu ? '120px' : '200px',
-                height: '3px',
-                background: 'rgba(255,255,255,0.3)',
-                borderRadius: '2px',
-                overflow: 'hidden',
-                marginTop: '0.5rem'
-              }}
-            >
-              <motion.div
-                style={{
-                  width: `${voiceLevel * 100}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #10b981, #3b82f6)',
-                  borderRadius: '2px'
-                }}
-                animate={{ width: `${voiceLevel * 100}%` }}
-                transition={{ duration: 0.1 }}
-              />
-            </motion.div>
-          )}
+          {isListening ? t.listening :
+           isSpeaking ? t.speaking :
+           isProcessing ? t.processing : ''}
         </motion.div>
+      )}
 
-        {/* Header Actions - Same as ChatInterface */}
-        <div className="header-actions" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-          {/* Left side - spacer */}
-          <div style={{ display: 'flex', gap: '0.5rem' }}></div>
-
-          {/* Right side - Navigation buttons */}
-          <div style={{
-            display: 'flex',
-            gap: shouldUseHamburgerMenu ? '0.5rem' : '0.75rem',
-            alignItems: 'center'
-          }}>
-            {!shouldUseHamburgerMenu && navigationButtons.map((button, index) => (
-              <motion.button
-                key={button.id}
-                className="header-button"
-                onClick={button.onClick}
-                disabled={button.disabled}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: (index + 1) * 0.1, duration: reducedMotion ? 0.1 : 0.3 }}
-                whileHover={!button.disabled && !reducedMotion ? { scale: 1.02, y: -1 } : {}}
-                whileTap={!button.disabled ? { scale: 0.98 } : {}}
-                style={{
-                  opacity: button.disabled ? 0.5 : 1
-                }}
-              >
-                <span>{button.icon}</span>
-                <span>{button.label}</span>
-              </motion.button>
-            ))}
-
-            {shouldUseHamburgerMenu && (
-              <motion.button
-                className="hamburger-btn"
-                onClick={() => setShowSettings(!showSettings)}
-                whileHover={!reducedMotion ? { scale: 1.05 } : {}}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  width: isCompact ? '40px' : '44px',
-                  height: isCompact ? '40px' : '44px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  gap: '3px',
-                  padding: 0
-                }}
-              >
-                <div style={{ width: '18px', height: '2px', background: 'var(--text-light)', borderRadius: '1px' }} />
-                <div style={{ width: '18px', height: '2px', background: 'var(--text-light)', borderRadius: '1px' }} />
-                <div style={{ width: '18px', height: '2px', background: 'var(--text-light)', borderRadius: '1px' }} />
-              </motion.button>
-            )}
-          </div>
-        </div>
-      </motion.header>
+      {/* Voice Level Indicator - Below Status */}
+      {isListening && (
+        <motion.div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -150%)',
+            width: '200px',
+            height: '4px',
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '2px',
+            overflow: 'hidden'
+          }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0 }}
+        >
+          <motion.div
+            style={{
+              width: `${voiceLevel * 100}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #10b981, #3b82f6)',
+              borderRadius: '2px'
+            }}
+            animate={{ width: `${voiceLevel * 100}%` }}
+            transition={{ duration: 0.1 }}
+          />
+        </motion.div>
+      )}
 
       {/* Main Voice Controls */}
       <motion.div
@@ -766,7 +750,7 @@ export default function VoiceInterface({
           flexDirection: 'column',
           alignItems: 'center',
           gap: '1.5rem',
-          marginTop: '80px'
+          marginTop: '20px'
         }}
       >
         <motion.button
@@ -825,7 +809,7 @@ export default function VoiceInterface({
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
             >
-              🔇 Stop
+              🔇 {t.stop}
             </motion.button>
           )}
 
@@ -837,216 +821,17 @@ export default function VoiceInterface({
               border: '2px solid rgba(156, 163, 175, 0.3)',
               background: 'rgba(156, 163, 175, 0.1)',
               color: 'var(--text-color)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              direction: language === 'ar' ? 'rtl' : 'ltr'
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            🗑️ Clear
+            🗑️ {t.clear}
           </motion.button>
         </div>
       </motion.div>
 
-      {/* Enhanced Settings Panel */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            className="voice-settings-panel"
-            style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: 'var(--glass-bg)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: '16px',
-              padding: '2rem',
-              width: '90vw',
-              maxWidth: '500px',
-              zIndex: 1000,
-              boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
-            }}
-            initial={{ opacity: 0, scale: 0.9, y: '-40%' }}
-            animate={{ opacity: 1, scale: 1, y: '-50%' }}
-            exit={{ opacity: 0, scale: 0.9, y: '-40%' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3>Voice Settings</h3>
-              <button
-                onClick={() => setShowSettings(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  color: 'var(--text-color)'
-                }}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="settings-grid" style={{ display: 'grid', gap: '1rem' }}>
-              <div>
-                <label>Auto Speak Responses</label>
-                <input
-                  type="checkbox"
-                  checked={autoSpeak}
-                  onChange={(e) => setAutoSpeak(e.target.checked)}
-                  style={{ marginLeft: '0.5rem' }}
-                />
-              </div>
-
-              <div>
-                <label>Voice Command Mode</label>
-                <input
-                  type="checkbox"
-                  checked={commandMode}
-                  onChange={(e) => setCommandMode(e.target.checked)}
-                  style={{ marginLeft: '0.5rem' }}
-                />
-              </div>
-
-              <div>
-                <label>Speech Speed: {speedLocal.toFixed(1)}x</label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={speedLocal}
-                  onChange={(e) => setSpeedLocal(parseFloat(e.target.value))}
-                  style={{ width: '100%', marginTop: '0.5rem' }}
-                />
-              </div>
-
-              <div>
-                <label>Speech Pitch: {pitchLocal.toFixed(1)}</label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={pitchLocal}
-                  onChange={(e) => setPitchLocal(parseFloat(e.target.value))}
-                  style={{ width: '100%', marginTop: '0.5rem' }}
-                />
-              </div>
-
-              <div>
-                <label>Volume: {Math.round(volumeLocal * 100)}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={volumeLocal}
-                  onChange={(e) => setVolumeLocal(parseFloat(e.target.value))}
-                  style={{ width: '100%', marginTop: '0.5rem' }}
-                />
-              </div>
-
-              <button
-                onClick={() => speak("This is a test of the voice settings")}
-                style={{
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  border: '2px solid var(--glass-border)',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  marginTop: '1rem'
-                }}
-              >
-                🔊 Test Voice
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Voice Commands Help */}
-      <AnimatePresence>
-        {showCommands && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 999,
-                backdropFilter: 'blur(4px)'
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowCommands(false)}
-            />
-
-            <motion.div
-              className="voice-commands-panel"
-              style={{
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                background: 'var(--glass-bg)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid var(--glass-border)',
-                borderRadius: '16px',
-                padding: '2rem',
-                width: '90vw',
-                maxWidth: '600px',
-                maxHeight: '80vh',
-                overflowY: 'auto',
-                zIndex: 1000,
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
-              }}
-              initial={{ opacity: 0, scale: 0.8, y: '-40%' }}
-              animate={{ opacity: 1, scale: 1, y: '-50%' }}
-              exit={{ opacity: 0, scale: 0.8, y: '-40%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3>Voice Commands</h3>
-              <button
-                onClick={() => setShowCommands(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  color: 'var(--text-color)'
-                }}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="commands-list" style={{ display: 'grid', gap: '0.75rem' }}>
-              {Object.entries(VOICE_COMMANDS).map(([command, config]) => (
-                <div key={command} style={{
-                  padding: '0.75rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                  <strong>"{command}"</strong>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8, marginTop: '0.25rem' }}>
-                    {config.response || `Executes ${config.action}`}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </>
-        )}
-      </AnimatePresence>
 
       {/* Conversation History */}
       <motion.div
