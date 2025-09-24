@@ -1,5 +1,10 @@
 /* Enhanced VoiceInterface.css - Ultra Soft Eye-Friendly Colors */
 
+/* Hide scrollbar for voice conversation container */
+.voice-conversation::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 @font-face {
   font-family: 'OpenDyslexic';
   src: url('https://cdn.jsdelivr.net/npm/opendyslexic@1.0.3/fonts/OpenDyslexic-Regular.woff2') format('woff2'),
@@ -1313,4 +1318,45 @@
 .voice-main-button > * {
   position: relative;
   z-index: 2;
+}
+
+/* ========================================
+   TEXT TRANSITION ANIMATION
+   ======================================== */
+
+.text-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 50000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.text-transition-overlay.active {
+  opacity: 1;
+}
+
+.text-transition-overlay.fade-out {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.text-transition-content {
+  text-align: center;
+}
+
+.text-transition-text {
+  font-size: 2rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-family, 'Inter', sans-serif);
+  letter-spacing: 0.5px;
 }

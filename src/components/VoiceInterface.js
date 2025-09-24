@@ -101,6 +101,170 @@ const buildConversationContext = (messages) => {
   return context;
 };
 
+// Enhanced Voice Selection for Natural AI Speech
+const getNaturalVoices = (language, availableVoices) => {
+  if (!availableVoices || availableVoices.length === 0) return [];
+
+  // High-quality voices in order of preference
+  const naturalVoices = {
+    en: [
+      // Premium/Neural voices (highest quality)
+      'Microsoft Aria Online (Natural) - English (United States)',
+      'Microsoft Jenny Online (Natural) - English (United States)',
+      'Microsoft Guy Online (Natural) - English (United States)',
+      'Microsoft Ava Online (Natural) - English (United States)',
+      'Microsoft Brian Online (Natural) - English (United States)',
+      'Microsoft Emma Online (Natural) - English (United States)',
+      'Google UK English Female',
+      'Google UK English Male',
+      'Google US English',
+      // Standard high-quality voices
+      'Microsoft Zira Desktop - English (United States)',
+      'Microsoft David Desktop - English (United States)',
+      'Microsoft Mark - English (United States)',
+      'Microsoft Hazel - English (Great Britain)',
+      'Alex', // macOS
+      'Samantha', // macOS
+      'Victoria', // macOS
+      'Karen', // macOS
+      // Fallbacks
+      'en-US',
+      'en-GB'
+    ],
+    ar: [
+      // Premium Neural Arabic voices (highest quality)
+      'Microsoft Salma Online (Natural) - Arabic (Egypt)',
+      'Microsoft Shakir Online (Natural) - Arabic (Egypt)',
+      'Microsoft Hamed Online (Natural) - Arabic (Saudi Arabia)',
+      'Microsoft Zariyah Online (Natural) - Arabic (Saudi Arabia)',
+      'Microsoft Amina Online (Natural) - Arabic (Saudi Arabia)',
+      'Microsoft Bassel Online (Natural) - Arabic (Syria)',
+
+      // Google Arabic voices
+      'Google العربية',
+      'Google Arabic',
+      'Arabic Google',
+
+      // Standard Microsoft Arabic voices
+      'Microsoft Naayf - Arabic (Saudi Arabia)',
+      'Microsoft Hoda - Arabic (Egypt)',
+      'Microsoft Amira - Arabic (Egypt)',
+
+      // Regional variations
+      'Arabic (Saudi Arabia)',
+      'Arabic (Egypt)',
+      'Arabic (UAE)',
+      'Arabic (Jordan)',
+      'Arabic (Lebanon)',
+
+      // Browser fallbacks
+      'ar-SA',
+      'ar-EG',
+      'ar-AE',
+      'ar-JO',
+      'ar-LB',
+      'ar'
+    ]
+  };
+
+  const preferredNames = naturalVoices[language] || naturalVoices.en;
+  const filtered = [];
+
+  // First pass: Find exact matches
+  for (const preferredName of preferredNames) {
+    const voice = availableVoices.find(v =>
+      v.name === preferredName ||
+      v.name.includes(preferredName) ||
+      preferredName.includes(v.name)
+    );
+    if (voice && !filtered.find(f => f.name === voice.name)) {
+      filtered.push(voice);
+    }
+  }
+
+  // Second pass: Find by language if no exact matches
+  if (filtered.length === 0) {
+    const langCode = language === 'ar' ? 'ar' : 'en';
+    const langVoices = availableVoices.filter(v => {
+      if (!v.lang) return false;
+      const lowerLang = v.lang.toLowerCase();
+
+      if (language === 'ar') {
+        // More comprehensive Arabic detection
+        return lowerLang.startsWith('ar') ||
+               lowerLang.includes('arabic') ||
+               lowerLang.includes('عربي') ||
+               v.name.toLowerCase().includes('arabic') ||
+               v.name.includes('العربية');
+      } else {
+        return lowerLang.startsWith('en');
+      }
+    });
+    filtered.push(...langVoices);
+  }
+
+  // Third pass: Very loose Arabic detection if still nothing found
+  if (language === 'ar' && filtered.length === 0) {
+    const anyArabicVoice = availableVoices.find(v =>
+      v.name.toLowerCase().includes('arab') ||
+      v.name.includes('عرب') ||
+      v.name.includes('سعود') ||
+      v.name.includes('مصر') ||
+      v.name.toLowerCase().includes('saudi') ||
+      v.name.toLowerCase().includes('egypt')
+    );
+    if (anyArabicVoice) {
+      filtered.push(anyArabicVoice);
+    }
+  }
+
+  return filtered.slice(0, 10); // Return top 10 natural voices
+};
+
+// Force Arabic Voice Creation - Works without installed Arabic voices
+const createArabicVoice = () => {
+  return {
+    name: 'Arabic Synthetic (ar-SA)',
+    lang: 'ar-SA',
+    voiceURI: 'ar-SA',
+    localService: false,
+    default: false,
+    synthetic: true // Mark as synthetic
+  };
+};
+
+// Enhanced Arabic Voice Getter - Always returns at least one Arabic voice
+const getArabicVoices = (availableVoices) => {
+  const arabicVoices = getNaturalVoices('ar', availableVoices);
+
+  // If no Arabic voices found, create synthetic ones
+  if (arabicVoices.length === 0) {
+    console.log('🚨 No Arabic voices found on system - creating synthetic voices');
+    return [
+      createArabicVoice(),
+      {
+        name: 'Arabic Egypt (ar-EG)',
+        lang: 'ar-EG',
+        voiceURI: 'ar-EG',
+        localService: false,
+        default: false,
+        synthetic: true
+      },
+      {
+        name: 'Arabic UAE (ar-AE)',
+        lang: 'ar-AE',
+        voiceURI: 'ar-AE',
+        localService: false,
+        default: false,
+        synthetic: true
+      }
+    ];
+  }
+
+  console.log('✅ Found Arabic voices on system:', arabicVoices.length);
+  return arabicVoices;
+};
+
 // Voice Commands System
 const getVoiceCommands = (language) => {
   if (language === 'ar') {
@@ -446,6 +610,21 @@ export default function VoiceInterface({
     }
   }, []);
 
+  // Arabic voice status notification
+  const [showArabicVoiceInfo, setShowArabicVoiceInfo] = useState(false);
+  useEffect(() => {
+    if (language === 'ar') {
+      const arabicVoices = getNaturalVoices('ar', voices);
+      if (arabicVoices.length === 0) {
+        setShowArabicVoiceInfo(true);
+        const timer = setTimeout(() => setShowArabicVoiceInfo(false), 8000);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      setShowArabicVoiceInfo(false);
+    }
+  }, [language, voices]);
+
   // Initialize user email from session
   useEffect(() => {
     try {
@@ -611,7 +790,24 @@ export default function VoiceInterface({
       return;
     }
 
-    if (!window.speechSynthesis) return;
+    if (!window.speechSynthesis) {
+      console.warn('🚨 SpeechSynthesis not supported in this browser');
+      return;
+    }
+
+    // Ensure voices are loaded (important for Arabic voices)
+    if (voices.length === 0) {
+      console.log('🔄 Loading voices...');
+      const availableVoices = window.speechSynthesis.getVoices();
+      if (availableVoices.length === 0) {
+        // Wait for voices to load
+        setTimeout(() => {
+          console.log('⏰ Retrying speech after voice loading delay');
+          speak(text);
+        }, 100);
+        return;
+      }
+    }
 
     // Stop any ongoing speech recognition when starting to speak
     if (recognitionRef.current && isListening) {
@@ -632,31 +828,113 @@ export default function VoiceInterface({
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    // Find appropriate voice for current language
-    const voice = voices.find(v => {
-      if (language === 'ar') {
-        return v.lang?.startsWith('ar') && v.name === selectedVoiceLocal;
-      }
-      return v.lang?.startsWith('en') && v.name === selectedVoiceLocal;
-    });
-
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-      console.log(`🔊 Using voice: ${voice.name} (${voice.lang})`);
+    // Get voices for current language (enhanced for Arabic)
+    let naturalVoices;
+    if (language === 'ar') {
+      naturalVoices = getArabicVoices(voices); // Always returns at least synthetic Arabic voices
     } else {
-      // Fallback to language setting
-      utterance.lang = language === 'ar' ? 'ar-SA' : 'en-US';
-      console.log(`🔊 Using fallback language: ${utterance.lang}`);
+      naturalVoices = getNaturalVoices(language, voices);
     }
 
-    utterance.rate = speedLocal;
-    utterance.pitch = pitchLocal;
+    console.log(`🔍 Available voices for ${language}:`, voices.length);
+    console.log(`🔍 Natural voices found:`, naturalVoices.length, naturalVoices.map(v => v.name));
+
+    let selectedVoice = null;
+
+    // First try to use user's selected voice if it's natural
+    if (selectedVoiceLocal && naturalVoices.find(v => v.name === selectedVoiceLocal)) {
+      selectedVoice = voices.find(v => v.name === selectedVoiceLocal);
+      console.log(`🎯 Using user-selected voice: ${selectedVoice.name}`);
+    }
+    // Otherwise use the best natural voice available
+    else if (naturalVoices.length > 0) {
+      selectedVoice = naturalVoices[0]; // Use the highest quality voice
+      console.log(`🎯 Auto-selected natural voice: ${selectedVoice.name}`);
+    }
+    // Enhanced fallback for Arabic
+    else if (language === 'ar') {
+      // Try any Arabic voice
+      selectedVoice = voices.find(v =>
+        v.lang?.toLowerCase().includes('ar') ||
+        v.name.toLowerCase().includes('arab') ||
+        v.name.includes('العربية')
+      );
+
+      if (selectedVoice) {
+        console.log(`🎯 Arabic fallback voice: ${selectedVoice.name}`);
+      } else {
+        console.warn('🚨 No Arabic voices found! Creating synthetic voice.');
+        // Create a synthetic Arabic voice entry
+        selectedVoice = {
+          name: 'Arabic Synthetic',
+          lang: 'ar-SA',
+          voiceURI: 'ar-SA'
+        };
+      }
+    }
+    // Final fallback to any voice in the language
+    else {
+      selectedVoice = voices.find(v => {
+        return v.lang?.startsWith('en');
+      });
+    }
+
+    if (selectedVoice) {
+      // Handle synthetic Arabic voices specially
+      if (selectedVoice.synthetic && language === 'ar') {
+        utterance.lang = selectedVoice.lang;
+        console.log(`🎭 Using synthetic Arabic voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+      } else if (!selectedVoice.synthetic) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang;
+        console.log(`🔊 Using system voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+      }
+    } else {
+      // Absolute fallback to language setting
+      if (language === 'ar') {
+        utterance.lang = 'ar-SA';
+        console.log(`🔊 Arabic fallback - forcing lang to: ${utterance.lang}`);
+      } else {
+        utterance.lang = 'en-US';
+        console.log(`🔊 English fallback - using lang: ${utterance.lang}`);
+      }
+    }
+
+    // Ensure Arabic text is properly handled
+    if (language === 'ar' && cleanText) {
+      console.log(`📝 Arabic text to speak:`, cleanText.substring(0, 100) + '...');
+      // Force Arabic language settings for better pronunciation
+      if (!utterance.lang || !utterance.lang.startsWith('ar')) {
+        utterance.lang = 'ar-SA';
+        console.log(`🔧 Corrected language to ar-SA for Arabic text`);
+      }
+    }
+
+    // Natural speech settings for AI responses
+    utterance.rate = Math.max(0.8, Math.min(speedLocal, 1.1)); // Constrain speed for naturalness
+    utterance.pitch = Math.max(0.8, Math.min(pitchLocal, 1.2)); // Natural pitch range
     utterance.volume = volumeLocal;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    // Enhanced settings for premium voices
+    if (selectedVoice && selectedVoice.name.includes('Natural')) {
+      utterance.rate = Math.max(0.85, Math.min(speedLocal, 1.0)); // Slower for premium voices
+      utterance.pitch = Math.max(0.9, Math.min(pitchLocal, 1.1)); // More natural pitch
+    }
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      console.log(`🗣️ AI speaking with ${selectedVoice?.name || 'default'} voice`);
+    };
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      console.log(`🔇 AI finished speaking`);
+    };
+
+    utterance.onerror = (event) => {
+      setIsSpeaking(false);
+      console.warn(`Speech synthesis error: ${event.error}`);
+    };
 
     window.speechSynthesis.speak(utterance);
   }, [extSpeak, autoSpeak, voices, selectedVoiceLocal, speedLocal, pitchLocal, volumeLocal, language, isListening]);
@@ -685,7 +963,7 @@ export default function VoiceInterface({
             setShowSaveModal(true);
             break;
           case 'switchMode':
-            onSwitchMode?.('chat');
+            handleTextTransition();
             break;
           case 'stopSpeaking':
             stopSpeaking();
@@ -699,6 +977,44 @@ export default function VoiceInterface({
     }
     return false;
   }, [onSwitchMode, stopSpeaking, language]);
+
+  // Simple text transition handler
+  const handleTextTransition = useCallback(() => {
+    if (!onSwitchMode) return;
+
+    // Create simple transition overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'text-transition-overlay';
+    overlay.innerHTML = `
+      <div class="text-transition-content">
+        <div class="text-transition-text">${t.lang === 'ar' ? 'التبديل...' : 'Switching...'}</div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Animate the transition
+    setTimeout(() => {
+      overlay.classList.add('active');
+    }, 50);
+
+    // Complete transition after brief display
+    setTimeout(() => {
+      onSwitchMode?.('chat');
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => {
+          try {
+            if (document.body.contains(overlay)) {
+              document.body.removeChild(overlay);
+            }
+          } catch (error) {
+            console.warn('Failed to remove text transition overlay:', error);
+          }
+        }, 300);
+      }, 100);
+    }, 800);
+  }, [onSwitchMode, t]);
 
   // Handle Voice Input (rewritten to match working chat interface pattern)
   const handleVoiceInput = useCallback(async (transcript, confidence) => {
@@ -834,7 +1150,7 @@ export default function VoiceInterface({
       id: 'chat-mode',
       icon: '💬',
       label: t.chatMode,
-      onClick: () => onSwitchMode?.('chat'),
+      onClick: () => handleTextTransition(),
       variant: 'white'
     }
   ];
@@ -914,6 +1230,39 @@ export default function VoiceInterface({
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
           >
             💾 {t.memoryRestored}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Arabic Voice Information */}
+      <AnimatePresence>
+        {showArabicVoiceInfo && (
+          <motion.div
+            style={{
+              position: 'fixed',
+              top: '80px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(59, 130, 246, 0.9)',
+              color: 'white',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              fontSize: '0.85rem',
+              fontWeight: '500',
+              zIndex: 1001,
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
+              maxWidth: '90%',
+              textAlign: 'center'
+            }}
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+          >
+            🎙️ {language === 'ar' ?
+              'استخدام صوت عربي اصطناعي - لتحسين الجودة، قم بتثبيت أصوات عربية من إعدادات النظام' :
+              'Using synthetic Arabic voice - Install Arabic voices in system settings for better quality'
+            }
           </motion.div>
         )}
       </AnimatePresence>
@@ -1092,6 +1441,59 @@ export default function VoiceInterface({
             🗑️ {t.clear}
           </motion.button>
         </div>
+
+        {/* Natural Voice Selector */}
+        <motion.div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginTop: '1rem'
+          }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <span style={{
+            fontSize: '0.9rem',
+            color: 'var(--text-light)',
+            opacity: 0.8,
+            fontWeight: '500'
+          }}>
+            🎙️ AI Voice
+          </span>
+          <select
+            value={selectedVoiceLocal}
+            onChange={(e) => setSelectedVoiceLocal(e.target.value)}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              fontSize: '0.9rem',
+              backdropFilter: 'blur(10px)',
+              cursor: 'pointer',
+              minWidth: '200px',
+              textAlign: 'center'
+            }}
+          >
+            <option value="" style={{ background: '#1a1a1a', color: 'white' }}>
+              Auto-select best voice
+            </option>
+            {(language === 'ar' ? getArabicVoices(voices) : getNaturalVoices(language, voices)).map(voice => (
+              <option
+                key={voice.name}
+                value={voice.name}
+                style={{ background: '#1a1a1a', color: 'white' }}
+              >
+                {voice.name.includes('Natural') ? '⭐ ' : ''}
+                {voice.name.length > 40 ? voice.name.substring(0, 40) + '...' : voice.name}
+              </option>
+            ))}
+          </select>
+        </motion.div>
       </motion.div>
 
 
@@ -1107,7 +1509,11 @@ export default function VoiceInterface({
           background: 'var(--glass-bg)',
           backdropFilter: 'blur(10px)',
           borderRadius: '12px',
-          border: '1px solid var(--glass-border)'
+          border: '1px solid var(--glass-border)',
+          /* Hide scrollbar but keep functionality */
+          scrollbarWidth: 'none', /* Firefox */
+          msOverflowStyle: 'none', /* IE and Edge */
+          WebkitScrollbar: { display: 'none' } /* Chrome, Safari, Opera - handled below */
         }}
       >
         <AnimatePresence mode="popLayout">

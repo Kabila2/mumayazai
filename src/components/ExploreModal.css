@@ -22,9 +22,9 @@
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 24px;
-  width: 100%;
-  max-width: 700px;
-  max-height: 90vh;
+  width: 95%;
+  max-width: 1200px;
+  max-height: 95vh;
   overflow: hidden;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
   transform-style: preserve-3d;
@@ -101,7 +101,14 @@
 .explore-content {
   padding: 1rem 2rem 2rem 2rem;
   overflow-y: auto;
-  max-height: calc(90vh - 120px);
+  max-height: calc(95vh - 140px);
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.explore-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .explore-subtitle {
