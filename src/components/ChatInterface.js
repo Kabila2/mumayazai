@@ -985,8 +985,14 @@ const ChatInterface = ({
                   transition={{ delay: reducedMotion ? 0 : 0.1 }}
                 >
                 {message.text && (
-                  <div 
-                    style={{ marginBottom: message.images?.length ? '12px' : 0 }}
+                  <div
+                    style={{
+                      marginBottom: message.images?.length ? '12px' : 0,
+                      fontSize: '1.1rem',
+                      lineHeight: '1.6',
+                      color: 'var(--text-color)',
+                      fontWeight: '500'
+                    }}
                     dangerouslySetInnerHTML={{
                       __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
                     }}
@@ -1028,10 +1034,11 @@ const ChatInterface = ({
                 {/* Message metadata */}
                 {index > 0 && (
                   <div style={{
-                    fontSize: '0.75rem',
-                    opacity: 0.6,
-                    marginTop: '8px',
-                    textAlign: message.sender === 'user' ? 'right' : 'left'
+                    fontSize: '0.9rem',
+                    opacity: 0.7,
+                    marginTop: '12px',
+                    textAlign: message.sender === 'user' ? 'right' : 'left',
+                    fontWeight: '500'
                   }}>
                     {message.sender === 'gpt' ? 'AI Response' : 'You'} • {new Date(message.id).toLocaleTimeString()}
                   </div>

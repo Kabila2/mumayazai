@@ -455,13 +455,14 @@ html, body {
 /* Message Bubble */
 .chat-bubble {
   max-width: 70%;
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-6) var(--space-8);
   background: var(--glass-strong);
   backdrop-filter: blur(40px) saturate(180%);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   color: var(--text-light);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
   line-height: 1.6;
   position: relative;
   overflow: hidden;
