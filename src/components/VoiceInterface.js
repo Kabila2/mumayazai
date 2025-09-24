@@ -411,6 +411,12 @@ export default function VoiceInterface({
 
     if (!window.speechSynthesis) return;
 
+    // Stop any ongoing speech recognition when starting to speak
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+
     window.speechSynthesis.cancel();
     setIsSpeaking(true);
 
@@ -451,7 +457,7 @@ export default function VoiceInterface({
     utterance.onerror = () => setIsSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
-  }, [extSpeak, autoSpeak, voices, selectedVoiceLocal, speedLocal, pitchLocal, volumeLocal, language]);
+  }, [extSpeak, autoSpeak, voices, selectedVoiceLocal, speedLocal, pitchLocal, volumeLocal, language, isListening]);
 
   const stopSpeaking = useCallback(() => {
     window.speechSynthesis.cancel();
