@@ -658,7 +658,7 @@ export default function VoiceInterface({
       setLastTranscript("");
       setConfidence(0);
       finalTranscriptRef.current = "";
-      console.log("🎤 Voice recognition started with 3-second buffer");
+      console.log("🎤 Voice recognition started with 0.8-second buffer");
     };
 
     recognition.onresult = (event) => {
@@ -676,13 +676,13 @@ export default function VoiceInterface({
           finalTranscriptRef.current = finalTranscript;
           console.log("🎤 Final speech detected:", transcript);
 
-          // Start 5-second silence timer
+          // Start 0.8-second silence timer
           if (silenceTimeoutRef.current) {
             clearTimeout(silenceTimeoutRef.current);
           }
 
           silenceTimeoutRef.current = setTimeout(() => {
-            console.log("🔇 3-second silence detected, processing speech");
+            console.log("🔇 0.8-second silence detected, processing speech");
             if (finalTranscriptRef.current.trim()) {
               handleVoiceInput(finalTranscriptRef.current.trim(), confidence);
               finalTranscriptRef.current = "";
@@ -691,7 +691,7 @@ export default function VoiceInterface({
             if (recognitionRef.current) {
               recognitionRef.current.stop();
             }
-          }, 3000); // 3-second buffer
+          }, 800); // 0.8-second buffer
         } else {
           interimTranscript += transcript;
           setLastTranscript(finalTranscriptRef.current + interimTranscript);
@@ -716,7 +716,6 @@ export default function VoiceInterface({
         clearTimeout(silenceTimeoutRef.current);
       }
       console.error("Speech recognition error:", event.error);
-      showNotification(`Voice recognition error: ${event.error}`, "error");
     };
 
     recognitionRef.current = recognition;
@@ -1354,7 +1353,7 @@ export default function VoiceInterface({
             ]
           } : {}}
           transition={{ repeat: isListening ? Infinity : 0, duration: 1.5 }}
-          title={isListening ? 'Click to stop listening (or wait 3 seconds after speaking)' : 'Click to start listening'}
+          title={isListening ? 'Click to stop listening (or wait 0.8 seconds after speaking)' : 'Click to start listening'}
         >
           {isListening ? '🔴' : isProcessing ? '⚡' : '🗣️'}
         </motion.button>
