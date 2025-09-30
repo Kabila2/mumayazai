@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ArabicAlphabetLearning from "./ArabicAlphabetLearning";
 import ArabicColorsLearning from "./ArabicColorsLearning";
@@ -33,6 +33,8 @@ const ArabicLearningPlatform = ({
     totalSessions: 0,
     streak: 0
   });
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const platformRef = useRef(null);
 
   // Load user progress from localStorage
   useEffect(() => {
@@ -45,6 +47,44 @@ const ArabicLearningPlatform = ({
       }
     }
   }, []);
+
+  // Handle scroll indicator
+  useEffect(() => {
+    const handleScroll = () => {
+      const platform = platformRef.current;
+      if (platform) {
+        const scrollTop = platform.scrollTop;
+        const scrollHeight = platform.scrollHeight;
+        const clientHeight = platform.clientHeight;
+
+        // Show scroll indicator if content is scrollable and not at bottom
+        const isScrollable = scrollHeight > clientHeight;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+        setShowScrollIndicator(isScrollable && !isAtBottom);
+      }
+    };
+
+    const platform = platformRef.current;
+    if (platform) {
+      platform.addEventListener('scroll', handleScroll);
+      // Check initial state
+      handleScroll();
+
+      return () => platform.removeEventListener('scroll', handleScroll);
+    }
+  }, [currentSection]);
+
+  // Smooth scroll to bottom function
+  const scrollToBottom = () => {
+    const platform = platformRef.current;
+    if (platform) {
+      platform.scrollTo({
+        top: platform.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Save user progress to localStorage
   const saveProgress = (newProgress) => {
@@ -302,7 +342,7 @@ const ArabicLearningPlatform = ({
   );
 
   return (
-    <div className="arabic-learning-platform">
+    <div className="arabic-learning-platform" ref={platformRef}>
       <nav className="platform-nav">
         <div className="nav-brand">
           <h2 className="brand-title">
@@ -494,6 +534,31 @@ const ArabicLearningPlatform = ({
           )}
         </AnimatePresence>
       </main>
+
+      {/* Scroll Down Indicator */}
+      <AnimatePresence>
+        {showScrollIndicator && (
+          <motion.div
+            className="scroll-indicator"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            onClick={scrollToBottom}
+          >
+            <div className="scroll-arrow">
+              <motion.div
+                animate={{ y: [0, 5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ↓
+              </motion.div>
+            </div>
+            <div className="scroll-text">
+              {language === 'ar' ? 'مرر للأسفل' : 'Scroll down'}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
