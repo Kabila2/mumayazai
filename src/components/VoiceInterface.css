@@ -111,10 +111,19 @@
   justify-content: flex-start;
   padding: 0;
   background: var(--bg-main);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   color: rgba(255, 255, 255, 0.95);
   font-family: var(--font-family) !important;
   font-size: var(--font-size-base);
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.voice-area::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
 
   /* Professional styling */
   letter-spacing: 0.02em;

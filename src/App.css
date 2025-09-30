@@ -142,7 +142,16 @@ body {
   position: relative;
   background: var(--bg-gradient);
   font-family: var(--font-family);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.app-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
   /* Animated background overlay */
   &::before {
     content: '';
