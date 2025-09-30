@@ -17,7 +17,9 @@
       "MultiEdit(*)",
       "Glob(*)",
       "Grep(*)",
-      "Bash(set PORT=3001)"
+      "Bash(set PORT=3001)",
+      "Bash(dir)",
+      "Bash(del test-components.js)"
     ],
     "deny": [],
     "ask": []

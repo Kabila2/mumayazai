@@ -7,6 +7,7 @@ import EntryLoginPage from "./components/EntryLoginPage";
 import OnboardingSetup from "./components/OnboardingSetup";
 import PaperAirplaneTransition from "./components/PaperAirplaneTransition";
 import ParentDashboard from "./components/ParentDashboard";
+import ArabicLearningPlatform from "./components/ArabicLearningPlatform";
 import { translations } from "./translations";
 import {
   initializeParentAccount,
@@ -287,52 +288,25 @@ export default function App() {
   let content;
   if (view === "chat") {
     content = (
-      <PaperAirplaneTransition
-        isTransitioning={isTransitioning}
-        fromMode={mode}
-        toMode={pendingMode}
-        onTransitionComplete={handleTransitionComplete}
-        reducedMotion={reducedMotion}
+      <ArabicLearningPlatform
         t={t}
         language={appLanguage}
-      >
-        <div style={{ position: "relative", height: "100%" }}>
-          {mode === "text" ? (
-            <ChatInterface
-              t={t}
-              language={appLanguage}
-              fontSize={fontSize}
-              highContrast={highContrast}
-              reducedMotion={reducedMotion}
-              assistantTitle={assistantTitle}
-              currentPreference={currentPreference}
-              onSwitchMode={() => handleModeSwitch("voice")}
-              onSignOut={handleSignOut}
-            />
-          ) : (
-            <VoiceInterface
-              t={t}
-              language={appLanguage}
-              voices={voices}
-              selectedVoice={selectedVoice}
-              setSelectedVoice={setSelectedVoice}
-              speed={speed}
-              setSpeed={setSpeed}
-              pitch={pitch}
-              setPitch={setPitch}
-              setLanguage={setLanguage}
-              speak={speak}
-              highContrast={highContrast}
-              fontSize={fontSize}
-              reducedMotion={reducedMotion}
-              assistantTitle={assistantTitle}
-              currentPreference={currentPreference}
-              onSwitchMode={() => handleModeSwitch("text")}
-              onSignOut={handleSignOut}
-            />
-          )}
-        </div>
-      </PaperAirplaneTransition>
+        fontSize={fontSize}
+        highContrast={highContrast}
+        reducedMotion={reducedMotion}
+        assistantTitle={assistantTitle}
+        currentPreference={currentPreference}
+        onSignOut={handleSignOut}
+        voices={voices}
+        selectedVoice={selectedVoice}
+        setSelectedVoice={setSelectedVoice}
+        speed={speed}
+        setSpeed={setSpeed}
+        pitch={pitch}
+        setPitch={setPitch}
+        setLanguage={setLanguage}
+        speak={speak}
+      />
     );
   } else if (view === "profile") {
     content = (

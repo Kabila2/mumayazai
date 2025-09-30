@@ -100,6 +100,32 @@ export const translations = {
 
     // Additional voice interface keys
     speaking: "Speaking",
+
+    // Arabic Learning Platform keys
+    arabicLearningPlatform: "Arabic Learning Platform",
+    welcomeToArabicLearning: "Welcome to Arabic Learning Platform",
+    learnArabicLettersColors: "Learn Arabic letters and colors in a fun and interactive way",
+    yourLearningProgress: "Your Learning Progress",
+    learnArabicAlphabet: "Learn Arabic Alphabet",
+    discoverArabicLetters: "Discover all 28 Arabic letters with pronunciation and examples",
+    learnArabicColors: "Learn Arabic Colors",
+    exploreArabicColors: "Explore different colors and their names in Arabic",
+    smartLearningAssistant: "Smart Learning Assistant",
+    askSmartAssistant: "Ask the smart learning assistant anything about Arabic language",
+    home: "Home",
+    alphabet: "Alphabet",
+    colors: "Colors",
+    assistant: "Assistant",
+    back: "Back",
+    textMode: "Text Mode",
+    voiceMode: "Voice Mode",
+    sessions: "Sessions",
+    streak: "Streak",
+    didYouKnow: "Did you know?",
+    arabicHas28Letters: "Arabic has 28 letters",
+    over400MillionSpeak: "Over 400 million people speak Arabic",
+    arabicRightToLeft: "Arabic is written from right to left",
+    learnArabic: "Learn Arabic",
   },
   ar: {
     // Mumayaz UI keys
@@ -202,5 +228,31 @@ export const translations = {
 
     // Additional voice interface keys
     speaking: "يتحدث",
+
+    // Arabic Learning Platform keys
+    arabicLearningPlatform: "منصة تعلم العربية",
+    welcomeToArabicLearning: "مرحباً بك في منصة تعلم العربية",
+    learnArabicLettersColors: "تعلم الحروف والألوان العربية بطريقة ممتعة وتفاعلية",
+    yourLearningProgress: "تقدمك في التعلم",
+    learnArabicAlphabet: "تعلم الحروف العربية",
+    discoverArabicLetters: "اكتشف الحروف العربية الـ 28 مع النطق والأمثلة",
+    learnArabicColors: "تعلم الألوان العربية",
+    exploreArabicColors: "تعرف على الألوان المختلفة وأسمائها باللغة العربية",
+    smartLearningAssistant: "مساعد التعلم الذكي",
+    askSmartAssistant: "اسأل مساعد التعلم الذكي عن أي شيء متعلق باللغة العربية",
+    home: "الرئيسية",
+    alphabet: "الحروف",
+    colors: "الألوان",
+    assistant: "المساعد",
+    back: "العودة",
+    textMode: "الوضع النصي",
+    voiceMode: "الوضع الصوتي",
+    sessions: "الجلسات",
+    streak: "الأيام المتتالية",
+    didYouKnow: "هل تعلم؟",
+    arabicHas28Letters: "اللغة العربية بها 28 حرفاً",
+    over400MillionSpeak: "يتحدث بالعربية أكثر من 400 مليون شخص",
+    arabicRightToLeft: "نكتب العربية من اليمين إلى اليسار",
+    learnArabic: "تعلم العربية",
   },
 };

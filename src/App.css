@@ -3,12 +3,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Professional Color System */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #3b82f6;
-  --secondary: #6366f1;
-  --accent: #06b6d4;
+  /* Soft Pastel Color System - Eye-friendly for learning */
+  --primary: #a78bfa;
+  --primary-hover: #8b5cf6;
+  --primary-light: #c4b5fd;
+  --secondary: #f472b6;
+  --accent: #fbbf24;
   
   /* Neutral Palette */
   --gray-50: #f8fafc;
@@ -22,11 +22,19 @@
   --gray-800: #1e293b;
   --gray-900: #0f172a;
   
-  /* Background System */
-  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --bg-glass: rgba(255, 255, 255, 0.08);
-  --bg-card: rgba(255, 255, 255, 0.1);
-  --bg-overlay: rgba(0, 0, 0, 0.3);
+  /* Background System - Soft Pastels */
+  --bg-gradient: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 25%, #f0fdf4 50%, #fefce8 75%, #fef2f2 100%);
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-overlay: rgba(0, 0, 0, 0.1);
+
+  /* Additional Pastel Colors */
+  --pastel-purple: #e9d5ff;
+  --pastel-pink: #fce7f3;
+  --pastel-blue: #dbeafe;
+  --pastel-green: #d1fae5;
+  --pastel-yellow: #fef3c7;
+  --pastel-orange: #fed7aa;
   
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -87,9 +95,11 @@ html {
 body {
   font-size: var(--font-size-base);
   background: var(--bg-gradient);
+  background-attachment: fixed;
   overflow: hidden;
   height: 100vh;
   height: 100dvh;
+  color: var(--gray-800);
   
   /* Mobile optimizations */
   -webkit-text-size-adjust: 100%;

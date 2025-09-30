@@ -1,0 +1,426 @@
+.arabic-alphabet-learning {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f6ff 0%, #f0f4f8 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  min-height: 100vh;
+}
+
+.learning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.learning-title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #9c88ff, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+
+.mode-selector {
+  display: flex;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.mode-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.mode-btn:hover:not(.active) {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.score-display {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+
+.letter-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.letter-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 500px;
+  width: 100%;
+}
+
+.letter-display {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  margin-bottom: 30px;
+}
+
+.letter-display:hover {
+  transform: scale(1.05);
+}
+
+.arabic-letter {
+  font-size: 6rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  margin-bottom: 10px;
+  text-shadow: 0 4px 8px rgba(139, 92, 246, 0.2);
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+}
+
+.letter-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #4f46e5;
+  margin-bottom: 8px;
+}
+
+.letter-pronunciation {
+  font-size: 1.1rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.letter-info {
+  margin-bottom: 25px;
+}
+
+.english-equivalent {
+  font-size: 1rem;
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.1);
+  padding: 8px 16px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.word-section {
+  margin-top: 20px;
+}
+
+.word-button {
+  background: linear-gradient(135deg, #f3e8ff, #e0e7ff);
+  border: 2px solid #c4b5fd;
+  color: #7c3aed;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
+}
+
+.word-button:hover {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.2);
+}
+
+.word-display {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 2px solid #f59e0b;
+  border-radius: 15px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.word-display:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2);
+}
+
+.arabic-word {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #d97706;
+  margin-bottom: 8px;
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+}
+
+.word-meaning {
+  font-size: 1.2rem;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.quiz-section {
+  width: 100%;
+}
+
+.quiz-question {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-radius: 12px;
+  border-left: 4px solid #0ea5e9;
+}
+
+.quiz-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.quiz-option {
+  padding: 15px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.quiz-option:hover:not(:disabled) {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.05);
+  transform: translateY(-2px);
+}
+
+.quiz-option.correct {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.quiz-option.incorrect {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.quiz-result {
+  padding: 15px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.correct-answer {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  border: 2px solid #10b981;
+}
+
+.incorrect-answer {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+  border: 2px solid #ef4444;
+}
+
+.navigation-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.nav-btn {
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.nav-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.progress-indicator {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 8px 16px;
+  border-radius: 12px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.alphabet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.alphabet-item {
+  aspect-ratio: 1;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #6b7280;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+}
+
+.alphabet-item:hover {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+.alphabet-item.active {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: white;
+  border-color: #7c3aed;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .arabic-alphabet-learning {
+    padding: 15px;
+  }
+
+  .learning-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .letter-card {
+    padding: 25px;
+  }
+
+  .arabic-letter {
+    font-size: 4rem;
+  }
+
+  .quiz-options {
+    grid-template-columns: 1fr;
+  }
+
+  .navigation-controls {
+    gap: 20px;
+  }
+
+  .alphabet-grid {
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 6px;
+    padding: 15px;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .arabic-alphabet-learning {
+  text-align: right;
+}
+
+[dir="rtl"] .learning-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .mode-selector {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .navigation-controls {
+  flex-direction: row-reverse;
+}
+
+/* High Contrast Mode */
+.high-contrast .arabic-alphabet-learning {
+  background: #000000;
+  color: #ffffff;
+}
+
+.high-contrast .letter-card {
+  background: #1a1a1a;
+  border: 2px solid #ffffff;
+}
+
+.high-contrast .arabic-letter {
+  color: #00ff00;
+}
+
+.high-contrast .mode-btn.active {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* Reduced Motion */
+.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Dyslexia Friendly */
+.dyslexia-friendly .arabic-alphabet-learning {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', cursive;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+}
+
+.dyslexia-friendly .arabic-letter {
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+}
+
+.dyslexia-friendly .letter-name,
+.dyslexia-friendly .word-meaning {
+  font-weight: 700;
+}
