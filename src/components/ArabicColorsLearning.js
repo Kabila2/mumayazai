@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ArabicColorsLearning.css';
 
@@ -124,6 +124,8 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
   const [matchingPairs, setMatchingPairs] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const containerRef = useRef(null);
 
   const currentColor = arabicColors[currentIndex];
 
@@ -134,6 +136,44 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
       generateMatchingGame();
     }
   }, [currentIndex, gameMode]);
+
+  // Handle scroll indicator
+  useEffect(() => {
+    const handleScroll = () => {
+      const container = containerRef.current;
+      if (container) {
+        const scrollTop = container.scrollTop;
+        const scrollHeight = container.scrollHeight;
+        const clientHeight = container.clientHeight;
+
+        // Show scroll indicator if content is scrollable and not at bottom
+        const isScrollable = scrollHeight > clientHeight;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+        setShowScrollIndicator(isScrollable && !isAtBottom);
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      // Check initial state
+      handleScroll();
+
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [gameMode, currentIndex]);
+
+  // Smooth scroll to bottom function
+  const scrollToBottom = () => {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const generateQuizOptions = () => {
     const correct = currentColor;
@@ -260,7 +300,7 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
   const isCardMatched = (card) => matchedPairs.includes(card.id);
 
   return (
-    <div className="arabic-colors-learning">
+    <div className="arabic-colors-learning" ref={containerRef}>
       <div className="learning-header">
         <h2 className="learning-title">
           {language === 'ar' ? 'تعلم الألوان العربية' : 'Learn Arabic Colors'}
@@ -517,6 +557,31 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
           )}
         </div>
       )}
+
+      {/* Scroll Down Indicator */}
+      <AnimatePresence>
+        {showScrollIndicator && (
+          <motion.div
+            className="scroll-indicator"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            onClick={scrollToBottom}
+          >
+            <div className="scroll-arrow">
+              <motion.div
+                animate={{ y: [0, 5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ↓
+              </motion.div>
+            </div>
+            <div className="scroll-text">
+              {language === 'ar' ? 'مرر للأسفل' : 'Scroll down'}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

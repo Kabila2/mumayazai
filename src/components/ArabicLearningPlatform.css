@@ -1,9 +1,11 @@
 .arabic-learning-platform {
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 25%, #f0fdf4 50%, #fefce8 75%, #fef2f2 100%);
   background-attachment: fixed;
   overflow-y: auto;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -85,9 +87,11 @@
 
 /* Platform Content */
 .platform-content {
+  flex: 1;
   padding: 30px;
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   /* Hide scrollbar but keep functionality */

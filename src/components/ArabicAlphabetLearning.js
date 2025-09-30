@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ArabicAlphabetLearning.css';
 
@@ -41,6 +41,8 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   const [quizOptions, setQuizOptions] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const containerRef = useRef(null);
 
   const currentLetter = arabicAlphabet[currentIndex];
 
@@ -49,6 +51,44 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
       generateQuizOptions();
     }
   }, [currentIndex, gameMode]);
+
+  // Handle scroll indicator
+  useEffect(() => {
+    const handleScroll = () => {
+      const container = containerRef.current;
+      if (container) {
+        const scrollTop = container.scrollTop;
+        const scrollHeight = container.scrollHeight;
+        const clientHeight = container.clientHeight;
+
+        // Show scroll indicator if content is scrollable and not at bottom
+        const isScrollable = scrollHeight > clientHeight;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+        setShowScrollIndicator(isScrollable && !isAtBottom);
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      // Check initial state
+      handleScroll();
+
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [gameMode, currentIndex]);
+
+  // Smooth scroll to bottom function
+  const scrollToBottom = () => {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const generateQuizOptions = () => {
     const correct = currentLetter;
@@ -120,7 +160,7 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   };
 
   return (
-    <div className="arabic-alphabet-learning">
+    <div className="arabic-alphabet-learning" ref={containerRef}>
       <div className="learning-header">
         <h2 className="learning-title">
           {language === 'ar' ? 'تعلم الحروف العربية' : 'Learn Arabic Alphabet'}
@@ -285,6 +325,31 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
           </button>
         ))}
       </div>
+
+      {/* Scroll Down Indicator */}
+      <AnimatePresence>
+        {showScrollIndicator && (
+          <motion.div
+            className="scroll-indicator"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            onClick={scrollToBottom}
+          >
+            <div className="scroll-arrow">
+              <motion.div
+                animate={{ y: [0, 5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ↓
+              </motion.div>
+            </div>
+            <div className="scroll-text">
+              {language === 'ar' ? 'مرر للأسفل' : 'Scroll down'}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
