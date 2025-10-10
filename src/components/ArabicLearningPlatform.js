@@ -4,6 +4,7 @@ import ArabicAlphabetLearning from "./ArabicAlphabetLearning";
 import ArabicColorsLearning from "./ArabicColorsLearning";
 import ChatInterface from "./ChatInterface";
 import VoiceInterface from "./VoiceInterface";
+import MemoryGame from "./MemoryGame";
 import './ArabicLearningPlatform.css';
 
 const ArabicLearningPlatform = ({
@@ -25,7 +26,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'chat', 'voice'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'chat', 'voice', 'memory'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
@@ -258,13 +259,34 @@ const ArabicLearningPlatform = ({
         </motion.div>
 
         <motion.div
+          className="section-card memory-card"
+          onClick={() => handleSectionChange('memory')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <div className="card-icon">🧠</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'لعبة الذاكرة' : 'Memory Match Game'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'طابق الصور مع الكلمات وحسّن ذاكرتك'
+              : 'Match pictures with words and improve your memory'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
           className="section-card chat-card"
           onClick={() => handleSectionChange('chat')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1.0 }}
         >
           <div className="card-icon">💬</div>
           <h3 className="card-title">
@@ -447,6 +469,26 @@ const ArabicLearningPlatform = ({
                 reducedMotion={reducedMotion}
                 speak={speak}
               />
+            </motion.div>
+          )}
+
+          {currentSection === 'memory' && (
+            <motion.div
+              key="memory"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <MemoryGame />
             </motion.div>
           )}
 

@@ -125,6 +125,7 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
+.voice-area {
   /* Professional styling */
   letter-spacing: 0.02em;
   word-spacing: 0.04em;
