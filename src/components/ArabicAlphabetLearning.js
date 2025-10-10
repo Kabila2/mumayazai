@@ -102,21 +102,11 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   };
 
   const handleLetterClick = () => {
-    if (speak) {
-      const textToSpeak = language === 'ar'
-        ? `${currentLetter.name}. ${currentLetter.letter}`
-        : `${currentLetter.name}. Letter ${currentLetter.letter}`;
-      speak(textToSpeak);
-    }
+    // Letter click interaction - no voiceover
   };
 
   const handleWordClick = () => {
-    if (speak) {
-      const textToSpeak = language === 'ar'
-        ? `${currentLetter.word}. ${currentLetter.wordMeaning}`
-        : `${currentLetter.word} means ${currentLetter.wordMeaning}`;
-      speak(textToSpeak);
-    }
+    // Word click interaction - no voiceover
   };
 
   const nextLetter = () => {
@@ -139,13 +129,6 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
     if (option.letter === currentLetter.letter) {
       setScore(prev => prev + 1);
-      if (speak) {
-        speak(language === 'ar' ? 'ممتاز! إجابة صحيحة' : 'Excellent! Correct answer');
-      }
-    } else {
-      if (speak) {
-        speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again');
-      }
     }
   };
 

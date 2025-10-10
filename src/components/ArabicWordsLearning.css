@@ -1,0 +1,497 @@
+/* Arabic Words Learning - Full Width Design */
+
+.arabic-words-learning {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 100%);
+  min-height: calc(100vh - 140px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.arabic-words-learning::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header */
+.words-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.words-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #a78bfa, #ec4899, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 15px 0;
+}
+
+.words-subtitle {
+  font-size: 1.2rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Categories */
+.words-categories {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.categories-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: #374151;
+  margin-bottom: 40px;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.category-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 3px solid transparent;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.category-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.category-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.category-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 10px 0;
+}
+
+.category-count {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Word Learning */
+.word-learning {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.learning-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.back-to-categories-btn {
+  padding: 12px 24px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  color: #374151;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.back-to-categories-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.category-badge {
+  padding: 12px 24px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress */
+.word-progress {
+  margin-bottom: 40px;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 15px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+}
+
+/* Word Card */
+.word-card {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  margin-bottom: 40px;
+}
+
+.word-image-container {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  background: #f3f4f6;
+  position: relative;
+}
+
+.word-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.word-card:hover .word-image {
+  transform: scale(1.05);
+}
+
+.word-content {
+  padding: 40px;
+  text-align: center;
+}
+
+.arabic-word {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+/* Syllables Section */
+.syllables-section {
+  margin: 30px 0;
+  padding: 25px;
+  background: #f9fafb;
+  border-radius: 16px;
+  border: 2px solid #e5e7eb;
+}
+
+.syllables-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.syllables-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.syllable-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.syllable-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  border-color: #a78bfa;
+}
+
+.syllable-arabic {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.syllable-pronunciation {
+  font-size: 1rem;
+  color: #6b7280;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.translation-toggle-btn {
+  padding: 12px 30px;
+  background: transparent;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+  font-family: inherit;
+}
+
+.translation-toggle-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-2px);
+}
+
+.translation {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #059669;
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(5, 150, 105, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Navigation */
+.word-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 15px 30px;
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  font-family: inherit;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.nav-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .words-title {
+    font-size: 2rem;
+  }
+
+  .words-subtitle {
+    font-size: 1rem;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .category-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+
+  .category-name {
+    font-size: 1.2rem;
+  }
+
+  .word-image-container {
+    height: 300px;
+  }
+
+  .arabic-word {
+    font-size: 3rem;
+  }
+
+  .word-content {
+    padding: 30px 20px;
+  }
+
+  .syllable-arabic {
+    font-size: 1.5rem;
+  }
+
+  .syllable-pronunciation {
+    font-size: 0.9rem;
+  }
+
+  .syllables-section {
+    padding: 20px 15px;
+  }
+
+  .word-navigation {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .arabic-words-learning {
+    padding: 20px 10px;
+  }
+
+  .words-title {
+    font-size: 1.5rem;
+  }
+
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .word-image-container {
+    height: 250px;
+  }
+
+  .arabic-word {
+    font-size: 2.5rem;
+  }
+
+  .syllable-item {
+    padding: 12px 15px;
+    min-width: 70px;
+  }
+
+  .syllable-arabic {
+    font-size: 1.3rem;
+  }
+
+  .syllable-pronunciation {
+    font-size: 0.85rem;
+  }
+
+  .syllables-title {
+    font-size: 1.1rem;
+  }
+
+  .translation {
+    font-size: 1.5rem;
+  }
+}
+
+/* High Contrast Mode */
+.high-contrast .category-card {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #ffffff;
+}
+
+.high-contrast .category-name,
+.high-contrast .arabic-word {
+  color: #ffffff;
+}
+
+.high-contrast .word-card {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #ffffff;
+}
+
+/* Dyslexia Support */
+.dyslexia-friendly .arabic-word,
+.dyslexia-friendly .category-name,
+.dyslexia-friendly .pronunciation {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .category-card,
+  .word-card,
+  .nav-btn,
+  .syllable-item,
+  .word-image {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .word-card:hover .word-image {
+    transform: none;
+  }
+
+  .syllable-item:hover {
+    transform: none;
+  }
+}
+
+/* Focus Styles */
+.category-card:focus-visible,
+.nav-btn:focus-visible,
+.syllable-item:focus-visible,
+.translation-toggle-btn:focus-visible,
+.back-to-categories-btn:focus-visible {
+  outline: 3px solid #a78bfa;
+  outline-offset: 2px;
+}

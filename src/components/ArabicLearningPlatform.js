@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ArabicAlphabetLearning from "./ArabicAlphabetLearning";
 import ArabicColorsLearning from "./ArabicColorsLearning";
+import ArabicWordsLearning from "./ArabicWordsLearning";
 import ChatInterface from "./ChatInterface";
 import VoiceInterface from "./VoiceInterface";
 import MemoryGame from "./MemoryGame";
@@ -26,7 +27,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'chat', 'voice', 'memory'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'words', 'chat', 'voice', 'memory'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
@@ -259,6 +260,27 @@ const ArabicLearningPlatform = ({
         </motion.div>
 
         <motion.div
+          className="section-card words-card"
+          onClick={() => handleSectionChange('words')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <div className="card-icon">📝</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'تعلم الكلمات العربية' : 'Learn Arabic Words'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'تعلم الكلمات الأساسية مع الصور والنطق'
+              : 'Learn essential words with pictures and pronunciation'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
           className="section-card memory-card"
           onClick={() => handleSectionChange('memory')}
           whileHover={{ scale: 1.05, y: -5 }}
@@ -392,6 +414,12 @@ const ArabicLearningPlatform = ({
             {language === 'ar' ? 'الألوان' : 'Colors'}
           </button>
           <button
+            className={`nav-link ${currentSection === 'words' ? 'active' : ''}`}
+            onClick={() => handleSectionChange('words')}
+          >
+            {language === 'ar' ? 'الكلمات' : 'Words'}
+          </button>
+          <button
             className={`nav-link ${(currentSection === 'chat' || currentSection === 'voice') ? 'active' : ''}`}
             onClick={() => setCurrentSection(chatMode === 'text' ? 'chat' : 'voice')}
           >
@@ -462,6 +490,33 @@ const ArabicLearningPlatform = ({
                 </button>
               </div>
               <ArabicColorsLearning
+                t={t}
+                language={language}
+                fontSize={fontSize}
+                highContrast={highContrast}
+                reducedMotion={reducedMotion}
+                speak={speak}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'words' && (
+            <motion.div
+              key="words"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <ArabicWordsLearning
                 t={t}
                 language={language}
                 fontSize={fontSize}

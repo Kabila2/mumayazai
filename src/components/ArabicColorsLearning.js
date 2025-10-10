@@ -203,23 +203,11 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
   };
 
   const handleColorClick = () => {
-    if (speak) {
-      const textToSpeak = language === 'ar'
-        ? `${currentColor.arabic}. ${currentColor.pronunciation}`
-        : `${currentColor.arabic} means ${currentColor.english}`;
-      speak(textToSpeak);
-    }
+    // Color click interaction - no voiceover
   };
 
   const handleObjectClick = (objectIndex) => {
-    if (speak) {
-      const arabicObject = currentColor.objects[objectIndex];
-      const englishObject = currentColor.objectsEnglish[objectIndex];
-      const textToSpeak = language === 'ar'
-        ? `${arabicObject}. ${englishObject}`
-        : `${arabicObject} means ${englishObject}`;
-      speak(textToSpeak);
-    }
+    // Object click interaction - no voiceover
   };
 
   const nextColor = () => {
@@ -242,13 +230,6 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
 
     if (option.arabic === currentColor.arabic) {
       setScore(prev => prev + 1);
-      if (speak) {
-        speak(language === 'ar' ? 'ممتاز! إجابة صحيحة' : 'Excellent! Correct answer');
-      }
-    } else {
-      if (speak) {
-        speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again');
-      }
     }
   };
 
@@ -267,18 +248,11 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
           setMatchedPairs(prev => [...prev, first.id, second.id]);
           setSelectedCards([]);
           setScore(prev => prev + 1);
-
-          if (speak) {
-            speak(language === 'ar' ? 'ممتاز! تطابق صحيح' : 'Excellent! Correct match');
-          }
         }, 500);
       } else {
         // No match
         setTimeout(() => {
           setSelectedCards([]);
-          if (speak) {
-            speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again');
-          }
         }, 1000);
       }
     }
