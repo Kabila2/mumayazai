@@ -173,252 +173,254 @@
 
 .welcome-header {
   text-align: center;
-  padding: 50px 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 25px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 60px 40px;
+  background: white;
+  border-radius: 30px;
+  border: 5px solid #10b981;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .platform-title {
-  font-size: 3rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #a78bfa, #ec4899, #f59e0b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 20px;
-  line-height: 1.2;
+  font-size: 4rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 30px;
+  line-height: 1.3;
 }
 
 .platform-subtitle {
-  font-size: 1.3rem;
-  color: #6b7280;
-  font-weight: 500;
-  max-width: 600px;
+  font-size: 2rem;
+  color: #374151;
+  font-weight: 600;
+  max-width: 800px;
   margin: 0 auto;
   line-height: 1.6;
 }
 
 /* Progress Card */
 .progress-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 30px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 24px;
+  padding: 50px;
+  border: 5px solid #8b5cf6;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .progress-title {
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  color: #374151;
-  margin-bottom: 25px;
+  color: #1f2937;
+  margin-bottom: 40px;
   text-align: center;
 }
 
 .progress-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 30px;
 }
 
 .stat-item {
   text-align: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-  border-radius: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  padding: 35px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  border: 4px solid #e5e7eb;
 }
 
 .stat-number {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 3.5rem;
+  font-weight: 700;
   color: #8b5cf6;
-  margin-bottom: 5px;
+  margin-bottom: 15px;
 }
 
 .stat-label {
-  font-size: 0.9rem;
-  color: #6b7280;
+  font-size: 1.5rem;
+  color: #1f2937;
   font-weight: 600;
 }
 
 /* Learning Sections */
 .learning-sections {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 40px;
 }
 
 .section-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 30px;
+  background: white;
+  border-radius: 24px;
+  padding: 50px 40px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border: 5px solid #e5e7eb;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  min-height: 350px;
 }
 
 .section-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, #a78bfa, #ec4899, #f59e0b);
-  border-radius: 20px 20px 0 0;
+  display: none;
 }
 
-.alphabet-card::before {
-  background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+.alphabet-card {
+  border-color: #8b5cf6;
 }
 
-.colors-card::before {
-  background: linear-gradient(90deg, #ec4899, #f472b6);
+.colors-card {
+  border-color: #ec4899;
 }
 
-.chat-card::before {
-  background: linear-gradient(90deg, #f59e0b, #f97316);
+.words-card {
+  border-color: #10b981;
+}
+
+.memory-card {
+  border-color: #f59e0b;
+}
+
+.chat-card {
+  border-color: #3b82f6;
 }
 
 .section-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
 .card-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
+  font-size: 5rem;
+  margin-bottom: 30px;
   text-align: center;
 }
 
 .card-title {
-  font-size: 1.4rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  color: #374151;
-  margin-bottom: 15px;
+  color: #1f2937;
+  margin-bottom: 20px;
   text-align: center;
+  line-height: 1.3;
 }
 
 .card-description {
-  font-size: 1rem;
-  color: #6b7280;
+  font-size: 1.5rem;
+  color: #374151;
+  font-weight: 500;
   line-height: 1.6;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   text-align: center;
 }
 
 .card-progress {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
+  margin-top: auto;
 }
 
 .progress-bar {
   flex: 1;
-  height: 8px;
+  height: 15px;
   background: #e5e7eb;
-  border-radius: 10px;
+  border-radius: 15px;
   overflow: hidden;
+  border: 3px solid #d1d5db;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #a78bfa, #8b5cf6);
-  border-radius: 10px;
+  background: #8b5cf6;
+  border-radius: 15px;
   transition: width 0.5s ease;
 }
 
 .alphabet-card .progress-fill {
-  background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+  background: #8b5cf6;
 }
 
 .colors-card .progress-fill {
-  background: linear-gradient(90deg, #ec4899, #f472b6);
+  background: #ec4899;
 }
 
 .progress-text {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #6b7280;
-  min-width: 40px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  min-width: 60px;
 }
 
 .chat-modes {
   display: flex;
-  gap: 10px;
+  gap: 15px;
   justify-content: center;
+  margin-top: auto;
 }
 
 .mode-btn {
-  padding: 8px 16px;
-  border: 2px solid #e5e7eb;
-  background: rgba(255, 255, 255, 0.8);
-  color: #6b7280;
-  font-weight: 600;
-  border-radius: 10px;
+  padding: 18px 35px;
+  border: 4px solid #3b82f6;
+  background: white;
+  color: #3b82f6;
+  font-weight: 700;
+  border-radius: 15px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  font-size: 1.3rem;
+  flex: 1;
 }
 
 .mode-btn:hover {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: #3b82f6;
+  color: white;
+  transform: scale(1.05);
 }
 
 /* Fun Facts */
 .fun-facts {
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 20px;
-  padding: 30px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 24px;
+  padding: 50px;
+  border: 5px solid #f59e0b;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .facts-title {
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  color: #374151;
-  margin-bottom: 25px;
+  color: #1f2937;
+  margin-bottom: 40px;
   text-align: center;
 }
 
 .facts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
 }
 
 .fact-item {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  border-radius: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  gap: 20px;
+  padding: 35px;
+  background: #fef3c7;
+  border-radius: 20px;
+  border: 4px solid #fbbf24;
 }
 
 .fact-icon {
-  font-size: 2rem;
+  font-size: 3.5rem;
   flex-shrink: 0;
 }
 
 .fact-text {
-  font-size: 1rem;
-  color: #374151;
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-weight: 600;
+  line-height: 1.6;
 }
 
 /* Responsive Design */
@@ -440,16 +442,16 @@
   }
 
   .platform-title {
-    font-size: 2rem;
+    font-size: 3rem;
   }
 
   .platform-subtitle {
-    font-size: 1.1rem;
+    font-size: 1.8rem;
   }
 
   .learning-sections {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 30px;
   }
 
   .section-header {
@@ -464,6 +466,18 @@
 
   .facts-grid {
     grid-template-columns: 1fr;
+  }
+
+  .card-icon {
+    font-size: 4rem;
+  }
+
+  .card-title {
+    font-size: 2rem;
+  }
+
+  .card-description {
+    font-size: 1.3rem;
   }
 
   /* Mobile scroll indicator */
@@ -484,27 +498,51 @@
 
 @media (max-width: 480px) {
   .welcome-header {
-    padding: 30px 15px;
+    padding: 40px 20px;
   }
 
   .platform-title {
-    font-size: 1.8rem;
+    font-size: 2.5rem;
   }
 
   .platform-subtitle {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
 
   .section-card {
-    padding: 20px;
+    padding: 35px 25px;
   }
 
   .card-icon {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
+  }
+
+  .card-title {
+    font-size: 1.8rem;
+  }
+
+  .card-description {
+    font-size: 1.2rem;
   }
 
   .progress-stats {
     grid-template-columns: 1fr;
+  }
+
+  .stat-number {
+    font-size: 3rem;
+  }
+
+  .stat-label {
+    font-size: 1.3rem;
+  }
+
+  .fact-icon {
+    font-size: 3rem;
+  }
+
+  .fact-text {
+    font-size: 1.3rem;
   }
 }
 
