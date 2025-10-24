@@ -23,6 +23,8 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
   const [selectedRole, setSelectedRole] = useState('student');
   const [remoteCursors, setRemoteCursors] = useState({});
   const lastDrawPoint = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const boardRef = useRef(null);
 
   const colors = [
     '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
@@ -168,6 +170,23 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
       redrawCanvas();
     }
   }, [texts]);
+
+  // Handle canvas resize on fullscreen change
+  useEffect(() => {
+    const handleResize = () => {
+      resizeCanvas();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Resize canvas when entering/exiting fullscreen
+  useEffect(() => {
+    setTimeout(() => {
+      resizeCanvas();
+    }, 100);
+  }, [isFullscreen]);
 
   const resizeCanvas = () => {
     const canvas = canvasRef.current;
@@ -327,6 +346,70 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     link.click();
   };
 
+  const toggleFullscreen = () => {
+    const element = boardRef.current;
+
+    if (!document.fullscreenElement) {
+      // Enter fullscreen
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Automatically enter fullscreen when joining the session
+  useEffect(() => {
+    if (hasJoined && boardRef.current) {
+      // Small delay to ensure the DOM is fully rendered
+      setTimeout(() => {
+        const element = boardRef.current;
+        if (element && !document.fullscreenElement) {
+          if (element.requestFullscreen) {
+            element.requestFullscreen().catch(err => {
+              console.log('Fullscreen request failed:', err);
+            });
+          } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+          } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+          }
+        }
+      }, 300);
+    }
+  }, [hasJoined]);
+
   const handleJoinSession = () => {
     if (username.trim()) {
       setHasJoined(true);
@@ -402,7 +485,7 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
   }
 
   return (
-    <div className="collaborative-drawing-board">
+    <div className={`collaborative-drawing-board ${isFullscreen ? 'fullscreen' : ''}`} ref={boardRef}>
       <motion.div
         className="drawing-header"
         initial={{ opacity: 0, y: -20 }}
@@ -542,6 +625,19 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
               onClick={downloadDrawing}
             >
               💾 {language === 'ar' ? 'حفظ' : 'Save'}
+            </button>
+            <button
+              className="action-btn fullscreen-btn"
+              onClick={toggleFullscreen}
+              title={language === 'ar'
+                ? (isFullscreen ? 'خروج من ملء الشاشة' : 'ملء الشاشة')
+                : (isFullscreen ? 'Exit Fullscreen' : 'Fullscreen')
+              }
+            >
+              {isFullscreen ? '🗗' : '⛶'} {language === 'ar'
+                ? (isFullscreen ? 'خروج' : 'ملء الشاشة')
+                : (isFullscreen ? 'Exit' : 'Fullscreen')
+              }
             </button>
           </div>
         </div>
