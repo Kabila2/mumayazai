@@ -1,0 +1,395 @@
+/* Letter Word Builder */
+.letter-word-builder {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 140px);
+}
+
+/* Reuse builder header styles */
+.letter-word-builder .builder-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.letter-word-builder .builder-title {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.letter-word-builder .builder-subtitle {
+  font-size: 1.3rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Word Image Section */
+.word-image-section {
+  margin-bottom: 2rem;
+}
+
+.word-builder-image {
+  width: 100%;
+  max-width: 400px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  display: block;
+  margin: 0 auto 1.5rem;
+}
+
+.word-hint {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.hint-label {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.hint-english {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ec4899;
+}
+
+/* Building Area for Letters */
+.letter-word-builder .building-area,
+.available-letters-area {
+  margin-bottom: 2rem;
+}
+
+.letter-word-builder .area-label {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.selected-letters-container {
+  min-height: 140px;
+  background: white;
+  border: 3px dashed #d1d5db;
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.selected-letters-container.correct {
+  border-color: #10b981;
+  background: #ecfdf5;
+  animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.letter-word-builder .placeholder-text {
+  color: #9ca3af;
+  font-size: 1.3rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.available-letters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 15px;
+  min-height: 120px;
+}
+
+/* Letter Chips */
+.letter-chip {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+  user-select: none;
+}
+
+.letter-chip.available {
+  color: white;
+  border: 3px solid transparent;
+}
+
+.letter-chip.selected {
+  background: white;
+  border: 3px solid;
+  color: #1f2937;
+}
+
+.letter-chip:hover {
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.letter-chip:active {
+  transform: translateY(0) scale(0.95);
+}
+
+/* Action Buttons */
+.letter-word-builder .builder-actions {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.letter-word-builder .action-btn {
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.letter-word-builder .reset-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.letter-word-builder .check-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.letter-word-builder .action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.letter-word-builder .action-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Navigation */
+.letter-word-builder .builder-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.letter-word-builder .nav-btn-builder {
+  flex: 1;
+  padding: 1.2rem 2rem;
+  border: 3px solid #ec4899;
+  border-radius: 12px;
+  background: white;
+  color: #ec4899;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.letter-word-builder .nav-btn-builder:hover:not(:disabled) {
+  background: #ec4899;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+}
+
+.letter-word-builder .nav-btn-builder:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Progress styles (reuse from SentenceBuilder) */
+.letter-word-builder .builder-progress {
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.letter-word-builder .progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.letter-word-builder .progress-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.letter-word-builder .progress-count {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ec4899;
+}
+
+.letter-word-builder .progress-bar-container {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.letter-word-builder .progress-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 10px;
+}
+
+.letter-word-builder .completed-count {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.letter-word-builder .category-badge-builder {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Celebration */
+.letter-word-builder .celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+
+.letter-word-builder .celebration-content {
+  background: white;
+  padding: 60px;
+  border-radius: 30px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  max-width: 500px;
+}
+
+.letter-word-builder .celebration-emoji {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.letter-word-builder .celebration-text {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #10b981;
+  margin-bottom: 15px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.letter-word-builder .celebration-subtext {
+  font-size: 1.5rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .letter-word-builder {
+    padding: 1rem;
+  }
+
+  .letter-word-builder .builder-title {
+    font-size: 2rem;
+  }
+
+  .letter-word-builder .builder-subtitle {
+    font-size: 1rem;
+  }
+
+  .word-builder-image {
+    max-width: 100%;
+    height: 250px;
+  }
+
+  .hint-english {
+    font-size: 1.5rem;
+  }
+
+  .letter-chip {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+
+  .letter-word-builder .builder-actions {
+    flex-direction: column;
+  }
+
+  .letter-word-builder .action-btn {
+    width: 100%;
+  }
+
+  .letter-word-builder .celebration-content {
+    padding: 40px 30px;
+    max-width: 90%;
+  }
+
+  .letter-word-builder .celebration-emoji {
+    font-size: 3.5rem;
+  }
+
+  .letter-word-builder .celebration-text {
+    font-size: 2rem;
+  }
+
+  .letter-word-builder .celebration-subtext {
+    font-size: 1.1rem;
+  }
+}

@@ -9,6 +9,8 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
   const [learnedWords, setLearnedWords] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+  const [recallMode, setRecallMode] = useState(false);
+  const [showRecallAnswer, setShowRecallAnswer] = useState(false);
 
   // Mark word as learned
   const markWordAsLearned = (categoryId, wordIndex) => {
@@ -166,12 +168,14 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
     if (selectedCategory && currentWordIndex < selectedCategory.words.length - 1) {
       markWordAsLearned(selectedCategory.id, currentWordIndex);
       setCurrentWordIndex(currentWordIndex + 1);
+      setShowRecallAnswer(false);
     }
   };
 
   const handlePreviousWord = () => {
     if (currentWordIndex > 0) {
       setCurrentWordIndex(currentWordIndex - 1);
+      setShowRecallAnswer(false);
     }
   };
 
@@ -224,6 +228,15 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           <div className="category-badge" style={{ background: selectedCategory.color }}>
             {selectedCategory.icon} {language === 'ar' ? selectedCategory.nameAr : selectedCategory.nameEn}
           </div>
+          <button
+            className={`recall-mode-btn ${recallMode ? 'active' : ''}`}
+            onClick={() => {
+              setRecallMode(!recallMode);
+              setShowRecallAnswer(false);
+            }}
+          >
+            {language === 'ar' ? (recallMode ? 'وضع التعلم' : 'وضع التذكر') : (recallMode ? 'Learn Mode' : 'Recall Mode')}
+          </button>
         </div>
 
         {/* Simple Progress with Stars */}
@@ -285,10 +298,26 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
               {currentWord.arabic}
             </div>
 
-            {/* Always Show Translation */}
-            <div className="translation-large">
-              {currentWord.english}
-            </div>
+            {/* Conditional Translation Based on Recall Mode */}
+            {recallMode ? (
+              <div
+                className="translation-large recall-clickable"
+                onClick={() => setShowRecallAnswer(!showRecallAnswer)}
+                style={{ cursor: 'pointer' }}
+              >
+                {showRecallAnswer ? (
+                  currentWord.english
+                ) : (
+                  <span style={{ fontStyle: 'italic', color: '#9ca3af' }}>
+                    {language === 'ar' ? 'انقر للكشف عن المعنى' : 'Click to reveal meaning'}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="translation-large">
+                {currentWord.english}
+              </div>
+            )}
 
             {/* Simple Pronunciation */}
             <div className="pronunciation-simple">

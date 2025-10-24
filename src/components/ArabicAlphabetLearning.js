@@ -36,7 +36,7 @@ const arabicAlphabet = [
 const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showWord, setShowWord] = useState(false);
-  const [gameMode, setGameMode] = useState('learn'); // 'learn', 'quiz', 'practice'
+  const [gameMode, setGameMode] = useState('learn'); // 'learn', 'quiz'
   const [score, setScore] = useState(0);
   const [quizOptions, setQuizOptions] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);

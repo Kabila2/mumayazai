@@ -3,9 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import ArabicAlphabetLearning from "./ArabicAlphabetLearning";
 import ArabicColorsLearning from "./ArabicColorsLearning";
 import ArabicWordsLearning from "./ArabicWordsLearning";
+import ArabicSentencesLearning from "./ArabicSentencesLearning";
+import ArabicWordBuilder from "./ArabicWordBuilder";
+import PointsTracker from "./PointsTracker";
 import ChatInterface from "./ChatInterface";
 import VoiceInterface from "./VoiceInterface";
 import MemoryGame from "./MemoryGame";
+import CollaborativeDrawingBoard from "./CollaborativeDrawingBoard";
+import SentenceBuilder from "./SentenceBuilder";
+import LetterWordBuilder from "./LetterWordBuilder";
 import './ArabicLearningPlatform.css';
 
 const ArabicLearningPlatform = ({
@@ -27,7 +33,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'words', 'chat', 'voice', 'memory'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
@@ -281,13 +287,55 @@ const ArabicLearningPlatform = ({
         </motion.div>
 
         <motion.div
+          className="section-card sentences-card"
+          onClick={() => handleSectionChange('sentences')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <div className="card-icon">💬</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'تعلم الجمل العربية' : 'Learn Arabic Sentences'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'تعلم كيفية تكوين الجمل من الكلمات'
+              : 'Learn how to form sentences from words'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card wordbuilder-card"
+          onClick={() => handleSectionChange('wordbuilder')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.9 }}
+        >
+          <div className="card-icon">🔤</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'بناء الكلمات' : 'Word Builder'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'شاهد الصورة ورتب الحروف لتكوين الكلمة'
+              : 'Look at the picture and arrange letters to form the word'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
           className="section-card memory-card"
           onClick={() => handleSectionChange('memory')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.0 }}
         >
           <div className="card-icon">🧠</div>
           <h3 className="card-title">
@@ -302,13 +350,76 @@ const ArabicLearningPlatform = ({
         </motion.div>
 
         <motion.div
+          className="section-card sentencebuilder-card"
+          onClick={() => handleSectionChange('sentencebuilder')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.1 }}
+        >
+          <div className="card-icon">🔤</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'بناء الجمل' : 'Sentence Builder'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'رتب الكلمات لتكوين جمل صحيحة'
+              : 'Arrange words to form correct sentences'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card letterwordbuilder-card"
+          onClick={() => handleSectionChange('letterwordbuilder')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.2 }}
+        >
+          <div className="card-icon">🔡</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'بناء الكلمات' : 'Letter Builder'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'رتب الحروف لتكوين كلمات صحيحة'
+              : 'Arrange letters to form correct words'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card drawing-board-card"
+          onClick={() => handleSectionChange('drawing')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3 }}
+        >
+          <div className="card-icon">🎨</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'لوحة الرسم التعاونية' : 'Collaborative Drawing Board'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'ارسم واكتب مع المعلمين والطلاب'
+              : 'Draw and write with teachers and students'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
           className="section-card chat-card"
           onClick={() => handleSectionChange('chat')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0 }}
+          transition={{ delay: 1.2 }}
         >
           <div className="card-icon">💬</div>
           <h3 className="card-title">
@@ -420,6 +531,25 @@ const ArabicLearningPlatform = ({
             {language === 'ar' ? 'الكلمات' : 'Words'}
           </button>
           <button
+            className={`nav-link ${currentSection === 'sentences' ? 'active' : ''}`}
+            onClick={() => handleSectionChange('sentences')}
+          >
+            {language === 'ar' ? 'الجمل' : 'Sentences'}
+          </button>
+          <button
+            className={`nav-link ${currentSection === 'points' ? 'active' : ''}`}
+            onClick={() => setCurrentSection('points')}
+            style={{ background: currentSection === 'points' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '' }}
+          >
+            🪙 {language === 'ar' ? 'نقاطي' : 'My Points'}
+          </button>
+          <button
+            className={`nav-link ${currentSection === 'drawing' ? 'active' : ''}`}
+            onClick={() => setCurrentSection('drawing')}
+          >
+            {language === 'ar' ? 'لوحة الرسم' : 'Drawing Board'}
+          </button>
+          <button
             className={`nav-link ${(currentSection === 'chat' || currentSection === 'voice') ? 'active' : ''}`}
             onClick={() => setCurrentSection(chatMode === 'text' ? 'chat' : 'voice')}
           >
@@ -527,6 +657,60 @@ const ArabicLearningPlatform = ({
             </motion.div>
           )}
 
+          {currentSection === 'sentences' && (
+            <motion.div
+              key="sentences"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <ArabicSentencesLearning
+                t={t}
+                language={language}
+                fontSize={fontSize}
+                highContrast={highContrast}
+                reducedMotion={reducedMotion}
+                speak={speak}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'wordbuilder' && (
+            <motion.div
+              key="wordbuilder"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <ArabicWordBuilder
+                t={t}
+                language={language}
+                fontSize={fontSize}
+                highContrast={highContrast}
+                reducedMotion={reducedMotion}
+                speak={speak}
+              />
+            </motion.div>
+          )}
+
           {currentSection === 'memory' && (
             <motion.div
               key="memory"
@@ -544,6 +728,98 @@ const ArabicLearningPlatform = ({
                 </button>
               </div>
               <MemoryGame />
+            </motion.div>
+          )}
+
+          {currentSection === 'points' && (
+            <motion.div
+              key="points"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <PointsTracker language={language} />
+            </motion.div>
+          )}
+
+          {currentSection === 'sentencebuilder' && (
+            <motion.div
+              key="sentencebuilder"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <SentenceBuilder
+                language={language}
+                fontSize={fontSize}
+                highContrast={highContrast}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'letterwordbuilder' && (
+            <motion.div
+              key="letterwordbuilder"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <LetterWordBuilder
+                language={language}
+                fontSize={fontSize}
+                highContrast={highContrast}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'drawing' && (
+            <motion.div
+              key="drawing"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="section-header">
+                <button
+                  className="back-btn"
+                  onClick={() => setCurrentSection('home')}
+                >
+                  {language === 'ar' ? '← العودة' : '← Back'}
+                </button>
+              </div>
+              <CollaborativeDrawingBoard
+                language={language}
+                fontSize={fontSize}
+                highContrast={highContrast}
+              />
             </motion.div>
           )}
 

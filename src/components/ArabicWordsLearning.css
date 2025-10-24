@@ -16,6 +16,38 @@
   font-family: 'Arial', 'Segoe UI', sans-serif; /* Simple, clear font */
 }
 
+.recall-mode-btn {
+  padding: 10px 20px;
+  border: 2px solid #8b5cf6;
+  border-radius: 12px;
+  background: white;
+  color: #8b5cf6;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.recall-mode-btn:hover {
+  background: #f3e8ff;
+}
+
+.recall-mode-btn.active {
+  background: #8b5cf6;
+  color: white;
+}
+
+.recall-clickable {
+  transition: all 0.2s ease;
+}
+
+.recall-clickable:hover {
+  transform: scale(1.02);
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 5px;
+}
+
 .arabic-words-learning::-webkit-scrollbar {
   display: none;
 }
