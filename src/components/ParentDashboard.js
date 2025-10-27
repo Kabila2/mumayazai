@@ -1347,22 +1347,22 @@ const AddChildModal = ({ open, onClose, onAddChild, parentEmail }) => {
         <DialogContent>
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2" fontWeight={600} gutterBottom>
-              Important Requirements:
+              How to Add Your Child:
             </Typography>
             <Typography variant="caption" component="div">
-              • The child must be registered in the system first
+              1. Make sure your child has already registered with a student account
             </Typography>
             <Typography variant="caption" component="div">
-              • The child must have a student account (not parent)
+              2. Enter the email address your child used to sign up
             </Typography>
             <Typography variant="caption" component="div">
-              • The child should have entered your email ({parentEmail}) during registration
+              3. Click "Add Child" to start tracking their progress
             </Typography>
           </Alert>
 
           <TextField
             margin="dense"
-            label="Child's Email"
+            label="Child's Email Address"
             type="email"
             fullWidth
             variant="outlined"
@@ -1370,7 +1370,8 @@ const AddChildModal = ({ open, onClose, onAddChild, parentEmail }) => {
             onChange={(e) => setChildEmail(e.target.value)}
             required
             autoFocus
-            helperText="Enter the email address your child used to register"
+            helperText="Enter the email address your child used to create their student account"
+            placeholder="child@example.com"
             sx={{ mb: 2 }}
           />
 
@@ -1382,7 +1383,8 @@ const AddChildModal = ({ open, onClose, onAddChild, parentEmail }) => {
             variant="outlined"
             value={childName}
             onChange={(e) => setChildName(e.target.value)}
-            helperText="If left empty, we'll use the name from their registered account"
+            helperText="Leave empty to automatically use the name from their account"
+            placeholder="Will auto-fill from student account"
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>

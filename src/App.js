@@ -7,6 +7,7 @@ import EntryLoginPage from "./components/EntryLoginPage";
 import OnboardingSetup from "./components/OnboardingSetup";
 import PaperAirplaneTransition from "./components/PaperAirplaneTransition";
 import ParentDashboard from "./components/ParentDashboard";
+import TeacherDashboard from "./components/TeacherDashboard";
 import ArabicLearningPlatform from "./components/ArabicLearningPlatform";
 import { translations } from "./translations";
 import {
@@ -16,6 +17,9 @@ import {
   startChildSession,
   endChildSession
 } from "./utils/parentTrackingUtils";
+import {
+  initializeTeacherAccount
+} from "./utils/teacherUtils";
 import "./App.css";
 
 /* ---------- LocalStorage keys ---------- */
@@ -177,6 +181,14 @@ export default function App() {
       }
     }
 
+    // If this is a teacher account, initialize teacher data
+    if (role === "teacher") {
+      const result = initializeTeacherAccount(key, name);
+      if (!result.success) {
+        return { ok: false, message: "Failed to initialize teacher account." };
+      }
+    }
+
     // If this is a child and has parent email, try to link
     if (role === "student" && parentEmail) {
       const result = linkChildToParent(key, name, parentEmail.trim().toLowerCase());
@@ -272,11 +284,23 @@ export default function App() {
     );
   }
 
-  // Check if user is a parent and route to parent dashboard
+  // Check user role and route to appropriate dashboard
   const userRole = localStorage.getItem("mumayaz_role");
+
   if (userRole === "parent") {
     return (
       <ParentDashboard
+        onSignOut={handleSignOut}
+        t={t}
+        language={appLanguage}
+        reducedMotion={reducedMotion}
+      />
+    );
+  }
+
+  if (userRole === "teacher") {
+    return (
+      <TeacherDashboard
         onSignOut={handleSignOut}
         t={t}
         language={appLanguage}

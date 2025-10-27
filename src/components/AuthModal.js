@@ -117,19 +117,28 @@ export default function AuthModal({ lang, mode, setMode, onClose, onSubmit }) {
               <input
                 type="radio"
                 name="role"
-                value="parent"
-                checked={role === "parent"}
-                onChange={() => setRole("parent")}
-              /> {lang === "en" ? "Parent" : "ولي أمر"}
+                value="student"
+                checked={role === "student"}
+                onChange={() => setRole("student")}
+              /> {lang === "en" ? "Student" : "طالب"}
             </label>
             <label style={{ marginLeft: 20 }}>
               <input
                 type="radio"
                 name="role"
-                value="student"
-                checked={role === "student"}
-                onChange={() => setRole("student")}
-              /> {lang === "en" ? "Child" : "طفل"}
+                value="teacher"
+                checked={role === "teacher"}
+                onChange={() => setRole("teacher")}
+              /> {lang === "en" ? "Teacher" : "معلم"}
+            </label>
+            <label style={{ marginLeft: 20 }}>
+              <input
+                type="radio"
+                name="role"
+                value="parent"
+                checked={role === "parent"}
+                onChange={() => setRole("parent")}
+              /> {lang === "en" ? "Parent" : "ولي أمر"}
             </label>
           </div>
         )}

@@ -212,7 +212,33 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     }
   };
 
+  // Get coordinates from mouse or touch event
+  const getEventCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+
+    // Check if it's a touch event
+    if (e.touches && e.touches.length > 0) {
+      const touch = e.touches[0];
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    // Mouse event
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  };
+
   const startDrawing = (e) => {
+    // Prevent default touch behavior (scrolling)
+    if (e.type === 'touchstart') {
+      e.preventDefault();
+    }
+
     if (currentTool === 'text') {
       handleTextClick(e);
       return;
@@ -220,8 +246,7 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const point = getEventCoordinates(e);
 
     ctx.beginPath();
     ctx.moveTo(point.x, point.y);
@@ -232,10 +257,14 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
   const draw = (e) => {
     if (!isDrawing || currentTool === 'text') return;
 
+    // Prevent default touch behavior (scrolling)
+    if (e.type === 'touchmove') {
+      e.preventDefault();
+    }
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const point = getEventCoordinates(e);
 
     if (currentTool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
@@ -266,7 +295,12 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     lastDrawPoint.current = point;
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e) => {
+    // Prevent default touch behavior
+    if (e && e.type === 'touchend') {
+      e.preventDefault();
+    }
+
     setIsDrawing(false);
     lastDrawPoint.current = null;
   };
@@ -289,11 +323,44 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     }
   };
 
+  const handleTouchMove = (e) => {
+    draw(e);
+
+    // Send cursor position to other users (throttled)
+    if (e.touches && e.touches.length > 0 && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+
+      wsRef.current.send(JSON.stringify({
+        type: 'cursorMove',
+        position: {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top
+        }
+      }));
+    }
+  };
+
   const handleTextClick = (e) => {
+    // Prevent default touch behavior
+    if (e.type === 'touchstart') {
+      e.preventDefault();
+    }
+
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+
+    let x, y;
+    // Check if it's a touch event
+    if (e.touches && e.touches.length > 0) {
+      const touch = e.touches[0];
+      x = touch.clientX - rect.left;
+      y = touch.clientY - rect.top;
+    } else {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    }
 
     setTextPosition({ x, y });
     setShowTextInput(true);
@@ -656,7 +723,10 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
           onMouseMove={handleMouseMove}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          style={{ cursor: currentTool === 'text' ? 'text' : 'crosshair' }}
+          onTouchStart={startDrawing}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={stopDrawing}
+          style={{ cursor: currentTool === 'text' ? 'text' : 'crosshair', touchAction: 'none' }}
         />
 
         {/* Remote cursors */}

@@ -289,6 +289,15 @@
   border-color: #f59e0b;
 }
 
+.quiz-card {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+}
+
+.quiz-card:hover {
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+}
+
 .chat-card {
   border-color: #3b82f6;
 }

@@ -95,21 +95,25 @@ export const linkChildToParent = (childEmail, childName, parentEmail) => {
       };
     }
 
-    // VALIDATION: Check if the user is a student (not a parent)
+    // VALIDATION: Check if the user is a student (not a parent or teacher)
     if (childUser.role !== "student") {
       return {
         success: false,
-        error: "This email is registered as a parent account, not a student account."
+        error: "This email is not registered as a student account. Only students can be added to parent dashboard."
       };
     }
 
-    // VALIDATION: Check if the child has set this parent's email during registration
-    if (childUser.parentEmail && childUser.parentEmail.toLowerCase() !== parentEmail.toLowerCase()) {
-      return {
-        success: false,
-        error: "This child is linked to a different parent account."
-      };
+    // OPTIONAL: Check if the child has set a parent's email during registration
+    // If they did, make sure it matches the current parent
+    if (childUser.parentEmail && childUser.parentEmail.trim() !== "") {
+      if (childUser.parentEmail.toLowerCase() !== parentEmail.toLowerCase()) {
+        return {
+          success: false,
+          error: "This student is already linked to a different parent account. Please ask them to update their parent email in their profile."
+        };
+      }
     }
+    // If no parent email was set during registration, any parent can add them
 
     // Check if child already exists in parent's dashboard
     const existingChild = parentData.children.find(
@@ -153,6 +157,15 @@ export const linkChildToParent = (childEmail, childName, parentEmail) => {
       linkedAt: new Date().toISOString()
     };
     localStorage.setItem(PARENT_CHILD_LINKS_KEY, JSON.stringify(links));
+
+    // Update child's user record to set parent email if not already set
+    if (!childUser.parentEmail || childUser.parentEmail.trim() === "") {
+      const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+      if (users[childEmail.toLowerCase()]) {
+        users[childEmail.toLowerCase()].parentEmail = parentEmail.toLowerCase();
+        localStorage.setItem("mumayaz_users", JSON.stringify(users));
+      }
+    }
 
     return { success: true, childId: childData.id };
   } catch (error) {

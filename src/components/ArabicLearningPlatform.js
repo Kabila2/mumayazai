@@ -12,6 +12,7 @@ import MemoryGame from "./MemoryGame";
 import CollaborativeDrawingBoard from "./CollaborativeDrawingBoard";
 import SentenceBuilder from "./SentenceBuilder";
 import LetterWordBuilder from "./LetterWordBuilder";
+import QuizCenter from "./QuizCenter";
 import './ArabicLearningPlatform.css';
 
 const ArabicLearningPlatform = ({
@@ -33,7 +34,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
@@ -392,13 +393,34 @@ const ArabicLearningPlatform = ({
         </motion.div>
 
         <motion.div
+          className="section-card quiz-card"
+          onClick={() => handleSectionChange('quiz')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.3 }}
+        >
+          <div className="card-icon">🎯</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'مركز الاختبارات' : 'Quiz Center'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'اختبر معرفتك في جميع المواضيع'
+              : 'Test your knowledge on all topics'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
           className="section-card drawing-board-card"
           onClick={() => handleSectionChange('drawing')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3 }}
+          transition={{ delay: 1.4 }}
         >
           <div className="card-icon">🎨</div>
           <h3 className="card-title">
@@ -819,6 +841,25 @@ const ArabicLearningPlatform = ({
                 language={language}
                 fontSize={fontSize}
                 highContrast={highContrast}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'quiz' && (
+            <motion.div
+              key="quiz"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <QuizCenter
+                t={t}
+                language={language}
+                fontSize={fontSize}
+                highContrast={highContrast}
+                reducedMotion={reducedMotion}
+                speak={speak}
               />
             </motion.div>
           )}
