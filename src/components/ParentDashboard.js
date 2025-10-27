@@ -1,7 +1,67 @@
-// src/components/ParentDashboard.js - Parent Dashboard for Child Monitoring and Management
+// src/components/ParentDashboard.js - Modern Parent Dashboard with Material-UI
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  Typography,
+  Button,
+  IconButton,
+  Tab,
+  Tabs,
+  Avatar,
+  Chip,
+  LinearProgress,
+  Alert,
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Skeleton,
+  Tooltip,
+  Badge,
+  useTheme,
+  useMediaQuery,
+  Paper,
+  Divider,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  ListItemAvatar,
+  Container
+} from '@mui/material';
+import {
+  Users,
+  UserPlus,
+  Settings,
+  LogOut,
+  Clock,
+  MessageSquare,
+  FileText,
+  TrendingUp,
+  Award,
+  Target,
+  Trash2,
+  Calendar,
+  Activity,
+  BarChart3,
+  Brain,
+  Sparkles,
+  Shield,
+  Bell,
+  Moon,
+  Sun,
+  Search,
+  Filter,
+  Download,
+  RefreshCw
+} from 'lucide-react';
 import {
   getParentData,
   getChildStatistics,
@@ -16,10 +76,22 @@ import {
   getLearningInsights
 } from '../utils/improvementAnalysisUtils';
 import {
-  TimeSpentGraph,
-  TasksCompletedGraph,
-  LearningDistributionChart
-} from './ProgressGraphs';
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  Area,
+  AreaChart
+} from 'recharts';
 
 const ParentDashboard = ({
   onSignOut,
@@ -30,10 +102,25 @@ const ParentDashboard = ({
   const [parentData, setParentData] = useState(null);
   const [selectedChild, setSelectedChild] = useState(null);
   const [childStats, setChildStats] = useState({});
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(0);
   const [showAddChild, setShowAddChild] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Modern color palette
+  const colors = {
+    primary: ['#6366f1', '#8b5cf6', '#a855f7', '#c026d3'],
+    success: ['#10b981', '#059669'],
+    warning: ['#f59e0b', '#d97706'],
+    danger: ['#ef4444', '#dc2626'],
+    info: ['#3b82f6', '#2563eb']
+  };
 
   // Load parent data
   useEffect(() => {
@@ -43,58 +130,59 @@ const ParentDashboard = ({
         setParentData(data);
 
         if (data && data.children.length > 0) {
-          // Load statistics for all children
           const stats = {};
           data.children.forEach(child => {
             stats[child.email] = getChildStatistics(child.email);
           });
           setChildStats(stats);
 
-          // Select first child by default
           if (!selectedChild) {
             setSelectedChild(data.children[0]);
           }
         }
       } catch (error) {
         console.error('Error loading parent data:', error);
+        showSnackbar('Error loading dashboard data', 'error');
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-    const interval = setInterval(loadData, 30000); // Refresh every 30 seconds
-
+    const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, [selectedChild]);
+
+  const showSnackbar = (message, severity = 'info') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   const handleAddChild = useCallback((childEmail, childName) => {
     if (!parentData) return;
 
     const result = linkChildToParent(childEmail, childName, parentData.email);
     if (result.success) {
-      // Reload parent data
       const updatedData = getParentData();
       setParentData(updatedData);
       setShowAddChild(false);
 
-      // Load stats for new child
       const newStats = { ...childStats };
       newStats[childEmail] = getChildStatistics(childEmail);
       setChildStats(newStats);
+
+      showSnackbar('Child added successfully!', 'success');
     } else {
-      alert(result.error || 'Failed to add child');
+      showSnackbar(result.error || 'Failed to add child', 'error');
     }
   }, [parentData, childStats]);
 
-  const handleRemoveChild = useCallback((childEmail) => {
-    if (window.confirm(`Are you sure you want to remove this child from your dashboard?`)) {
+  const handleRemoveChild = useCallback((childEmail, childName) => {
+    if (window.confirm(`Are you sure you want to remove ${childName} from your dashboard?`)) {
       const result = removeChildFromParent(childEmail);
       if (result.success) {
         const updatedData = getParentData();
         setParentData(updatedData);
 
-        // Remove from stats and reset selection
         const newStats = { ...childStats };
         delete newStats[childEmail];
         setChildStats(newStats);
@@ -102,6 +190,10 @@ const ParentDashboard = ({
         if (selectedChild?.email === childEmail) {
           setSelectedChild(updatedData.children[0] || null);
         }
+
+        showSnackbar('Child removed successfully', 'success');
+      } else {
+        showSnackbar('Failed to remove child', 'error');
       }
     }
   }, [childStats, selectedChild]);
@@ -110,619 +202,746 @@ const ParentDashboard = ({
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const filteredChildren = parentData?.children.filter(child =>
+    child.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    child.email.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)'
-      }}>
-        <div style={{ textAlign: 'center', color: 'white' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👨‍👩‍👧‍👦</div>
-          <h2>Loading Parent Dashboard...</h2>
-        </div>
-      </div>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          p: 3
+        }}
+      >
+        <Container maxWidth="xl">
+          <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 3, mb: 3 }} />
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={3}>
+              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3 }} />
+            </Grid>
+            <Grid item xs={12} md={9}>
+              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3 }} />
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
     );
   }
 
   if (!parentData) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)'
-      }}>
-        <div style={{ textAlign: 'center', color: 'white' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
-          <h2>Parent Account Not Found</h2>
-          <button
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Card sx={{ maxWidth: 400, p: 4, textAlign: 'center' }}>
+          <Shield size={64} color="#ef4444" style={{ margin: '0 auto 16px' }} />
+          <Typography variant="h5" gutterBottom>Parent Account Not Found</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            We couldn't find your parent account. Please sign in again.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<LogOut />}
             onClick={onSignOut}
-            style={{
-              padding: '1rem 2rem',
-              background: 'rgba(255, 255, 255, 0.2)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              marginTop: '1rem'
-            }}
+            fullWidth
           >
             Back to Sign In
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Card>
+      </Box>
     );
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-      padding: '2rem'
-    }}>
-      {/* Header */}
-      <motion.header
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '24px',
-          padding: '1.5rem 2rem',
-          marginBottom: '2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.1)'
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#333' }}>
-            👨‍👩‍👧‍👦 Parent Dashboard
-          </h1>
-          <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
-            Welcome, {parentData.name}
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button
-            onClick={() => setShowAddChild(true)}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            ➕ Add Child
-          </button>
-
-          <button
-            onClick={() => setShowSettings(true)}
-            style={{
-              padding: '0.75rem',
-              background: 'rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(0, 0, 0, 0.2)',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '1.2rem'
-            }}
-            title="Settings"
-          >
-            ⚙️
-          </button>
-
-          <button
-            onClick={onSignOut}
-            style={{
-              padding: '0.75rem',
-              background: 'rgba(220, 53, 69, 0.1)',
-              border: '1px solid rgba(220, 53, 69, 0.3)',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-              color: '#dc3545'
-            }}
-            title="Sign Out"
-          >
-            🚪
-          </button>
-        </div>
-      </motion.header>
-
-      {/* Main Content */}
-      <div style={{ display: 'flex', gap: '2rem' }}>
-        {/* Sidebar - Children List */}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: darkMode
+          ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
+          : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+        p: { xs: 2, md: 3 },
+        transition: 'background 0.3s ease'
+      }}
+    >
+      <Container maxWidth="xl">
+        {/* Header */}
         <motion.div
-          initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          style={{
-            width: '300px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '24px',
-            padding: '2rem',
-            height: 'fit-content',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.1)'
-          }}
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          <h3 style={{ margin: '0 0 1.5rem 0', color: '#333' }}>
-            Your Children ({parentData.children.length})
-          </h3>
-
-          {parentData.children.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              color: '#666',
-              padding: '2rem 1rem'
-            }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👶</div>
-              <p>No children added yet.</p>
-              <p style={{ fontSize: '0.9rem' }}>
-                Click "Add Child" to start monitoring your child's learning progress.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {parentData.children.map(child => {
-                const stats = childStats[child.email] || {};
-                const isSelected = selectedChild?.id === child.id;
-
-                return (
-                  <motion.div
-                    key={child.id}
-                    whileHover={!reducedMotion ? { scale: 1.02 } : {}}
-                    onClick={() => setSelectedChild(child)}
-                    style={{
-                      padding: '1rem',
-                      background: isSelected ?
-                        'linear-gradient(135deg, #667eea, #764ba2)' :
-                        'rgba(0, 0, 0, 0.05)',
-                      color: isSelected ? 'white' : '#333',
-                      borderRadius: '16px',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      border: isSelected ? 'none' : '1px solid rgba(0, 0, 0, 0.1)'
+          <Card
+            elevation={0}
+            sx={{
+              mb: 3,
+              borderRadius: 4,
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)'
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem' }}>
-                          {child.name}
-                        </h4>
-                        <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>
-                          {stats.totalSessions || 0} sessions
-                        </p>
-                      </div>
+                    <Users size={28} />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h5" fontWeight={700}>
+                      Parent Dashboard
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Welcome back, {parentData.name}
+                    </Typography>
+                  </Box>
+                </Box>
 
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>
-                          {formatTime(stats.totalTimeSpent || 0)}
-                        </div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          {child.status === 'active' ? '🟢 Active' : '⚪ Inactive'}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Tooltip title="Refresh">
+                    <IconButton onClick={() => window.location.reload()} color="primary">
+                      <RefreshCw size={20} />
+                    </IconButton>
+                  </Tooltip>
 
-        {/* Main Dashboard Area */}
-        <motion.div
-          initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          style={{
-            flex: 1,
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '24px',
-            padding: '2rem',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          {!selectedChild ? (
-            <div style={{
-              textAlign: 'center',
-              color: '#666',
-              padding: '4rem 2rem'
-            }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📊</div>
-              <h2>Select a Child</h2>
-              <p>Choose a child from the sidebar to view their learning progress and activity.</p>
-            </div>
-          ) : (
-            <>
-              {/* Child Header */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '2rem',
-                paddingBottom: '1rem',
-                borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
-              }}>
-                <div>
-                  <h2 style={{ margin: '0 0 0.5rem 0', color: '#333' }}>
-                    {selectedChild.name}'s Progress
-                  </h2>
-                  <p style={{ margin: 0, color: '#666' }}>
-                    Linked on {formatDate(selectedChild.linkedAt)}
-                  </p>
-                </div>
+                  <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
+                    <IconButton onClick={() => setDarkMode(!darkMode)} color="primary">
+                      {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </IconButton>
+                  </Tooltip>
 
-                <button
-                  onClick={() => handleRemoveChild(selectedChild.email)}
-                  style={{
-                    padding: '0.5rem',
-                    background: 'rgba(220, 53, 69, 0.1)',
-                    border: '1px solid rgba(220, 53, 69, 0.3)',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    color: '#dc3545'
-                  }}
-                  title="Remove Child"
-                >
-                  🗑️
-                </button>
-              </div>
-
-              {/* Tab Navigation */}
-              <div style={{
-                display: 'flex',
-                gap: '1rem',
-                marginBottom: '2rem'
-              }}>
-                {['overview', 'activity', 'progress', 'improvements', 'achievements'].map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      background: activeTab === tab ?
-                        'linear-gradient(135deg, #667eea, #764ba2)' :
-                        'rgba(0, 0, 0, 0.05)',
-                      color: activeTab === tab ? 'white' : '#666',
-                      border: activeTab === tab ? 'none' : '1px solid rgba(0, 0, 0, 0.1)',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      textTransform: 'capitalize',
-                      transition: 'all 0.3s ease'
+                  <Button
+                    variant="contained"
+                    startIcon={<UserPlus size={18} />}
+                    onClick={() => setShowAddChild(true)}
+                    sx={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' }
                     }}
                   >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+                    Add Child
+                  </Button>
 
-              {/* Tab Content */}
-              <AnimatePresence mode="wait">
-                {activeTab === 'overview' && (
-                  <OverviewTab
-                    child={selectedChild}
-                    stats={childStats[selectedChild.email]}
-                    formatTime={formatTime}
-                  />
-                )}
-                {activeTab === 'activity' && (
-                  <ActivityTab
-                    child={selectedChild}
-                    stats={childStats[selectedChild.email]}
-                    formatTime={formatTime}
-                  />
-                )}
-                {activeTab === 'progress' && (
-                  <ProgressTab
-                    child={selectedChild}
-                    stats={childStats[selectedChild.email]}
-                    formatTime={formatTime}
-                  />
-                )}
-                {activeTab === 'improvements' && (
-                  <ImprovementsTab
-                    child={selectedChild}
-                    stats={childStats[selectedChild.email]}
-                  />
-                )}
-                {activeTab === 'achievements' && (
-                  <AchievementsTab
-                    child={selectedChild}
-                  />
-                )}
-              </AnimatePresence>
-            </>
-          )}
+                  <Tooltip title="Settings">
+                    <IconButton
+                      onClick={() => setShowSettings(true)}
+                      sx={{ border: '1px solid', borderColor: 'divider' }}
+                    >
+                      <Settings size={20} />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Sign Out">
+                    <IconButton
+                      onClick={onSignOut}
+                      sx={{
+                        border: '1px solid',
+                        borderColor: 'error.main',
+                        color: 'error.main'
+                      }}
+                    >
+                      <LogOut size={20} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
         </motion.div>
-      </div>
 
-      {/* Add Child Modal */}
-      <AddChildModal
-        isOpen={showAddChild}
-        onClose={() => setShowAddChild(false)}
-        onAddChild={handleAddChild}
-        parentEmail={parentData.email}
-      />
+        {/* Main Content */}
+        <Grid container spacing={3}>
+          {/* Sidebar - Children List */}
+          <Grid item xs={12} md={3}>
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 4,
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  height: 'fit-content'
+                }}
+              >
+                <CardContent>
+                  <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Your Children
+                    </Typography>
+                    <Chip
+                      label={filteredChildren.length}
+                      size="small"
+                      sx={{
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        color: 'white',
+                        fontWeight: 600
+                      }}
+                    />
+                  </Box>
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        parentData={parentData}
-        onUpdateSettings={updateParentSettings}
-      />
-    </div>
+                  {parentData.children.length > 3 && (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Search children..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      InputProps={{
+                        startAdornment: <Search size={18} style={{ marginRight: 8, color: '#9ca3af' }} />
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                  )}
+
+                  {parentData.children.length === 0 ? (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Users size={48} color="#d1d5db" style={{ marginBottom: 16 }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        No children added yet
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Click "Add Child" to start monitoring
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <List sx={{ p: 0 }}>
+                      {filteredChildren.map((child, index) => {
+                        const stats = childStats[child.email] || {};
+                        const isSelected = selectedChild?.id === child.id;
+
+                        return (
+                          <motion.div
+                            key={child.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <ListItem
+                              disablePadding
+                              sx={{ mb: 1 }}
+                            >
+                              <ListItemButton
+                                selected={isSelected}
+                                onClick={() => setSelectedChild(child)}
+                                sx={{
+                                  borderRadius: 2,
+                                  background: isSelected
+                                    ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                                    : 'transparent',
+                                  color: isSelected ? 'white' : 'inherit',
+                                  '&:hover': {
+                                    background: isSelected
+                                      ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                                      : 'rgba(99, 102, 241, 0.08)'
+                                  },
+                                  '&.Mui-selected': {
+                                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                    '&:hover': {
+                                      background: 'linear-gradient(135deg, #5b5ef0, #7c4de5)'
+                                    }
+                                  }
+                                }}
+                              >
+                                <ListItemAvatar>
+                                  <Avatar
+                                    sx={{
+                                      background: isSelected
+                                        ? 'rgba(255, 255, 255, 0.2)'
+                                        : 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                                    }}
+                                  >
+                                    {child.name.charAt(0).toUpperCase()}
+                                  </Avatar>
+                                </ListItemAvatar>
+                                <ListItemText
+                                  primary={
+                                    <Typography variant="body2" fontWeight={600}>
+                                      {child.name}
+                                    </Typography>
+                                  }
+                                  secondary={
+                                    <Box>
+                                      <Typography variant="caption" sx={{ color: isSelected ? 'rgba(255,255,255,0.8)' : 'text.secondary' }}>
+                                        {stats.totalSessions || 0} sessions
+                                      </Typography>
+                                      <Typography variant="caption" sx={{ display: 'block', color: isSelected ? 'rgba(255,255,255,0.8)' : 'text.secondary' }}>
+                                        {formatTime(stats.totalTimeSpent || 0)}
+                                      </Typography>
+                                    </Box>
+                                  }
+                                />
+                                <Badge
+                                  variant="dot"
+                                  sx={{
+                                    '& .MuiBadge-dot': {
+                                      backgroundColor: child.status === 'active' ? '#10b981' : '#9ca3af'
+                                    }
+                                  }}
+                                />
+                              </ListItemButton>
+                            </ListItem>
+                          </motion.div>
+                        );
+                      })}
+                    </List>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+
+          {/* Main Dashboard Area */}
+          <Grid item xs={12} md={9}>
+            <motion.div
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 4,
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)'
+                }}
+              >
+                <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                  {!selectedChild ? (
+                    <Box sx={{ textAlign: 'center', py: 8 }}>
+                      <BarChart3 size={64} color="#d1d5db" style={{ margin: '0 auto 16px' }} />
+                      <Typography variant="h5" gutterBottom>Select a Child</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Choose a child from the sidebar to view their learning progress
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <>
+                      {/* Child Header */}
+                      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                        <Box>
+                          <Typography variant="h5" fontWeight={700} gutterBottom>
+                            {selectedChild.name}'s Progress
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            <Calendar size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            Linked on {formatDate(selectedChild.linkedAt)}
+                          </Typography>
+                        </Box>
+
+                        <Tooltip title="Remove Child">
+                          <IconButton
+                            onClick={() => handleRemoveChild(selectedChild.email, selectedChild.name)}
+                            sx={{
+                              border: '1px solid',
+                              borderColor: 'error.main',
+                              color: 'error.main',
+                              '&:hover': { background: 'rgba(239, 68, 68, 0.08)' }
+                            }}
+                          >
+                            <Trash2 size={18} />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+
+                      <Divider sx={{ mb: 3 }} />
+
+                      {/* Tabs */}
+                      <Tabs
+                        value={activeTab}
+                        onChange={(e, newValue) => setActiveTab(newValue)}
+                        variant="scrollable"
+                        scrollButtons="auto"
+                        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+                      >
+                        <Tab icon={<Activity size={18} />} label="Overview" iconPosition="start" />
+                        <Tab icon={<Calendar size={18} />} label="Activity" iconPosition="start" />
+                        <Tab icon={<TrendingUp size={18} />} label="Progress" iconPosition="start" />
+                        <Tab icon={<Target size={18} />} label="Improvements" iconPosition="start" />
+                        <Tab icon={<Award size={18} />} label="Achievements" iconPosition="start" />
+                      </Tabs>
+
+                      {/* Tab Content */}
+                      <AnimatePresence mode="wait">
+                        {activeTab === 0 && (
+                          <OverviewTab
+                            child={selectedChild}
+                            stats={childStats[selectedChild.email]}
+                            formatTime={formatTime}
+                            colors={colors}
+                          />
+                        )}
+                        {activeTab === 1 && (
+                          <ActivityTab
+                            child={selectedChild}
+                            stats={childStats[selectedChild.email]}
+                            formatTime={formatTime}
+                            colors={colors}
+                          />
+                        )}
+                        {activeTab === 2 && (
+                          <ProgressTab
+                            child={selectedChild}
+                            stats={childStats[selectedChild.email]}
+                            formatTime={formatTime}
+                            colors={colors}
+                          />
+                        )}
+                        {activeTab === 3 && (
+                          <ImprovementsTab
+                            child={selectedChild}
+                            stats={childStats[selectedChild.email]}
+                            colors={colors}
+                          />
+                        )}
+                        {activeTab === 4 && (
+                          <AchievementsTab
+                            child={selectedChild}
+                            colors={colors}
+                          />
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+        </Grid>
+
+        {/* Modals */}
+        <AddChildModal
+          open={showAddChild}
+          onClose={() => setShowAddChild(false)}
+          onAddChild={handleAddChild}
+          parentEmail={parentData.email}
+        />
+
+        <SettingsModal
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          parentData={parentData}
+          onUpdateSettings={updateParentSettings}
+          onSuccess={() => showSnackbar('Settings updated successfully', 'success')}
+        />
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </Box>
   );
 };
 
 // Overview Tab Component
-const OverviewTab = ({ child, stats, formatTime }) => (
+const OverviewTab = ({ child, stats, formatTime, colors }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
   >
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: '1.5rem',
-      marginBottom: '2rem'
-    }}>
-      {/* Total Time Card */}
-      <div style={{
-        background: 'linear-gradient(135deg, #667eea, #764ba2)',
-        color: 'white',
-        padding: '1.5rem',
-        borderRadius: '16px'
-      }}>
-        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⏰</div>
-        <h3 style={{ margin: '0 0 0.5rem 0' }}>Total Learning Time</h3>
-        <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600' }}>
-          {formatTime(stats?.totalTimeSpent || 0)}
-        </p>
-      </div>
+    <Grid container spacing={3}>
+      {/* Stats Cards */}
+      <Grid item xs={12} sm={6} lg={3}>
+        <Card
+          sx={{
+            background: `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`,
+            color: 'white'
+          }}
+        >
+          <CardContent>
+            <Clock size={32} style={{ marginBottom: 12 }} />
+            <Typography variant="h4" fontWeight={700} gutterBottom>
+              {formatTime(stats?.totalTimeSpent || 0)}
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              Total Learning Time
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
 
-      {/* Sessions Card */}
-      <div style={{
-        background: 'linear-gradient(135deg, #10b981, #059669)',
-        color: 'white',
-        padding: '1.5rem',
-        borderRadius: '16px'
-      }}>
-        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💬</div>
-        <h3 style={{ margin: '0 0 0.5rem 0' }}>Chat Sessions</h3>
-        <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600' }}>
-          {stats?.totalSessions || 0}
-        </p>
-      </div>
+      <Grid item xs={12} sm={6} lg={3}>
+        <Card
+          sx={{
+            background: `linear-gradient(135deg, ${colors.success[0]}, ${colors.success[1]})`,
+            color: 'white'
+          }}
+        >
+          <CardContent>
+            <MessageSquare size={32} style={{ marginBottom: 12 }} />
+            <Typography variant="h4" fontWeight={700} gutterBottom>
+              {stats?.totalSessions || 0}
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              Chat Sessions
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
 
-      {/* Messages Card */}
-      <div style={{
-        background: 'linear-gradient(135deg, #f093fb, #f5576c)',
-        color: 'white',
-        padding: '1.5rem',
-        borderRadius: '16px'
-      }}>
-        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📝</div>
-        <h3 style={{ margin: '0 0 0.5rem 0' }}>Messages Sent</h3>
-        <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600' }}>
-          {stats?.totalMessages || 0}
-        </p>
-      </div>
-    </div>
+      <Grid item xs={12} sm={6} lg={3}>
+        <Card
+          sx={{
+            background: `linear-gradient(135deg, ${colors.warning[0]}, ${colors.warning[1]})`,
+            color: 'white'
+          }}
+        >
+          <CardContent>
+            <FileText size={32} style={{ marginBottom: 12 }} />
+            <Typography variant="h4" fontWeight={700} gutterBottom>
+              {stats?.totalMessages || 0}
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              Messages Sent
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
 
-    {/* Recent Activity */}
-    <div style={{
-      background: 'rgba(0, 0, 0, 0.02)',
-      padding: '1.5rem',
-      borderRadius: '16px',
-      border: '1px solid rgba(0, 0, 0, 0.1)'
-    }}>
-      <h3 style={{ margin: '0 0 1rem 0', color: '#333' }}>Recent Activity</h3>
-      {child.lastActivity ? (
-        <p style={{ color: '#666' }}>
-          Last active: {new Date(child.lastActivity).toLocaleString()}
-        </p>
-      ) : (
-        <p style={{ color: '#666' }}>No recent activity</p>
-      )}
-    </div>
+      <Grid item xs={12} sm={6} lg={3}>
+        <Card
+          sx={{
+            background: `linear-gradient(135deg, ${colors.info[0]}, ${colors.info[1]})`,
+            color: 'white'
+          }}
+        >
+          <CardContent>
+            <Brain size={32} style={{ marginBottom: 12 }} />
+            <Typography variant="h4" fontWeight={700} gutterBottom>
+              {stats?.topicsExplored?.length || 0}
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              Topics Explored
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Recent Activity */}
+      <Grid item xs={12}>
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              <Activity size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+              Recent Activity
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            {child.lastActivity ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Badge variant="dot" color="success" />
+                <Typography variant="body2" color="text.secondary">
+                  Last active: {new Date(child.lastActivity).toLocaleString()}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No recent activity recorded
+              </Typography>
+            )}
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Quick Stats */}
+      <Grid item xs={12} md={6}>
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              Average Session
+            </Typography>
+            <Typography variant="h3" fontWeight={700} color="primary">
+              {formatTime(stats?.averageSessionTime || 0)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {stats?.averageMessagesPerSession || 0} messages per session
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12} md={6}>
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              Learning Streak
+            </Typography>
+            <Typography variant="h3" fontWeight={700} color="success.main">
+              {stats?.totalSessions || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total sessions completed
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+    </Grid>
   </motion.div>
 );
 
 // Activity Tab Component
-const ActivityTab = ({ child, stats, formatTime }) => (
+const ActivityTab = ({ child, stats, formatTime, colors }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
   >
-    <h3 style={{ margin: '0 0 1.5rem 0', color: '#333' }}>7-Day Activity Overview</h3>
+    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+      7-Day Activity Overview
+    </Typography>
 
     {stats?.dailyActivity && stats.dailyActivity.length > 0 ? (
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(7, 1fr)',
-        gap: '1rem',
-        marginBottom: '2rem'
-      }}>
-        {stats.dailyActivity.slice(-7).map((day, index) => (
-          <div
-            key={day.date}
-            style={{
-              background: day.timeSpent > 0 ?
-                'linear-gradient(135deg, #667eea, #764ba2)' :
-                'rgba(0, 0, 0, 0.05)',
-              color: day.timeSpent > 0 ? 'white' : '#666',
-              padding: '1rem',
-              borderRadius: '12px',
-              textAlign: 'center',
-              border: day.timeSpent === 0 ? '1px solid rgba(0, 0, 0, 0.1)' : 'none'
-            }}
-          >
-            <div style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>
-              {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-            </div>
-            <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.25rem' }}>
-              {formatTime(day.timeSpent)}
-            </div>
-            <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-              {day.sessions} sessions
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>
-        No activity data available yet.
-      </p>
-    )}
-
-    {/* Topics Explored */}
-    {stats?.topicsExplored && stats.topicsExplored.length > 0 && (
-      <div style={{
-        background: 'rgba(0, 0, 0, 0.02)',
-        padding: '1.5rem',
-        borderRadius: '16px',
-        border: '1px solid rgba(0, 0, 0, 0.1)'
-      }}>
-        <h4 style={{ margin: '0 0 1rem 0', color: '#333' }}>Topics Explored</h4>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          {stats.topicsExplored.map((topic, index) => (
-            <span
-              key={index}
-              style={{
-                background: 'rgba(102, 126, 234, 0.2)',
-                color: '#667eea',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '16px',
-                fontSize: '0.9rem',
-                fontWeight: '500'
-              }}
-            >
-              {topic}
-            </span>
+      <>
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          {stats.dailyActivity.slice(-7).map((day, index) => (
+            <Grid item xs={12} sm={6} md key={day.date}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card
+                  sx={{
+                    background: day.timeSpent > 0
+                      ? `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`
+                      : 'transparent',
+                    color: day.timeSpent > 0 ? 'white' : 'text.secondary',
+                    border: day.timeSpent === 0 ? '1px dashed' : 'none',
+                    borderColor: 'divider',
+                    textAlign: 'center'
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                      {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                    </Typography>
+                    <Typography variant="h6" fontWeight={700} sx={{ my: 1 }}>
+                      {formatTime(day.timeSpent)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                      {day.sessions} sessions
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
           ))}
-        </div>
-      </div>
+        </Grid>
+
+        {/* Activity Chart */}
+        <Card variant="outlined" sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              Activity Trend
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={stats.dailyActivity.slice(-7)}>
+                <defs>
+                  <linearGradient id="colorTime" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={colors.primary[0]} stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor={colors.primary[0]} stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                  stroke="#9ca3af"
+                />
+                <YAxis stroke="#9ca3af" />
+                <RechartsTooltip />
+                <Area
+                  type="monotone"
+                  dataKey="timeSpent"
+                  stroke={colors.primary[0]}
+                  fillOpacity={1}
+                  fill="url(#colorTime)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Topics Explored */}
+        {stats?.topicsExplored && stats.topicsExplored.length > 0 && (
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
+                <Sparkles size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+                Topics Explored
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                {stats.topicsExplored.map((topic, index) => (
+                  <Chip
+                    key={index}
+                    label={topic}
+                    sx={{
+                      background: `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`,
+                      color: 'white',
+                      fontWeight: 500
+                    }}
+                  />
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+        )}
+      </>
+    ) : (
+      <Card variant="outlined">
+        <CardContent sx={{ textAlign: 'center', py: 6 }}>
+          <Calendar size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
+          <Typography variant="body1" color="text.secondary">
+            No activity data available yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Activity will appear here once your child starts learning
+          </Typography>
+        </CardContent>
+      </Card>
     )}
   </motion.div>
 );
 
 // Progress Tab Component
-const ProgressTab = ({ child, stats, formatTime }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-  >
-    <h3 style={{ margin: '0 0 1.5rem 0', color: '#333' }}>📊 Progress Analytics</h3>
-
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-      gap: '1.5rem',
-      marginBottom: '2rem'
-    }}>
-      {/* Time Spent Graph */}
-      <TimeSpentGraph
-        dailyActivity={stats?.dailyActivity}
-        formatTime={formatTime}
-      />
-
-      {/* Tasks Completed Graph */}
-      <TasksCompletedGraph
-        dailyActivity={stats?.dailyActivity}
-      />
-    </div>
-
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-      gap: '1.5rem'
-    }}>
-      {/* Learning Distribution */}
-      <LearningDistributionChart stats={stats} />
-
-      {/* Learning Insights */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        borderRadius: '16px',
-        padding: '1.5rem',
-        border: '1px solid rgba(0, 0, 0, 0.1)'
-      }}>
-        <h4 style={{ margin: '0 0 1rem 0', color: '#333' }}>💡 Learning Insights</h4>
-        {getLearningInsights(stats).length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {getLearningInsights(stats).map((insight, index) => (
-              <div
-                key={index}
-                style={{
-                  padding: '0.75rem',
-                  background: insight.type === 'positive' ? 'rgba(16, 185, 129, 0.1)' :
-                            insight.type === 'concern' ? 'rgba(239, 68, 68, 0.1)' :
-                            'rgba(59, 130, 246, 0.1)',
-                  border: `1px solid ${insight.type === 'positive' ? 'rgba(16, 185, 129, 0.3)' :
-                                     insight.type === 'concern' ? 'rgba(239, 68, 68, 0.3)' :
-                                     'rgba(59, 130, 246, 0.3)'}`,
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem'
-                }}
-              >
-                <span style={{ fontSize: '1.2rem' }}>{insight.icon}</span>
-                <div>
-                  <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '600' }}>
-                    {insight.title}
-                  </h5>
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
-                    {insight.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p style={{ color: '#666', margin: 0 }}>
-            Keep tracking to see learning insights!
-          </p>
-        )}
-      </div>
-    </div>
-  </motion.div>
-);
-
-// Improvements Tab Component
-const ImprovementsTab = ({ child, stats }) => {
-  const improvements = analyzeAreasForImprovement(stats, child);
-  const improvementScore = calculateImprovementScore(stats, child);
-  const recommendations = generateLearningRecommendations(stats, child);
+const ProgressTab = ({ child, stats, formatTime, colors }) => {
+  const insights = getLearningInsights(stats);
 
   return (
     <motion.div
@@ -730,449 +949,551 @@ const ImprovementsTab = ({ child, stats }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
-      <h3 style={{ margin: '0 0 1.5rem 0', color: '#333' }}>🎯 Areas for Improvement</h3>
+      <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+        <BarChart3 size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+        Progress Analytics
+      </Typography>
+
+      <Grid container spacing={3}>
+        {/* Charts */}
+        {stats?.dailyActivity && stats.dailyActivity.length > 0 && (
+          <>
+            <Grid item xs={12} lg={6}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    Daily Time Spent
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={stats.dailyActivity.slice(-7)}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
+                        stroke="#9ca3af"
+                      />
+                      <YAxis stroke="#9ca3af" />
+                      <RechartsTooltip />
+                      <Bar dataKey="timeSpent" fill={colors.primary[0]} radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} lg={6}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    Sessions Completed
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={stats.dailyActivity.slice(-7)}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
+                        stroke="#9ca3af"
+                      />
+                      <YAxis stroke="#9ca3af" />
+                      <RechartsTooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="sessions"
+                        stroke={colors.success[0]}
+                        strokeWidth={3}
+                        dot={{ fill: colors.success[0], r: 5 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </>
+        )}
+
+        {/* Learning Insights */}
+        <Grid item xs={12}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                <Brain size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+                Learning Insights
+              </Typography>
+              {insights.length > 0 ? (
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  {insights.map((insight, index) => (
+                    <Grid item xs={12} key={index}>
+                      <Alert
+                        severity={
+                          insight.type === 'positive' ? 'success' :
+                          insight.type === 'concern' ? 'error' : 'info'
+                        }
+                        icon={<span style={{ fontSize: '1.5rem' }}>{insight.icon}</span>}
+                      >
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          {insight.title}
+                        </Typography>
+                        <Typography variant="body2">
+                          {insight.description}
+                        </Typography>
+                      </Alert>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Keep tracking to see learning insights!
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </motion.div>
+  );
+};
+
+// Improvements Tab Component
+const ImprovementsTab = ({ child, stats, colors }) => {
+  const improvements = analyzeAreasForImprovement(stats, child);
+  const improvementScore = calculateImprovementScore(stats, child);
+  const recommendations = generateLearningRecommendations(stats, child);
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return colors.success[0];
+    if (score >= 60) return colors.warning[0];
+    return colors.danger[0];
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+        <Target size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+        Areas for Improvement
+      </Typography>
 
       {/* Improvement Score */}
-      <div style={{
-        background: `linear-gradient(135deg, ${improvementScore >= 80 ? '#10b981' : improvementScore >= 60 ? '#f59e0b' : '#ef4444'}, ${improvementScore >= 80 ? '#059669' : improvementScore >= 60 ? '#d97706' : '#dc2626'})`,
-        color: 'white',
-        padding: '2rem',
-        borderRadius: '16px',
-        textAlign: 'center',
-        marginBottom: '2rem'
-      }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-          {improvementScore >= 80 ? '🌟' : improvementScore >= 60 ? '📈' : '🎯'}
-        </div>
-        <h2 style={{ margin: '0 0 0.5rem 0' }}>Learning Score: {improvementScore}/100</h2>
-        <p style={{ margin: 0, opacity: 0.9 }}>
-          {improvementScore >= 80 ? 'Excellent progress! Keep it up!' :
-           improvementScore >= 60 ? 'Good progress with room for improvement' :
-           'Several areas need attention for better learning outcomes'}
-        </p>
-      </div>
+      <Card
+        sx={{
+          mb: 3,
+          background: `linear-gradient(135deg, ${getScoreColor(improvementScore)}, ${getScoreColor(improvementScore)}dd)`,
+          color: 'white'
+        }}
+      >
+        <CardContent sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h2" fontWeight={700} gutterBottom>
+            {improvementScore}/100
+          </Typography>
+          <Typography variant="h6" sx={{ opacity: 0.9 }}>
+            Learning Score
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
+            {improvementScore >= 80 ? '🌟 Excellent progress! Keep it up!' :
+             improvementScore >= 60 ? '📈 Good progress with room for improvement' :
+             '🎯 Several areas need attention for better learning outcomes'}
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={improvementScore}
+            sx={{
+              mt: 2,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: 'white'
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '1.5rem'
-      }}>
-        {/* Areas for Improvement */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          border: '1px solid rgba(0, 0, 0, 0.1)'
-        }}>
-          <h4 style={{ margin: '0 0 1rem 0', color: '#333' }}>⚠️ Focus Areas</h4>
-          {improvements.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {improvements.map((improvement, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  style={{
-                    padding: '1rem',
-                    background: 'rgba(0, 0, 0, 0.02)',
-                    border: `2px solid ${improvement.color}20`,
-                    borderLeft: `4px solid ${improvement.color}`,
-                    borderRadius: '12px'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '1.5rem' }}>{improvement.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <h5 style={{
-                        margin: '0 0 0.25rem 0',
-                        color: improvement.color,
-                        fontSize: '1rem',
-                        fontWeight: '600'
-                      }}>
-                        {improvement.issue}
-                      </h5>
-                      <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#666' }}>
-                        {improvement.description}
-                      </p>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#333', fontWeight: '500' }}>
-                        💡 {improvement.suggestion}
-                      </p>
-                    </div>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: improvement.color,
-                      color: 'white',
-                      borderRadius: '8px',
-                      fontSize: '0.7rem',
-                      fontWeight: '600',
-                      textTransform: 'uppercase'
-                    }}>
-                      {improvement.severity}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-              <h4>Great job!</h4>
-              <p>No major areas for improvement detected. Keep up the excellent work!</p>
-            </div>
-          )}
-        </div>
+      <Grid container spacing={3}>
+        {/* Focus Areas */}
+        <Grid item xs={12} lg={6}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                Focus Areas
+              </Typography>
+              {improvements.length > 0 ? (
+                <Box sx={{ mt: 2 }}>
+                  {improvements.map((improvement, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          mb: 2,
+                          borderLeft: `4px solid ${improvement.color}`,
+                          '&:hover': { boxShadow: 2 }
+                        }}
+                      >
+                        <CardContent>
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                            <Box sx={{ fontSize: '1.5rem' }}>{improvement.icon}</Box>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="subtitle2" fontWeight={600} color={improvement.color}>
+                                {improvement.issue}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary" sx={{ my: 0.5 }}>
+                                {improvement.description}
+                              </Typography>
+                              <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
+                                <Sparkles size={14} />
+                                {improvement.suggestion}
+                              </Typography>
+                            </Box>
+                            <Chip
+                              label={improvement.severity}
+                              size="small"
+                              sx={{
+                                backgroundColor: improvement.color,
+                                color: 'white',
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                fontSize: '0.65rem'
+                              }}
+                            />
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Award size={48} color="#10b981" style={{ marginBottom: 16 }} />
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Great job!
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    No major areas for improvement detected
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
 
-        {/* Learning Recommendations */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '16px',
-          padding: '1.5rem',
-          border: '1px solid rgba(0, 0, 0, 0.1)'
-        }}>
-          <h4 style={{ margin: '0 0 1rem 0', color: '#333' }}>🚀 Recommendations</h4>
-          {recommendations.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {recommendations.map((rec, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  style={{
-                    padding: '1rem',
-                    background: rec.priority === 'high' ? 'rgba(239, 68, 68, 0.1)' :
-                              rec.priority === 'medium' ? 'rgba(245, 158, 11, 0.1)' :
-                              'rgba(59, 130, 246, 0.1)',
-                    border: `1px solid ${rec.priority === 'high' ? 'rgba(239, 68, 68, 0.3)' :
-                                        rec.priority === 'medium' ? 'rgba(245, 158, 11, 0.3)' :
-                                        'rgba(59, 130, 246, 0.3)'}`,
-                    borderRadius: '12px'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '1.2rem' }}>{rec.icon}</span>
-                    <div>
-                      <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '600' }}>
-                        {rec.title}
-                      </h5>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>
-                        {rec.description}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <p style={{ color: '#666', margin: 0 }}>
-              Recommendations will appear as we gather more learning data.
-            </p>
-          )}
-        </div>
-      </div>
+        {/* Recommendations */}
+        <Grid item xs={12} lg={6}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                Recommendations
+              </Typography>
+              {recommendations.length > 0 ? (
+                <Box sx={{ mt: 2 }}>
+                  {recommendations.map((rec, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + index * 0.1 }}
+                    >
+                      <Alert
+                        severity={
+                          rec.priority === 'high' ? 'error' :
+                          rec.priority === 'medium' ? 'warning' : 'info'
+                        }
+                        icon={<span style={{ fontSize: '1.2rem' }}>{rec.icon}</span>}
+                        sx={{ mb: 2 }}
+                      >
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          {rec.title}
+                        </Typography>
+                        <Typography variant="body2">
+                          {rec.description}
+                        </Typography>
+                      </Alert>
+                    </motion.div>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Recommendations will appear as we gather more learning data
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </motion.div>
   );
 };
 
 // Achievements Tab Component
-const AchievementsTab = ({ child }) => (
+const AchievementsTab = ({ child, colors }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
   >
-    <h3 style={{ margin: '0 0 1.5rem 0', color: '#333' }}>Achievements</h3>
+    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+      <Award size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+      Achievements Unlocked
+    </Typography>
 
     {child.progressData.achievements && child.progressData.achievements.length > 0 ? (
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '1.5rem'
-      }}>
+      <Grid container spacing={3}>
         {child.progressData.achievements.map((achievement, index) => (
-          <motion.div
-            key={achievement.id}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: index * 0.1 }}
-            style={{
-              background: 'linear-gradient(135deg, #f093fb, #f5576c)',
-              color: 'white',
-              padding: '1.5rem',
-              borderRadius: '16px',
-              textAlign: 'center'
-            }}
-          >
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-              {achievement.icon}
-            </div>
-            <h4 style={{ margin: '0 0 0.5rem 0' }}>
-              {achievement.name}
-            </h4>
-            <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', opacity: 0.9 }}>
-              {achievement.description}
-            </p>
-            <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-              Earned on {new Date(achievement.earnedAt).toLocaleDateString()}
-            </div>
-          </motion.div>
+          <Grid item xs={12} sm={6} md={4} key={achievement.id}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card
+                sx={{
+                  background: `linear-gradient(135deg, ${colors.primary[index % colors.primary.length]}, ${colors.primary[(index + 1) % colors.primary.length]})`,
+                  color: 'white',
+                  textAlign: 'center',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 4,
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                <CardContent>
+                  <Box sx={{ fontSize: '3rem', mb: 2 }}>
+                    {achievement.icon}
+                  </Box>
+                  <Typography variant="h6" fontWeight={700} gutterBottom>
+                    {achievement.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+                    {achievement.description}
+                  </Typography>
+                  <Chip
+                    label={new Date(achievement.earnedAt).toLocaleDateString()}
+                    size="small"
+                    sx={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      fontWeight: 500
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
         ))}
-      </div>
+      </Grid>
     ) : (
-      <div style={{
-        textAlign: 'center',
-        color: '#666',
-        padding: '3rem'
-      }}>
-        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏆</div>
-        <h4>No achievements yet</h4>
-        <p>Achievements will appear here as your child learns and explores!</p>
-      </div>
+      <Card variant="outlined">
+        <CardContent sx={{ textAlign: 'center', py: 8 }}>
+          <Award size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
+          <Typography variant="h6" gutterBottom>
+            No achievements yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Achievements will appear here as your child learns and explores!
+          </Typography>
+        </CardContent>
+      </Card>
     )}
   </motion.div>
 );
 
 // Add Child Modal Component
-const AddChildModal = ({ isOpen, onClose, onAddChild, parentEmail }) => {
+const AddChildModal = ({ open, onClose, onAddChild, parentEmail }) => {
   const [childEmail, setChildEmail] = useState('');
   const [childName, setChildName] = useState('');
 
+  const handleClose = () => {
+    setChildEmail('');
+    setChildName('');
+    onClose();
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (childEmail.trim() && childName.trim()) {
-      onAddChild(childEmail.trim(), childName.trim());
+    if (childEmail.trim()) {
+      // Use childName if provided, otherwise let the backend use the registered name
+      onAddChild(childEmail.trim(), childName.trim() || childEmail.trim());
       setChildEmail('');
       setChildName('');
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        style={{
-          background: 'white',
-          borderRadius: '24px',
-          padding: '2rem',
-          width: '90%',
-          maxWidth: '500px'
-        }}
-      >
-        <h2 style={{ margin: '0 0 1.5rem 0' }}>Add Child to Dashboard</h2>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3 }
+      }}
+    >
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <UserPlus size={24} />
+          Add Child to Dashboard
+        </Box>
+      </DialogTitle>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2" fontWeight={600} gutterBottom>
+              Important Requirements:
+            </Typography>
+            <Typography variant="caption" component="div">
+              • The child must be registered in the system first
+            </Typography>
+            <Typography variant="caption" component="div">
+              • The child must have a student account (not parent)
+            </Typography>
+            <Typography variant="caption" component="div">
+              • The child should have entered your email ({parentEmail}) during registration
+            </Typography>
+          </Alert>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-              Child's Name
-            </label>
-            <input
-              type="text"
-              value={childName}
-              onChange={(e) => setChildName(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid rgba(0, 0, 0, 0.2)',
-                borderRadius: '12px',
-                fontSize: '1rem'
-              }}
-              required
-            />
-          </div>
+          <TextField
+            margin="dense"
+            label="Child's Email"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={childEmail}
+            onChange={(e) => setChildEmail(e.target.value)}
+            required
+            autoFocus
+            helperText="Enter the email address your child used to register"
+            sx={{ mb: 2 }}
+          />
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-              Child's Email
-            </label>
-            <input
-              type="email"
-              value={childEmail}
-              onChange={(e) => setChildEmail(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid rgba(0, 0, 0, 0.2)',
-                borderRadius: '12px',
-                fontSize: '1rem'
-              }}
-              required
-            />
-            <p style={{ fontSize: '0.8rem', color: '#666', margin: '0.5rem 0 0 0' }}>
-              When your child signs up with this email and enters your email ({parentEmail}),
-              they will be automatically added to your dashboard.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: 'rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(0, 0, 0, 0.2)',
-                borderRadius: '12px',
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              Add Child
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+          <TextField
+            margin="dense"
+            label="Child's Name (Optional)"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={childName}
+            onChange={(e) => setChildName(e.target.value)}
+            helperText="If left empty, we'll use the name from their registered account"
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' }
+            }}
+          >
+            Add Child
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
 };
 
 // Settings Modal Component
-const SettingsModal = ({ isOpen, onClose, parentData, onUpdateSettings }) => {
-  const [settings, setSettings] = useState(parentData?.settings || {});
+const SettingsModal = ({ open, onClose, parentData, onUpdateSettings, onSuccess }) => {
+  const [settings, setSettings] = useState(parentData?.settings || {
+    allowedHours: { start: "09:00", end: "21:00" },
+    contentFilter: "moderate",
+    notifications: true,
+    weeklyReports: true
+  });
 
   const handleSave = () => {
-    onUpdateSettings(settings);
-    onClose();
+    const result = onUpdateSettings(settings);
+    if (result.success) {
+      onSuccess();
+      onClose();
+    }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        style={{
-          background: 'white',
-          borderRadius: '24px',
-          padding: '2rem',
-          width: '90%',
-          maxWidth: '600px',
-          maxHeight: '80vh',
-          overflow: 'auto'
-        }}
-      >
-        <h2 style={{ margin: '0 0 1.5rem 0' }}>Parent Settings</h2>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-            Daily Time Limit (minutes)
-          </label>
-          <input
-            type="number"
-            value={settings.dailyTimeLimit}
-            onChange={(e) => setSettings({...settings, dailyTimeLimit: parseInt(e.target.value)})}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '1px solid rgba(0, 0, 0, 0.2)',
-              borderRadius: '12px',
-              fontSize: '1rem'
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3 }
+      }}
+    >
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Settings size={24} />
+          Parent Settings
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
             Allowed Hours
-          </label>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <input
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+            Set the time window when your child can use the learning platform
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
+              label="Start Time"
               type="time"
               value={settings.allowedHours?.start}
               onChange={(e) => setSettings({
                 ...settings,
-                allowedHours: {...settings.allowedHours, start: e.target.value}
+                allowedHours: { ...settings.allowedHours, start: e.target.value }
               })}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                border: '1px solid rgba(0, 0, 0, 0.2)',
-                borderRadius: '12px',
-                fontSize: '1rem'
-              }}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
             />
-            <span style={{ alignSelf: 'center' }}>to</span>
-            <input
+            <TextField
+              label="End Time"
               type="time"
               value={settings.allowedHours?.end}
               onChange={(e) => setSettings({
                 ...settings,
-                allowedHours: {...settings.allowedHours, end: e.target.value}
+                allowedHours: { ...settings.allowedHours, end: e.target.value }
               })}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                border: '1px solid rgba(0, 0, 0, 0.2)',
-                borderRadius: '12px',
-                fontSize: '1rem'
-              }}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
             />
-          </div>
-        </div>
+          </Box>
 
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: 'rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(0, 0, 0, 0.2)',
-              borderRadius: '12px',
-              cursor: 'pointer'
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: '600'
-            }}
-          >
-            Save Settings
-          </button>
-        </div>
-      </motion.div>
-    </div>
+          <Alert severity="info">
+            <Typography variant="caption">
+              Children can access the platform between the specified hours. This helps maintain healthy learning habits.
+            </Typography>
+          </Alert>
+        </Box>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 3 }}>
+        <Button onClick={onClose} variant="outlined">
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          sx={{
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            '&:hover': { background: 'linear-gradient(135deg, #5b5ef0, #7c4de5)' }
+          }}
+        >
+          Save Settings
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

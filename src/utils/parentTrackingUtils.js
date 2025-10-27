@@ -30,7 +30,6 @@ export const initializeParentAccount = (parentEmail, parentName) => {
       createdAt: new Date().toISOString(),
       children: [],
       settings: {
-        dailyTimeLimit: 60, // minutes
         allowedHours: { start: "09:00", end: "21:00" },
         contentFilter: "moderate",
         notifications: true,
@@ -60,6 +59,19 @@ export const getParentData = () => {
 };
 
 /**
+ * Check if a user exists in the system
+ */
+const getUserFromSystem = (email) => {
+  try {
+    const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+    return users[email.toLowerCase()] || null;
+  } catch (error) {
+    console.error("Error getting user from system:", error);
+    return null;
+  }
+};
+
+/**
  * Link child to parent account
  */
 export const linkChildToParent = (childEmail, childName, parentEmail) => {
@@ -74,7 +86,32 @@ export const linkChildToParent = (childEmail, childName, parentEmail) => {
       return { success: false, error: "Parent email does not match" };
     }
 
-    // Check if child already exists
+    // VALIDATION: Check if child is actually registered in the system
+    const childUser = getUserFromSystem(childEmail);
+    if (!childUser) {
+      return {
+        success: false,
+        error: "Child not found. Please ensure the child has registered with this email first."
+      };
+    }
+
+    // VALIDATION: Check if the user is a student (not a parent)
+    if (childUser.role !== "student") {
+      return {
+        success: false,
+        error: "This email is registered as a parent account, not a student account."
+      };
+    }
+
+    // VALIDATION: Check if the child has set this parent's email during registration
+    if (childUser.parentEmail && childUser.parentEmail.toLowerCase() !== parentEmail.toLowerCase()) {
+      return {
+        success: false,
+        error: "This child is linked to a different parent account."
+      };
+    }
+
+    // Check if child already exists in parent's dashboard
     const existingChild = parentData.children.find(
       child => child.email.toLowerCase() === childEmail.toLowerCase()
     );
@@ -83,11 +120,14 @@ export const linkChildToParent = (childEmail, childName, parentEmail) => {
       return { success: false, error: "Child already linked to this account" };
     }
 
+    // Use the actual name from the registered user account
+    const actualChildName = childUser.name || childName;
+
     // Add child to parent's account
     const childData = {
       id: generateId(),
       email: childEmail.toLowerCase(),
-      name: childName,
+      name: actualChildName,
       linkedAt: new Date().toISOString(),
       status: 'active',
       totalTimeSpent: 0,
@@ -514,28 +554,3 @@ export const isWithinAllowedHours = (childEmail) => {
   }
 };
 
-/**
- * Check if child has exceeded daily time limit
- */
-export const hasExceededDailyLimit = (childEmail) => {
-  try {
-    const parentData = getParentData();
-    if (!parentData) return false;
-
-    const child = parentData.children.find(
-      child => child.email.toLowerCase() === childEmail.toLowerCase()
-    );
-
-    if (!child) return false;
-
-    const stats = getChildStatistics(childEmail, 1); // Today only
-    const todayActivity = stats?.dailyActivity[0];
-
-    if (!todayActivity) return false;
-
-    return todayActivity.timeSpent >= parentData.settings.dailyTimeLimit;
-  } catch (error) {
-    console.error("Error checking daily limit:", error);
-    return false;
-  }
-};

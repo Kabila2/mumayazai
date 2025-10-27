@@ -19,7 +19,8 @@
       "Grep(*)",
       "Bash(set PORT=3001)",
       "Bash(dir)",
-      "Bash(del test-components.js)"
+      "Bash(del test-components.js)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

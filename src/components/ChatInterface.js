@@ -9,8 +9,7 @@ import {
   startChildSession,
   endChildSession,
   updateChildSession,
-  isWithinAllowedHours,
-  hasExceededDailyLimit
+  isWithinAllowedHours
 } from '../utils/parentTrackingUtils';
 import {
   initializeUserStats,
@@ -584,9 +583,8 @@ const ChatInterface = ({
 
             // Check time restrictions
             const withinHours = isWithinAllowedHours(session.email);
-            const exceedsLimit = hasExceededDailyLimit(session.email);
 
-            if (withinHours && !exceedsLimit) {
+            if (withinHours) {
               // Start session tracking
               const result = startChildSession(session.email);
               if (result.success) {
