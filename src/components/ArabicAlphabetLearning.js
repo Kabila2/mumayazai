@@ -36,21 +36,10 @@ const arabicAlphabet = [
 const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showWord, setShowWord] = useState(false);
-  const [gameMode, setGameMode] = useState('learn'); // 'learn', 'quiz'
-  const [score, setScore] = useState(0);
-  const [quizOptions, setQuizOptions] = useState([]);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [showResult, setShowResult] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const containerRef = useRef(null);
 
   const currentLetter = arabicAlphabet[currentIndex];
-
-  useEffect(() => {
-    if (gameMode === 'quiz') {
-      generateQuizOptions();
-    }
-  }, [currentIndex, gameMode]);
 
   // Handle scroll indicator
   useEffect(() => {
@@ -77,7 +66,7 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [gameMode, currentIndex]);
+  }, [currentIndex]);
 
   // Smooth scroll to bottom function
   const scrollToBottom = () => {
@@ -88,17 +77,6 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
         behavior: 'smooth'
       });
     }
-  };
-
-  const generateQuizOptions = () => {
-    const correct = currentLetter;
-    const incorrectOptions = arabicAlphabet
-      .filter((_, index) => index !== currentIndex)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const options = [correct, ...incorrectOptions].sort(() => Math.random() - 0.5);
-    setQuizOptions(options);
   };
 
   const handleLetterClick = () => {
@@ -112,34 +90,11 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   const nextLetter = () => {
     setCurrentIndex((prev) => (prev + 1) % arabicAlphabet.length);
     setShowWord(false);
-    setSelectedAnswer(null);
-    setShowResult(false);
   };
 
   const previousLetter = () => {
     setCurrentIndex((prev) => (prev - 1 + arabicAlphabet.length) % arabicAlphabet.length);
     setShowWord(false);
-    setSelectedAnswer(null);
-    setShowResult(false);
-  };
-
-  const handleQuizAnswer = (option) => {
-    setSelectedAnswer(option);
-    setShowResult(true);
-
-    if (option.letter === currentLetter.letter) {
-      setScore(prev => prev + 1);
-    }
-  };
-
-  const switchMode = (mode) => {
-    setGameMode(mode);
-    setShowWord(false);
-    setSelectedAnswer(null);
-    setShowResult(false);
-    if (mode === 'quiz') {
-      setScore(0);
-    }
   };
 
   return (
@@ -148,27 +103,6 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
         <h2 className="learning-title">
           {language === 'ar' ? 'تعلم الحروف العربية' : 'Learn Arabic Alphabet'}
         </h2>
-
-        <div className="mode-selector">
-          <button
-            className={`mode-btn ${gameMode === 'learn' ? 'active' : ''}`}
-            onClick={() => switchMode('learn')}
-          >
-            {language === 'ar' ? 'تعلم' : 'Learn'}
-          </button>
-          <button
-            className={`mode-btn ${gameMode === 'quiz' ? 'active' : ''}`}
-            onClick={() => switchMode('quiz')}
-          >
-            {language === 'ar' ? 'اختبار' : 'Quiz'}
-          </button>
-        </div>
-
-        {gameMode === 'quiz' && (
-          <div className="score-display">
-            {language === 'ar' ? 'النقاط' : 'Score'}: {score}
-          </div>
-        )}
       </div>
 
       <div className="letter-container">
@@ -186,95 +120,42 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
             </div>
           </div>
 
-          {gameMode === 'learn' && (
-            <>
-              <div className="letter-info">
-                <div className="english-equivalent">
-                  {language === 'ar' ? 'بالإنجليزية' : 'English'}: {currentLetter.english}
-                </div>
-              </div>
+          <div className="letter-info">
+            <div className="english-equivalent">
+              {language === 'ar' ? 'بالإنجليزية' : 'English'}: {currentLetter.english}
+            </div>
+          </div>
 
-              <motion.div
-                className="word-section"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <button
-                  className="word-button"
-                  onClick={() => setShowWord(!showWord)}
-                >
-                  {language === 'ar' ? 'مثال على الحرف' : 'Example Word'}
-                </button>
+          <motion.div
+            className="word-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <button
+              className="word-button"
+              onClick={() => setShowWord(!showWord)}
+            >
+              {language === 'ar' ? 'مثال على الحرف' : 'Example Word'}
+            </button>
 
-                <AnimatePresence>
-                  {showWord && (
-                    <motion.div
-                      className="word-display"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      onClick={handleWordClick}
-                    >
-                      <div className="arabic-word">{currentLetter.word}</div>
-                      <div className="word-meaning">
-                        {language === 'ar' ? currentLetter.wordMeaning : `(${currentLetter.wordMeaning})`}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </>
-          )}
-
-          {gameMode === 'quiz' && (
-            <div className="quiz-section">
-              <div className="quiz-question">
-                {language === 'ar'
-                  ? `ما هو اسم هذا الحرف: ${currentLetter.letter}؟`
-                  : `What is the name of this letter: ${currentLetter.letter}?`
-                }
-              </div>
-
-              <div className="quiz-options">
-                {quizOptions.map((option, index) => (
-                  <button
-                    key={index}
-                    className={`quiz-option ${
-                      selectedAnswer === option ?
-                        (option.letter === currentLetter.letter ? 'correct' : 'incorrect')
-                        : ''
-                    }`}
-                    onClick={() => handleQuizAnswer(option)}
-                    disabled={showResult}
-                  >
-                    {option.name}
-                  </button>
-                ))}
-              </div>
-
-              {showResult && (
+            <AnimatePresence>
+              {showWord && (
                 <motion.div
-                  className="quiz-result"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  className="word-display"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  onClick={handleWordClick}
                 >
-                  {selectedAnswer.letter === currentLetter.letter ? (
-                    <div className="correct-answer">
-                      ✓ {language === 'ar' ? 'إجابة صحيحة!' : 'Correct answer!'}
-                    </div>
-                  ) : (
-                    <div className="incorrect-answer">
-                      ✗ {language === 'ar'
-                        ? `الإجابة الصحيحة هي: ${currentLetter.name}`
-                        : `Correct answer is: ${currentLetter.name}`
-                      }
-                    </div>
-                  )}
+                  <div className="arabic-word">{currentLetter.word}</div>
+                  <div className="word-meaning">
+                    {language === 'ar' ? currentLetter.wordMeaning : `(${currentLetter.wordMeaning})`}
+                  </div>
                 </motion.div>
               )}
-            </div>
-          )}
+            </AnimatePresence>
+          </motion.div>
         </motion.div>
       </div>
 
@@ -300,8 +181,6 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
             onClick={() => {
               setCurrentIndex(index);
               setShowWord(false);
-              setSelectedAnswer(null);
-              setShowResult(false);
             }}
           >
             {letter.letter}

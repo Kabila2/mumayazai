@@ -559,6 +559,13 @@ const ArabicLearningPlatform = ({
             {language === 'ar' ? 'الجمل' : 'Sentences'}
           </button>
           <button
+            className={`nav-link ${currentSection === 'quiz' ? 'active' : ''}`}
+            onClick={() => setCurrentSection('quiz')}
+            style={{ background: currentSection === 'quiz' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '' }}
+          >
+            🎯 {language === 'ar' ? 'اختبارات' : 'Quiz'}
+          </button>
+          <button
             className={`nav-link ${currentSection === 'points' ? 'active' : ''}`}
             onClick={() => setCurrentSection('points')}
             style={{ background: currentSection === 'points' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '' }}
@@ -606,14 +613,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <ArabicAlphabetLearning
                 t={t}
                 language={language}
@@ -633,14 +632,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <ArabicColorsLearning
                 t={t}
                 language={language}
@@ -660,14 +651,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <ArabicWordsLearning
                 t={t}
                 language={language}
@@ -687,14 +670,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <ArabicSentencesLearning
                 t={t}
                 language={language}
@@ -714,14 +689,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <ArabicWordBuilder
                 t={t}
                 language={language}
@@ -741,14 +708,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <MemoryGame />
             </motion.div>
           )}
@@ -761,14 +720,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <PointsTracker language={language} />
             </motion.div>
           )}
@@ -781,14 +732,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <SentenceBuilder
                 language={language}
                 fontSize={fontSize}
@@ -805,14 +748,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <LetterWordBuilder
                 language={language}
                 fontSize={fontSize}
@@ -829,14 +764,6 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-              </div>
               <CollaborativeDrawingBoard
                 language={language}
                 fontSize={fontSize}

@@ -114,28 +114,9 @@ const arabicColors = [
 ];
 
 const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [gameMode, setGameMode] = useState('learn'); // 'learn', 'quiz', 'match'
-  const [score, setScore] = useState(0);
-  const [quizOptions, setQuizOptions] = useState([]);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [showResult, setShowResult] = useState(false);
-  const [showObjects, setShowObjects] = useState(false);
-  const [matchingPairs, setMatchingPairs] = useState([]);
-  const [selectedCards, setSelectedCards] = useState([]);
-  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const containerRef = useRef(null);
-
-  const currentColor = arabicColors[currentIndex];
-
-  useEffect(() => {
-    if (gameMode === 'quiz') {
-      generateQuizOptions();
-    } else if (gameMode === 'match') {
-      generateMatchingGame();
-    }
-  }, [currentIndex, gameMode]);
 
   // Handle scroll indicator
   useEffect(() => {
@@ -162,7 +143,7 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
 
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [gameMode, currentIndex]);
+  }, []);
 
   // Smooth scroll to bottom function
   const scrollToBottom = () => {
@@ -175,362 +156,126 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
     }
   };
 
-  const generateQuizOptions = () => {
-    const correct = currentColor;
-    const incorrectOptions = arabicColors
-      .filter((_, index) => index !== currentIndex)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const options = [correct, ...incorrectOptions].sort(() => Math.random() - 0.5);
-    setQuizOptions(options);
-  };
-
-  const generateMatchingGame = () => {
-    const selectedColors = arabicColors.slice(0, 6).sort(() => Math.random() - 0.5);
-    const pairs = [];
-
-    selectedColors.forEach((color, index) => {
-      pairs.push(
-        { id: `arabic-${index}`, type: 'arabic', content: color.arabic, color: color, matched: false },
-        { id: `english-${index}`, type: 'english', content: color.english, color: color, matched: false }
-      );
-    });
-
-    setMatchingPairs(pairs.sort(() => Math.random() - 0.5));
-    setMatchedPairs([]);
-    setSelectedCards([]);
-  };
-
-  const handleColorClick = () => {
-    // Color click interaction - no voiceover
-  };
-
-  const handleObjectClick = (objectIndex) => {
-    // Object click interaction - no voiceover
-  };
-
-  const nextColor = () => {
-    setCurrentIndex((prev) => (prev + 1) % arabicColors.length);
-    setShowObjects(false);
-    setSelectedAnswer(null);
-    setShowResult(false);
-  };
-
-  const previousColor = () => {
-    setCurrentIndex((prev) => (prev - 1 + arabicColors.length) % arabicColors.length);
-    setShowObjects(false);
-    setSelectedAnswer(null);
-    setShowResult(false);
-  };
-
-  const handleQuizAnswer = (option) => {
-    setSelectedAnswer(option);
-    setShowResult(true);
-
-    if (option.arabic === currentColor.arabic) {
-      setScore(prev => prev + 1);
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    // Scroll to top when a color is selected
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const handleCardClick = (card) => {
-    if (card.matched || selectedCards.length >= 2) return;
-
-    const newSelected = [...selectedCards, card];
-    setSelectedCards(newSelected);
-
-    if (newSelected.length === 2) {
-      const [first, second] = newSelected;
-
-      if (first.color.arabic === second.color.arabic && first.type !== second.type) {
-        // Match found
-        setTimeout(() => {
-          setMatchedPairs(prev => [...prev, first.id, second.id]);
-          setSelectedCards([]);
-          setScore(prev => prev + 1);
-        }, 500);
-      } else {
-        // No match
-        setTimeout(() => {
-          setSelectedCards([]);
-        }, 1000);
-      }
-    }
+  const handleCloseDetail = () => {
+    setSelectedColor(null);
   };
-
-  const switchMode = (mode) => {
-    setGameMode(mode);
-    setShowObjects(false);
-    setSelectedAnswer(null);
-    setShowResult(false);
-    setSelectedCards([]);
-    setMatchedPairs([]);
-    if (mode !== 'learn') {
-      setScore(0);
-    }
-  };
-
-  const isCardSelected = (card) => selectedCards.some(selected => selected.id === card.id);
-  const isCardMatched = (card) => matchedPairs.includes(card.id);
 
   return (
     <div className="arabic-colors-learning" ref={containerRef}>
-      <div className="learning-header">
-        <h2 className="learning-title">
-          {language === 'ar' ? 'تعلم الألوان العربية' : 'Learn Arabic Colors'}
-        </h2>
+      <motion.div
+        className="colors-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="colors-main-title">
+          {language === 'ar' ? '🎨 تعلم الألوان العربية' : '🎨 Learn Arabic Colors'}
+        </h1>
+        <p className="colors-subtitle">
+          {language === 'ar'
+            ? 'اكتشف الألوان الجميلة في اللغة العربية'
+            : 'Discover beautiful colors in Arabic language'
+          }
+        </p>
+      </motion.div>
 
-        <div className="mode-selector">
-          <button
-            className={`mode-btn ${gameMode === 'learn' ? 'active' : ''}`}
-            onClick={() => switchMode('learn')}
-          >
-            {language === 'ar' ? 'تعلم' : 'Learn'}
-          </button>
-          <button
-            className={`mode-btn ${gameMode === 'quiz' ? 'active' : ''}`}
-            onClick={() => switchMode('quiz')}
-          >
-            {language === 'ar' ? 'اختبار' : 'Quiz'}
-          </button>
-          <button
-            className={`mode-btn ${gameMode === 'match' ? 'active' : ''}`}
-            onClick={() => switchMode('match')}
-          >
-            {language === 'ar' ? 'مطابقة' : 'Match'}
-          </button>
-        </div>
-
-        {(gameMode === 'quiz' || gameMode === 'match') && (
-          <div className="score-display">
-            {language === 'ar' ? 'النقاط' : 'Score'}: {score}
-          </div>
-        )}
-      </div>
-
-      {gameMode === 'learn' && (
-        <div className="color-container">
+      {/* Color Detail Modal */}
+      <AnimatePresence>
+        {selectedColor && (
           <motion.div
-            className="color-card"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            className="color-detail-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleCloseDetail}
           >
-            <div
-              className="color-display"
-              onClick={handleColorClick}
-              style={{ backgroundColor: currentColor.pastelHex }}
-            >
-              <div className="color-swatch">
-                <div
-                  className="color-circle"
-                  style={{ backgroundColor: currentColor.darkHex }}
-                ></div>
-              </div>
-
-              <div className="color-info">
-                <div className="arabic-color">{currentColor.arabic}</div>
-                <div className="english-color">{currentColor.english}</div>
-                <div className="color-pronunciation">
-                  {language === 'ar' ? currentColor.pronunciation : `(${currentColor.pronunciation})`}
-                </div>
-              </div>
-            </div>
-
             <motion.div
-              className="objects-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              className="color-detail-modal"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: `linear-gradient(135deg, ${selectedColor.pastelHex}, ${selectedColor.darkHex}15)`
+              }}
             >
-              <button
-                className="objects-button"
-                onClick={() => setShowObjects(!showObjects)}
-              >
-                {language === 'ar' ? 'أشياء بهذا اللون' : 'Things with this color'}
+              <button className="close-detail-btn" onClick={handleCloseDetail}>
+                ✕
               </button>
 
-              <AnimatePresence>
-                {showObjects && (
-                  <motion.div
-                    className="objects-display"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                  >
-                    {currentColor.objects.map((object, index) => (
-                      <div
-                        key={index}
-                        className="object-item"
-                        onClick={() => handleObjectClick(index)}
-                        style={{ borderColor: currentColor.darkHex }}
-                      >
-                        <div className="arabic-object">{object}</div>
-                        <div className="english-object">
-                          {currentColor.objectsEnglish[index]}
-                        </div>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div className="detail-color-circle-large" style={{ backgroundColor: selectedColor.darkHex }}>
+                <div className="detail-color-shine"></div>
+              </div>
+
+              <div className="detail-color-info">
+                <div className="detail-arabic-name">{selectedColor.arabic}</div>
+                <div className="detail-english-name">{selectedColor.english}</div>
+                <div className="detail-pronunciation">{selectedColor.pronunciation}</div>
+              </div>
+
+              <div className="detail-objects-section">
+                <h3 className="detail-objects-title">
+                  {language === 'ar' ? 'أمثلة من الحياة اليومية' : 'Everyday Examples'}
+                </h3>
+                <div className="detail-objects-grid">
+                  {selectedColor.objects.map((object, index) => (
+                    <motion.div
+                      key={index}
+                      className="detail-object-card"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="detail-object-arabic">{object}</div>
+                      <div className="detail-object-english">{selectedColor.objectsEnglish[index]}</div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
 
-          <div className="navigation-controls">
-            <button className="nav-btn prev" onClick={previousColor}>
-              {language === 'ar' ? '→' : '←'}
-            </button>
-
-            <div className="progress-indicator">
-              {currentIndex + 1} / {arabicColors.length}
+      {/* Colors Grid */}
+      <div className="modern-colors-grid">
+        {arabicColors.map((color, index) => (
+          <motion.div
+            key={index}
+            className="modern-color-card"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.05 }}
+            whileHover={{ scale: 1.05, y: -8 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleColorSelect(color)}
+          >
+            <div className="modern-color-top" style={{ backgroundColor: color.pastelHex }}>
+              <div className="modern-color-circle" style={{ backgroundColor: color.darkHex }}>
+                <div className="color-shine"></div>
+              </div>
             </div>
 
-            <button className="nav-btn next" onClick={nextColor}>
-              {language === 'ar' ? '←' : '→'}
-            </button>
-          </div>
-
-          <div className="colors-grid">
-            {arabicColors.map((color, index) => (
-              <button
-                key={index}
-                className={`color-item ${index === currentIndex ? 'active' : ''}`}
-                onClick={() => {
-                  setCurrentIndex(index);
-                  setShowObjects(false);
-                }}
-                style={{ backgroundColor: color.pastelHex }}
-              >
-                <div className="color-item-name">{color.arabic}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {gameMode === 'quiz' && (
-        <div className="quiz-container">
-          <div className="quiz-color-display">
-            <div
-              className="quiz-color-swatch"
-              style={{ backgroundColor: currentColor.pastelHex }}
-            >
-              <div
-                className="quiz-color-circle"
-                style={{ backgroundColor: currentColor.darkHex }}
-              ></div>
+            <div className="modern-color-bottom">
+              <div className="modern-color-arabic">{color.arabic}</div>
+              <div className="modern-color-english">{color.english}</div>
+              <div className="modern-color-pronunciation">{color.pronunciation}</div>
             </div>
-          </div>
 
-          <div className="quiz-question">
-            {language === 'ar'
-              ? 'ما هو اسم هذا اللون؟'
-              : 'What is the name of this color?'
-            }
-          </div>
-
-          <div className="quiz-options">
-            {quizOptions.map((option, index) => (
-              <button
-                key={index}
-                className={`quiz-option ${
-                  selectedAnswer === option ?
-                    (option.arabic === currentColor.arabic ? 'correct' : 'incorrect')
-                    : ''
-                }`}
-                onClick={() => handleQuizAnswer(option)}
-                disabled={showResult}
-              >
-                <span className="option-arabic">{option.arabic}</span>
-                <span className="option-english">{option.english}</span>
-              </button>
-            ))}
-          </div>
-
-          {showResult && (
-            <motion.div
-              className="quiz-result"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              {selectedAnswer.arabic === currentColor.arabic ? (
-                <div className="correct-answer">
-                  ✓ {language === 'ar' ? 'إجابة صحيحة!' : 'Correct answer!'}
-                </div>
-              ) : (
-                <div className="incorrect-answer">
-                  ✗ {language === 'ar'
-                    ? `الإجابة الصحيحة هي: ${currentColor.arabic}`
-                    : `Correct answer is: ${currentColor.arabic}`
-                  }
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          <div className="quiz-navigation">
-            <button className="next-question-btn" onClick={nextColor}>
-              {language === 'ar' ? 'السؤال التالي' : 'Next Question'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {gameMode === 'match' && (
-        <div className="matching-container">
-          <div className="matching-instructions">
-            {language === 'ar'
-              ? 'اضغط على البطاقات لتجد التطابق بين اللون العربي والإنجليزي'
-              : 'Click on cards to match Arabic and English color names'
-            }
-          </div>
-
-          <div className="matching-grid">
-            {matchingPairs.map((card) => (
-              <motion.div
-                key={card.id}
-                className={`matching-card ${
-                  isCardSelected(card) ? 'selected' : ''
-                } ${isCardMatched(card) ? 'matched' : ''}`}
-                onClick={() => handleCardClick(card)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  backgroundColor: isCardMatched(card) ? card.color.pastelHex : undefined,
-                  borderColor: isCardSelected(card) ? card.color.darkHex : undefined
-                }}
-              >
-                <div className="card-content">
-                  {card.content}
-                </div>
-                {isCardMatched(card) && (
-                  <div
-                    className="card-color-indicator"
-                    style={{ backgroundColor: card.color.darkHex }}
-                  ></div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-
-          {matchedPairs.length === matchingPairs.length && matchingPairs.length > 0 && (
-            <motion.div
-              className="game-complete"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <h3>{language === 'ar' ? '🎉 أحسنت! لعبة مكتملة' : '🎉 Well done! Game complete'}</h3>
-              <button
-                className="play-again-btn"
-                onClick={() => generateMatchingGame()}
-              >
-                {language === 'ar' ? 'العب مرة أخرى' : 'Play Again'}
-              </button>
-            </motion.div>
-          )}
-        </div>
-      )}
+            <div className="tap-hint">
+              {language === 'ar' ? '← انقر لمزيد من التفاصيل' : 'Tap for details →'}
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* Scroll Down Indicator */}
       <AnimatePresence>

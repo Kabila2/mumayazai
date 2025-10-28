@@ -1,12 +1,20 @@
 /* Arabic Words Learning - Down Syndrome Friendly Design */
 
+.arabic-words-learning *,
+.arabic-words-learning *::before,
+.arabic-words-learning *::after {
+  box-sizing: border-box;
+}
+
 .arabic-words-learning {
   position: relative;
-  width: 100%;
+  width: 100vw;
+  max-width: 100vw;
   margin: 0;
   padding: 40px 20px;
   background: #ffffff; /* Simple white background for clarity */
-  min-height: calc(100vh - 140px);
+  height: calc(100vh - 140px);
+  max-height: calc(100vh - 140px);
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
@@ -14,6 +22,8 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   font-family: 'Arial', 'Segoe UI', sans-serif; /* Simple, clear font */
+  contain: layout style;
+  box-sizing: border-box;
 }
 
 .recall-mode-btn {
@@ -78,6 +88,9 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
+  min-height: calc(100vh - 240px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .categories-title {
@@ -96,6 +109,8 @@
   max-width: 1000px;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .category-card {
@@ -152,6 +167,9 @@
   max-width: 900px;
   margin: 0 auto;
   padding: 0 20px;
+  min-height: calc(100vh - 240px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .learning-navigation {

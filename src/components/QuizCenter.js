@@ -16,6 +16,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [matchingPairs, setMatchingPairs] = useState([]);
+  const [selectedCards, setSelectedCards] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]);
 
   // Quiz Types
   const quizTypes = [
@@ -116,6 +119,14 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { arabic: 'ت', english: 'ta', hint: 'Third letter' },
         { arabic: 'ث', english: 'tha', hint: 'Fourth letter' },
         { arabic: 'ج', english: 'jeem', hint: 'Fifth letter' }
+      ],
+      matching: [
+        { arabic: 'أ', english: 'alif' },
+        { arabic: 'ب', english: 'ba' },
+        { arabic: 'ت', english: 'ta' },
+        { arabic: 'ث', english: 'tha' },
+        { arabic: 'ج', english: 'jeem' },
+        { arabic: 'ح', english: 'ha' }
       ]
     },
     words: {
@@ -146,6 +157,14 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { sentence: 'I drink _____ when thirsty.', arabic: 'مَاء', options: ['food', 'water', 'milk', 'juice'], correct: 1 },
         { sentence: 'I live in a _____.', arabic: 'بَيْت', options: ['car', 'home', 'school', 'park'], correct: 1 },
         { sentence: 'I am _____ today!', arabic: 'سَعِيد', options: ['sad', 'happy', 'angry', 'tired'], correct: 1 }
+      ],
+      matching: [
+        { arabic: 'كِتَاب', english: 'book' },
+        { arabic: 'قَلَم', english: 'pen' },
+        { arabic: 'مَاء', english: 'water' },
+        { arabic: 'بَيْت', english: 'home' },
+        { arabic: 'طَعَام', english: 'food' },
+        { arabic: 'سَعِيد', english: 'happy' }
       ]
     },
     sentences: {
@@ -169,6 +188,14 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { arabic: 'مَرْحَبًا', english: 'hello', hint: 'Greeting' },
         { arabic: 'مَعَ السَّلَامَة', english: 'goodbye', hint: 'Farewell' },
         { arabic: 'كَيْفَ حَالُك', english: 'how are you', hint: 'Ask about wellbeing' }
+      ],
+      matching: [
+        { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you' },
+        { arabic: 'شُكْرًا', english: 'thank you' },
+        { arabic: 'مَرْحَبًا', english: 'hello' },
+        { arabic: 'مَعَ السَّلَامَة', english: 'goodbye' },
+        { arabic: 'صَبَاحُ الخَيْر', english: 'good morning' },
+        { arabic: 'كَيْفَ حَالُك', english: 'how are you' }
       ]
     },
     colors: {
@@ -192,6 +219,14 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { arabic: 'أَخْضَر', english: 'green', hint: 'Color of grass' },
         { arabic: 'أَصْفَر', english: 'yellow', hint: 'Color of sun' },
         { arabic: 'أَبْيَض', english: 'white', hint: 'Color of snow' }
+      ],
+      matching: [
+        { arabic: 'أَحْمَر', english: 'red' },
+        { arabic: 'أَزْرَق', english: 'blue' },
+        { arabic: 'أَخْضَر', english: 'green' },
+        { arabic: 'أَصْفَر', english: 'yellow' },
+        { arabic: 'أَبْيَض', english: 'white' },
+        { arabic: 'أَسْوَد', english: 'black' }
       ]
     }
   };
@@ -206,6 +241,28 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
     return letters;
   };
 
+  // Generate matching pairs for matching game
+  const generateMatchingGame = () => {
+    if (!selectedTopic) return;
+
+    const matchingContent = quizContent[selectedTopic.id]?.matching;
+    if (!matchingContent) return;
+
+    const pairs = [];
+    matchingContent.forEach((item, index) => {
+      pairs.push(
+        { id: `arabic-${index}`, type: 'arabic', content: item.arabic, pairId: index },
+        { id: `english-${index}`, type: 'english', content: item.english, pairId: index }
+      );
+    });
+
+    // Shuffle the pairs
+    const shuffled = pairs.sort(() => Math.random() - 0.5);
+    setMatchingPairs(shuffled);
+    setMatchedPairs([]);
+    setSelectedCards([]);
+  };
+
   // Initialize scrambled letters when starting scrambled quiz
   useEffect(() => {
     if (selectedQuizType?.id === 'scrambled-letters' && selectedTopic && currentQuestionIndex >= 0) {
@@ -215,6 +272,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         setScrambledLetters(scrambleWord(word));
         setUserAnswer('');
       }
+    } else if (selectedQuizType?.id === 'matching' && selectedTopic) {
+      generateMatchingGame();
     }
   }, [selectedQuizType, selectedTopic, currentQuestionIndex]);
 
@@ -238,7 +297,50 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
     setSelectedAnswer(null);
     setShowFeedback(false);
     setIsCorrect(false);
+    setMatchingPairs([]);
+    setSelectedCards([]);
+    setMatchedPairs([]);
   };
+
+  const handleCardClick = (card) => {
+    // Don't allow clicking on matched cards or more than 2 cards
+    if (matchedPairs.includes(card.id) || selectedCards.length >= 2) return;
+
+    // Don't allow clicking the same card twice
+    if (selectedCards.some(c => c.id === card.id)) return;
+
+    const newSelected = [...selectedCards, card];
+    setSelectedCards(newSelected);
+
+    if (newSelected.length === 2) {
+      const [first, second] = newSelected;
+
+      // Check if they match (same pairId but different types)
+      if (first.pairId === second.pairId && first.type !== second.type) {
+        // Match found!
+        setTimeout(() => {
+          setMatchedPairs([...matchedPairs, first.id, second.id]);
+          setSelectedCards([]);
+          setScore(score + 1);
+
+          // Check if all pairs are matched
+          if (matchedPairs.length + 2 === matchingPairs.length) {
+            setTimeout(() => {
+              setShowResults(true);
+            }, 500);
+          }
+        }, 500);
+      } else {
+        // No match
+        setTimeout(() => {
+          setSelectedCards([]);
+        }, 1000);
+      }
+    }
+  };
+
+  const isCardSelected = (card) => selectedCards.some(selected => selected.id === card.id);
+  const isCardMatched = (card) => matchedPairs.includes(card.id);
 
   const handleAnswerSelect = (answerIndex) => {
     if (showFeedback) return; // Prevent multiple selections
@@ -483,6 +585,103 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
               {language === 'ar' ? 'العودة إلى الاختبارات' : 'Back to Quizzes'}
             </button>
           </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Handle matching game separately
+  if (selectedQuizType.id === 'matching') {
+    const matchingContent = quizContent[selectedTopic.id]?.matching;
+
+    if (!matchingContent) {
+      return (
+        <div className="quiz-center">
+          <div className="quiz-error">
+            <p>{language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This quiz is not available yet'}</p>
+            <button className="btn btn-primary" onClick={() => setSelectedTopic(null)}>
+              {language === 'ar' ? 'رجوع' : 'Go Back'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="quiz-center">
+        <motion.div
+          className="quiz-container"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="quiz-progress-header">
+            <button className="back-button" onClick={() => setSelectedTopic(null)}>
+              ← {language === 'ar' ? 'رجوع' : 'Back'}
+            </button>
+            <h3 className="matching-title">
+              {language === 'ar' ? 'طابق الكلمات' : 'Match the Pairs'}
+            </h3>
+            <div className="quiz-score-display">
+              <span className="score-label">{language === 'ar' ? 'النقاط:' : 'Score:'}</span>
+              <span className="score-value">{score}/{matchingContent.length}</span>
+            </div>
+          </div>
+
+          <div className="matching-instructions">
+            {language === 'ar'
+              ? 'اضغط على البطاقات لمطابقة الكلمات العربية مع الإنجليزية'
+              : 'Click on cards to match Arabic words with their English translations'
+            }
+          </div>
+
+          <div className="matching-grid">
+            {matchingPairs.map((card) => (
+              <motion.div
+                key={card.id}
+                className={`matching-card ${
+                  isCardSelected(card) ? 'selected' : ''
+                } ${isCardMatched(card) ? 'matched' : ''}`}
+                onClick={() => handleCardClick(card)}
+                whileHover={{ scale: isCardMatched(card) ? 1 : 1.05 }}
+                whileTap={{ scale: isCardMatched(card) ? 1 : 0.95 }}
+                style={{
+                  backgroundColor: isCardMatched(card) ? '#10b981' : undefined,
+                  color: isCardMatched(card) ? 'white' : undefined,
+                  borderColor: isCardSelected(card) ? selectedTopic.color : undefined,
+                  borderWidth: isCardSelected(card) ? '3px' : '2px'
+                }}
+              >
+                <div className="card-content">
+                  {card.content}
+                </div>
+                {isCardMatched(card) && (
+                  <motion.div
+                    className="match-checkmark"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                  >
+                    ✓
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          {matchedPairs.length === matchingPairs.length && matchingPairs.length > 0 && (
+            <motion.div
+              className="game-complete"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <h3>{language === 'ar' ? '🎉 أحسنت! لعبة مكتملة' : '🎉 Well done! Game complete'}</h3>
+              <button
+                className="btn btn-primary"
+                onClick={generateMatchingGame}
+              >
+                {language === 'ar' ? 'العب مرة أخرى' : 'Play Again'}
+              </button>
+            </motion.div>
+          )}
         </motion.div>
       </div>
     );

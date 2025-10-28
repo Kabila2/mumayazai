@@ -5,8 +5,6 @@ import './ArabicSentencesLearning.css';
 const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
-  const [recallMode, setRecallMode] = useState(false);
-  const [showRecallAnswer, setShowRecallAnswer] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [learnedSentences, setLearnedSentences] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -251,15 +249,12 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setCurrentSentenceIndex(0);
-    setRecallMode(false);
-    setShowRecallAnswer(false);
     setShowVideo(true);
   };
 
   const handleNextSentence = () => {
     if (selectedCategory && currentSentenceIndex < selectedCategory.sentences.length - 1) {
       setCurrentSentenceIndex(currentSentenceIndex + 1);
-      setShowRecallAnswer(false);
       setShowVideo(true);
       if (videoRef.current) {
         videoRef.current.load();
@@ -270,7 +265,6 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
   const handlePreviousSentence = () => {
     if (currentSentenceIndex > 0) {
       setCurrentSentenceIndex(currentSentenceIndex - 1);
-      setShowRecallAnswer(false);
       setShowVideo(true);
       if (videoRef.current) {
         videoRef.current.load();
@@ -326,15 +320,6 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           <div className="category-badge" style={{ background: selectedCategory.color }}>
             {selectedCategory.icon} {language === 'ar' ? selectedCategory.nameAr : selectedCategory.nameEn}
           </div>
-          <button
-            className={`recall-mode-btn ${recallMode ? 'active' : ''}`}
-            onClick={() => {
-              setRecallMode(!recallMode);
-              setShowRecallAnswer(false);
-            }}
-          >
-            {language === 'ar' ? (recallMode ? 'وضع التعلم' : 'وضع التذكر') : (recallMode ? 'Learn Mode' : 'Recall Mode')}
-          </button>
         </div>
 
         <div className="sentence-progress">
@@ -410,24 +395,9 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
               {currentSentence.arabic}
             </div>
 
-            {recallMode ? (
-              <div
-                className="sentence-translation recall-clickable"
-                onClick={() => setShowRecallAnswer(!showRecallAnswer)}
-              >
-                {showRecallAnswer ? (
-                  currentSentence.english
-                ) : (
-                  <span style={{ fontStyle: 'italic', color: '#9ca3af' }}>
-                    {language === 'ar' ? 'انقر للكشف عن المعنى' : 'Click to reveal meaning'}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <div className="sentence-translation">
-                {currentSentence.english}
-              </div>
-            )}
+            <div className="sentence-translation">
+              {currentSentence.english}
+            </div>
 
             <div className="sentence-pronunciation">
               {currentSentence.pronunciation}
