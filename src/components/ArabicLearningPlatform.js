@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import LearnHub from "./LearnHub";
 import ArabicAlphabetLearning from "./ArabicAlphabetLearning";
 import ArabicColorsLearning from "./ArabicColorsLearning";
 import ArabicWordsLearning from "./ArabicWordsLearning";
@@ -34,7 +35,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
@@ -520,7 +521,8 @@ const ArabicLearningPlatform = ({
 
   return (
     <div className="arabic-learning-platform" ref={platformRef}>
-      <nav className="platform-nav">
+      {currentSection !== 'learn' && (
+        <nav className="platform-nav">
         <div className="nav-brand">
           <h2 className="brand-title">
             {language === 'ar' ? 'تعلم العربية' : 'Learn Arabic'}
@@ -535,28 +537,11 @@ const ArabicLearningPlatform = ({
             {language === 'ar' ? 'الرئيسية' : 'Home'}
           </button>
           <button
-            className={`nav-link ${currentSection === 'alphabet' ? 'active' : ''}`}
-            onClick={() => handleSectionChange('alphabet')}
+            className={`nav-link ${['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'active' : ''}`}
+            onClick={() => setCurrentSection('learn')}
+            style={{ background: ['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'linear-gradient(135deg, #667eea, #764ba2)' : '' }}
           >
-            {language === 'ar' ? 'الحروف' : 'Alphabet'}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'colors' ? 'active' : ''}`}
-            onClick={() => handleSectionChange('colors')}
-          >
-            {language === 'ar' ? 'الألوان' : 'Colors'}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'words' ? 'active' : ''}`}
-            onClick={() => handleSectionChange('words')}
-          >
-            {language === 'ar' ? 'الكلمات' : 'Words'}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'sentences' ? 'active' : ''}`}
-            onClick={() => handleSectionChange('sentences')}
-          >
-            {language === 'ar' ? 'الجمل' : 'Sentences'}
+            📚 {language === 'ar' ? 'تعلم' : 'Learn'}
           </button>
           <button
             className={`nav-link ${currentSection === 'quiz' ? 'active' : ''}`}
@@ -590,8 +575,9 @@ const ArabicLearningPlatform = ({
           {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
         </button>
       </nav>
+      )}
 
-      <main className="platform-content">
+      <main className={`platform-content ${currentSection === 'learn' ? 'fullscreen' : ''}`}>
         <AnimatePresence mode="wait">
           {currentSection === 'home' && (
             <motion.div
@@ -602,6 +588,21 @@ const ArabicLearningPlatform = ({
               transition={{ duration: 0.3 }}
             >
               {renderHomeSection()}
+            </motion.div>
+          )}
+
+          {currentSection === 'learn' && (
+            <motion.div
+              key="learn"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <LearnHub
+                language={language}
+                onSectionSelect={(sectionId) => setCurrentSection(sectionId)}
+              />
             </motion.div>
           )}
 

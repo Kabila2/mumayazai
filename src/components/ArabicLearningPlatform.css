@@ -14,6 +14,10 @@
   -ms-overflow-style: none; /* IE and Edge */
 }
 
+.arabic-learning-platform:has(.fullscreen) {
+  overflow: hidden;
+}
+
 .arabic-learning-platform::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
@@ -102,6 +106,19 @@
 
 .platform-content > * {
   pointer-events: auto;
+}
+
+.platform-content.fullscreen {
+  min-height: 100vh;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+}
+
+.platform-content.fullscreen > * {
+  margin: 0;
+  padding: 0;
+  max-width: 100vw;
 }
 
 /* Full width for specific sections - target the motion.div wrappers */
@@ -458,7 +475,7 @@
   }
 
   .platform-content {
-    padding: 20px 15px;
+    padding: 0;
   }
 
   .platform-title {

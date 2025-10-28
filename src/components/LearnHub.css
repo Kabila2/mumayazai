@@ -1,0 +1,232 @@
+.learn-hub {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  z-index: 1000;
+}
+
+.learn-section {
+  flex: 1;
+  width: 25%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.learn-section:last-child {
+  border-right: none;
+}
+
+.learn-section:hover {
+  flex: 1.1;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.1);
+}
+
+.learn-section::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: top 0.5s;
+}
+
+.learn-section:hover::before {
+  top: 100%;
+}
+
+.learn-section-content {
+  text-align: center;
+  z-index: 1;
+  position: relative;
+  padding: 20px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.learn-section-icon {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.learn-section-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 15px 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.learn-section-description {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.learn-section-arrow {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) rotate(90deg);
+  font-size: 3rem;
+  color: white;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.learn-section:hover .learn-section-arrow {
+  opacity: 1;
+  bottom: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .learn-hub {
+    flex-direction: column;
+  }
+
+  .learn-section {
+    width: 100%;
+    height: 25%;
+    border-right: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .learn-section:last-child {
+    border-bottom: none;
+  }
+
+  .learn-section-arrow {
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+  }
+
+  .learn-section:hover .learn-section-arrow {
+    bottom: 20px;
+  }
+
+  .learn-section-title {
+    font-size: 2.5rem;
+  }
+
+  .learn-section-description {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .learn-section-icon {
+    font-size: 4rem;
+  }
+
+  .learn-section-title {
+    font-size: 2.5rem;
+  }
+
+  .learn-section-description {
+    font-size: 1.2rem;
+  }
+
+  .learn-section-arrow {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .learn-section-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+
+  .learn-section-title {
+    font-size: 2rem;
+  }
+
+  .learn-section-description {
+    font-size: 1rem;
+  }
+
+  .learn-section-arrow {
+    font-size: 2rem;
+  }
+
+  .learn-section-content {
+    padding: 15px;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .learn-section-arrow {
+  transform: translateX(-50%) rotate(-90deg);
+}
+
+/* High Contrast Mode */
+.high-contrast .learn-section {
+  border: 3px solid #ffffff;
+}
+
+.high-contrast .learn-section-title {
+  color: #00ff00;
+  text-shadow: 0 0 10px #000000;
+}
+
+.high-contrast .learn-section-description {
+  color: #ffffff;
+  text-shadow: 0 0 10px #000000;
+}
+
+/* Reduced Motion */
+.reduced-motion .learn-section-icon {
+  animation: none;
+}
+
+.reduced-motion .learn-section:hover {
+  flex: 1;
+}
+
+.reduced-motion .learn-section::before {
+  display: none;
+}
+
+/* Accessibility - Focus States */
+.learn-section:focus-visible {
+  outline: 4px solid rgba(255, 255, 255, 0.8);
+  outline-offset: -4px;
+}
+
+/* Touch Feedback */
+@media (hover: none) {
+  .learn-section:active {
+    transform: scale(0.98);
+  }
+}
