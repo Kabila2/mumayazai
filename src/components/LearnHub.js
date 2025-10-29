@@ -56,9 +56,8 @@ const LearnHub = ({ language, onSectionSelect }) => {
           style={{ background: section.color }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          transition={{ delay: index * 0.15, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+          whileTap={{ scale: 0.99 }}
         >
           <div className="learn-section-content">
             <div className="learn-section-icon">{section.icon}</div>
@@ -68,8 +67,8 @@ const LearnHub = ({ language, onSectionSelect }) => {
             <p className="learn-section-description">
               {language === 'ar' ? section.descriptionAr : section.descriptionEn}
             </p>
-            <div className="learn-section-arrow">→</div>
           </div>
+          <div className="learn-section-decorator"></div>
         </motion.div>
       ))}
     </div>
