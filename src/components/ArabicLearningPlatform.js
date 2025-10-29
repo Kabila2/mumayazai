@@ -43,7 +43,6 @@ const ArabicLearningPlatform = ({
     totalSessions: 0,
     streak: 0
   });
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const platformRef = useRef(null);
 
   // Load user progress from localStorage
@@ -58,43 +57,6 @@ const ArabicLearningPlatform = ({
     }
   }, []);
 
-  // Handle scroll indicator
-  useEffect(() => {
-    const handleScroll = () => {
-      const platform = platformRef.current;
-      if (platform) {
-        const scrollTop = platform.scrollTop;
-        const scrollHeight = platform.scrollHeight;
-        const clientHeight = platform.clientHeight;
-
-        // Show scroll indicator if content is scrollable and not at bottom
-        const isScrollable = scrollHeight > clientHeight;
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-
-        setShowScrollIndicator(isScrollable && !isAtBottom);
-      }
-    };
-
-    const platform = platformRef.current;
-    if (platform) {
-      platform.addEventListener('scroll', handleScroll);
-      // Check initial state
-      handleScroll();
-
-      return () => platform.removeEventListener('scroll', handleScroll);
-    }
-  }, [currentSection]);
-
-  // Smooth scroll to bottom function
-  const scrollToBottom = () => {
-    const platform = platformRef.current;
-    if (platform) {
-      platform.scrollTo({
-        top: platform.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   // Save user progress to localStorage
   const saveProgress = (newProgress) => {
@@ -140,6 +102,22 @@ const ArabicLearningPlatform = ({
   const handleChatModeSwitch = (mode) => {
     setChatMode(mode);
     setCurrentSection(mode === 'text' ? 'chat' : 'voice');
+  };
+
+  // Helper function to animate text letter by letter
+  const animateText = (text) => {
+    return text.split('').map((char, index) => (
+      <span
+        key={index}
+        className="animated-letter"
+        style={{
+          animationDelay: `${index * 0.05}s`,
+          display: 'inline-block'
+        }}
+      >
+        {char === ' ' ? '\u00A0' : char}
+      </span>
+    ));
   };
 
   const renderProgressCard = () => (
@@ -194,13 +172,13 @@ const ArabicLearningPlatform = ({
         transition={{ duration: 0.6 }}
       >
         <h1 className="platform-title">
-          {language === 'ar' ? 'مرحباً بك في منصة تعلم العربية' : 'Welcome to Arabic Learning Platform'}
+          {animateText(language === 'ar' ? 'مرحباً بك في منصة تعلم العربية' : 'Welcome to Arabic Learning Platform')}
         </h1>
         <p className="platform-subtitle">
-          {language === 'ar'
+          {animateText(language === 'ar'
             ? 'تعلم الحروف والألوان العربية بطريقة ممتعة وتفاعلية'
             : 'Learn Arabic letters and colors in a fun and interactive way'
-          }
+          )}
         </p>
       </motion.div>
 
@@ -521,7 +499,7 @@ const ArabicLearningPlatform = ({
 
   return (
     <div className="arabic-learning-platform" ref={platformRef}>
-      {currentSection !== 'learn' && (
+      {currentSection !== 'learn' && currentSection !== 'chat' && currentSection !== 'voice' && (
         <nav className="platform-nav">
         <div className="nav-brand">
           <h2 className="brand-title">
@@ -577,7 +555,7 @@ const ArabicLearningPlatform = ({
       </nav>
       )}
 
-      <main className={`platform-content ${currentSection === 'learn' ? 'fullscreen' : ''}`}>
+      <main className={`platform-content ${(currentSection === 'learn' || currentSection === 'chat' || currentSection === 'voice') ? 'fullscreen' : ''}`}>
         <AnimatePresence mode="wait">
           {currentSection === 'home' && (
             <motion.div
@@ -799,21 +777,8 @@ const ArabicLearningPlatform = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.3 }}
+              style={{ height: '100vh', width: '100vw', margin: 0, padding: 0 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-                <button
-                  className="switch-mode-btn"
-                  onClick={() => handleChatModeSwitch('voice')}
-                >
-                  🎤 {language === 'ar' ? 'الوضع الصوتي' : 'Voice Mode'}
-                </button>
-              </div>
               <ChatInterface
                 t={t}
                 language={language}
@@ -823,6 +788,8 @@ const ArabicLearningPlatform = ({
                 assistantTitle={assistantTitle}
                 currentPreference={currentPreference}
                 onSwitchMode={() => handleChatModeSwitch('voice')}
+                onSignOut={onSignOut}
+                onBack={() => setCurrentSection('home')}
                 customPrompt={getLearningPrompt('general')}
                 isLearningMode={true}
               />
@@ -836,21 +803,8 @@ const ArabicLearningPlatform = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.3 }}
+              style={{ height: '100vh', width: '100vw', margin: 0, padding: 0 }}
             >
-              <div className="section-header">
-                <button
-                  className="back-btn"
-                  onClick={() => setCurrentSection('home')}
-                >
-                  {language === 'ar' ? '← العودة' : '← Back'}
-                </button>
-                <button
-                  className="switch-mode-btn"
-                  onClick={() => handleChatModeSwitch('text')}
-                >
-                  💬 {language === 'ar' ? 'الوضع النصي' : 'Text Mode'}
-                </button>
-              </div>
               <VoiceInterface
                 t={t}
                 language={language}
@@ -869,6 +823,8 @@ const ArabicLearningPlatform = ({
                 assistantTitle={assistantTitle}
                 currentPreference={currentPreference}
                 onSwitchMode={() => handleChatModeSwitch('text')}
+                onSignOut={onSignOut}
+                onBack={() => setCurrentSection('home')}
                 customPrompt={getLearningPrompt('general')}
                 isLearningMode={true}
               />
@@ -876,31 +832,6 @@ const ArabicLearningPlatform = ({
           )}
         </AnimatePresence>
       </main>
-
-      {/* Scroll Down Indicator */}
-      <AnimatePresence>
-        {showScrollIndicator && (
-          <motion.div
-            className="scroll-indicator"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            onClick={scrollToBottom}
-          >
-            <div className="scroll-arrow">
-              <motion.div
-                animate={{ y: [0, 5, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                ↓
-              </motion.div>
-            </div>
-            <div className="scroll-text">
-              {language === 'ar' ? 'مرر للأسفل' : 'Scroll down'}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

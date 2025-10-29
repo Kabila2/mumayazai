@@ -6,8 +6,7 @@
   background: linear-gradient(135deg, #f8f6ff 0%, #f0f4f8 100%);
   border-radius: 0;
   box-shadow: none;
-  min-height: calc(100vh - 140px);
-  max-height: calc(100vh - 140px);
+  min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
@@ -326,6 +325,54 @@
 .english-equivalent strong {
   color: #1f2937;
   font-weight: 700;
+}
+
+/* Mark as Learned Button */
+.mark-learned-btn {
+  width: 100%;
+  padding: 14px 20px;
+  margin: 15px 0;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.mark-learned-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.points-badge {
+  background: rgba(254, 243, 199, 0.3);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fef3c7;
+}
+
+.learned-badge {
+  width: 100%;
+  padding: 14px 20px;
+  margin: 15px 0;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border: 2px solid #10b981;
+  border-radius: 14px;
+  color: #065f46;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
 }
 
 /* Word Section */

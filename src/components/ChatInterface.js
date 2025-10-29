@@ -400,7 +400,8 @@ const ChatInterface = ({
   t = {},
   language = "en",
   reducedMotion = false,
-  onSignOut
+  onSignOut,
+  onBack
 }) => {
 
   // Enhanced translations
@@ -463,7 +464,6 @@ const ChatInterface = ({
   
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showMemoryStatus, setShowMemoryStatus] = useState(false);
   const [showSaveChatModal, setShowSaveChatModal] = useState(false);
@@ -531,24 +531,6 @@ const ChatInterface = ({
     }
   }, [messages, scrollToBottom]);
 
-  // Handle scroll indicator visibility
-  useEffect(() => {
-    if (!isMobile) return;
-    
-    const handleScroll = () => {
-      if (messagesRef.current) {
-        const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
-        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-        setShowScrollIndicator(!isNearBottom && messages.length > 3);
-      }
-    };
-    
-    const container = messagesRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll, { passive: true });
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [messages.length, isMobile]);
 
   // Show memory status notification
   useEffect(() => {
@@ -867,6 +849,20 @@ const ChatInterface = ({
         <div className="header-actions" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
           {/* Left side - Mode buttons */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {onBack && (
+              <motion.button
+                className="header-button white"
+                onClick={onBack}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: reducedMotion ? 0 : 0.2 }}
+              >
+                <span>🏠</span>
+                <span className="button-text">{language === 'ar' ? 'الرئيسية' : 'Home'}</span>
+              </motion.button>
+            )}
 
             {onSwitchMode && (
               <motion.button
@@ -928,6 +924,22 @@ const ChatInterface = ({
               <span>🌟</span>
               <span className="button-text">{tr.explore}</span>
             </motion.button>
+
+            {onBack && (
+              <motion.button
+                className="header-button white exit-fullscreen-button"
+                onClick={onBack}
+                title={language === 'ar' ? 'الخروج من وضع ملء الشاشة' : 'Exit fullscreen'}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: reducedMotion ? 0 : 0.38 }}
+              >
+                <span>✕</span>
+                <span className="button-text">{language === 'ar' ? 'إغلاق' : 'Exit'}</span>
+              </motion.button>
+            )}
           </div>
         </div>
       </motion.header>
@@ -1048,26 +1060,6 @@ const ChatInterface = ({
         </AnimatePresence>
         <div ref={bottomRef} />
       </div>
-
-      {/* Scroll Indicator */}
-      <AnimatePresence>
-        {isMobile && showScrollIndicator && (
-          <motion.div
-            className="scroll-indicator"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => scrollToBottom(true)}
-            whileTap={{ scale: 0.9 }}
-            whileHover={!reducedMotion ? { scale: 1.1, y: -2 } : {}}
-            style={{
-              bottom: keyboardOpen ? '140px' : '120px'
-            }}
-          >
-            ↓
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Professional Input Area */}
       <motion.div

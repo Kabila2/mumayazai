@@ -360,7 +360,13 @@ export const initializeUserStats = (userEmail, userName) => {
         totalPoints: 0,
         learningActivities: {},
         dailyPointsByDate: {},
-        taskStreak: 0
+        taskStreak: 0,
+        // Additional tracking
+        quizzesPassed: 0,
+        lessonsCompleted: 0,
+        wordsLearned: 0,
+        lettersLearned: 0,
+        sentencesLearned: 0
       };
 
       localStorage.setItem(USER_STATS_KEY, JSON.stringify(allStats));
@@ -370,5 +376,74 @@ export const initializeUserStats = (userEmail, userName) => {
   } catch (error) {
     console.error("Error initializing user stats:", error);
     return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get class leaderboard
+ */
+export const getClassLeaderboard = (className) => {
+  try {
+    const teacherData = JSON.parse(localStorage.getItem('mumayaz_teachers') || '{}');
+    const allStats = JSON.parse(localStorage.getItem(USER_STATS_KEY) || '{}');
+
+    // Find students in this class
+    const classStudents = [];
+
+    Object.values(teacherData).forEach(teacher => {
+      if (teacher.classes && teacher.classes[className]) {
+        const studentEmails = teacher.classes[className].students || [];
+        studentEmails.forEach(email => {
+          const emailLower = email.toLowerCase();
+          if (allStats[emailLower]) {
+            classStudents.push({
+              ...allStats[emailLower],
+              totalPoints: (allStats[emailLower].totalPoints || 0) +
+                          (allStats[emailLower].learningPoints || 0) +
+                          (allStats[emailLower].dailyTaskPoints || 0)
+            });
+          }
+        });
+      }
+    });
+
+    // Sort by total points
+    const leaderboard = classStudents.sort((a, b) => b.totalPoints - a.totalPoints);
+
+    return {
+      success: true,
+      leaderboard,
+      totalStudents: classStudents.length
+    };
+  } catch (error) {
+    console.error("Error getting class leaderboard:", error);
+    return {
+      success: false,
+      leaderboard: [],
+      totalStudents: 0
+    };
+  }
+};
+
+/**
+ * Get user's class rank
+ */
+export const getUserClassRank = (userEmail, className) => {
+  try {
+    const classData = getClassLeaderboard(className);
+    if (!classData.success) return { rank: null, totalStudents: 0 };
+
+    const userIndex = classData.leaderboard.findIndex(
+      student => student.email === userEmail.toLowerCase()
+    );
+
+    return {
+      rank: userIndex >= 0 ? userIndex + 1 : null,
+      totalStudents: classData.totalStudents,
+      leaderboard: classData.leaderboard.slice(0, 10)
+    };
+  } catch (error) {
+    console.error("Error getting user class rank:", error);
+    return { rank: null, totalStudents: 0, leaderboard: [] };
   }
 };

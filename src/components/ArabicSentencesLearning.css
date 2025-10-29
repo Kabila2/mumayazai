@@ -13,8 +13,7 @@
   margin: 0;
   padding: 40px 20px;
   background: #ffffff;
-  height: calc(100vh - 140px);
-  max-height: calc(100vh - 140px);
+  min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;

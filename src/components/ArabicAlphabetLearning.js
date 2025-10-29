@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ArabicAlphabetLearning.css';
+import PointNotification from './PointNotification';
+import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
 
 const arabicAlphabet = [
   { letter: 'ا', name: 'ألف', pronunciation: 'alif', english: 'A', word: 'أسد', wordMeaning: 'lion', category: 'vowel' },
@@ -41,10 +43,28 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   const [favorites, setFavorites] = useState([]);
   const [viewMode, setViewMode] = useState('card'); // 'card' or 'grid'
   const [recentLetters, setRecentLetters] = useState([]);
+  const [learnedLetters, setLearnedLetters] = useState([]);
+  const [userEmail, setUserEmail] = useState(null);
   const containerRef = useRef(null);
   const searchInputRef = useRef(null);
 
   const currentLetter = arabicAlphabet[currentIndex];
+
+  // Get user email on mount
+  useEffect(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+      if (session.email) {
+        setUserEmail(session.email);
+
+        // Load learned letters
+        const learned = JSON.parse(localStorage.getItem(`alphabet_learned_${session.email}`) || '[]');
+        setLearnedLetters(learned);
+      }
+    } catch (error) {
+      console.error("Error loading user:", error);
+    }
+  }, []);
 
   // Load favorites from localStorage
   useEffect(() => {
@@ -173,10 +193,47 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
   const nextLetter = () => {
     setCurrentIndex((prev) => (prev + 1) % arabicAlphabet.length);
+    markLetterAsViewed();
   };
 
   const previousLetter = () => {
     setCurrentIndex((prev) => (prev - 1 + arabicAlphabet.length) % arabicAlphabet.length);
+    markLetterAsViewed();
+  };
+
+  // Mark letter as learned and award points
+  const markLetterAsLearned = () => {
+    if (!userEmail || learnedLetters.includes(currentLetter.letter)) return;
+
+    const newLearned = [...learnedLetters, currentLetter.letter];
+    setLearnedLetters(newLearned);
+
+    localStorage.setItem(`alphabet_learned_${userEmail}`, JSON.stringify(newLearned));
+
+    // Award points for learning a letter
+    awardPoints(userEmail, 'LETTER_LEARNED');
+
+    // Check if completed all letters
+    if (newLearned.length === arabicAlphabet.length) {
+      awardPoints(userEmail, 'MODULE_COMPLETED');
+    }
+  };
+
+  // Mark letter as viewed (for tracking activity)
+  const markLetterAsViewed = () => {
+    if (!userEmail) return;
+
+    // Award points for first-time viewing
+    const viewedKey = `alphabet_viewed_${userEmail}`;
+    const viewed = JSON.parse(localStorage.getItem(viewedKey) || '[]');
+
+    if (!viewed.includes(currentLetter.letter)) {
+      viewed.push(currentLetter.letter);
+      localStorage.setItem(viewedKey, JSON.stringify(viewed));
+
+      // Small points for viewing
+      awardPoints(userEmail, 'LETTER_LEARNED', 0.2); // 1 point for viewing
+    }
   };
 
   // Filter letters based on search
@@ -193,6 +250,8 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
   return (
     <div className="arabic-alphabet-learning" ref={containerRef}>
+      {/* Point Notification */}
+      {userEmail && <PointNotification userEmail={userEmail} language={language} />}
       <div className="learning-header">
         <h2 className="learning-title">
           {language === 'ar' ? 'تعلم الحروف العربية' : 'Learn Arabic Alphabet'}
@@ -335,6 +394,28 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
                   {language === 'ar' ? 'بالإنجليزية' : 'English'}: <strong>{currentLetter.english}</strong>
                 </div>
               </div>
+
+              {/* Mark as Learned Button */}
+              {userEmail && !learnedLetters.includes(currentLetter.letter) && (
+                <motion.button
+                  className="mark-learned-btn"
+                  onClick={markLetterAsLearned}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  ✓ {language === 'ar' ? 'علّم كمتعلم' : 'Mark as Learned'}
+                  <span className="points-badge">+{POINT_VALUES.LETTER_LEARNED}</span>
+                </motion.button>
+              )}
+
+              {userEmail && learnedLetters.includes(currentLetter.letter) && (
+                <div className="learned-badge">
+                  ✓ {language === 'ar' ? 'متعلم' : 'Learned'}
+                </div>
+              )}
 
               <AnimatePresence mode="wait">
                 {showWord && (

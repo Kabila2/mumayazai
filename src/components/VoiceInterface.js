@@ -441,7 +441,8 @@ export default function VoiceInterface({
   fontSize,
   reducedMotion,
   onSwitchMode,
-  onSignOut
+  onSignOut,
+  onBack
 }) {
   console.log("🎯 New VoiceInterface initialized");
 
@@ -1107,6 +1108,13 @@ export default function VoiceInterface({
 
   // Navigation Configuration - Split into left and right groups
   const leftButtons = [
+    ...(onBack ? [{
+      id: 'home',
+      icon: '🏠',
+      label: language === 'ar' ? 'الرئيسية' : 'Home',
+      onClick: onBack,
+      variant: 'white'
+    }] : []),
     {
       id: 'chat-mode',
       icon: '💬',
@@ -1132,7 +1140,15 @@ export default function VoiceInterface({
       onClick: () => setShowExploreModal(true),
       variant: 'white',
       className: 'explore-button'
-    }
+    },
+    ...(onBack ? [{
+      id: 'exit',
+      icon: '✕',
+      label: language === 'ar' ? 'إغلاق' : 'Exit',
+      onClick: onBack,
+      variant: 'white',
+      className: 'exit-fullscreen-button'
+    }] : [])
   ];
 
   return (
