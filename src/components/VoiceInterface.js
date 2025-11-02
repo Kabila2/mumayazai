@@ -3,6 +3,11 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import ExploreModal from './ExploreModal';
 import SaveVoiceChatModal from './SaveVoiceChatModal';
+import { awardPoints } from '../utils/pointsUtils';
+import {
+  initializeUserStats,
+  recordMessage
+} from '../utils/leaderboardUtils';
 import "./VoiceInterface.css";
 import "./ChatInterface.css";
 
@@ -632,6 +637,13 @@ export default function VoiceInterface({
       const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
       if (session.email) {
         setUserEmail(session.email);
+
+        // Initialize user stats if they don't exist
+        const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+        const user = users[session.email.toLowerCase()];
+        if (user) {
+          initializeUserStats(session.email, user.name);
+        }
       }
     } catch (error) {
       console.error("Error loading user session:", error);
@@ -732,7 +744,7 @@ export default function VoiceInterface({
         recognition.onerror = null;
       }
     };
-  }, [language]);
+  }, [language, handleVoiceInput]);
 
   // Audio Level Monitoring
   useEffect(() => {
@@ -1005,6 +1017,12 @@ export default function VoiceInterface({
       saveVoiceConversationMemory(updated);
       return updated;
     });
+
+    // Track message and award points
+    if (userEmail) {
+      recordMessage(userEmail);
+      awardPoints(userEmail, 'VOICE_MESSAGE');
+    }
 
     try {
       // Build conversation context from ALL previous messages (like chat interface)

@@ -532,6 +532,464 @@
   margin-bottom: 2rem;
 }
 
+/* Match Pairs Game - Ultra Modern Design */
+.matching-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 25%, #ec4899 50%, #f59e0b 75%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 1rem;
+  animation: gradientFlow 8s ease infinite;
+  background-size: 300% 300%;
+  letter-spacing: -0.5px;
+  position: relative;
+  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.3));
+}
+
+@keyframes gradientFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.matching-instructions {
+  text-align: center;
+  font-size: 1.05rem;
+  color: #64748b;
+  margin: 0 auto 3rem;
+  padding: 1.8rem 2.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    0 8px 32px rgba(99, 102, 241, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  max-width: 600px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.matching-instructions::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 24px;
+  padding: 2px;
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.4) 0%,
+    rgba(139, 92, 246, 0.4) 25%,
+    rgba(236, 72, 153, 0.4) 50%,
+    rgba(245, 158, 11, 0.4) 75%,
+    rgba(99, 102, 241, 0.4) 100%);
+  background-size: 200% 200%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: borderFlow 4s ease infinite;
+  z-index: -1;
+}
+
+@keyframes borderFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.matching-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
+  perspective: 1200px;
+}
+
+.matching-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  padding: 3rem 2rem;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+  transform-style: preserve-3d;
+  backdrop-filter: blur(10px);
+}
+
+/* Gradient orb background effect */
+.matching-card::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 24px;
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.08) 0%,
+    rgba(139, 92, 246, 0.08) 50%,
+    rgba(236, 72, 153, 0.08) 100%);
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: 0;
+}
+
+/* Glass reflection effect */
+.matching-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  transition: left 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: 1;
+}
+
+.matching-card:hover::before {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.matching-card:hover::after {
+  left: 100%;
+}
+
+.matching-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow:
+    0 20px 60px rgba(99, 102, 241, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.matching-card:active {
+  transform: translateY(-4px) scale(1.01);
+  transition: all 0.15s ease;
+}
+
+.matching-card.selected {
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.15) 0%,
+    rgba(139, 92, 246, 0.15) 100%);
+  border: 2px solid #6366f1;
+  transform: translateY(-12px) scale(1.06);
+  box-shadow:
+    0 24px 70px rgba(99, 102, 241, 0.25),
+    0 12px 30px rgba(99, 102, 241, 0.15),
+    0 0 0 4px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: selectedGlow 2s ease-in-out infinite;
+}
+
+@keyframes selectedGlow {
+  0%, 100% {
+    box-shadow:
+      0 24px 70px rgba(99, 102, 241, 0.25),
+      0 12px 30px rgba(99, 102, 241, 0.15),
+      0 0 0 4px rgba(99, 102, 241, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  50% {
+    box-shadow:
+      0 24px 70px rgba(99, 102, 241, 0.35),
+      0 12px 30px rgba(99, 102, 241, 0.25),
+      0 0 0 6px rgba(99, 102, 241, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+}
+
+.matching-card.matched {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white !important;
+  border: 2px solid #10b981;
+  cursor: default;
+  animation: matchCelebrate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+             matchPulse 2s ease-in-out 0.6s infinite;
+  box-shadow:
+    0 20px 60px rgba(16, 185, 129, 0.3),
+    0 8px 24px rgba(16, 185, 129, 0.2),
+    0 0 0 1px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.matching-card.matched::before {
+  display: none;
+}
+
+@keyframes matchCelebrate {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.15) rotate(-8deg);
+  }
+  60% {
+    transform: scale(1.1) rotate(8deg);
+  }
+  100% {
+    transform: scale(1.05) rotate(0deg);
+  }
+}
+
+@keyframes matchPulse {
+  0%, 100% {
+    transform: scale(1.05);
+    box-shadow:
+      0 20px 60px rgba(16, 185, 129, 0.3),
+      0 8px 24px rgba(16, 185, 129, 0.2),
+      0 0 0 1px rgba(16, 185, 129, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 24px 70px rgba(16, 185, 129, 0.4),
+      0 12px 30px rgba(16, 185, 129, 0.3),
+      0 0 0 1px rgba(16, 185, 129, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+.matching-card.matched:hover {
+  transform: scale(1.06);
+}
+
+/* Particle burst effect for matched cards */
+.matching-card.matched::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.8) 0%,
+    transparent 70%);
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  animation: particleBurst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes particleBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+.card-content {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  word-break: break-word;
+  z-index: 2;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  color: #1e293b;
+  letter-spacing: -0.3px;
+}
+
+.matching-card:hover .card-content {
+  transform: scale(1.08);
+  color: #6366f1;
+}
+
+.matching-card.matched .card-content {
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.match-checkmark {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #10b981;
+  box-shadow:
+    0 4px 16px rgba(16, 185, 129, 0.3),
+    0 0 0 3px rgba(16, 185, 129, 0.2);
+  animation: checkmarkAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 3;
+}
+
+@keyframes checkmarkAppear {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25) rotate(15deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.game-complete {
+  text-align: center;
+  padding: 4rem 3rem;
+  background: linear-gradient(135deg,
+    rgba(251, 191, 36, 0.15) 0%,
+    rgba(245, 158, 11, 0.15) 100%);
+  border-radius: 32px;
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  margin-top: 3rem;
+  box-shadow:
+    0 20px 60px rgba(245, 158, 11, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  animation: completePulse 2s ease-in-out infinite;
+}
+
+.game-complete::before {
+  content: '🎊';
+  position: absolute;
+  font-size: 5rem;
+  animation: confettiDance 4s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.game-complete::after {
+  content: '🎉';
+  position: absolute;
+  font-size: 5rem;
+  animation: confettiDance 4s ease-in-out infinite 2s;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes completePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 20px 60px rgba(245, 158, 11, 0.2),
+      0 8px 24px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow:
+      0 24px 70px rgba(245, 158, 11, 0.3),
+      0 12px 30px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+}
+
+@keyframes confettiDance {
+  0% {
+    top: -10%;
+    left: 10%;
+    opacity: 0;
+    transform: rotate(0deg) scale(0);
+  }
+  15% {
+    opacity: 1;
+    transform: rotate(120deg) scale(1);
+  }
+  45% {
+    top: 50%;
+    left: 25%;
+    transform: rotate(300deg) scale(1.3);
+  }
+  75% {
+    opacity: 1;
+    transform: rotate(480deg) scale(0.9);
+  }
+  100% {
+    top: 110%;
+    left: 40%;
+    opacity: 0;
+    transform: rotate(720deg) scale(0);
+  }
+}
+
+.game-complete h3 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  animation: completeTitle 1.5s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes completeTitle {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.03);
+  }
+}
+
+/* Responsive adjustments for matching */
+@media (max-width: 768px) {
+  .matching-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+
+  .matching-card {
+    padding: 1.5rem 1rem;
+    min-height: 100px;
+  }
+
+  .card-content {
+    font-size: 1.1rem;
+  }
+
+  .matching-instructions {
+    font-size: 0.95rem;
+    margin: 1rem 0 1.5rem;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .quiz-center {

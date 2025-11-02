@@ -9,6 +9,11 @@ export default function ShinyText({ textEN, textAR, showArabic }) {
   return (
     <motion.h1
       className="shiny-text"
+      lang={showArabic ? "ar" : "en"}
+      dir={showArabic ? "rtl" : "ltr"}
+      style={{
+        fontFamily: showArabic ? "'Cairo', 'Tajawal', 'Amiri', sans-serif" : "'Inter', sans-serif"
+      }}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}

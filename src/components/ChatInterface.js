@@ -16,6 +16,7 @@ import {
   recordMessage,
   recordChatSession
 } from '../utils/leaderboardUtils';
+import { awardPoints } from '../utils/pointsUtils';
 
 /** ---------- Enhanced Memory System ---------- */
 const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
@@ -412,8 +413,8 @@ const ChatInterface = ({
       placeholder: "Type your message here...",
       send: "Send Message",
       saveChat: "Save Conversation",
-      clearChat: "Clear History",
       explore: "Explore",
+      clearChat: "Clear History",
       voiceMode: "Switch to Voice",
       thinking: "Thinking...",
       memoryEnabled: "Context memory is active",
@@ -430,8 +431,8 @@ const ChatInterface = ({
       placeholder: "اكتب رسالتك هنا...",
       send: "إرسال الرسالة",
       saveChat: "حفظ المحادثة",
-      clearChat: "مسح المحفوظات",
       explore: "استكشاف",
+      clearChat: "مسح المحفوظات",
       voiceMode: "التبديل للصوت",
       thinking: "أفكر...",
       memoryEnabled: "ذاكرة السياق نشطة",
@@ -654,9 +655,10 @@ const ChatInterface = ({
       return updated;
     });
 
-    // Track message for leaderboard
+    // Track message for leaderboard and award points
     if (userEmail) {
       recordMessage(userEmail);
+      awardPoints(userEmail, 'MESSAGE_SENT');
     }
 
     // Track activity for child users
@@ -1040,7 +1042,7 @@ const ChatInterface = ({
                     ))}
                   </motion.div>
                 )}
-                
+                  
                 {/* Message metadata */}
                 {index > 0 && (
                   <div style={{

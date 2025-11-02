@@ -15,8 +15,49 @@
   background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   /* Continuous light sweep animation */
   animation: shine 3s infinite;
+  /* Fix Arabic text ligature rendering */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: normal;
+  font-variant-ligatures: normal;
+  /* Enable proper Arabic text shaping and kerning */
+  font-kerning: normal;
+  text-align: inherit;
+  white-space: normal;
+  /* Ensure proper bidi handling for Arabic text */
+  unicode-bidi: embed;
+}
+
+/* Additional rules for Arabic text specifically - remove animation effects */
+.shiny-text[lang="ar"] {
+  /* Reset background clip effects that break ligatures */
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  background-clip: unset;
+  /* Use solid color with glow instead */
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+               0 0 40px rgba(245, 212, 145, 0.3);
+  animation: textGlow 3s infinite;
+  /* Enable proper Arabic ligatures */
+  font-feature-settings: "liga" 1, "calt" 1, "ccmp" 1;
+  font-variant-ligatures: common-ligatures contextual;
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+                 0 0 40px rgba(245, 212, 145, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
+                 0 0 60px rgba(245, 212, 145, 0.5);
+  }
 }
 
 @keyframes shine {

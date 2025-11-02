@@ -14,8 +14,34 @@ import CollaborativeDrawingBoard from "./CollaborativeDrawingBoard";
 import SentenceBuilder from "./SentenceBuilder";
 import LetterWordBuilder from "./LetterWordBuilder";
 import QuizCenter from "./QuizCenter";
+import TeacherParentChat from "./TeacherParentChat";
+import DarkModeToggle from "./DarkModeToggle";
+import SoundToggle from "./SoundToggle";
+import ProfilePictureUpload from "./ProfilePictureUpload";
+import StreakCounter from "./StreakCounter";
+import DataManagement from "./DataManagement";
+import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
+/**
+ * PLATFORM ACCESS LEVELS:
+ *
+ * ALL USERS (Students, Teachers, Parents, Children):
+ * - Full access to all learning components:
+ *   ✓ Alphabet, Colors, Words, Sentences
+ *   ✓ Word Builder, Memory Game, Quiz Center
+ *   ✓ Drawing Board, Chat Assistant, Voice Assistant
+ *   ✓ Points Tracker, Leaderboard
+ *
+ * TEACHERS & PARENTS ONLY (Additional Features):
+ * - Teacher-Parent Communication (exclusive messaging system)
+ * - Unread message notifications
+ * - Account role badges
+ *
+ * This ensures teachers and parents can:
+ * 1. Learn and explore content just like students
+ * 2. PLUS communicate with each other about student progress
+ */
 const ArabicLearningPlatform = ({
   t,
   language,
@@ -35,8 +61,12 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
+  const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
+  const [showDataManagement, setShowDataManagement] = useState(false);
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
     colorsProgress: 0,
@@ -55,6 +85,54 @@ const ArabicLearningPlatform = ({
         console.warn('Failed to load user progress:', error);
       }
     }
+  }, []);
+
+  // Monitor unread messages count
+  useEffect(() => {
+    const updateUnreadCount = () => {
+      const count = parseInt(localStorage.getItem('mumayaz_unread_messages') || '0', 10);
+      setUnreadMessagesCount(count);
+    };
+
+    // Initial load
+    updateUnreadCount();
+
+    // Listen for storage changes
+    window.addEventListener('storage', updateUnreadCount);
+
+    // Poll every 3 seconds as backup
+    const interval = setInterval(updateUnreadCount, 3000);
+
+    return () => {
+      window.removeEventListener('storage', updateUnreadCount);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Load and monitor profile picture
+  useEffect(() => {
+    const loadProfilePicture = () => {
+      const userEmail = getCurrentUserEmail();
+      if (userEmail) {
+        const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+        const user = users[userEmail.toLowerCase()];
+        setCurrentProfilePicture(user?.profilePicture || null);
+      }
+    };
+
+    // Initial load
+    loadProfilePicture();
+
+    // Listen for profile picture updates
+    const handleProfileUpdate = () => {
+      loadProfilePicture();
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
+    };
   }, []);
 
 
@@ -93,15 +171,46 @@ const ArabicLearningPlatform = ({
   };
 
   const handleSectionChange = (section) => {
+    playClickSound(); // Play click sound on section change
     setCurrentSection(section);
     if (section === 'alphabet' || section === 'colors') {
       updateSessionCount();
+    }
+    // Play whoosh for transitions
+    if (section !== 'home') {
+      setTimeout(() => playWhooshSound(), 100);
     }
   };
 
   const handleChatModeSwitch = (mode) => {
     setChatMode(mode);
     setCurrentSection(mode === 'text' ? 'chat' : 'voice');
+  };
+
+  // Get current user email from session
+  const getCurrentUserEmail = () => {
+    try {
+      const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+      return session.email || null;
+    } catch (error) {
+      console.error('Error getting user email:', error);
+      return null;
+    }
+  };
+
+  // Get current user role
+  const getCurrentUserRole = () => {
+    try {
+      const userEmail = getCurrentUserEmail();
+      if (!userEmail) return null;
+
+      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const user = users[userEmail.toLowerCase()];
+      return user?.role || null;
+    } catch (error) {
+      console.error('Error getting user role:', error);
+      return null;
+    }
   };
 
   // Helper function to animate text letter by letter
@@ -163,26 +272,66 @@ const ArabicLearningPlatform = ({
     </motion.div>
   );
 
-  const renderHomeSection = () => (
-    <div className="home-section">
-      <motion.div
-        className="welcome-header"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h1 className="platform-title">
-          {animateText(language === 'ar' ? 'مرحباً بك في منصة تعلم العربية' : 'Welcome to Arabic Learning Platform')}
-        </h1>
-        <p className="platform-subtitle">
-          {animateText(language === 'ar'
-            ? 'تعلم الحروف والألوان العربية بطريقة ممتعة وتفاعلية'
-            : 'Learn Arabic letters and colors in a fun and interactive way'
+  const renderHomeSection = () => {
+    const userRole = getCurrentUserRole();
+    const isTeacherOrParent = userRole === 'teacher' || userRole === 'parent';
+
+    return (
+      <div className="home-section">
+        <motion.div
+          className="welcome-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h1
+            className="platform-title"
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
+            lang={language === 'ar' ? 'ar' : 'en'}
+          >
+            {language === 'ar' ? 'مرحباً بك في منصة تعلم العربية' : 'Welcome to Arabic Learning Platform'}
+          </h1>
+          <p
+            className="platform-subtitle"
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
+            lang={language === 'ar' ? 'ar' : 'en'}
+          >
+            {isTeacherOrParent ? (
+              language === 'ar'
+                ? 'تعلم واستكشف المحتوى التعليمي، وتواصل مع أولياء الأمور والمعلمين'
+                : 'Learn and explore educational content, plus communicate with parents and teachers'
+            ) : (
+              language === 'ar'
+                ? 'تعلم الحروف والألوان العربية بطريقة ممتعة وتفاعلية'
+                : 'Learn Arabic letters and colors in a fun and interactive way'
+            )}
+          </p>
+          {isTeacherOrParent && (
+            <motion.p
+              className="platform-role-badge"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {userRole === 'teacher'
+                ? (language === 'ar' ? '👨‍🏫 حساب معلم' : '👨‍🏫 Teacher Account')
+                : (language === 'ar' ? '👨‍👩‍👧‍👦 حساب ولي أمر' : '👨‍👩‍👧‍👦 Parent Account')
+              }
+            </motion.p>
           )}
-        </p>
-      </motion.div>
+        </motion.div>
 
       {renderProgressCard()}
+
+      {/* Enhanced Streak Counter */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        style={{ marginTop: '30px' }}
+      >
+        <StreakCounter language={language} />
+      </motion.div>
 
       <div className="learning-sections">
         <motion.div
@@ -453,6 +602,34 @@ const ArabicLearningPlatform = ({
             </button>
           </div>
         </motion.div>
+
+        {/* Only show Teacher-Parent Communication for teachers and parents */}
+        {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
+          <motion.div
+            className="section-card teacherchat-card"
+            onClick={() => handleSectionChange('teacherchat')}
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5 }}
+            style={{ position: 'relative' }}
+          >
+            {unreadMessagesCount > 0 && (
+              <div className="card-unread-badge">{unreadMessagesCount}</div>
+            )}
+            <div className="card-icon">👨‍🏫👨‍👩‍👧‍👦</div>
+            <h3 className="card-title">
+              {language === 'ar' ? 'التواصل بين المعلمين والأهل' : 'Teacher-Parent Communication'}
+            </h3>
+            <p className="card-description">
+              {language === 'ar'
+                ? 'تواصل مع المعلمين والأهل بسهولة'
+                : 'Connect with teachers and parents easily'
+              }
+            </p>
+          </motion.div>
+        )}
       </div>
 
       <motion.div
@@ -495,11 +672,12 @@ const ArabicLearningPlatform = ({
         </div>
       </motion.div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="arabic-learning-platform" ref={platformRef}>
-      {currentSection !== 'learn' && currentSection !== 'chat' && currentSection !== 'voice' && (
+      {currentSection !== 'learn' && currentSection !== 'chat' && currentSection !== 'voice' && currentSection !== 'teacherchat' && (
         <nav className="platform-nav">
         <div className="nav-brand">
           <h2 className="brand-title">
@@ -512,7 +690,7 @@ const ArabicLearningPlatform = ({
             className={`nav-link ${currentSection === 'home' ? 'active' : ''}`}
             onClick={() => setCurrentSection('home')}
           >
-            {language === 'ar' ? 'الرئيسية' : 'Home'}
+            🏠 {language === 'ar' ? 'الرئيسية' : 'Home'}
           </button>
           <button
             className={`nav-link ${['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'active' : ''}`}
@@ -539,23 +717,71 @@ const ArabicLearningPlatform = ({
             className={`nav-link ${currentSection === 'drawing' ? 'active' : ''}`}
             onClick={() => setCurrentSection('drawing')}
           >
-            {language === 'ar' ? 'لوحة الرسم' : 'Drawing Board'}
+            🎨 {language === 'ar' ? 'لوحة الرسم' : 'Drawing Board'}
           </button>
           <button
             className={`nav-link ${(currentSection === 'chat' || currentSection === 'voice') ? 'active' : ''}`}
             onClick={() => setCurrentSection(chatMode === 'text' ? 'chat' : 'voice')}
           >
-            {language === 'ar' ? 'المساعد' : 'Assistant'}
+            🤖 {language === 'ar' ? 'المساعد' : 'Assistant'}
           </button>
+          {/* Only show Communication link for teachers and parents */}
+          {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
+            <button
+              className={`nav-link ${currentSection === 'teacherchat' ? 'active' : ''}`}
+              onClick={() => setCurrentSection('teacherchat')}
+              style={{
+                background: currentSection === 'teacherchat' ? 'linear-gradient(135deg, #ec4899, #f472b6)' : '',
+                position: 'relative'
+              }}
+            >
+              👨‍🏫 {language === 'ar' ? 'التواصل' : 'Communication'}
+              {unreadMessagesCount > 0 && (
+                <span className="nav-unread-badge">{unreadMessagesCount}</span>
+              )}
+            </button>
+          )}
         </div>
 
-        <button className="sign-out-btn" onClick={onSignOut}>
-          {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            className="profile-picture-btn"
+            onClick={() => {
+              playClickSound();
+              setShowProfilePictureModal(true);
+            }}
+            title={language === 'ar' ? 'الصورة الشخصية' : 'Profile Picture'}
+          >
+            {currentProfilePicture ? (
+              currentProfilePicture.startsWith('data:') ? (
+                <img src={currentProfilePicture} alt="Profile" className="profile-pic-small" />
+              ) : (
+                <span className="profile-emoji">{currentProfilePicture}</span>
+              )
+            ) : (
+              <span className="profile-emoji">👤</span>
+            )}
+          </button>
+          <button
+            className="data-management-btn"
+            onClick={() => {
+              playClickSound();
+              setShowDataManagement(true);
+            }}
+            title={language === 'ar' ? 'إدارة البيانات' : 'Data Management'}
+          >
+            💾
+          </button>
+          <SoundToggle language={language} />
+          <DarkModeToggle language={language} />
+          <button className="sign-out-btn" onClick={onSignOut}>
+            🚪 {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
+          </button>
+        </div>
       </nav>
       )}
 
-      <main className={`platform-content ${(currentSection === 'learn' || currentSection === 'chat' || currentSection === 'voice') ? 'fullscreen' : ''}`}>
+      <main className={`platform-content ${(currentSection === 'learn' || currentSection === 'chat' || currentSection === 'voice' || currentSection === 'teacherchat') ? 'fullscreen' : ''}`}>
         <AnimatePresence mode="wait">
           {currentSection === 'home' && (
             <motion.div
@@ -766,6 +992,7 @@ const ArabicLearningPlatform = ({
                 highContrast={highContrast}
                 reducedMotion={reducedMotion}
                 speak={speak}
+                userEmail={getCurrentUserEmail()}
               />
             </motion.div>
           )}
@@ -830,8 +1057,50 @@ const ArabicLearningPlatform = ({
               />
             </motion.div>
           )}
+
+          {currentSection === 'teacherchat' && (
+            <motion.div
+              key="teacherchat"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+              style={{ height: '100vh', width: '100vw', margin: 0, padding: 0 }}
+            >
+              <TeacherParentChat
+                currentUserEmail={getCurrentUserEmail()}
+                userRole={getCurrentUserRole()}
+                language={language}
+                onBack={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
+
+      {/* Profile Picture Modal */}
+      <AnimatePresence>
+        {showProfilePictureModal && (
+          <ProfilePictureUpload
+            currentUser={getCurrentUserEmail()}
+            onUpdate={(imageData) => {
+              setCurrentProfilePicture(imageData);
+            }}
+            onClose={() => setShowProfilePictureModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Data Management Modal */}
+      <AnimatePresence>
+        {showDataManagement && (
+          <DataManagement
+            userEmail={getCurrentUserEmail()}
+            language={language}
+            onClose={() => setShowDataManagement(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

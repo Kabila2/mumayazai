@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LeaderboardModal from './LeaderboardModal';
-import LearnModal from './LearnModal';
 import DailyTasksModal from './DailyTasksModal';
 import SavedChatsModal from './SavedChatsModal';
 import "./ExploreModal.css";
@@ -26,14 +25,6 @@ export default function ExploreModal({ isOpen, onClose, currentUserEmail, t, lan
       icon: '📋',
       color: '#4CAF50',
       gradient: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)'
-    },
-    {
-      id: 'learn',
-      title: language === 'en' ? 'Learning Center' : 'مركز التعلم',
-      description: language === 'en' ? 'Expand your knowledge with lessons' : 'وسع معرفتك مع الدروس',
-      icon: '🎓',
-      color: '#2196F3',
-      gradient: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)'
     },
     {
       id: 'savedChats',
@@ -345,14 +336,6 @@ export default function ExploreModal({ isOpen, onClose, currentUserEmail, t, lan
         isOpen={activeModal === 'leaderboard'}
         onClose={handleModalClose}
         currentUserEmail={currentUserEmail}
-        t={t}
-        language={language}
-      />
-
-      <LearnModal
-        isOpen={activeModal === 'learn'}
-        onClose={handleModalClose}
-        userEmail={currentUserEmail}
         t={t}
         language={language}
       />

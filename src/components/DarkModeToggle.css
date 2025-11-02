@@ -1,0 +1,220 @@
+.dark-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode-toggle:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: #8b5cf6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.toggle-icon {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-label {
+  white-space: nowrap;
+}
+
+/* Dark Mode Styles */
+:root.dark-mode {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-color: #475569;
+  --card-bg: #1e293b;
+  --hover-bg: #334155;
+  --gradient-start: #6366f1;
+  --gradient-end: #8b5cf6;
+}
+
+.dark-mode {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark-mode .dark-mode-toggle {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: var(--text-primary);
+}
+
+.dark-mode .dark-mode-toggle:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: #8b5cf6;
+}
+
+/* Dark mode for platform components */
+.dark-mode .arabic-learning-platform {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+}
+
+.dark-mode .platform-nav,
+.dark-mode .welcome-header,
+.dark-mode .section-card,
+.dark-mode .progress-card,
+.dark-mode .fun-facts {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .section-card:hover {
+  background: var(--hover-bg);
+}
+
+.dark-mode .platform-title {
+  color: #a78bfa;
+  background: linear-gradient(135deg, #a78bfa, #ec4899, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark-mode .platform-subtitle,
+.dark-mode .card-title,
+.dark-mode .card-description,
+.dark-mode .stat-label {
+  color: var(--text-secondary);
+}
+
+.dark-mode .nav-link {
+  color: var(--text-secondary);
+}
+
+.dark-mode .nav-link:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.dark-mode .nav-link.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.dark-mode .progress-bar {
+  background: var(--bg-tertiary);
+}
+
+/* Dark mode for chat interface */
+.dark-mode .chat-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.dark-mode .chat-header,
+.dark-mode .chat-input-area {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.dark-mode .chat-bubble {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.dark-mode .message-container.user .chat-bubble {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+/* Dark mode for teacher-parent chat */
+.dark-mode .teacher-parent-chat {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+}
+
+.dark-mode .chat-comm-header,
+.dark-mode .conversations-sidebar,
+.dark-mode .messages-area,
+.dark-mode .conversation-header-bar {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.dark-mode .conversation-item {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .conversation-item:hover {
+  background: var(--hover-bg);
+}
+
+.dark-mode .conversation-item.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+  border-color: #8b5cf6;
+}
+
+.dark-mode .message-bubble-container.received .message-bubble {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .message-input {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .message-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Dark mode for modals */
+.dark-mode .new-conversation-modal,
+.dark-mode .modal-overlay {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.dark-mode .modal-header,
+.dark-mode .modal-body {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.dark-mode .search-input,
+.dark-mode .search-input-small {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .user-item {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .user-item:hover {
+  background: var(--hover-bg);
+}
+
+/* Responsive dark mode toggle */
+@media (max-width: 768px) {
+  .dark-mode-toggle .toggle-label {
+    display: none;
+  }
+
+  .dark-mode-toggle {
+    padding: 10px;
+    min-width: 44px;
+    justify-content: center;
+  }
+}

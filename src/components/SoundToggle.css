@@ -1,0 +1,58 @@
+.sound-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sound-toggle:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.sound-icon {
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sound-label {
+  white-space: nowrap;
+}
+
+/* Dark mode styles */
+.dark-mode .sound-toggle {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: var(--text-primary);
+}
+
+.dark-mode .sound-toggle:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: #10b981;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sound-toggle .sound-label {
+    display: none;
+  }
+
+  .sound-toggle {
+    padding: 10px;
+    min-width: 44px;
+    justify-content: center;
+  }
+}

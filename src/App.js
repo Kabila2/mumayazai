@@ -284,30 +284,9 @@ export default function App() {
     );
   }
 
-  // Check user role and route to appropriate dashboard
+  // All users (students, teachers, parents) get the same learning platform
+  // Teachers and parents get EXTRA features (communication) built into the platform
   const userRole = localStorage.getItem("mumayaz_role");
-
-  if (userRole === "parent") {
-    return (
-      <ParentDashboard
-        onSignOut={handleSignOut}
-        t={t}
-        language={appLanguage}
-        reducedMotion={reducedMotion}
-      />
-    );
-  }
-
-  if (userRole === "teacher") {
-    return (
-      <TeacherDashboard
-        onSignOut={handleSignOut}
-        t={t}
-        language={appLanguage}
-        reducedMotion={reducedMotion}
-      />
-    );
-  }
 
   let content;
   if (view === "chat") {

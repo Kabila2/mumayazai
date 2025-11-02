@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { awardPoints } from '../utils/pointsUtils';
 import './QuizCenter.css';
 
-const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
+const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak, userEmail }) => {
   const [selectedQuizType, setSelectedQuizType] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -114,11 +115,18 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { word: 'jeem', scrambled: 'mejе', arabic: 'ج', hint: 'Fifth letter of Arabic alphabet' }
       ],
       recall: [
-        { arabic: 'أ', english: 'alif', hint: 'First letter' },
-        { arabic: 'ب', english: 'ba', hint: 'Second letter' },
-        { arabic: 'ت', english: 'ta', hint: 'Third letter' },
-        { arabic: 'ث', english: 'tha', hint: 'Fourth letter' },
-        { arabic: 'ج', english: 'jeem', hint: 'Fifth letter' }
+        { arabic: 'أ', english: 'alif', hint: 'First letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 0 },
+        { arabic: 'ب', english: 'ba', hint: 'Second letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 1 },
+        { arabic: 'ت', english: 'ta', hint: 'Third letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 2 },
+        { arabic: 'ث', english: 'tha', hint: 'Fourth letter', options: ['ba', 'ta', 'tha', 'jeem'], correct: 2 },
+        { arabic: 'ج', english: 'jeem', hint: 'Fifth letter', options: ['tha', 'jeem', 'ha', 'kha'], correct: 1 }
+      ],
+      fillBlanks: [
+        { sentence: 'The first letter of Arabic is _____.', arabic: 'أ', options: ['alif', 'ba', 'ta', 'tha'], correct: 0 },
+        { sentence: 'The sound "ba" is written as _____.', arabic: 'ب', options: ['أ', 'ب', 'ت', 'ث'], correct: 1 },
+        { sentence: 'The third letter is pronounced _____.', arabic: 'ت', options: ['alif', 'ba', 'ta', 'tha'], correct: 2 },
+        { sentence: 'The letter ث sounds like _____.', arabic: 'ث', options: ['ba', 'ta', 'tha', 'jeem'], correct: 2 },
+        { sentence: 'The fifth Arabic letter is _____.', arabic: 'ج', options: ['tha', 'jeem', 'ha', 'kha'], correct: 1 }
       ],
       matching: [
         { arabic: 'أ', english: 'alif' },
@@ -145,11 +153,11 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { word: 'happy', scrambled: 'yppah', arabic: 'سَعِيد', hint: 'Feeling good' }
       ],
       recall: [
-        { arabic: 'كِتَاب', english: 'book', hint: 'Reading material' },
-        { arabic: 'قَلَم', english: 'pen', hint: 'Writing tool' },
-        { arabic: 'مَاء', english: 'water', hint: 'Drink this' },
-        { arabic: 'بَيْت', english: 'home', hint: 'Where you live' },
-        { arabic: 'طَعَام', english: 'food', hint: 'You eat this' }
+        { arabic: 'كِتَاب', english: 'book', hint: 'Reading material', options: ['book', 'pen', 'water', 'home'], correct: 0 },
+        { arabic: 'قَلَم', english: 'pen', hint: 'Writing tool', options: ['book', 'pen', 'water', 'home'], correct: 1 },
+        { arabic: 'مَاء', english: 'water', hint: 'Drink this', options: ['food', 'water', 'home', 'happy'], correct: 1 },
+        { arabic: 'بَيْت', english: 'home', hint: 'Where you live', options: ['school', 'home', 'car', 'tree'], correct: 1 },
+        { arabic: 'طَعَام', english: 'food', hint: 'You eat this', options: ['water', 'food', 'pen', 'book'], correct: 1 }
       ],
       fillBlanks: [
         { sentence: 'I read a _____ every day.', arabic: 'كِتَاب', options: ['book', 'pen', 'car', 'tree'], correct: 0 },
@@ -183,11 +191,18 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { word: 'welcome', scrambled: 'emoclew', arabic: 'أَهْلًا وَسَهْلًا', hint: 'Greeting guests' }
       ],
       recall: [
-        { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you', hint: 'Islamic greeting' },
-        { arabic: 'شُكْرًا', english: 'thank you', hint: 'Express gratitude' },
-        { arabic: 'مَرْحَبًا', english: 'hello', hint: 'Greeting' },
-        { arabic: 'مَعَ السَّلَامَة', english: 'goodbye', hint: 'Farewell' },
-        { arabic: 'كَيْفَ حَالُك', english: 'how are you', hint: 'Ask about wellbeing' }
+        { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you', hint: 'Islamic greeting', options: ['peace be upon you', 'good morning', 'thank you', 'goodbye'], correct: 0 },
+        { arabic: 'شُكْرًا', english: 'thank you', hint: 'Express gratitude', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 2 },
+        { arabic: 'مَرْحَبًا', english: 'hello', hint: 'Greeting', options: ['hello', 'goodbye', 'thank you', 'how are you'], correct: 0 },
+        { arabic: 'مَعَ السَّلَامَة', english: 'goodbye', hint: 'Farewell', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 1 },
+        { arabic: 'كَيْفَ حَالُك', english: 'how are you', hint: 'Ask about wellbeing', options: ['what is your name', 'how are you', 'where are you', 'what time is it'], correct: 1 }
+      ],
+      fillBlanks: [
+        { sentence: 'Muslims greet each other by saying _____.', arabic: 'السَّلَامُ عَلَيْكُم', options: ['peace be upon you', 'good morning', 'thank you', 'goodbye'], correct: 0 },
+        { sentence: 'To express gratitude, you say _____.', arabic: 'شُكْرًا', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 2 },
+        { sentence: 'When you meet someone, you say _____.', arabic: 'مَرْحَبًا', options: ['hello', 'goodbye', 'thank you', 'how are you'], correct: 0 },
+        { sentence: 'When leaving, you say _____.', arabic: 'مَعَ السَّلَامَة', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 1 },
+        { sentence: 'To ask about wellbeing, say _____.', arabic: 'كَيْفَ حَالُك', options: ['what is your name', 'how are you', 'where are you', 'what time is it'], correct: 1 }
       ],
       matching: [
         { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you' },
@@ -214,11 +229,18 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
         { word: 'white', scrambled: 'etihw', arabic: 'أَبْيَض', hint: 'Color of snow' }
       ],
       recall: [
-        { arabic: 'أَحْمَر', english: 'red', hint: 'Color of apple' },
-        { arabic: 'أَزْرَق', english: 'blue', hint: 'Color of sky' },
-        { arabic: 'أَخْضَر', english: 'green', hint: 'Color of grass' },
-        { arabic: 'أَصْفَر', english: 'yellow', hint: 'Color of sun' },
-        { arabic: 'أَبْيَض', english: 'white', hint: 'Color of snow' }
+        { arabic: 'أَحْمَر', english: 'red', hint: 'Color of apple', options: ['blue', 'red', 'green', 'yellow'], correct: 1 },
+        { arabic: 'أَزْرَق', english: 'blue', hint: 'Color of sky', options: ['blue', 'red', 'green', 'yellow'], correct: 0 },
+        { arabic: 'أَخْضَر', english: 'green', hint: 'Color of grass', options: ['blue', 'red', 'green', 'yellow'], correct: 2 },
+        { arabic: 'أَصْفَر', english: 'yellow', hint: 'Color of sun', options: ['blue', 'red', 'green', 'yellow'], correct: 3 },
+        { arabic: 'أَبْيَض', english: 'white', hint: 'Color of snow', options: ['white', 'black', 'brown', 'pink'], correct: 0 }
+      ],
+      fillBlanks: [
+        { sentence: 'An apple is _____ in color.', arabic: 'أَحْمَر', options: ['blue', 'red', 'green', 'yellow'], correct: 1 },
+        { sentence: 'The sky is _____.', arabic: 'أَزْرَق', options: ['blue', 'red', 'green', 'yellow'], correct: 0 },
+        { sentence: 'Grass is _____.', arabic: 'أَخْضَر', options: ['blue', 'red', 'green', 'yellow'], correct: 2 },
+        { sentence: 'The sun is _____.', arabic: 'أَصْفَر', options: ['blue', 'red', 'green', 'yellow'], correct: 3 },
+        { sentence: 'Snow is _____.', arabic: 'أَبْيَض', options: ['white', 'black', 'brown', 'pink'], correct: 0 }
       ],
       matching: [
         { arabic: 'أَحْمَر', english: 'red' },
@@ -262,6 +284,29 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
     setMatchedPairs([]);
     setSelectedCards([]);
   };
+
+  // Award points when quiz is completed
+  useEffect(() => {
+    if (showResults && userEmail && answers.length > 0) {
+      const totalQuestions = answers.length;
+      const percentage = Math.round((score / totalQuestions) * 100);
+
+      // Award points based on performance
+      if (percentage === 100) {
+        // Perfect score
+        awardPoints(userEmail, 'QUIZ_PERFECT_SCORE');
+        console.log('Awarded QUIZ_PERFECT_SCORE points');
+      } else if (percentage >= 70) {
+        // Passed
+        awardPoints(userEmail, 'QUIZ_COMPLETED');
+        console.log('Awarded QUIZ_COMPLETED points');
+      }
+
+      // Award points for each correct answer
+      awardPoints(userEmail, 'QUIZ_QUESTION_CORRECT', score);
+      console.log(`Awarded points for ${score} correct answers`);
+    }
+  }, [showResults, userEmail, score, answers]);
 
   // Initialize scrambled letters when starting scrambled quiz
   useEffect(() => {
@@ -353,6 +398,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
       content = quizContent[selectedTopic.id]?.multipleChoice;
     } else if (selectedQuizType.id === 'fill-blanks') {
       content = quizContent[selectedTopic.id]?.fillBlanks;
+    } else if (selectedQuizType.id === 'recall') {
+      content = quizContent[selectedTopic.id]?.recall;
     }
 
     if (content && content[currentQuestionIndex]) {
@@ -420,38 +467,6 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
       setUserAnswer(userAnswer.slice(0, -1));
       setScrambledLetters([...scrambledLetters, lastLetter]);
     }
-  };
-
-  const handleRecallReveal = (reveal) => {
-    const content = quizContent[selectedTopic.id]?.recall;
-    if (content && content[currentQuestionIndex]) {
-      if (reveal) {
-        setShowFeedback(true);
-        setIsCorrect(false); // Revealed answers don't count as correct
-      }
-    }
-  };
-
-  const handleRecallKnow = (known) => {
-    setIsCorrect(known);
-    setShowFeedback(true);
-
-    if (known) {
-      setScore(score + 1);
-      speak && speak(language === 'ar' ? 'رائع' : 'Great!');
-    }
-
-    setAnswers([...answers, { questionIndex: currentQuestionIndex, correct: known }]);
-
-    const content = quizContent[selectedTopic.id]?.recall;
-    setTimeout(() => {
-      if (currentQuestionIndex < content.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-        setShowFeedback(false);
-      } else {
-        setShowResults(true);
-      }
-    }, 1000);
   };
 
   // Render Quiz Type Selection
@@ -642,14 +657,11 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
                   isCardSelected(card) ? 'selected' : ''
                 } ${isCardMatched(card) ? 'matched' : ''}`}
                 onClick={() => handleCardClick(card)}
-                whileHover={{ scale: isCardMatched(card) ? 1 : 1.05 }}
-                whileTap={{ scale: isCardMatched(card) ? 1 : 0.95 }}
-                style={{
-                  backgroundColor: isCardMatched(card) ? '#10b981' : undefined,
-                  color: isCardMatched(card) ? 'white' : undefined,
-                  borderColor: isCardSelected(card) ? selectedTopic.color : undefined,
-                  borderWidth: isCardSelected(card) ? '3px' : '2px'
-                }}
+                whileHover={!isCardMatched(card) ? { y: -8, scale: 1.03 } : {}}
+                whileTap={!isCardMatched(card) ? { scale: 0.95 } : {}}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: matchingPairs.indexOf(card) * 0.05 }}
               >
                 <div className="card-content">
                   {card.content}
@@ -657,8 +669,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
                 {isCardMatched(card) && (
                   <motion.div
                     className="match-checkmark"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
                   >
                     ✓
                   </motion.div>
@@ -841,39 +854,39 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak 
               </div>
             )}
 
-            {/* Recall Quiz */}
+            {/* Recall Quiz - Multiple Choice */}
             {selectedQuizType.id === 'recall' && (
-              <div className="quiz-question recall-quiz">
+              <div className="quiz-question">
                 <div className="arabic-display-large">
                   {currentQuestion.arabic}
                 </div>
                 <p className="hint-text">💡 {currentQuestion.hint}</p>
-
-                {!showFeedback ? (
-                  <div className="recall-actions">
-                    <h3 className="question-text">
-                      {language === 'ar' ? 'هل تتذكر معنى هذه الكلمة؟' : 'Do you remember the meaning?'}
-                    </h3>
-                    <div className="recall-buttons">
-                      <button className="btn btn-success" onClick={() => handleRecallKnow(true)}>
-                        ✓ {language === 'ar' ? 'أعرف' : 'I Know'}
-                      </button>
-                      <button className="btn btn-warning" onClick={() => handleRecallReveal(true)}>
-                        👁️ {language === 'ar' ? 'أظهر الإجابة' : 'Show Answer'}
-                      </button>
-                      <button className="btn btn-danger" onClick={() => handleRecallKnow(false)}>
-                        ✗ {language === 'ar' ? 'لا أعرف' : "I Don't Know"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
+                <h3 className="question-text">
+                  {language === 'ar' ? 'ما معنى هذه الكلمة؟' : 'What does this mean?'}
+                </h3>
+                <div className="options-grid">
+                  {currentQuestion.options.map((option, index) => (
+                    <button
+                      key={index}
+                      className={`option-btn ${selectedAnswer === index ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
+                      onClick={() => handleAnswerSelect(index)}
+                      disabled={showFeedback}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                {showFeedback && (
                   <motion.div
-                    className="recall-answer"
+                    className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                   >
-                    <div className="english-meaning">{currentQuestion.english}</div>
-                    {isCorrect && <div className="feedback correct">✓ {language === 'ar' ? 'رائع!' : 'Great!'}</div>}
+                    {isCorrect ? '✓ ' : '✗ '}
+                    {isCorrect
+                      ? (language === 'ar' ? 'صحيح!' : 'Correct!')
+                      : (language === 'ar' ? `الإجابة الصحيحة: ${currentQuestion.english}` : `Correct answer: ${currentQuestion.english}`)
+                    }
                   </motion.div>
                 )}
               </div>
