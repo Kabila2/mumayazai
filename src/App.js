@@ -9,6 +9,8 @@ import PaperAirplaneTransition from "./components/PaperAirplaneTransition";
 import ParentDashboard from "./components/ParentDashboard";
 import TeacherDashboard from "./components/TeacherDashboard";
 import ArabicLearningPlatform from "./components/ArabicLearningPlatform";
+import { ToastContainer } from "./components/Toast";
+import { useToast } from "./hooks/useToast";
 import { translations } from "./translations";
 import {
   initializeParentAccount,
@@ -54,6 +56,9 @@ function savePreference(preference) {
 }
 
 export default function App() {
+  // ---------- Toast notifications ----------
+  const { toasts, removeToast } = useToast();
+
   // ---------- Auth & flow ----------
   const [isLoggedIn, setIsLoggedIn] = useState(!!getSession());
   const [showSetup, setShowSetup]   = useState(false);
@@ -388,6 +393,7 @@ export default function App() {
       style={{ fontSize: `${fontSize}rem` }}
     >
       {content}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

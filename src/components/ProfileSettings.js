@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playClickSound, playSuccessSound, playErrorSound } from '../utils/soundEffects';
 import { exportUserData, importUserData, clearAllUserData } from '../utils/dataExport';
+import { toast } from '../hooks/useToast';
 import './ProfileSettings.css';
 
 const DEFAULT_AVATARS = [
@@ -154,7 +155,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
   const handleSaveProfile = () => {
     try {
       if (!name.trim()) {
-        alert(t.error);
+        toast.error(t.error);
         return;
       }
 
@@ -183,7 +184,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
         }
 
         playSuccessSound();
-        alert(t.success);
+        toast.success(t.success);
         loadUserData();
 
         if (onUpdate) onUpdate();
@@ -191,7 +192,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert(t.error);
+      toast.error(t.error);
     } finally {
       setLoading(false);
     }
@@ -200,17 +201,17 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
   const handleChangePassword = () => {
     try {
       if (!currentPassword || !newPassword || !confirmPassword) {
-        alert(t.error);
+        toast.error(t.error);
         return;
       }
 
       if (newPassword !== confirmPassword) {
-        alert(t.passwordMismatch);
+        toast.error(t.passwordMismatch);
         return;
       }
 
       if (newPassword.length < 6) {
-        alert(t.passwordWeak);
+        toast.warning(t.passwordWeak);
         return;
       }
 
@@ -223,7 +224,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       if (users[userKey]) {
         // Verify current password
         if (users[userKey].password !== currentPassword) {
-          alert('Current password is incorrect');
+          toast.error('Current password is incorrect');
           setLoading(false);
           return;
         }
@@ -233,7 +234,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
         localStorage.setItem('mumayaz_users', JSON.stringify(users));
 
         playSuccessSound();
-        alert('Password changed successfully!');
+        toast.success('Password changed successfully!');
 
         // Clear password fields
         setCurrentPassword('');
@@ -242,7 +243,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      alert(t.error);
+      toast.error(t.error);
     } finally {
       setLoading(false);
     }
@@ -252,12 +253,12 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
+        toast.error('File size must be less than 5MB');
         return;
       }
 
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        toast.error('Please select an image file');
         return;
       }
 
@@ -336,9 +337,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     const success = exportUserData(userEmail);
     if (success) {
       playSuccessSound();
-      setTimeout(() => {
-        alert(t.exportSuccess);
-      }, 500);
+      toast.success(t.exportSuccess);
     }
   };
 
@@ -357,7 +356,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     try {
       await importUserData(file, userEmail);
       playSuccessSound();
-      alert(t.importSuccess);
+      toast.success(t.importSuccess);
 
       // Reload page to reflect imported data
       setTimeout(() => {
@@ -366,7 +365,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     } catch (error) {
       console.error('Import error:', error);
       playErrorSound();
-      alert(`${t.importError}: ${error.message}`);
+      toast.error(`${t.importError}: ${error.message}`);
     } finally {
       setImporting(false);
       // Reset file input

@@ -19,6 +19,11 @@ import DarkModeToggle from "./DarkModeToggle";
 import SoundToggle from "./SoundToggle";
 import ProfileSettings from "./ProfileSettings";
 import StreakCounter from "./StreakCounter";
+import ProgressDashboard from "./ProgressDashboard";
+import ArabicHandwritingPractice from "./ArabicHandwritingPractice";
+import InteractiveStoryReader from "./InteractiveStoryReader";
+import HomeworkSystem from "./HomeworkSystem";
+import ClassManagement from "./ClassManagement";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
@@ -60,7 +65,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -556,6 +561,114 @@ const ArabicLearningPlatform = ({
           </div>
         </motion.div>
 
+        <motion.div
+          className="section-card progress-card"
+          onClick={() => handleSectionChange('progress')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+        >
+          <div className="card-icon">📊</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'لوحة التقدم' : 'Progress Dashboard'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'تابع تقدمك وشاهد إنجازاتك'
+              : 'Track your progress and view achievements'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card handwriting-card"
+          onClick={() => handleSectionChange('handwriting')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.6 }}
+        >
+          <div className="card-icon">✍️</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'تمرين الكتابة اليدوية' : 'Handwriting Practice'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'تدرب على كتابة الحروف العربية'
+              : 'Practice writing Arabic letters'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card story-card"
+          onClick={() => handleSectionChange('story')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.7 }}
+        >
+          <div className="card-icon">📖</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'قصص تفاعلية' : 'Interactive Stories'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'اقرأ قصصاً ممتعة وتفاعلية'
+              : 'Read fun and interactive stories'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card homework-card"
+          onClick={() => handleSectionChange('homework')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8 }}
+        >
+          <div className="card-icon">📚</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'مركز الواجبات' : 'Homework Center'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'شاهد واجباتك وأكملها'
+              : 'View and complete your homework'
+            }
+          </p>
+        </motion.div>
+
+        {/* Only show Class Management for teachers */}
+        {getCurrentUserRole() === 'teacher' && (
+          <motion.div
+            className="section-card class-card"
+            onClick={() => handleSectionChange('classmanagement')}
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.9 }}
+          >
+            <div className="card-icon">🏫</div>
+            <h3 className="card-title">
+              {language === 'ar' ? 'إدارة الصفوف' : 'Class Management'}
+            </h3>
+            <p className="card-description">
+              {language === 'ar'
+                ? 'إدارة الصفوف والطلاب'
+                : 'Manage classes and students'
+              }
+            </p>
+          </motion.div>
+        )}
+
         {/* Only show Teacher-Parent Communication for teachers and parents */}
         {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
           <motion.div
@@ -665,6 +778,13 @@ const ArabicLearningPlatform = ({
             style={{ background: currentSection === 'points' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '' }}
           >
             🪙 {language === 'ar' ? 'نقاطي' : 'My Points'}
+          </button>
+          <button
+            className={`nav-link ${currentSection === 'progress' ? 'active' : ''}`}
+            onClick={() => setCurrentSection('progress')}
+            style={{ background: currentSection === 'progress' ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : '' }}
+          >
+            📊 {language === 'ar' ? 'تقدمي' : 'Progress'}
           </button>
           <button
             className={`nav-link ${currentSection === 'drawing' ? 'active' : ''}`}
@@ -1007,6 +1127,85 @@ const ArabicLearningPlatform = ({
                 userRole={getCurrentUserRole()}
                 language={language}
                 onBack={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'progress' && (
+            <motion.div
+              key="progress"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ProgressDashboard
+                userEmail={getCurrentUserEmail()}
+                language={language}
+                onClose={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'handwriting' && (
+            <motion.div
+              key="handwriting"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ArabicHandwritingPractice
+                onClose={() => setCurrentSection('home')}
+                language={language}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'story' && (
+            <motion.div
+              key="story"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <InteractiveStoryReader
+                language={language}
+                onClose={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'homework' && (
+            <motion.div
+              key="homework"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <HomeworkSystem
+                userEmail={getCurrentUserEmail()}
+                userRole={getCurrentUserRole()}
+                language={language}
+                onClose={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'classmanagement' && (
+            <motion.div
+              key="classmanagement"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ClassManagement
+                teacherEmail={getCurrentUserEmail()}
+                language={language}
+                onClose={() => setCurrentSection('home')}
               />
             </motion.div>
           )}
