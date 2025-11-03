@@ -11,6 +11,7 @@ import TeacherDashboard from "./components/TeacherDashboard";
 import ArabicLearningPlatform from "./components/ArabicLearningPlatform";
 import { ToastContainer } from "./components/Toast";
 import { useToast } from "./hooks/useToast";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { translations } from "./translations";
 import {
   initializeParentAccount,
@@ -388,12 +389,14 @@ export default function App() {
   }
 
   return (
-    <div
-      className={`app-container ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""} ${currentPreference === "dyslexia" ? "dyslexia-friendly" : ""}`}
-      style={{ fontSize: `${fontSize}rem` }}
-    >
-      {content}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
-    </div>
+    <ErrorBoundary language={appLanguage}>
+      <div
+        className={`app-container ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""} ${currentPreference === "dyslexia" ? "dyslexia-friendly" : ""}`}
+        style={{ fontSize: `${fontSize}rem` }}
+      >
+        {content}
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
+      </div>
+    </ErrorBoundary>
   );
 }

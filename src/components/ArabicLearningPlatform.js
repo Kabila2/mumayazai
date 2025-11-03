@@ -24,6 +24,7 @@ import ArabicHandwritingPractice from "./ArabicHandwritingPractice";
 import InteractiveStoryReader from "./InteractiveStoryReader";
 import HomeworkSystem from "./HomeworkSystem";
 import ClassManagement from "./ClassManagement";
+import OnboardingTutorial from "./OnboardingTutorial";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
@@ -70,6 +71,7 @@ const ArabicLearningPlatform = ({
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
     colorsProgress: 0,
@@ -77,6 +79,15 @@ const ArabicLearningPlatform = ({
     streak: 0
   });
   const platformRef = useRef(null);
+
+  // Check if first-time user
+  useEffect(() => {
+    const hasCompletedOnboarding = localStorage.getItem('mumayaz_onboarding_completed');
+    if (!hasCompletedOnboarding && currentSection === 'home') {
+      // Show onboarding after a short delay
+      setTimeout(() => setShowOnboarding(true), 1000);
+    }
+  }, [currentSection]);
 
   // Load user progress from localStorage
   useEffect(() => {
@@ -1230,6 +1241,14 @@ const ArabicLearningPlatform = ({
           />
         )}
       </AnimatePresence>
+
+      {/* Onboarding Tutorial for First-Time Users */}
+      {showOnboarding && (
+        <OnboardingTutorial
+          language={language}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 };

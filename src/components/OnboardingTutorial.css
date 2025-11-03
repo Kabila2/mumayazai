@@ -1,0 +1,266 @@
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+}
+
+.onboarding-modal {
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.onboarding-skip {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.onboarding-skip:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.onboarding-content {
+  text-align: center;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.onboarding-icon {
+  font-size: 5rem;
+  margin-bottom: 24px;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.onboarding-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 0 0 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.onboarding-description {
+  font-size: 1.1rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.onboarding-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 32px 0 24px;
+  padding: 0 16px;
+}
+
+.progress-dots {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.progress-dot.active {
+  width: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.progress-dot.completed {
+  background: #10b981;
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  font-weight: 600;
+  margin-left: 16px;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.onboarding-btn {
+  padding: 14px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.onboarding-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.onboarding-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.onboarding-btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+}
+
+.onboarding-btn.secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Highlight effect for elements */
+.onboarding-highlight {
+  position: relative;
+  z-index: 99998;
+  box-shadow: 0 0 0 4px #667eea, 0 0 40px rgba(102, 126, 234, 0.5) !important;
+  border-radius: 12px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px #667eea, 0 0 40px rgba(102, 126, 234, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px #667eea, 0 0 60px rgba(102, 126, 234, 0.8);
+  }
+}
+
+/* Dark Mode Support */
+.dark-mode .onboarding-modal {
+  background: var(--bg-secondary);
+}
+
+.dark-mode .onboarding-title {
+  color: var(--text-primary);
+}
+
+.dark-mode .onboarding-description {
+  color: var(--text-secondary);
+}
+
+.dark-mode .onboarding-skip {
+  color: var(--text-tertiary);
+}
+
+.dark-mode .onboarding-skip:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.dark-mode .progress-dot {
+  background: var(--bg-tertiary);
+}
+
+.dark-mode .progress-text {
+  color: var(--text-tertiary);
+}
+
+.dark-mode .onboarding-btn.secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .onboarding-btn.secondary:hover {
+  background: var(--bg-primary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .onboarding-modal {
+    padding: 32px 24px;
+  }
+
+  .onboarding-skip {
+    top: 12px;
+    right: 12px;
+    font-size: 0.85rem;
+  }
+
+  .onboarding-icon {
+    font-size: 4rem;
+  }
+
+  .onboarding-title {
+    font-size: 1.5rem;
+  }
+
+  .onboarding-description {
+    font-size: 1rem;
+  }
+
+  .onboarding-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .onboarding-btn {
+    width: 100%;
+  }
+
+  .progress-dots {
+    gap: 8px;
+  }
+
+  .progress-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .progress-dot.active {
+    width: 24px;
+  }
+}
