@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound } from '../utils/soundEffects';
+import AnalyticsCharts from './AnalyticsCharts';
 import './ProgressDashboard.css';
 
 const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
@@ -110,6 +111,9 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       // Analyze strengths and weaknesses
       const analysis = analyzePerformance(quizHistory, progress);
 
+      // Prepare chart data
+      const chartData = prepareChartData(filteredQuizzes, progress);
+
       setStats({
         totalTime: estimatedTime,
         topicsCompleted,
@@ -122,7 +126,8 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         strengths: analysis.strengths,
         weaknesses: analysis.weaknesses,
         recommendations: analysis.recommendations,
-        progressData: progress
+        progressData: progress,
+        chartData
       });
     } catch (error) {
       console.error('Error loading statistics:', error);
@@ -203,6 +208,45 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
     }
 
     return { strengths, weaknesses, recommendations };
+  };
+
+  const prepareChartData = (quizHistory, progress) => {
+    // Progress trend (last 8 weeks)
+    const progressTrend = [];
+    for (let i = 7; i >= 0; i--) {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - i * 7);
+      const weekQuizzes = quizHistory.filter(q => {
+        const qDate = new Date(q.completedAt || q.timestamp);
+        return qDate >= weekAgo && qDate < new Date(weekAgo.getTime() + 7 * 24 * 60 * 60 * 1000);
+      });
+      const avgScore = weekQuizzes.length > 0
+        ? weekQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / weekQuizzes.length
+        : 0;
+      progressTrend.push({
+        label: `W${8 - i}`,
+        score: Math.round(avgScore)
+      });
+    }
+
+    // Topic scores
+    const topicScores = [
+      { name: 'Alphabet', score: progress.alphabetProgress || 0, color: '#10b981' },
+      { name: 'Colors', score: progress.colorsProgress || 0, color: '#3b82f6' },
+      { name: 'Words', score: progress.wordsProgress || 0, color: '#f59e0b' },
+      { name: 'Sentences', score: progress.sentencesProgress || 0, color: '#ef4444' }
+    ];
+
+    // Skills radar
+    const skills = [
+      { name: 'Reading', score: progress.alphabetProgress || 0 },
+      { name: 'Writing', score: (progress.alphabetProgress || 0) * 0.8 },
+      { name: 'Listening', score: progress.colorsProgress || 0 },
+      { name: 'Speaking', score: (progress.colorsProgress || 0) * 0.9 },
+      { name: 'Vocabulary', score: progress.wordsProgress || 0 }
+    ];
+
+    return { progressTrend, topicScores, skills };
   };
 
   const getScoreColor = (score) => {
@@ -375,6 +419,13 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
                   </motion.div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* Analytics Charts */}
+          {stats.chartData && (
+            <section className="analytics-section">
+              <AnalyticsCharts data={stats.chartData} language={language} />
             </section>
           )}
 

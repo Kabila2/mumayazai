@@ -22,7 +22,13 @@
       "Bash(del test-components.js)",
       "mcp__ide__getDiagnostics",
       "Bash(mv:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(echo:*)",
+      "Bash(\"C:\\Users\\Uuawei\\mumayazgpt\\src\\components\\ProgressDashboard.css\")",
+      "Bash(\"C:\\Users\\Uuawei\\mumayazgpt\\src\\components\\ArabicLearningPlatform.css\")",
+      "Bash(\"C:\\Users\\Uuawei\\mumayazgpt\\src\\components\\ArabicLearningPlatform.css.tmp\")",
+      "Bash(del srccomponentsDataManagement.js)",
+      "Bash(del srccomponentsDataManagement.css)"
     ],
     "deny": [],
     "ask": []

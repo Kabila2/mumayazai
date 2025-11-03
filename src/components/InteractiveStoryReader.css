@@ -1,0 +1,22 @@
+.story-reader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); }
+.story-reader-modal { background: white; border-radius: 20px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
+.story-reader-modal.reading { max-width: 600px; }
+.story-reader-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; border-bottom: 2px solid #e5e7eb; background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); border-radius: 20px 20px 0 0; }
+.story-reader-header h2 { margin: 0; font-size: 1.5rem; color: white; }
+.close-button { background: rgba(255, 255, 255, 0.2); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.5rem; color: white; cursor: pointer; }
+.story-list { padding: 25px; }
+.story-list h3 { margin: 0 0 20px; }
+.story-card { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: all 0.2s ease; }
+.story-card:hover { border-color: #ec4899; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+.story-icon { font-size: 3rem; }
+.story-card h4 { margin: 0; color: #1f2937; }
+.story-content { padding: 40px 30px; text-align: center; }
+.story-image { font-size: 5rem; margin-bottom: 30px; }
+.story-text { font-size: 1.3rem; line-height: 1.8; margin-bottom: 20px; }
+.story-text.ar { font-weight: 700; color: #1f2937; }
+.story-text.en { color: #6b7280; font-style: italic; }
+.story-progress { margin-top: 20px; color: #9ca3af; font-size: 0.9rem; }
+.story-navigation { display: flex; gap: 10px; padding: 20px 25px; border-top: 2px solid #e5e7eb; }
+.nav-btn { flex: 1; padding: 12px 24px; background: #ec4899; color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+.nav-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+.nav-btn.finish { background: #10b981; }

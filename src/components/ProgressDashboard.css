@@ -411,3 +411,14 @@
     text-align: left;
   }
 }
+
+/* Analytics Section */
+.analytics-section {
+  margin-top: 30px;
+  padding: 20px 0;
+  border-top: 2px solid #e5e7eb;
+}
+
+.dark-mode .analytics-section {
+  border-top-color: var(--border-color);
+}

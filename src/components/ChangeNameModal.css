@@ -1,0 +1,254 @@
+.change-name-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.change-name-modal {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.change-name-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 2px solid #e5e7eb;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 20px 20px 0 0;
+}
+
+.change-name-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.change-name-content {
+  padding: 30px 25px;
+}
+
+.current-name-section,
+.new-name-section {
+  margin-bottom: 25px;
+}
+
+.name-label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.current-name-display {
+  padding: 15px 20px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  color: #1f2937;
+  font-weight: 500;
+  border: 2px solid #e5e7eb;
+}
+
+.name-input {
+  width: 100%;
+  padding: 15px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #1f2937;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.name-input.error {
+  border-color: #ef4444;
+}
+
+.name-input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-message {
+  margin-top: 8px;
+  padding: 10px 15px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.change-name-actions {
+  display: flex;
+  gap: 10px;
+  padding: 20px 25px;
+  border-top: 2px solid #e5e7eb;
+  justify-content: flex-end;
+}
+
+.cancel-button,
+.save-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.cancel-button:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.save-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.save-button:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.save-button:disabled:hover {
+  transform: none;
+}
+
+/* Dark mode styles */
+.dark-mode .change-name-modal {
+  background: var(--bg-secondary);
+}
+
+.dark-mode .change-name-header {
+  border-bottom-color: var(--border-color);
+}
+
+.dark-mode .name-label {
+  color: var(--text-primary);
+}
+
+.dark-mode .current-name-display {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .name-input {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .name-input:focus {
+  border-color: #3b82f6;
+  background: var(--bg-secondary);
+}
+
+.dark-mode .change-name-actions {
+  border-top-color: var(--border-color);
+}
+
+.dark-mode .cancel-button {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.dark-mode .cancel-button:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .change-name-modal {
+    width: 95%;
+  }
+
+  .change-name-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .change-name-content {
+    padding: 20px 15px;
+  }
+
+  .change-name-actions {
+    padding: 15px;
+  }
+
+  .cancel-button,
+  .save-button {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+}

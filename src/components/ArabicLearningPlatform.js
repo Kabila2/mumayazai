@@ -17,9 +17,8 @@ import QuizCenter from "./QuizCenter";
 import TeacherParentChat from "./TeacherParentChat";
 import DarkModeToggle from "./DarkModeToggle";
 import SoundToggle from "./SoundToggle";
-import ProfilePictureUpload from "./ProfilePictureUpload";
+import ProfileSettings from "./ProfileSettings";
 import StreakCounter from "./StreakCounter";
-import DataManagement from "./DataManagement";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
@@ -64,9 +63,8 @@ const ArabicLearningPlatform = ({
   const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
-  const [showDataManagement, setShowDataManagement] = useState(false);
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
     colorsProgress: 0,
@@ -229,49 +227,6 @@ const ArabicLearningPlatform = ({
     ));
   };
 
-  const renderProgressCard = () => (
-    <motion.div
-      className="progress-card"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-    >
-      <h3 className="progress-title">
-        {language === 'ar' ? 'تقدمك في التعلم' : 'Your Learning Progress'}
-      </h3>
-
-      <div className="progress-stats">
-        <div className="stat-item">
-          <div className="stat-number">{userProgress.alphabetProgress}%</div>
-          <div className="stat-label">
-            {language === 'ar' ? 'الحروف' : 'Alphabet'}
-          </div>
-        </div>
-
-        <div className="stat-item">
-          <div className="stat-number">{userProgress.colorsProgress}%</div>
-          <div className="stat-label">
-            {language === 'ar' ? 'الألوان' : 'Colors'}
-          </div>
-        </div>
-
-        <div className="stat-item">
-          <div className="stat-number">{userProgress.totalSessions}</div>
-          <div className="stat-label">
-            {language === 'ar' ? 'الجلسات' : 'Sessions'}
-          </div>
-        </div>
-
-        <div className="stat-item">
-          <div className="stat-number">{userProgress.streak}</div>
-          <div className="stat-label">
-            {language === 'ar' ? 'الأيام المتتالية' : 'Streak'}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
   const renderHomeSection = () => {
     const userRole = getCurrentUserRole();
     const isTeacherOrParent = userRole === 'teacher' || userRole === 'parent';
@@ -289,7 +244,7 @@ const ArabicLearningPlatform = ({
             dir={language === 'ar' ? 'rtl' : 'ltr'}
             lang={language === 'ar' ? 'ar' : 'en'}
           >
-            {language === 'ar' ? 'مرحباً بك في منصة تعلم العربية' : 'Welcome to Arabic Learning Platform'}
+            {language === 'ar' ? 'منصة ممتاز لتعلم اللغة العربية' : 'Welcome to Arabic Learning Platform'}
           </h1>
           <p
             className="platform-subtitle"
@@ -320,8 +275,6 @@ const ArabicLearningPlatform = ({
             </motion.p>
           )}
         </motion.div>
-
-      {renderProgressCard()}
 
       {/* Enhanced Streak Counter */}
       <motion.div
@@ -745,32 +698,14 @@ const ArabicLearningPlatform = ({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
-            className="profile-picture-btn"
+            className="profile-settings-btn"
             onClick={() => {
               playClickSound();
-              setShowProfilePictureModal(true);
+              setShowProfileSettings(true);
             }}
-            title={language === 'ar' ? 'الصورة الشخصية' : 'Profile Picture'}
+            title={language === 'ar' ? 'الإعدادات' : 'Settings'}
           >
-            {currentProfilePicture ? (
-              currentProfilePicture.startsWith('data:') ? (
-                <img src={currentProfilePicture} alt="Profile" className="profile-pic-small" />
-              ) : (
-                <span className="profile-emoji">{currentProfilePicture}</span>
-              )
-            ) : (
-              <span className="profile-emoji">👤</span>
-            )}
-          </button>
-          <button
-            className="data-management-btn"
-            onClick={() => {
-              playClickSound();
-              setShowDataManagement(true);
-            }}
-            title={language === 'ar' ? 'إدارة البيانات' : 'Data Management'}
-          >
-            💾
+            ⚙️
           </button>
           <SoundToggle language={language} />
           <DarkModeToggle language={language} />
@@ -1078,26 +1013,21 @@ const ArabicLearningPlatform = ({
         </AnimatePresence>
       </main>
 
-      {/* Profile Picture Modal */}
+      {/* Profile Settings Modal - All-in-One (Picture, Name, Password, Data, etc.) */}
       <AnimatePresence>
-        {showProfilePictureModal && (
-          <ProfilePictureUpload
-            currentUser={getCurrentUserEmail()}
-            onUpdate={(imageData) => {
-              setCurrentProfilePicture(imageData);
-            }}
-            onClose={() => setShowProfilePictureModal(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Data Management Modal */}
-      <AnimatePresence>
-        {showDataManagement && (
-          <DataManagement
+        {showProfileSettings && (
+          <ProfileSettings
             userEmail={getCurrentUserEmail()}
             language={language}
-            onClose={() => setShowDataManagement(false)}
+            onUpdate={() => {
+              // Reload user data
+              const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+              const user = users[getCurrentUserEmail().toLowerCase()];
+              if (user?.profilePicture) {
+                setCurrentProfilePicture(user.profilePicture);
+              }
+            }}
+            onClose={() => setShowProfileSettings(false)}
           />
         )}
       </AnimatePresence>
