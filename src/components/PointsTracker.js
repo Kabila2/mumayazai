@@ -306,8 +306,8 @@ const PointsTracker = ({ language }) => {
           </div>
           <div className="earn-item">
             <div className="earn-icon">🎯</div>
-            <div className="earn-title">{language === 'ar' ? 'الاختبارات' : 'Quizzes'}</div>
-            <div className="earn-desc">{language === 'ar' ? 'اجتاز الاختبارات بنجاح' : 'Pass quizzes successfully'}</div>
+            <div className="earn-title">{language === 'ar' ? 'الاختبارات' : 'Tests'}</div>
+            <div className="earn-desc">{language === 'ar' ? 'اجتاز الاختبارات بنجاح' : 'Pass tests successfully'}</div>
           </div>
           <div className="earn-item">
             <div className="earn-icon">🔥</div>

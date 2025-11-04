@@ -18,8 +18,10 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       recommendations: 'Recommendations',
       totalTime: 'Total Time Spent',
       topicsCompleted: 'Topics Completed',
-      avgQuizScore: 'Avg Quiz Score',
+      avgQuizScore: 'Avg Test Score',
       currentStreak: 'Current Streak',
+      totalPoints: 'Total Points',
+      points: 'points',
       week: 'This Week',
       month: 'This Month',
       all: 'All Time',
@@ -28,7 +30,7 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       topics: 'topics',
       close: 'Close',
       exportPDF: 'Export PDF',
-      quizPerformance: 'Quiz Performance',
+      quizPerformance: 'Test Performance',
       learningActivity: 'Learning Activity',
       topAchievements: 'Top Achievements',
       recentActivity: 'Recent Activity',
@@ -48,6 +50,8 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       topicsCompleted: 'المواضيع المكتملة',
       avgQuizScore: 'متوسط درجات الاختبار',
       currentStreak: 'السلسلة الحالية',
+      totalPoints: 'إجمالي النقاط',
+      points: 'نقاط',
       week: 'هذا الأسبوع',
       month: 'هذا الشهر',
       all: 'كل الأوقات',
@@ -172,16 +176,16 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
     const weaknesses = [];
     const recommendations = [];
 
-    // Analyze quiz performance
+    // Analyze test performance
     if (quizHistory.length >= 3) {
       const recentScores = quizHistory.slice(0, 3).map(q => q.score || 0);
       const avgRecent = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
 
       if (avgRecent >= 90) {
-        strengths.push({ icon: '🎯', text: 'Excellent quiz performance!' });
+        strengths.push({ icon: '🎯', text: 'Excellent test performance!' });
       } else if (avgRecent < 60) {
-        weaknesses.push({ icon: '📝', text: 'Quiz scores need improvement' });
-        recommendations.push({ icon: '💡', text: 'Review topics before taking quizzes' });
+        weaknesses.push({ icon: '📝', text: 'Test scores need improvement' });
+        recommendations.push({ icon: '💡', text: 'Review topics before taking tests' });
       }
     }
 
@@ -356,6 +360,11 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
                 <div className="stat-value">{stats.currentStreak}</div>
                 <div className="stat-label">{t.currentStreak} ({t.days})</div>
               </div>
+              <div className="stat-card">
+                <div className="stat-icon">🪙</div>
+                <div className="stat-value">{stats.totalPoints}</div>
+                <div className="stat-label">{t.totalPoints}</div>
+              </div>
             </div>
           </section>
 
@@ -437,7 +446,7 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
                 {stats.quizHistory.map((quiz, index) => (
                   <div key={index} className="quiz-item">
                     <div className="quiz-info">
-                      <div className="quiz-name">{quiz.quizName || `Quiz ${index + 1}`}</div>
+                      <div className="quiz-name">{quiz.quizName || `Test ${index + 1}`}</div>
                       <div className="quiz-date">
                         {new Date(quiz.completedAt || quiz.timestamp).toLocaleDateString()}
                       </div>

@@ -54,7 +54,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
           title: 'Settings & Profile',
           description: 'Customize your experience, manage your profile, and export your data from the settings.',
           icon: '⚙️',
-          highlight: '.profile-settings-btn'
+          highlight: '.profile-settings-btn-with-text'
         }
       ]
     },
@@ -104,7 +104,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
           title: 'الإعدادات والملف الشخصي',
           description: 'خصص تجربتك، أدر ملفك الشخصي، وصدر بياناتك من الإعدادات.',
           icon: '⚙️',
-          highlight: '.profile-settings-btn'
+          highlight: '.profile-settings-btn-with-text'
         }
       ]
     }

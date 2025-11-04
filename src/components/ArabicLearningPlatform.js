@@ -6,7 +6,6 @@ import ArabicColorsLearning from "./ArabicColorsLearning";
 import ArabicWordsLearning from "./ArabicWordsLearning";
 import ArabicSentencesLearning from "./ArabicSentencesLearning";
 import ArabicWordBuilder from "./ArabicWordBuilder";
-import PointsTracker from "./PointsTracker";
 import ChatInterface from "./ChatInterface";
 import VoiceInterface from "./VoiceInterface";
 import MemoryGame from "./MemoryGame";
@@ -35,7 +34,7 @@ import './ArabicLearningPlatform.css';
  * ALL USERS (Students, Teachers, Parents, Children):
  * - Full access to all learning components:
  *   ✓ Alphabet, Colors, Words, Sentences
- *   ✓ Word Builder, Memory Game, Quiz Center
+ *   ✓ Word Builder, Memory Game, Test Yourself
  *   ✓ Drawing Board, Chat Assistant, Voice Assistant
  *   ✓ Points Tracker, Leaderboard
  *
@@ -67,7 +66,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -501,7 +500,7 @@ const ArabicLearningPlatform = ({
         >
           <div className="card-icon">🎯</div>
           <h3 className="card-title">
-            {language === 'ar' ? 'مركز الاختبارات' : 'Quiz Center'}
+            {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
           </h3>
           <p className="card-description">
             {language === 'ar'
@@ -802,12 +801,12 @@ const ArabicLearningPlatform = ({
             🏠 {language === 'ar' ? 'الرئيسية' : 'Home'}
           </button>
           <button
-            className={`nav-link ${['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'active' : ''}`}
+            className={`nav-link ${['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'active' : ''}`}
             onClick={() => setCurrentSection('learn')}
             role="menuitem"
             aria-label={language === 'ar' ? 'الانتقال إلى مركز التعلم' : 'Go to learning hub'}
-            aria-current={['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'page' : undefined}
-            style={{ background: ['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'linear-gradient(135deg, #667eea, #764ba2)' : '' }}
+            aria-current={['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'page' : undefined}
+            style={{ background: ['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'linear-gradient(135deg, #667eea, #764ba2)' : '' }}
           >
             📚 {language === 'ar' ? 'تعلم' : 'Learn'}
           </button>
@@ -816,14 +815,7 @@ const ArabicLearningPlatform = ({
             onClick={() => setCurrentSection('quiz')}
             style={{ background: currentSection === 'quiz' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '' }}
           >
-            🎯 {language === 'ar' ? 'اختبارات' : 'Quiz'}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'points' ? 'active' : ''}`}
-            onClick={() => setCurrentSection('points')}
-            style={{ background: currentSection === 'points' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '' }}
-          >
-            🪙 {language === 'ar' ? 'نقاطي' : 'My Points'}
+            🎯 {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
           </button>
           <button
             className={`nav-link ${currentSection === 'progress' ? 'active' : ''}`}
@@ -833,37 +825,10 @@ const ArabicLearningPlatform = ({
             📊 {language === 'ar' ? 'تقدمي' : 'Progress'}
           </button>
           <button
-            className={`nav-link ${currentSection === 'drawing' ? 'active' : ''}`}
-            onClick={() => setCurrentSection('drawing')}
-          >
-            🎨 {language === 'ar' ? 'لوحة الرسم' : 'Drawing Board'}
-          </button>
-          <button
             className={`nav-link ${(currentSection === 'chat' || currentSection === 'voice') ? 'active' : ''}`}
             onClick={() => setCurrentSection(chatMode === 'text' ? 'chat' : 'voice')}
           >
             🤖 {language === 'ar' ? 'المساعد' : 'Assistant'}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'handwriting' ? 'active' : ''}`}
-            onClick={() => setCurrentSection('handwriting')}
-            style={{ background: currentSection === 'handwriting' ? 'linear-gradient(135deg, #10b981, #059669)' : '' }}
-          >
-            ✍️ {language === 'ar' ? 'الكتابة' : 'Handwriting'}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'story' ? 'active' : ''}`}
-            onClick={() => setCurrentSection('story')}
-            style={{ background: currentSection === 'story' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '' }}
-          >
-            📖 {language === 'ar' ? 'القصص' : 'Stories'}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'homework' ? 'active' : ''}`}
-            onClick={() => setCurrentSection('homework')}
-            style={{ background: currentSection === 'homework' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : '' }}
-          >
-            📚 {language === 'ar' ? 'الواجبات' : 'Homework'}
           </button>
           {/* Only show Communication link for teachers and parents */}
           {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
@@ -885,7 +850,7 @@ const ArabicLearningPlatform = ({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
           <button
-            className="profile-settings-btn"
+            className="profile-settings-btn-with-text"
             onClick={() => {
               playClickSound();
               setShowProfileSettings(true);
@@ -893,8 +858,7 @@ const ArabicLearningPlatform = ({
             aria-label={language === 'ar' ? 'فتح الإعدادات' : 'Open settings'}
             title={language === 'ar' ? 'الإعدادات' : 'Settings'}
           >
-            <span aria-hidden="true">⚙️</span>
-            <span className="sr-only">{language === 'ar' ? 'الإعدادات' : 'Settings'}</span>
+            ⚙️ {language === 'ar' ? 'الإعدادات' : 'Settings'}
           </button>
           <SoundToggle language={language} />
           <DarkModeToggle language={language} />
@@ -1051,17 +1015,6 @@ const ArabicLearningPlatform = ({
             </motion.div>
           )}
 
-          {currentSection === 'points' && (
-            <motion.div
-              key="points"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <PointsTracker language={language} />
-            </motion.div>
-          )}
 
           {currentSection === 'sentencebuilder' && (
             <motion.div

@@ -22,7 +22,7 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
       overview: 'Overview',
       totalTime: 'Total Learning Time',
       lessonsCompleted: 'Lessons Completed',
-      quizzesTaken: 'Quizzes Taken',
+      quizzesTaken: 'Tests Taken',
       avgScore: 'Average Score',
       streak: 'Current Streak',
       achievements: 'Achievements Unlocked',
@@ -118,7 +118,7 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
       if (avgScore < 70) {
         recommendations.push(language === 'ar'
           ? 'ننصح بمزيد من الممارسة في الاختبارات'
-          : 'More quiz practice recommended');
+          : 'More test practice recommended');
       }
       if (streak < 7) {
         recommendations.push(language === 'ar'

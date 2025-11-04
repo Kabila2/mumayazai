@@ -479,12 +479,12 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           animate={{ opacity: 1, y: 0 }}
         >
           <h2 className="quiz-title">
-            {language === 'ar' ? '🎯 مركز الاختبارات' : '🎯 Quiz Center'}
+            {language === 'ar' ? '🎯 اختبر نفسك' : '🎯 Test Yourself'}
           </h2>
           <p className="quiz-subtitle">
             {language === 'ar'
               ? 'اختر نوع الاختبار لبدء التعلم'
-              : 'Select a quiz type to start learning'}
+              : 'Select a test type to start learning'}
           </p>
         </motion.div>
 
@@ -576,7 +576,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
             {passed ? '🎉' : '📚'}
           </div>
           <h2 className="results-title">
-            {language === 'ar' ? 'النتيجة النهائية' : 'Quiz Complete!'}
+            {language === 'ar' ? 'النتيجة النهائية' : 'Test Complete!'}
           </h2>
           <div className="results-score">
             <div className="score-circle" style={{ borderColor: passed ? '#10b981' : '#f59e0b' }}>
@@ -597,7 +597,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
               {language === 'ar' ? 'اختر موضوعًا آخر' : 'Choose Another Topic'}
             </button>
             <button className="btn btn-secondary" onClick={() => setSelectedQuizType(null)}>
-              {language === 'ar' ? 'العودة إلى الاختبارات' : 'Back to Quizzes'}
+              {language === 'ar' ? 'العودة إلى الاختبارات' : 'Back to Tests'}
             </button>
           </div>
         </motion.div>
@@ -613,7 +613,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       return (
         <div className="quiz-center">
           <div className="quiz-error">
-            <p>{language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This quiz is not available yet'}</p>
+            <p>{language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet'}</p>
             <button className="btn btn-primary" onClick={() => setSelectedTopic(null)}>
               {language === 'ar' ? 'رجوع' : 'Go Back'}
             </button>
@@ -722,7 +722,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
     return (
       <div className="quiz-center">
         <div className="quiz-error">
-          <p>{language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This quiz is not available yet'}</p>
+          <p>{language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet'}</p>
           <button className="btn btn-primary" onClick={() => setSelectedTopic(null)}>
             {language === 'ar' ? 'رجوع' : 'Go Back'}
           </button>
