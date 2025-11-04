@@ -272,35 +272,35 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
 
   if (!stats) {
     return (
-      <div className="progress-dashboard-loading">
-        <div className="loading-spinner">⏳</div>
-        <p>Loading statistics...</p>
+      <div className="progress-dashboard-container">
+        <div className="progress-dashboard-loading">
+          <div className="loading-spinner">⏳</div>
+          <p>Loading statistics...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <motion.div
-      className="progress-dashboard-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
+      className="progress-dashboard-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
     >
-      <motion.div
-        className="progress-dashboard-modal"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="progress-dashboard-page">
         <div className="progress-dashboard-header">
-          <h2>📊 {t.title}</h2>
+          <div className="header-left">
+            <button className="back-button" onClick={onClose}>
+              ← Back
+            </button>
+            <h2>📊 {t.title}</h2>
+          </div>
           <div className="header-actions">
             <button className="export-pdf-btn" onClick={handleExportPDF}>
               📄 {t.exportPDF}
             </button>
-            <button className="close-button" onClick={onClose}>✕</button>
           </div>
         </div>
 
@@ -478,7 +478,7 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 };

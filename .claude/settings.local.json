@@ -28,7 +28,11 @@
       "Bash(\"C:\\Users\\Uuawei\\mumayazgpt\\src\\components\\ArabicLearningPlatform.css\")",
       "Bash(\"C:\\Users\\Uuawei\\mumayazgpt\\src\\components\\ArabicLearningPlatform.css.tmp\")",
       "Bash(del srccomponentsDataManagement.js)",
-      "Bash(del srccomponentsDataManagement.css)"
+      "Bash(del srccomponentsDataManagement.css)",
+      "Bash(timeout /t 10)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

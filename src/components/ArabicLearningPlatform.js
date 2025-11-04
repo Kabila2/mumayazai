@@ -15,8 +15,8 @@ import LetterWordBuilder from "./LetterWordBuilder";
 import QuizCenter from "./QuizCenter";
 import TeacherParentChat from "./TeacherParentChat";
 import DarkModeToggle from "./DarkModeToggle";
-import SoundToggle from "./SoundToggle";
 import ProfileSettings from "./ProfileSettings";
+import Leaderboard from "./Leaderboard";
 import StreakCounter from "./StreakCounter";
 import ProgressDashboard from "./ProgressDashboard";
 import ArabicHandwritingPractice from "./ArabicHandwritingPractice";
@@ -72,6 +72,7 @@ const ArabicLearningPlatform = ({
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
     colorsProgress: 0,
@@ -825,6 +826,17 @@ const ArabicLearningPlatform = ({
             📊 {language === 'ar' ? 'تقدمي' : 'Progress'}
           </button>
           <button
+            className="nav-link"
+            onClick={() => {
+              playClickSound();
+              setShowLeaderboard(true);
+            }}
+            aria-label={language === 'ar' ? 'عرض لوحة المتصدرين' : 'View leaderboard'}
+            title={language === 'ar' ? 'لوحة المتصدرين' : 'Leaderboard'}
+          >
+            🏆 {language === 'ar' ? 'المتصدرون' : 'Leaderboard'}
+          </button>
+          <button
             className={`nav-link ${(currentSection === 'chat' || currentSection === 'voice') ? 'active' : ''}`}
             onClick={() => setCurrentSection(chatMode === 'text' ? 'chat' : 'voice')}
           >
@@ -860,7 +872,6 @@ const ArabicLearningPlatform = ({
           >
             ⚙️ {language === 'ar' ? 'الإعدادات' : 'Settings'}
           </button>
-          <SoundToggle language={language} />
           <DarkModeToggle language={language} />
           <button
             className="sign-out-btn"
@@ -1275,6 +1286,17 @@ const ArabicLearningPlatform = ({
               }
             }}
             onClose={() => setShowProfileSettings(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Leaderboard Modal */}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <Leaderboard
+            userEmail={getCurrentUserEmail()}
+            language={language}
+            onClose={() => setShowLeaderboard(false)}
           />
         )}
       </AnimatePresence>

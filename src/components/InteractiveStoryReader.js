@@ -41,24 +41,42 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
 
   if (!selectedStory) {
     return (
-      <motion.div className="story-reader-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
-        <motion.div className="story-reader-modal" initial={{ scale: 0.9 }} animate={{ scale: 1 }} onClick={(e) => e.stopPropagation()} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <motion.div
+        className="story-reader-container"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="story-reader-page">
           <div className="story-reader-header">
-            <h2>📚 {t.title}</h2>
-            <button className="close-button" onClick={onClose}>✕</button>
+            <div className="header-left">
+              <button className="back-button" onClick={onClose}>
+                ← {t.close}
+              </button>
+              <h2>📚 {t.title}</h2>
+            </div>
           </div>
-          <div className="story-list">
+          <div className="story-list" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <h3>{t.selectStory}</h3>
-            {stories.map((story) => (
-              <div key={story.id} className="story-card" onClick={() => { playClickSound(); setSelectedStory(story); }}>
-                <div className="story-icon">{story.image}</div>
-                <div>
-                  <h4>{language === 'ar' ? story.title : story.titleEn}</h4>
-                </div>
-              </div>
-            ))}
+            <div className="story-cards-grid">
+              {stories.map((story) => (
+                <motion.div
+                  key={story.id}
+                  className="story-card"
+                  onClick={() => { playClickSound(); setSelectedStory(story); }}
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="story-icon">{story.image}</div>
+                  <div>
+                    <h4>{language === 'ar' ? story.title : story.titleEn}</h4>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
     );
   }
@@ -66,13 +84,23 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
   const currentContent = selectedStory.content[currentPage];
 
   return (
-    <motion.div className="story-reader-overlay" onClick={onClose}>
-      <motion.div className="story-reader-modal reading" onClick={(e) => e.stopPropagation()} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <motion.div
+      className="story-reader-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="story-reader-page reading">
         <div className="story-reader-header">
-          <h2>📖 {language === 'ar' ? selectedStory.title : selectedStory.titleEn}</h2>
-          <button className="close-button" onClick={() => setSelectedStory(null)}>←</button>
+          <div className="header-left">
+            <button className="back-button" onClick={() => setSelectedStory(null)}>
+              ← {t.close}
+            </button>
+            <h2>📖 {language === 'ar' ? selectedStory.title : selectedStory.titleEn}</h2>
+          </div>
         </div>
-        <div className="story-content">
+        <div className="story-content" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <div className="story-image">{selectedStory.image}</div>
           <div className="story-text ar">{currentContent.ar}</div>
           <div className="story-text en">{currentContent.en}</div>
@@ -86,7 +114,7 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
             <button className="nav-btn finish" onClick={() => { playClickSound(); setSelectedStory(null); setCurrentPage(0); }}>{t.finish}</button>
           )}
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 };

@@ -672,9 +672,15 @@ const ParentDashboard = ({
 // Overview Tab Component
 const OverviewTab = ({ child, stats, formatTime, colors }) => (
   <motion.div
+    key="overview-tab"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
+    transition={{
+      duration: 0.4,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }}
+    style={{ willChange: 'opacity, transform' }}
   >
     <Grid container spacing={3}>
       {/* Stats Cards */}
@@ -816,249 +822,332 @@ const OverviewTab = ({ child, stats, formatTime, colors }) => (
 );
 
 // Activity Tab Component
-const ActivityTab = ({ child, stats, formatTime, colors }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-  >
-    <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
-      7-Day Activity Overview
-    </Typography>
-
-    {stats?.dailyActivity && stats.dailyActivity.length > 0 ? (
-      <>
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          {stats.dailyActivity.slice(-7).map((day, index) => (
-            <Grid item xs={12} sm={6} md key={day.date}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card
-                  sx={{
-                    background: day.timeSpent > 0
-                      ? `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`
-                      : 'transparent',
-                    color: day.timeSpent > 0 ? 'white' : 'text.secondary',
-                    border: day.timeSpent === 0 ? '1px dashed' : 'none',
-                    borderColor: 'divider',
-                    textAlign: 'center'
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                      {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                    </Typography>
-                    <Typography variant="h6" fontWeight={700} sx={{ my: 1 }}>
-                      {formatTime(day.timeSpent)}
-                    </Typography>
-                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                      {day.sessions} sessions
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Activity Chart */}
-        <Card variant="outlined" sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Activity Trend
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={stats.dailyActivity.slice(-7)}>
-                <defs>
-                  <linearGradient id="colorTime" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={colors.primary[0]} stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor={colors.primary[0]} stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
-                  stroke="#9ca3af"
-                />
-                <YAxis stroke="#9ca3af" />
-                <RechartsTooltip />
-                <Area
-                  type="monotone"
-                  dataKey="timeSpent"
-                  stroke={colors.primary[0]}
-                  fillOpacity={1}
-                  fill="url(#colorTime)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Topics Explored */}
-        {stats?.topicsExplored && stats.topicsExplored.length > 0 && (
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
-                <Sparkles size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                Topics Explored
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                {stats.topicsExplored.map((topic, index) => (
-                  <Chip
-                    key={index}
-                    label={topic}
-                    sx={{
-                      background: `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`,
-                      color: 'white',
-                      fontWeight: 500
-                    }}
-                  />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-        )}
-      </>
-    ) : (
-      <Card variant="outlined">
-        <CardContent sx={{ textAlign: 'center', py: 6 }}>
-          <Calendar size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
-          <Typography variant="body1" color="text.secondary">
-            No activity data available yet
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Activity will appear here once your child starts learning
-          </Typography>
-        </CardContent>
-      </Card>
-    )}
-  </motion.div>
-);
-
-// Progress Tab Component
-const ProgressTab = ({ child, stats, formatTime, colors }) => {
-  const insights = getLearningInsights(stats);
+const ActivityTab = ({ child, stats, formatTime, colors }) => {
+  const hasData = stats && stats.dailyActivity && Array.isArray(stats.dailyActivity) && stats.dailyActivity.length > 0;
+  const activityData = hasData ? stats.dailyActivity.slice(-7) : [];
 
   return (
     <motion.div
+      key="activity-tab"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      transition={{
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }}
+      style={{ willChange: 'opacity, transform' }}
+    >
+      <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+        7-Day Activity Overview
+      </Typography>
+
+      {hasData ? (
+        <>
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            {activityData.map((day, index) => (
+              <Grid item xs={12} sm={6} md key={day.date || index}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card
+                    sx={{
+                      background: day.timeSpent > 0
+                        ? `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`
+                        : 'transparent',
+                      color: day.timeSpent > 0 ? 'white' : 'text.secondary',
+                      border: day.timeSpent === 0 ? '1px dashed' : 'none',
+                      borderColor: 'divider',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <CardContent>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                        {day.date ? new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }) : 'N/A'}
+                      </Typography>
+                      <Typography variant="h6" fontWeight={700} sx={{ my: 1 }}>
+                        {formatTime(day.timeSpent || 0)}
+                      </Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                        {day.sessions || 0} sessions
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Activity Chart */}
+          <Card variant="outlined" sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
+                Activity Trend
+              </Typography>
+              <Box sx={{ width: '100%', height: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityData}>
+                    <defs>
+                      <linearGradient id="colorTime" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={colors.primary[0]} stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor={colors.primary[0]} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(date) => {
+                        try {
+                          return new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                        } catch (e) {
+                          return date;
+                        }
+                      }}
+                      stroke="#9ca3af"
+                    />
+                    <YAxis stroke="#9ca3af" />
+                    <RechartsTooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="timeSpent"
+                      stroke={colors.primary[0]}
+                      fillOpacity={1}
+                      fill="url(#colorTime)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Topics Explored */}
+          {stats?.topicsExplored && stats.topicsExplored.length > 0 && (
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" fontWeight={600} gutterBottom>
+                  <Sparkles size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+                  Topics Explored
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                  {stats.topicsExplored.map((topic, index) => (
+                    <Chip
+                      key={index}
+                      label={topic}
+                      sx={{
+                        background: `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`,
+                        color: 'white',
+                        fontWeight: 500
+                      }}
+                    />
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      ) : (
+        <Card variant="outlined">
+          <CardContent sx={{ textAlign: 'center', py: 6 }}>
+            <Calendar size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
+            <Typography variant="body1" color="text.secondary">
+              No activity data available yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Activity will appear here once your child starts learning
+            </Typography>
+          </CardContent>
+        </Card>
+      )}
+    </motion.div>
+  );
+};
+
+// Progress Tab Component
+const ProgressTab = ({ child, stats, formatTime, colors }) => {
+  // Safely get insights - only if stats and dailyActivity exist
+  const insights = (stats && stats.dailyActivity && stats.dailyActivity.length > 0)
+    ? getLearningInsights(stats)
+    : [];
+
+  // Check if we have valid data
+  const hasData = stats && stats.dailyActivity && Array.isArray(stats.dailyActivity) && stats.dailyActivity.length > 0;
+  const chartData = hasData ? stats.dailyActivity.slice(-7) : [];
+
+  return (
+    <motion.div
+      key="progress-tab"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }}
+      style={{ willChange: 'opacity, transform' }}
     >
       <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
         <BarChart3 size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
         Progress Analytics
       </Typography>
 
-      <Grid container spacing={3}>
-        {/* Charts */}
-        {stats?.dailyActivity && stats.dailyActivity.length > 0 && (
-          <>
-            <Grid item xs={12} lg={6}>
+      {!hasData ? (
+        <Card variant="outlined">
+          <CardContent sx={{ textAlign: 'center', py: 6 }}>
+            <BarChart3 size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
+            <Typography variant="body1" color="text.secondary">
+              No progress data available yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Progress analytics will appear here once your child starts learning regularly
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <Grid container spacing={3}>
+          {/* Charts */}
+          <Grid item xs={12} lg={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
               <Card variant="outlined">
                 <CardContent>
                   <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                     Daily Time Spent
                   </Typography>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={stats.dailyActivity.slice(-7)}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
-                        stroke="#9ca3af"
-                      />
-                      <YAxis stroke="#9ca3af" />
-                      <RechartsTooltip />
-                      <Bar dataKey="timeSpent" fill={colors.primary[0]} radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <Box sx={{ width: '100%', height: 250 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="date"
+                          tickFormatter={(date) => {
+                            try {
+                              return new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+                            } catch (e) {
+                              return date;
+                            }
+                          }}
+                          stroke="#9ca3af"
+                        />
+                        <YAxis stroke="#9ca3af" />
+                        <RechartsTooltip />
+                        <Bar dataKey="timeSpent" fill={colors.primary[0]} radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
                 </CardContent>
               </Card>
-            </Grid>
+            </motion.div>
+          </Grid>
 
-            <Grid item xs={12} lg={6}>
+          <Grid item xs={12} lg={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
               <Card variant="outlined">
                 <CardContent>
                   <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                     Sessions Completed
                   </Typography>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={stats.dailyActivity.slice(-7)}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
-                        stroke="#9ca3af"
-                      />
-                      <YAxis stroke="#9ca3af" />
-                      <RechartsTooltip />
-                      <Line
-                        type="monotone"
-                        dataKey="sessions"
-                        stroke={colors.success[0]}
-                        strokeWidth={3}
-                        dot={{ fill: colors.success[0], r: 5 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <Box sx={{ width: '100%', height: 250 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="date"
+                          tickFormatter={(date) => {
+                            try {
+                              return new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+                            } catch (e) {
+                              return date;
+                            }
+                          }}
+                          stroke="#9ca3af"
+                        />
+                        <YAxis stroke="#9ca3af" />
+                        <RechartsTooltip />
+                        <Line
+                          type="monotone"
+                          dataKey="sessions"
+                          stroke={colors.success[0]}
+                          strokeWidth={3}
+                          dot={{ fill: colors.success[0], r: 5 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Box>
                 </CardContent>
               </Card>
-            </Grid>
-          </>
-        )}
+            </motion.div>
+          </Grid>
 
-        {/* Learning Insights */}
-        <Grid item xs={12}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                <Brain size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                Learning Insights
-              </Typography>
-              {insights.length > 0 ? (
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  {insights.map((insight, index) => (
-                    <Grid item xs={12} key={index}>
-                      <Alert
-                        severity={
-                          insight.type === 'positive' ? 'success' :
-                          insight.type === 'concern' ? 'error' : 'info'
-                        }
-                        icon={<span style={{ fontSize: '1.5rem' }}>{insight.icon}</span>}
-                      >
-                        <Typography variant="subtitle2" fontWeight={600}>
-                          {insight.title}
-                        </Typography>
-                        <Typography variant="body2">
-                          {insight.description}
-                        </Typography>
-                      </Alert>
+          {/* Learning Insights */}
+          <Grid item xs={12}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    <Brain size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+                    Learning Insights
+                  </Typography>
+                  {insights && insights.length > 0 ? (
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                      {insights.map((insight, index) => (
+                        <Grid item xs={12} key={index}>
+                          <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 + index * 0.1, duration: 0.3 }}
+                          >
+                            <Alert
+                              severity={
+                                insight.type === 'positive' ? 'success' :
+                                insight.type === 'concern' ? 'error' : 'info'
+                              }
+                              icon={<span style={{ fontSize: '1.5rem' }}>{insight.icon}</span>}
+                            >
+                              <Typography variant="subtitle2" fontWeight={600}>
+                                {insight.title}
+                              </Typography>
+                              <Typography variant="body2">
+                                {insight.description}
+                              </Typography>
+                            </Alert>
+                          </motion.div>
+                        </Grid>
+                      ))}
                     </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  Keep tracking to see learning insights!
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                      Keep tracking to see learning insights!
+                    </Typography>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
     </motion.div>
   );
 };
 
 // Improvements Tab Component
 const ImprovementsTab = ({ child, stats, colors }) => {
-  const improvements = analyzeAreasForImprovement(stats, child);
-  const improvementScore = calculateImprovementScore(stats, child);
-  const recommendations = generateLearningRecommendations(stats, child);
+  // Safely get improvements data
+  const improvements = (stats && child) ? analyzeAreasForImprovement(stats, child) : [];
+  const improvementScore = (stats && child) ? calculateImprovementScore(stats, child) : 0;
+  const recommendations = (stats && child) ? generateLearningRecommendations(stats, child) : [];
 
   const getScoreColor = (score) => {
     if (score >= 80) return colors.success[0];
@@ -1068,9 +1157,15 @@ const ImprovementsTab = ({ child, stats, colors }) => {
 
   return (
     <motion.div
+      key="improvements-tab"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      transition={{
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }}
+      style={{ willChange: 'opacity, transform' }}
     >
       <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
         <Target size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
@@ -1235,9 +1330,15 @@ const ImprovementsTab = ({ child, stats, colors }) => {
 // Achievements Tab Component
 const AchievementsTab = ({ child, colors }) => (
   <motion.div
+    key="achievements-tab"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
+    transition={{
+      duration: 0.4,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }}
+    style={{ willChange: 'opacity, transform' }}
   >
     <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
       <Award size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />

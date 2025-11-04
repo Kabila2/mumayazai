@@ -148,23 +148,23 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   return (
     <motion.div
-      className="homework-system-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
+      className="homework-system-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
     >
-      <motion.div
-        className="homework-system-modal"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
+      <div
+        className="homework-system-page"
         dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
         <div className="homework-system-header">
-          <h2>📚 {t.title}</h2>
-          <button className="close-button" onClick={onClose}>✕</button>
+          <div className="header-left">
+            <button className="back-button" onClick={onClose}>
+              ← {t.close}
+            </button>
+            <h2>📚 {t.title}</h2>
+          </div>
         </div>
 
         <div className="homework-system-actions">
@@ -257,7 +257,7 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
             ))
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Create Homework Modal */}
       <AnimatePresence>

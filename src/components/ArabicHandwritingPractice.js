@@ -35,31 +35,32 @@ const arabicLetters = [
 ];
 
 const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
-  const [selectedLetter, setSelectedLetter] = useState(arabicLetters[0]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [showGuide, setShowGuide] = useState(true);
   const canvasRef = useRef(null);
   const [ctx, setCtx] = useState(null);
 
+  const selectedLetter = arabicLetters[currentIndex];
+
   const translations = {
     en: {
-      title: 'Arabic Handwriting Practice',
-      selectLetter: 'Select Letter',
+      title: 'Arabic Handwriting',
+      instruction: 'Trace the letter with your finger or mouse',
       clear: 'Clear',
-      save: 'Save',
-      showGuide: 'Show Guide',
-      hideGuide: 'Hide Guide',
-      practice: 'Practice writing',
+      previous: 'Previous',
+      next: 'Next',
+      letterProgress: 'Letter',
+      of: 'of',
       close: 'Close'
     },
     ar: {
-      title: 'ممارسة الكتابة العربية',
-      selectLetter: 'اختر الحرف',
+      title: 'ممارسة الكتابة',
+      instruction: 'ارسم الحرف بإصبعك أو الماوس',
       clear: 'مسح',
-      save: 'حفظ',
-      showGuide: 'إظهار الدليل',
-      hideGuide: 'إخفاء الدليل',
-      practice: 'تدرب على الكتابة',
+      previous: 'السابق',
+      next: 'التالي',
+      letterProgress: 'حرف',
+      of: 'من',
       close: 'إغلاق'
     }
   };
@@ -70,40 +71,58 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
     const canvas = canvasRef.current;
     if (canvas) {
       const context = canvas.getContext('2d');
-      context.strokeStyle = '#1f2937';
-      context.lineWidth = 3;
+      context.strokeStyle = '#8b5cf6';
+      context.lineWidth = 5;
       context.lineCap = 'round';
       context.lineJoin = 'round';
       setCtx(context);
-
-      // Draw guide letter
-      if (showGuide) {
-        drawGuideLetter(context);
-      }
+      drawGuideLetter(context);
     }
-  }, [selectedLetter, showGuide]);
+  }, [selectedLetter]);
 
   const drawGuideLetter = (context) => {
+    const canvas = canvasRef.current;
+    context.clearRect(0, 0, canvas.width, canvas.height);
     context.save();
-    context.font = 'bold 200px Arial';
-    context.fillStyle = '#e5e7eb';
+    context.font = 'bold 350px Arial';
+    context.fillStyle = 'rgba(139, 92, 246, 0.15)';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(selectedLetter.letter, 300, 225);
+    context.fillText(selectedLetter.letter, canvas.width / 2, canvas.height / 2);
     context.restore();
   };
 
-  const startDrawing = (e) => {
-    setIsDrawing(true);
+  const getCoordinates = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+
+    if (e.touches) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY
+      };
+    } else {
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+  };
+
+  const startDrawing = (e) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    const coords = getCoordinates(e);
     ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.moveTo(coords.x, coords.y);
   };
 
   const draw = (e) => {
     if (!isDrawing) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    e.preventDefault();
+    const coords = getCoordinates(e);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
   };
 
@@ -113,108 +132,100 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
 
   const clearCanvas = () => {
     playClickSound();
-    const canvas = canvasRef.current;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (showGuide) {
-      drawGuideLetter(ctx);
-    }
+    drawGuideLetter(ctx);
   };
 
-  const saveDrawing = () => {
-    playSuccessSound();
-    const canvas = canvasRef.current;
-    const dataURL = canvas.toDataURL();
+  const goToPrevious = () => {
+    playClickSound();
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  };
 
-    // Save to localStorage
-    const savedDrawings = JSON.parse(localStorage.getItem('mumayaz_handwriting') || '[]');
-    savedDrawings.push({
-      letter: selectedLetter.letter,
-      drawing: dataURL,
-      timestamp: Date.now()
-    });
-    localStorage.setItem('mumayaz_handwriting', JSON.stringify(savedDrawings));
-
-    alert('Drawing saved!');
+  const goToNext = () => {
+    playClickSound();
+    setCurrentIndex((prev) => Math.min(arabicLetters.length - 1, prev + 1));
   };
 
   return (
     <motion.div
-      className="handwriting-practice-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
+      className="handwriting-practice-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
     >
-      <motion.div
-        className="handwriting-practice-modal"
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
-        onClick={(e) => e.stopPropagation()}
+      <div
+        className="handwriting-practice-page"
         dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
         <div className="handwriting-practice-header">
-          <h2>✍️ {t.title}</h2>
-          <button className="close-button" onClick={onClose}>✕</button>
+          <div className="header-left">
+            <button className="back-button" onClick={onClose}>
+              ← {t.close}
+            </button>
+            <h2>✍️ {t.title}</h2>
+          </div>
         </div>
 
         <div className="handwriting-practice-content">
-          <div className="letter-selector">
-            <h3>{t.selectLetter}</h3>
-            <div className="letters-grid">
-              {arabicLetters.map((item) => (
-                <button
-                  key={item.letter}
-                  className={`letter-btn ${selectedLetter.letter === item.letter ? 'active' : ''}`}
-                  onClick={() => {
-                    playClickSound();
-                    setSelectedLetter(item);
-                    clearCanvas();
-                  }}
-                >
-                  {item.letter}
-                </button>
-              ))}
+          <div className="practice-main">
+            {/* Letter Display */}
+            <div className="letter-display">
+              <div className="letter-showcase">
+                <div className="letter-large">{selectedLetter.letter}</div>
+                <div className="letter-name">{selectedLetter.name}</div>
+              </div>
+              <div className="progress-indicator">
+                {t.letterProgress} {currentIndex + 1} {t.of} {arabicLetters.length}
+              </div>
             </div>
-          </div>
 
-          <div className="canvas-container">
-            <div className="canvas-header">
-              <h3>{selectedLetter.letter} - {selectedLetter.name}</h3>
+            {/* Instruction */}
+            <div className="practice-instruction">
+              ✍️ {t.instruction}
+            </div>
+
+            {/* Canvas */}
+            <div className="canvas-wrapper">
+              <canvas
+                ref={canvasRef}
+                width={800}
+                height={600}
+                className="drawing-canvas"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+            </div>
+
+            {/* Controls */}
+            <div className="practice-controls">
               <button
-                className="guide-toggle-btn"
-                onClick={() => {
-                  playClickSound();
-                  setShowGuide(!showGuide);
-                  clearCanvas();
-                }}
+                className="control-btn nav-btn"
+                onClick={goToPrevious}
+                disabled={currentIndex === 0}
               >
-                {showGuide ? t.hideGuide : t.showGuide}
+                ← {t.previous}
               </button>
-            </div>
 
-            <canvas
-              ref={canvasRef}
-              width={600}
-              height={450}
-              className="drawing-canvas"
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-            />
-
-            <div className="canvas-actions">
-              <button className="clear-btn" onClick={clearCanvas}>
+              <button className="control-btn clear-btn-main" onClick={clearCanvas}>
                 🗑️ {t.clear}
               </button>
-              <button className="save-btn" onClick={saveDrawing}>
-                💾 {t.save}
+
+              <button
+                className="control-btn nav-btn"
+                onClick={goToNext}
+                disabled={currentIndex === arabicLetters.length - 1}
+              >
+                {t.next} →
               </button>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 };
