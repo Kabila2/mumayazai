@@ -13,8 +13,10 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
   const [isTyping, setIsTyping] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const autoRefreshIntervalRef = useRef(null);
 
@@ -42,7 +44,12 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
       noMessages: 'No messages yet. Start the conversation!',
       messageSent: 'Message sent',
       pressEnter: 'Press Enter to send',
-      newMessages: 'new messages'
+      newMessages: 'new messages',
+      attachFile: 'Attach File',
+      filesSelected: 'files selected',
+      removeFile: 'Remove',
+      download: 'Download',
+      attachment: 'Attachment'
     },
     ar: {
       title: 'التواصل بين المعلمين والأهل',
@@ -67,7 +74,12 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
       noMessages: 'لا توجد رسائل بعد. ابدأ المحادثة!',
       messageSent: 'تم إرسال الرسالة',
       pressEnter: 'اضغط Enter للإرسال',
-      newMessages: 'رسائل جديدة'
+      newMessages: 'رسائل جديدة',
+      attachFile: 'إرفاق ملف',
+      filesSelected: 'ملفات محددة',
+      removeFile: 'إزالة',
+      download: 'تحميل',
+      attachment: 'مرفق'
     }
   };
 
@@ -220,17 +232,28 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
   }, [loadConversations]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || isSending) return;
+    if ((!newMessage.trim() && selectedFiles.length === 0) || !selectedConversation || isSending) return;
 
     setIsSending(true);
 
     try {
+      // Convert files to base64
+      const attachments = await Promise.all(
+        selectedFiles.map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: await convertFileToBase64(file)
+        }))
+      );
+
       const message = {
         id: Date.now(),
         sender: currentUserEmail,
         text: newMessage.trim(),
         timestamp: Date.now(),
-        read: false
+        read: false,
+        attachments: attachments.length > 0 ? attachments : undefined
       };
 
       // Add message to conversation
@@ -253,6 +276,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
       // Update local state
       setMessages([...messages, message]);
       setNewMessage('');
+      setSelectedFiles([]);
       loadConversations();
 
       // Clear typing indicator
@@ -293,6 +317,30 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024); // 5MB limit
+
+    if (validFiles.length < files.length) {
+      alert(language === 'ar' ? 'بعض الملفات تتجاوز 5 ميجابايت' : 'Some files exceed 5MB limit');
+    }
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
   };
 
   const getParticipantName = (email) => {
@@ -576,7 +624,32 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
                         transition={{ delay: index * 0.02 }}
                       >
                         <div className="message-bubble">
-                          <p className="message-text">{msg.text}</p>
+                          {msg.text && <p className="message-text">{msg.text}</p>}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <div className="message-attachments">
+                              {msg.attachments.map((attachment, attIndex) => (
+                                <div key={attIndex} className="attachment-item">
+                                  <span className="attachment-icon">
+                                    {attachment.type.startsWith('image/') ? '🖼️' : '📄'}
+                                  </span>
+                                  <div className="attachment-info">
+                                    <span className="attachment-name">{attachment.name}</span>
+                                    <span className="attachment-size">
+                                      ({Math.round(attachment.size / 1024)}KB)
+                                    </span>
+                                  </div>
+                                  <a
+                                    href={attachment.data}
+                                    download={attachment.name}
+                                    className="download-attachment-btn"
+                                    title={t.download}
+                                  >
+                                    ⬇️
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           <div className="message-meta">
                             <span className="message-time">{formatTime(msg.timestamp)}</span>
                             {msg.sender === currentUserEmail && (
@@ -595,29 +668,67 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
               {/* Message Input */}
               <div className="message-input-area">
-                <textarea
-                  ref={messageInputRef}
-                  className="message-input"
-                  value={newMessage}
-                  onChange={handleMessageChange}
-                  onKeyPress={handleKeyPress}
-                  placeholder={t.typeMessage}
-                  disabled={isSending}
-                  rows={1}
-                />
-                <motion.button
-                  className="send-message-btn"
-                  onClick={handleSendMessage}
-                  disabled={isSending || !newMessage.trim()}
-                  whileHover={!isSending && newMessage.trim() ? { scale: 1.05 } : {}}
-                  whileTap={!isSending && newMessage.trim() ? { scale: 0.95 } : {}}
-                >
-                  {isSending ? (
-                    <span>⏳</span>
-                  ) : (
-                    <span>{language === 'ar' ? '📤' : '📤'}</span>
-                  )}
-                </motion.button>
+                {selectedFiles.length > 0 && (
+                  <div className="selected-files-preview">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="file-preview-item">
+                        <span className="file-icon">📎</span>
+                        <span className="file-name">{file.name}</span>
+                        <span className="file-size">({Math.round(file.size / 1024)}KB)</span>
+                        <button
+                          className="remove-file-btn"
+                          onClick={() => removeFile(index)}
+                          title={t.removeFile}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="input-controls">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                  />
+                  <motion.button
+                    className="attach-file-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSending}
+                    whileHover={!isSending ? { scale: 1.05 } : {}}
+                    whileTap={!isSending ? { scale: 0.95 } : {}}
+                    title={t.attachFile}
+                  >
+                    📎
+                  </motion.button>
+                  <textarea
+                    ref={messageInputRef}
+                    className="message-input"
+                    value={newMessage}
+                    onChange={handleMessageChange}
+                    onKeyPress={handleKeyPress}
+                    placeholder={t.typeMessage}
+                    disabled={isSending}
+                    rows={1}
+                  />
+                  <motion.button
+                    className="send-message-btn"
+                    onClick={handleSendMessage}
+                    disabled={isSending || (!newMessage.trim() && selectedFiles.length === 0)}
+                    whileHover={!isSending && (newMessage.trim() || selectedFiles.length > 0) ? { scale: 1.05 } : {}}
+                    whileTap={!isSending && (newMessage.trim() || selectedFiles.length > 0) ? { scale: 0.95 } : {}}
+                  >
+                    {isSending ? (
+                      <span>⏳</span>
+                    ) : (
+                      <span>{language === 'ar' ? '📤' : '📤'}</span>
+                    )}
+                  </motion.button>
+                </div>
               </div>
             </>
           )}

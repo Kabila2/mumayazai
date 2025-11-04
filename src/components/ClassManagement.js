@@ -8,6 +8,7 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
   const [students, setStudents] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [classToDelete, setClassToDelete] = useState(null);
 
   const translations = {
     en: {
@@ -30,7 +31,11 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
       close: 'Close',
       grade: 'Grade',
       performance: 'Performance',
-      email: 'Email'
+      email: 'Email',
+      confirmDelete: 'Delete Class',
+      confirmDeleteMessage: 'Are you sure you want to delete this class? This action cannot be undone.',
+      confirmYes: 'Yes, Delete',
+      confirmNo: 'Cancel'
     },
     ar: {
       title: 'إدارة الصفوف',
@@ -52,7 +57,11 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
       close: 'إغلاق',
       grade: 'الصف',
       performance: 'الأداء',
-      email: 'البريد الإلكتروني'
+      email: 'البريد الإلكتروني',
+      confirmDelete: 'حذف الصف',
+      confirmDeleteMessage: 'هل أنت متأكد من حذف هذا الصف؟ لا يمكن التراجع عن هذا الإجراء.',
+      confirmYes: 'نعم، احذف',
+      confirmNo: 'إلغاء'
     }
   };
 
@@ -113,8 +122,6 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
   };
 
   const deleteClass = (classId) => {
-    if (!confirm('Are you sure you want to delete this class?')) return;
-
     try {
       const classesKey = 'mumayaz_classes';
       const allClasses = JSON.parse(localStorage.getItem(classesKey) || '[]');
@@ -123,6 +130,7 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
       playClickSound();
       loadClasses();
       setSelectedClass(null);
+      setClassToDelete(null);
     } catch (error) {
       console.error('Error deleting class:', error);
     }
@@ -173,7 +181,7 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
   const copyClassCode = (code) => {
     navigator.clipboard.writeText(code);
     playClickSound();
-    alert('Class code copied!');
+    // Class code copied notification shown via clipboard API
   };
 
   const getStudentInfo = (email) => {
@@ -254,7 +262,7 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
                         </button>
                         <button
                           className="action-btn delete-btn"
-                          onClick={() => deleteClass(cls.id)}
+                          onClick={() => setClassToDelete(cls)}
                         >
                           🗑️
                         </button>
@@ -288,6 +296,44 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
             language={language}
             t={t}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {classToDelete && (
+          <motion.div
+            className="confirmation-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setClassToDelete(null)}
+          >
+            <motion.div
+              className="confirmation-modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>{t.confirmDelete}</h3>
+              <p>{t.confirmDeleteMessage}</p>
+              <div className="confirmation-actions">
+                <button
+                  className="confirm-btn delete"
+                  onClick={() => deleteClass(classToDelete.id)}
+                >
+                  {t.confirmYes}
+                </button>
+                <button
+                  className="confirm-btn cancel"
+                  onClick={() => setClassToDelete(null)}
+                >
+                  {t.confirmNo}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.div>

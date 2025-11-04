@@ -25,6 +25,7 @@ import InteractiveStoryReader from "./InteractiveStoryReader";
 import HomeworkSystem from "./HomeworkSystem";
 import ClassManagement from "./ClassManagement";
 import OnboardingTutorial from "./OnboardingTutorial";
+import StudentProgressReport from "./StudentProgressReport";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
@@ -66,7 +67,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'points', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -707,6 +708,30 @@ const ArabicLearningPlatform = ({
             </p>
           </motion.div>
         )}
+
+        {/* Only show Student Progress Report for teachers and parents */}
+        {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
+          <motion.div
+            className="section-card progressreport-card"
+            onClick={() => handleSectionChange('progressreport')}
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.0 }}
+          >
+            <div className="card-icon">📄</div>
+            <h3 className="card-title">
+              {language === 'ar' ? 'تقرير تقدم الطالب' : 'Student Progress Report'}
+            </h3>
+            <p className="card-description">
+              {language === 'ar'
+                ? 'عرض تقارير مفصلة عن تقدم الطلاب'
+                : 'View detailed student progress reports'
+              }
+            </p>
+          </motion.div>
+        )}
       </div>
 
       <motion.div
@@ -755,23 +780,33 @@ const ArabicLearningPlatform = ({
   return (
     <div className="arabic-learning-platform" ref={platformRef}>
       {currentSection !== 'learn' && currentSection !== 'chat' && currentSection !== 'voice' && currentSection !== 'teacherchat' && (
-        <nav className="platform-nav">
+        <nav
+          className="platform-nav"
+          role="navigation"
+          aria-label={language === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'}
+        >
         <div className="nav-brand">
-          <h2 className="brand-title">
+          <h2 className="brand-title" id="platform-title">
             {language === 'ar' ? 'تعلم العربية' : 'Learn Arabic'}
           </h2>
         </div>
 
-        <div className="nav-links">
+        <div className="nav-links" role="menu" aria-labelledby="platform-title">
           <button
             className={`nav-link ${currentSection === 'home' ? 'active' : ''}`}
             onClick={() => setCurrentSection('home')}
+            role="menuitem"
+            aria-label={language === 'ar' ? 'العودة إلى الصفحة الرئيسية' : 'Go to home page'}
+            aria-current={currentSection === 'home' ? 'page' : undefined}
           >
             🏠 {language === 'ar' ? 'الرئيسية' : 'Home'}
           </button>
           <button
             className={`nav-link ${['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'active' : ''}`}
             onClick={() => setCurrentSection('learn')}
+            role="menuitem"
+            aria-label={language === 'ar' ? 'الانتقال إلى مركز التعلم' : 'Go to learning hub'}
+            aria-current={['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'page' : undefined}
             style={{ background: ['learn', 'alphabet', 'colors', 'words', 'sentences'].includes(currentSection) ? 'linear-gradient(135deg, #667eea, #764ba2)' : '' }}
           >
             📚 {language === 'ar' ? 'تعلم' : 'Learn'}
@@ -809,6 +844,27 @@ const ArabicLearningPlatform = ({
           >
             🤖 {language === 'ar' ? 'المساعد' : 'Assistant'}
           </button>
+          <button
+            className={`nav-link ${currentSection === 'handwriting' ? 'active' : ''}`}
+            onClick={() => setCurrentSection('handwriting')}
+            style={{ background: currentSection === 'handwriting' ? 'linear-gradient(135deg, #10b981, #059669)' : '' }}
+          >
+            ✍️ {language === 'ar' ? 'الكتابة' : 'Handwriting'}
+          </button>
+          <button
+            className={`nav-link ${currentSection === 'story' ? 'active' : ''}`}
+            onClick={() => setCurrentSection('story')}
+            style={{ background: currentSection === 'story' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '' }}
+          >
+            📖 {language === 'ar' ? 'القصص' : 'Stories'}
+          </button>
+          <button
+            className={`nav-link ${currentSection === 'homework' ? 'active' : ''}`}
+            onClick={() => setCurrentSection('homework')}
+            style={{ background: currentSection === 'homework' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : '' }}
+          >
+            📚 {language === 'ar' ? 'الواجبات' : 'Homework'}
+          </button>
           {/* Only show Communication link for teachers and parents */}
           {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
             <button
@@ -827,27 +883,39 @@ const ArabicLearningPlatform = ({
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
           <button
             className="profile-settings-btn"
             onClick={() => {
               playClickSound();
               setShowProfileSettings(true);
             }}
+            aria-label={language === 'ar' ? 'فتح الإعدادات' : 'Open settings'}
             title={language === 'ar' ? 'الإعدادات' : 'Settings'}
           >
-            ⚙️
+            <span aria-hidden="true">⚙️</span>
+            <span className="sr-only">{language === 'ar' ? 'الإعدادات' : 'Settings'}</span>
           </button>
           <SoundToggle language={language} />
           <DarkModeToggle language={language} />
-          <button className="sign-out-btn" onClick={onSignOut}>
-            🚪 {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
+          <button
+            className="sign-out-btn"
+            onClick={onSignOut}
+            aria-label={language === 'ar' ? 'تسجيل الخروج من الحساب' : 'Sign out of account'}
+          >
+            <span aria-hidden="true">🚪</span> {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
           </button>
         </div>
       </nav>
       )}
 
-      <main className={`platform-content ${(currentSection === 'learn' || currentSection === 'chat' || currentSection === 'voice' || currentSection === 'teacherchat') ? 'fullscreen' : ''}`}>
+      <main
+        id="main-content"
+        className={`platform-content ${(currentSection === 'learn' || currentSection === 'chat' || currentSection === 'voice' || currentSection === 'teacherchat') ? 'fullscreen' : ''}`}
+        role="main"
+        aria-label={language === 'ar' ? 'المحتوى الرئيسي' : 'Main content'}
+        tabIndex="-1"
+      >
         <AnimatePresence mode="wait">
           {currentSection === 'home' && (
             <motion.div
@@ -1215,6 +1283,22 @@ const ArabicLearningPlatform = ({
             >
               <ClassManagement
                 teacherEmail={getCurrentUserEmail()}
+                language={language}
+                onClose={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'progressreport' && (
+            <motion.div
+              key="progressreport"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <StudentProgressReport
+                userEmail={getCurrentUserEmail()}
                 language={language}
                 onClose={() => setCurrentSection('home')}
               />

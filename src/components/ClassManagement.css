@@ -546,3 +546,120 @@
     gap: 10px;
   }
 }
+
+/* Confirmation Modal */
+.confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  backdrop-filter: blur(4px);
+}
+
+.confirmation-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.confirmation-modal h3 {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.confirmation-modal p {
+  margin: 0 0 24px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.confirm-btn.delete {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.confirm-btn.delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.confirm-btn.cancel {
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+}
+
+.confirm-btn.cancel:hover {
+  background: #e5e7eb;
+}
+
+/* Dark Mode Support for Confirmation */
+.dark-mode .confirmation-modal {
+  background: var(--bg-secondary);
+}
+
+.dark-mode .confirmation-modal h3 {
+  color: var(--text-primary);
+}
+
+.dark-mode .confirmation-modal p {
+  color: var(--text-secondary);
+}
+
+.dark-mode .confirm-btn.cancel {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .confirm-btn.cancel:hover {
+  background: var(--bg-primary);
+}
+
+/* Mobile Responsive for Confirmation */
+@media (max-width: 768px) {
+  .confirmation-modal {
+    padding: 24px;
+  }
+
+  .confirmation-modal h3 {
+    font-size: 1.25rem;
+  }
+
+  .confirmation-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .confirm-btn {
+    width: 100%;
+  }
+}
