@@ -39,42 +39,8 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   const [currentIndex, setCurrentIndex] = useState(0);
   const [learnedLetters, setLearnedLetters] = useState([]);
   const [userEmail, setUserEmail] = useState(null);
-  const [voices, setVoices] = useState([]);
 
   const currentLetter = arabicAlphabet[currentIndex];
-
-  // Load available voices
-  useEffect(() => {
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      setVoices(availableVoices);
-      console.log('=== AVAILABLE VOICES ===');
-      availableVoices.forEach((v, i) => {
-        console.log(`${i + 1}. ${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`);
-      });
-      console.log('======================');
-
-      // Check for Arabic voices specifically
-      const arabicVoices = availableVoices.filter(v =>
-        v.lang.toLowerCase().includes('ar') ||
-        v.name.toLowerCase().includes('arabic')
-      );
-      console.log('Arabic voices found:', arabicVoices.length);
-      arabicVoices.forEach(v => console.log(`  - ${v.name} (${v.lang})`));
-    };
-
-    // Load voices immediately
-    loadVoices();
-
-    // Some browsers load voices asynchronously
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
-  }, []);
 
   // Get user email on mount
   useEffect(() => {
@@ -91,9 +57,29 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
       console.error("Error loading user:", error);
     }
 
+    // Check if ResponsiveVoice is loaded
+    if (window.responsiveVoice) {
+      console.log('✅ ResponsiveVoice loaded successfully!');
+      console.log('Available voices:', window.responsiveVoice.getVoices());
+    } else {
+      console.warn('⚠️ ResponsiveVoice not loaded. Waiting...');
+      // Wait a bit for it to load
+      const checkInterval = setInterval(() => {
+        if (window.responsiveVoice) {
+          console.log('✅ ResponsiveVoice loaded!');
+          clearInterval(checkInterval);
+        }
+      }, 100);
+
+      // Clear interval after 5 seconds
+      setTimeout(() => clearInterval(checkInterval), 5000);
+    }
+
     // Cleanup: Cancel any ongoing speech when component unmounts
     return () => {
-      if ('speechSynthesis' in window) {
+      if (window.responsiveVoice) {
+        window.responsiveVoice.cancel();
+      } else if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
     };
@@ -121,126 +107,95 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [currentIndex]);
 
-  const getArabicVoice = () => {
-    if (voices.length === 0) {
-      console.log('No voices loaded yet');
-      return null;
-    }
-
-    // Try multiple patterns to find an Arabic voice
-    let arabicVoice = voices.find(voice =>
-      voice.lang.toLowerCase().startsWith('ar')
-    );
-
-    if (!arabicVoice) {
-      arabicVoice = voices.find(voice =>
-        voice.lang.toLowerCase().includes('ar-')
-      );
-    }
-
-    if (!arabicVoice) {
-      arabicVoice = voices.find(voice =>
-        voice.name.toLowerCase().includes('arabic')
-      );
-    }
-
-    // If still no Arabic voice, try to find any voice that might work with Arabic
-    if (!arabicVoice) {
-      // Use the first available voice as fallback
-      arabicVoice = voices[0];
-      console.log('No Arabic voice found. Using fallback:', arabicVoice ? `${arabicVoice.name} (${arabicVoice.lang})` : 'None');
-    } else {
-      console.log('Selected Arabic voice:', `${arabicVoice.name} (${arabicVoice.lang})`);
-    }
-
-    return arabicVoice;
-  };
-
   const speakLetter = () => {
-    if ('speechSynthesis' in window) {
-      try {
+    try {
+      // Check if ResponsiveVoice is loaded
+      if (window.responsiveVoice) {
         // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
+        window.responsiveVoice.cancel();
 
-        // Small delay to ensure cancel completes
-        setTimeout(() => {
-          const utterance = new SpeechSynthesisUtterance(currentLetter.name);
+        console.log('Speaking letter with ResponsiveVoice:', currentLetter.name);
 
-          // Don't set a specific voice - let the browser choose based on lang
-          // This allows Chrome to use Google's remote Arabic TTS
-          utterance.lang = 'ar-SA'; // Arabic language (Saudi Arabia)
-          utterance.rate = 0.8; // Slower for clarity
-          utterance.pitch = 1;
-          utterance.volume = 1;
-
-          console.log('Speaking letter:', currentLetter.name, 'with lang: ar-SA');
-
-          utterance.onerror = (event) => {
-            console.error('Speech error:', event.error);
-          };
-
-          utterance.onend = () => {
-            console.log('Speech ended successfully');
-          };
-
-          utterance.onstart = () => {
+        // Use ResponsiveVoice with Arabic voice
+        window.responsiveVoice.speak(currentLetter.name, "Arabic Female", {
+          rate: 0.8, // Slower for clarity
+          pitch: 1,
+          volume: 1,
+          onstart: () => {
             console.log('Speech started');
-          };
-
-          window.speechSynthesis.speak(utterance);
-        }, 100);
-      } catch (error) {
-        console.error('Error speaking letter:', error);
+          },
+          onend: () => {
+            console.log('Speech ended successfully');
+          },
+          onerror: (error) => {
+            console.error('Speech error:', error);
+          }
+        });
+      } else {
+        console.warn('ResponsiveVoice not loaded, falling back to Web Speech API');
+        // Fallback to browser's speech synthesis
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          setTimeout(() => {
+            const utterance = new SpeechSynthesisUtterance(currentLetter.name);
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
+          }, 100);
+        }
       }
-    } else {
-      console.warn('Speech synthesis not supported');
+    } catch (error) {
+      console.error('Error speaking letter:', error);
     }
   };
 
   const speakWord = () => {
-    if ('speechSynthesis' in window) {
-      try {
+    try {
+      // Check if ResponsiveVoice is loaded
+      if (window.responsiveVoice) {
         // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
+        window.responsiveVoice.cancel();
 
-        // Small delay to ensure cancel completes
-        setTimeout(() => {
-          const utterance = new SpeechSynthesisUtterance(currentLetter.word);
+        console.log('Speaking word with ResponsiveVoice:', currentLetter.word);
 
-          // Don't set a specific voice - let the browser choose based on lang
-          // This allows Chrome to use Google's remote Arabic TTS
-          utterance.lang = 'ar-SA'; // Arabic language (Saudi Arabia)
-          utterance.rate = 0.8; // Slower for clarity
-          utterance.pitch = 1;
-          utterance.volume = 1;
-
-          console.log('Speaking word:', currentLetter.word, 'with lang: ar-SA');
-
-          utterance.onerror = (event) => {
-            console.error('Speech error:', event.error);
-          };
-
-          utterance.onend = () => {
-            console.log('Speech ended successfully');
-          };
-
-          utterance.onstart = () => {
+        // Use ResponsiveVoice with Arabic voice
+        window.responsiveVoice.speak(currentLetter.word, "Arabic Female", {
+          rate: 0.8, // Slower for clarity
+          pitch: 1,
+          volume: 1,
+          onstart: () => {
             console.log('Speech started');
-          };
-
-          window.speechSynthesis.speak(utterance);
-        }, 100);
-      } catch (error) {
-        console.error('Error speaking word:', error);
+          },
+          onend: () => {
+            console.log('Speech ended successfully');
+          },
+          onerror: (error) => {
+            console.error('Speech error:', error);
+          }
+        });
+      } else {
+        console.warn('ResponsiveVoice not loaded, falling back to Web Speech API');
+        // Fallback to browser's speech synthesis
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          setTimeout(() => {
+            const utterance = new SpeechSynthesisUtterance(currentLetter.word);
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
+          }, 100);
+        }
       }
-    } else {
-      console.warn('Speech synthesis not supported');
+    } catch (error) {
+      console.error('Error speaking word:', error);
     }
   };
 
   const nextLetter = () => {
     // Cancel any ongoing speech when navigating
-    if ('speechSynthesis' in window) {
+    if (window.responsiveVoice) {
+      window.responsiveVoice.cancel();
+    } else if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     setCurrentIndex((prev) => (prev + 1) % arabicAlphabet.length);
@@ -249,7 +204,9 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
   const previousLetter = () => {
     // Cancel any ongoing speech when navigating
-    if ('speechSynthesis' in window) {
+    if (window.responsiveVoice) {
+      window.responsiveVoice.cancel();
+    } else if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     setCurrentIndex((prev) => (prev - 1 + arabicAlphabet.length) % arabicAlphabet.length);

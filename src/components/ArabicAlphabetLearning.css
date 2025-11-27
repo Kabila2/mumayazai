@@ -19,6 +19,76 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* ===== Voice Warning ===== */
+.voice-warning {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 3px solid #f59e0b;
+  border-radius: 16px;
+  padding: 20px 50px 20px 20px;
+  box-shadow: 0 10px 40px rgba(245, 158, 11, 0.4);
+  max-width: 600px;
+  width: 90%;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+.warning-message {
+  font-size: 0.95rem;
+  color: #78350f;
+  line-height: 1.5;
+}
+
+.warning-message strong {
+  color: #92400e;
+  font-weight: 700;
+}
+
+.warning-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(146, 64, 14, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #92400e;
+  font-weight: 700;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.warning-close:hover {
+  background: rgba(146, 64, 14, 0.2);
+  transform: scale(1.1);
+}
+
 /* ===== Header Section ===== */
 .learning-header {
   display: flex;
@@ -789,6 +859,23 @@
     padding: 15px;
   }
 
+  .voice-warning {
+    padding: 15px 45px 15px 15px;
+    max-width: 95%;
+  }
+
+  .warning-icon {
+    font-size: 1.5rem;
+  }
+
+  .warning-title {
+    font-size: 1rem;
+  }
+
+  .warning-message {
+    font-size: 0.85rem;
+  }
+
   .learning-header {
     flex-direction: column;
     text-align: center;
@@ -960,6 +1047,22 @@
 .high-contrast .arabic-alphabet-learning {
   background: #000000;
   color: #ffffff;
+}
+
+.high-contrast .voice-warning {
+  background: #000000;
+  border: 3px solid #ffff00;
+}
+
+.high-contrast .warning-title,
+.high-contrast .warning-message,
+.high-contrast .warning-message strong {
+  color: #ffff00;
+}
+
+.high-contrast .warning-close {
+  background: rgba(255, 255, 0, 0.2);
+  color: #ffff00;
 }
 
 .high-contrast .letter-card {
