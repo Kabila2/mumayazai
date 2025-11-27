@@ -269,6 +269,34 @@
   cursor: pointer;
   transition: transform 0.3s ease;
   margin-bottom: 25px;
+  position: relative;
+}
+
+.letter-display:hover {
+  transform: translateY(-2px);
+}
+
+.pronunciation-hint {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  color: #8b5cf6;
+  font-weight: 600;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.letter-display:hover .pronunciation-hint {
+  opacity: 1;
+  animation: pulse-hint 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-hint {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .arabic-letter {
@@ -306,6 +334,83 @@
   font-weight: 600;
   color: #7c3aed;
   text-transform: capitalize;
+}
+
+/* Visual Example Section */
+.letter-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin: 30px 0;
+  padding: 25px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 18px;
+  border: 3px solid #f59e0b;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.letter-visual:hover {
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+  border-color: #d97706;
+}
+
+.visual-emoji {
+  font-size: 5rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  animation: bounce-in 0.6s ease-out;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.visual-word {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.arabic-word-main {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #d97706;
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+  text-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+}
+
+.word-meaning-main {
+  font-size: 1.3rem;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.word-pronunciation-hint {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #d97706;
+  font-weight: 600;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.letter-visual:hover .word-pronunciation-hint {
+  opacity: 1;
+  animation: pulse-hint 1.5s ease-in-out infinite;
 }
 
 .letter-info {
@@ -703,6 +808,31 @@
     font-size: 4.5rem;
   }
 
+  .visual-emoji {
+    font-size: 4rem;
+  }
+
+  .arabic-word-main {
+    font-size: 1.8rem;
+  }
+
+  .word-meaning-main {
+    font-size: 1.1rem;
+  }
+
+  .letter-visual {
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .pronunciation-hint {
+    font-size: 0.85rem;
+  }
+
+  .word-pronunciation-hint {
+    font-size: 0.8rem;
+  }
+
   .navigation-controls {
     gap: 15px;
   }
@@ -756,6 +886,31 @@
 
   .arabic-letter {
     font-size: 3.5rem;
+  }
+
+  .visual-emoji {
+    font-size: 3.5rem;
+  }
+
+  .arabic-word-main {
+    font-size: 1.6rem;
+  }
+
+  .word-meaning-main {
+    font-size: 1rem;
+  }
+
+  .letter-visual {
+    padding: 18px;
+    margin: 15px 0;
+  }
+
+  .pronunciation-hint {
+    font-size: 0.8rem;
+  }
+
+  .word-pronunciation-hint {
+    font-size: 0.75rem;
   }
 
   .search-input {
@@ -815,6 +970,24 @@
 .high-contrast .arabic-letter {
   color: #00ff00;
   text-shadow: 0 0 10px #00ff00;
+}
+
+.high-contrast .letter-visual {
+  background: #000000;
+  border: 3px solid #ffff00;
+}
+
+.high-contrast .visual-emoji {
+  filter: drop-shadow(0 0 10px #ffffff);
+}
+
+.high-contrast .arabic-word-main {
+  color: #ffff00;
+  text-shadow: 0 0 10px #ffff00;
+}
+
+.high-contrast .word-meaning-main {
+  color: #ffffff;
 }
 
 .high-contrast .view-btn.active {
