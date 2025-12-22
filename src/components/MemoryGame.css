@@ -18,6 +18,16 @@
   -ms-overflow-style: none;
 }
 
+/* RTL support for Arabic */
+.memory-game-container[dir="rtl"] {
+  font-family: 'Segoe UI', 'Arial', 'Tahoma', sans-serif;
+}
+
+.memory-game-container[dir="rtl"] .card-word {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
 .memory-game-container::-webkit-scrollbar {
   display: none;
 }
@@ -80,6 +90,60 @@
   font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--primary);
+}
+
+/* Difficulty Selector */
+.difficulty-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.difficulty-label {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.difficulty-buttons {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.difficulty-btn {
+  padding: var(--space-2) var(--space-4);
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  color: var(--gray-700);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: var(--mobile-button-height);
+  min-width: 90px;
+}
+
+.difficulty-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.difficulty-btn.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  border-color: var(--primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.difficulty-btn:active {
+  transform: translateY(0);
 }
 
 .reset-btn {
@@ -326,6 +390,16 @@
     flex-direction: column;
     gap: var(--space-3);
   }
+
+  .difficulty-buttons {
+    gap: var(--space-2);
+  }
+
+  .difficulty-btn {
+    min-width: 70px;
+    font-size: 0.75rem;
+    padding: var(--space-2) var(--space-3);
+  }
 }
 
 @media (max-width: 480px) {
@@ -419,10 +493,19 @@
   .win-content {
     animation: none;
   }
+
+  .difficulty-btn:hover,
+  .reset-btn:hover,
+  .play-again-btn:hover {
+    transform: none;
+  }
 }
 
 /* Focus Styles for Accessibility */
-.memory-card:focus-visible {
+.memory-card:focus-visible,
+.difficulty-btn:focus-visible,
+.reset-btn:focus-visible,
+.play-again-btn:focus-visible {
   outline: 3px solid var(--primary);
   outline-offset: 2px;
 }

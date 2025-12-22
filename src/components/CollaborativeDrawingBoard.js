@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVoiceOver } from '../hooks/useVoiceOver';
 import './CollaborativeDrawingBoard.css';
 
 const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
@@ -13,6 +14,9 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
   const [currentText, setCurrentText] = useState('');
   const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
   const [showTextInput, setShowTextInput] = useState(false);
+
+  // Voice Over hook for accessibility
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // Multiplayer state
   const [isConnected, setIsConnected] = useState(false);

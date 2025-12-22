@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 import './ArabicWordBuilder.css';
 
 const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
+  // Voice Over hook for Arabic pronunciation
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedLetters, setSelectedLetters] = useState([]);
@@ -16,6 +20,40 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [showReward, setShowReward] = useState(false);
   const [currentReward, setCurrentReward] = useState(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Difficulty levels based on word length
+  const difficultyLevels = [
+    {
+      id: 'easy',
+      nameEn: 'Easy',
+      nameAr: 'سهل',
+      icon: '⭐',
+      color: '#10b981',
+      description: 'Short words (2-3 letters)',
+      maxLength: 3
+    },
+    {
+      id: 'medium',
+      nameEn: 'Medium',
+      nameAr: 'متوسط',
+      icon: '⭐⭐',
+      color: '#f59e0b',
+      description: 'Medium words (4-5 letters)',
+      minLength: 4,
+      maxLength: 5
+    },
+    {
+      id: 'hard',
+      nameEn: 'Hard',
+      nameAr: 'صعب',
+      icon: '⭐⭐⭐',
+      color: '#ef4444',
+      description: 'Long words (6+ letters)',
+      minLength: 6
+    }
+  ];
 
   const wordCategories = [
     {
@@ -25,6 +63,23 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       icon: '🦁',
       color: '#10b981',
       words: [
+        // Easy (2-3 letters)
+        {
+          arabic: 'قط',
+          english: 'Cat',
+          image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'فأر',
+          english: 'Mouse',
+          image: 'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'دب',
+          english: 'Bear',
+          image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=400&h=300&fit=crop'
+        },
+        // Medium (4-5 letters)
         {
           arabic: 'أسد',
           english: 'Lion',
@@ -32,8 +87,8 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
         },
         {
           arabic: 'قطة',
-          english: 'Cat',
-          image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop'
+          english: 'Kitten',
+          image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=300&fit=crop'
         },
         {
           arabic: 'كلب',
@@ -44,6 +99,22 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
           arabic: 'فيل',
           english: 'Elephant',
           image: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=400&h=300&fit=crop'
+        },
+        // Hard (6+ letters)
+        {
+          arabic: 'حصان',
+          english: 'Horse',
+          image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'أرنب',
+          english: 'Rabbit',
+          image: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'طائر',
+          english: 'Bird',
+          image: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -54,11 +125,7 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       icon: '🍎',
       color: '#f59e0b',
       words: [
-        {
-          arabic: 'تفاحة',
-          english: 'Apple',
-          image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=300&fit=crop'
-        },
+        // Easy (2-3 letters)
         {
           arabic: 'خبز',
           english: 'Bread',
@@ -70,9 +137,46 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
           image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop'
         },
         {
+          arabic: 'رز',
+          english: 'Rice',
+          image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop'
+        },
+        // Medium (4-5 letters)
+        {
+          arabic: 'تفاح',
+          english: 'Apple',
+          image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=300&fit=crop'
+        },
+        {
           arabic: 'حليب',
           english: 'Milk',
           image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'عسل',
+          english: 'Honey',
+          image: 'https://images.unsplash.com/photo-1587049352846-4a222e784e38?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'جبن',
+          english: 'Cheese',
+          image: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&h=300&fit=crop'
+        },
+        // Hard (6+ letters)
+        {
+          arabic: 'برتقال',
+          english: 'Orange',
+          image: 'https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'موزة',
+          english: 'Banana',
+          image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'فراولة',
+          english: 'Strawberry',
+          image: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -83,6 +187,7 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       icon: '🌸',
       color: '#ec4899',
       words: [
+        // Easy (2-3 letters)
         {
           arabic: 'شمس',
           english: 'Sun',
@@ -94,6 +199,12 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
           image: 'https://images.unsplash.com/photo-1509773896068-7fd415d91e2e?w=400&h=300&fit=crop'
         },
         {
+          arabic: 'نجم',
+          english: 'Star',
+          image: 'https://images.unsplash.com/photo-1519981593452-666cf05569a9?w=400&h=300&fit=crop'
+        },
+        // Medium (4-5 letters)
+        {
           arabic: 'زهرة',
           english: 'Flower',
           image: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop'
@@ -102,6 +213,32 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
           arabic: 'شجرة',
           english: 'Tree',
           image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'نهر',
+          english: 'River',
+          image: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'جبل',
+          english: 'Mountain',
+          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop'
+        },
+        // Hard (6+ letters)
+        {
+          arabic: 'سحابة',
+          english: 'Cloud',
+          image: 'https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'قوس قزح',
+          english: 'Rainbow',
+          image: 'https://images.unsplash.com/photo-1514897575457-c4db467cf78e?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'فراشة',
+          english: 'Butterfly',
+          image: 'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -112,10 +249,11 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       icon: '📚',
       color: '#8b5cf6',
       words: [
+        // Easy (2-3 letters)
         {
-          arabic: 'كتاب',
-          english: 'Book',
-          image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=300&fit=crop'
+          arabic: 'باب',
+          english: 'Door',
+          image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'
         },
         {
           arabic: 'قلم',
@@ -123,14 +261,46 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
           image: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400&h=300&fit=crop'
         },
         {
-          arabic: 'باب',
-          english: 'Door',
-          image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'
+          arabic: 'كأس',
+          english: 'Cup',
+          image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400&h=300&fit=crop'
+        },
+        // Medium (4-5 letters)
+        {
+          arabic: 'كتاب',
+          english: 'Book',
+          image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=300&fit=crop'
         },
         {
           arabic: 'كرسي',
           english: 'Chair',
           image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'طاولة',
+          english: 'Table',
+          image: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'مفتاح',
+          english: 'Key',
+          image: 'https://images.unsplash.com/photo-1582139329536-e7284fece509?w=400&h=300&fit=crop'
+        },
+        // Hard (6+ letters)
+        {
+          arabic: 'حاسوب',
+          english: 'Computer',
+          image: 'https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'هاتف',
+          english: 'Phone',
+          image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=300&fit=crop'
+        },
+        {
+          arabic: 'نافذة',
+          english: 'Window',
+          image: 'https://images.unsplash.com/photo-1506880135364-e28660dc35fa?w=400&h=300&fit=crop'
         }
       ]
     }
@@ -175,13 +345,45 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
     }
   }, [totalPoints, bestStreak]);
 
+  // Filter words by difficulty level
+  const getFilteredWords = (category, difficulty) => {
+    if (!difficulty) return category.words;
+
+    return category.words.filter(word => {
+      const wordLength = word.arabic.length;
+
+      if (difficulty.id === 'easy') {
+        return wordLength <= difficulty.maxLength;
+      } else if (difficulty.id === 'medium') {
+        return wordLength >= difficulty.minLength && wordLength <= difficulty.maxLength;
+      } else if (difficulty.id === 'hard') {
+        return wordLength >= difficulty.minLength;
+      }
+
+      return true;
+    });
+  };
+
+  const handleDifficultySelect = (difficulty) => {
+    setSelectedDifficulty(difficulty);
+  };
+
   const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
+    const filteredWords = getFilteredWords(category, selectedDifficulty);
+    const categoryWithFilteredWords = {
+      ...category,
+      words: filteredWords
+    };
+
+    setSelectedCategory(categoryWithFilteredWords);
     setCurrentWordIndex(0);
     setScore(0);
     setStreak(0);
     setCoinsEarned(0);
-    initializeWord(category.words[0]);
+
+    if (filteredWords.length > 0) {
+      initializeWord(filteredWords[0]);
+    }
   };
 
   const initializeWord = (word) => {
@@ -207,6 +409,9 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
     const userWord = selectedLetters.map(l => l.letter).join('');
 
     if (userWord === currentWord.arabic) {
+      // Speak the word in Arabic using voice over
+      voiceOver.speak(currentWord.arabic, true);
+
       // Calculate points
       const basePoints = 10;
       const streakBonus = streak * 5;
@@ -233,6 +438,7 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       };
       setCurrentReward(reward);
       setShowSuccess(true);
+      setShowCelebration(true); // Show celebration popup!
 
       setTimeout(() => {
         setShowSuccess(false);
@@ -251,8 +457,10 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       setCurrentWordIndex(nextIndex);
       initializeWord(selectedCategory.words[nextIndex]);
     } else {
-      // Category completed
+      // Category completed - return to category selection
       setSelectedCategory(null);
+      // Optionally reset difficulty to start fresh
+      // setSelectedDifficulty(null);
     }
   };
 
@@ -267,8 +475,8 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
     }
   }, [selectedLetters]);
 
-  const renderCategorySelection = () => (
-    <div className="word-builder-categories">
+  const renderDifficultySelection = () => (
+    <div className="word-builder-difficulty">
       {totalPoints > 0 && (
         <motion.div
           className="player-stats-banner"
@@ -297,32 +505,91 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
         </motion.div>
       )}
       <h2 className="categories-title">
-        {language === 'ar' ? 'اختر فئة' : 'Choose a Category'}
+        {language === 'ar' ? 'اختر مستوى الصعوبة' : 'Choose Difficulty Level'}
       </h2>
-      <div className="categories-grid">
-        {wordCategories.map((category) => (
+      <p className="difficulty-subtitle">
+        {language === 'ar'
+          ? 'حدد مستوى الصعوبة بناءً على طول الكلمات'
+          : 'Select difficulty based on word length'
+        }
+      </p>
+      <div className="difficulty-grid">
+        {difficultyLevels.map((difficulty, index) => (
           <motion.div
-            key={category.id}
-            className="category-card"
-            style={{ borderColor: category.color }}
-            onClick={() => handleCategorySelect(category)}
+            key={difficulty.id}
+            className="difficulty-card"
+            style={{ borderColor: difficulty.color }}
+            onClick={() => handleDifficultySelect(difficulty)}
             whileHover={{ scale: 1.05, y: -5 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
           >
-            <div className="category-icon" style={{ background: category.color }}>
-              {category.icon}
+            <div className="difficulty-icon" style={{ background: difficulty.color }}>
+              {difficulty.icon}
             </div>
-            <h3 className="category-name">
-              {language === 'ar' ? category.nameAr : category.nameEn}
+            <h3 className="difficulty-name">
+              {language === 'ar' ? difficulty.nameAr : difficulty.nameEn}
             </h3>
-            <p className="category-count">
-              {category.words.length} {language === 'ar' ? 'كلمات' : 'words'}
+            <p className="difficulty-description">
+              {language === 'ar'
+                ? difficulty.id === 'easy'
+                  ? 'كلمات قصيرة (٢-٣ حروف)'
+                  : difficulty.id === 'medium'
+                  ? 'كلمات متوسطة (٤-٥ حروف)'
+                  : 'كلمات طويلة (٦+ حروف)'
+                : difficulty.description
+              }
             </p>
           </motion.div>
         ))}
+      </div>
+    </div>
+  );
+
+  const renderCategorySelection = () => (
+    <div className="word-builder-categories">
+      <button
+        className="back-button"
+        onClick={() => setSelectedDifficulty(null)}
+      >
+        ← {language === 'ar' ? 'عودة إلى الصعوبة' : 'Back to Difficulty'}
+      </button>
+
+      <h2 className="categories-title">
+        {language === 'ar' ? 'اختر فئة' : 'Choose a Category'}
+      </h2>
+      <div className="difficulty-badge" style={{ background: selectedDifficulty?.color }}>
+        {selectedDifficulty?.icon} {language === 'ar' ? selectedDifficulty?.nameAr : selectedDifficulty?.nameEn}
+      </div>
+      <div className="categories-grid">
+        {wordCategories.map((category) => {
+          const filteredWords = getFilteredWords(category, selectedDifficulty);
+          return (
+            <motion.div
+              key={category.id}
+              className="category-card"
+              style={{ borderColor: category.color }}
+              onClick={() => handleCategorySelect(category)}
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="category-icon" style={{ background: category.color }}>
+                {category.icon}
+              </div>
+              <h3 className="category-name">
+                {language === 'ar' ? category.nameAr : category.nameEn}
+              </h3>
+              <p className="category-count">
+                {filteredWords.length} {language === 'ar' ? 'كلمات' : 'words'}
+              </p>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -553,8 +820,20 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       </div>
 
       <AnimatePresence mode="wait">
-        {!selectedCategory ? renderCategorySelection() : renderWordBuilder()}
+        {!selectedDifficulty
+          ? renderDifficultySelection()
+          : !selectedCategory
+          ? renderCategorySelection()
+          : renderWordBuilder()
+        }
       </AnimatePresence>
+
+      {/* Celebration Popup */}
+      <CelebrationPopup
+        show={showCelebration}
+        language={language}
+        onClose={() => setShowCelebration(false)}
+      />
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 import './LetterWordBuilder.css';
 
 const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
@@ -9,6 +11,10 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [completedWords, setCompletedWords] = useState([]);
+  const [showCelebrationPopup, setShowCelebrationPopup] = useState(false);
+
+  // Voice Over hook for Arabic pronunciation
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // All words from the words section
   const words = [
@@ -62,11 +68,24 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
     const correct = userWord === currentWord.arabic;
 
     if (correct) {
+      // Speak the word in Arabic
+      voiceOver.speak(currentWord.arabic, true);
+
       setIsCorrect(true);
       setShowCelebration(true);
+      setShowCelebrationPopup(true); // Show celebration popup!
       if (!completedWords.includes(currentWordIndex)) {
         setCompletedWords([...completedWords, currentWordIndex]);
       }
+
+      // After a short delay, speak the English meaning
+      setTimeout(() => {
+        const message = language === 'ar'
+          ? `رائع! ${currentWord.english}`
+          : `Great! ${currentWord.english}`;
+        voiceOver.speak(message, true);
+      }, 1000);
+
       setTimeout(() => {
         setShowCelebration(false);
       }, 2500);
@@ -288,6 +307,13 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Celebration Popup */}
+      <CelebrationPopup
+        show={showCelebrationPopup}
+        language={language}
+        onClose={() => setShowCelebrationPopup(false)}
+      />
     </div>
   );
 };

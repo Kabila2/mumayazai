@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 import './ArabicWordsLearning.css';
 
 const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
@@ -9,6 +11,9 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
   const [learnedWords, setLearnedWords] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+
+  // Voice Over hook for Arabic pronunciation
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // Mark word as learned
   const markWordAsLearned = (categoryId, wordIndex) => {
@@ -33,25 +38,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'تَعَلُّم',
           english: 'Learn',
           simplePronunciation: 'ta-al-lum',
-          image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop'
         },
         {
           arabic: 'كِتَاب',
           english: 'Book',
           simplePronunciation: 'ki-tab',
-          image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=300&fit=crop'
         },
         {
           arabic: 'قَلَم',
           english: 'Pen',
           simplePronunciation: 'qa-lam',
-          image: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1563297007-0686b7003af7?w=400&h=300&fit=crop'
         },
         {
           arabic: 'قِرَاءَة',
           english: 'Reading',
           simplePronunciation: 'qi-ra-a',
-          image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -66,25 +71,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'سَعِيد',
           english: 'Happy',
           simplePronunciation: 'sa-eed',
-          image: 'https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&h=300&fit=crop'
         },
         {
           arabic: 'حُبّ',
           english: 'Love',
           simplePronunciation: 'hubb',
-          image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=300&fit=crop'
         },
         {
           arabic: 'صَدِيق',
           english: 'Friend',
           simplePronunciation: 'sa-deeq',
-          image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop'
         },
         {
           arabic: 'مُسَاعَدَة',
           english: 'Help',
           simplePronunciation: 'mu-sa-a-da',
-          image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -99,25 +104,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'طَعَام',
           english: 'Food',
           simplePronunciation: 'ta-am',
-          image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=400&h=300&fit=crop'
         },
         {
           arabic: 'مَاء',
           english: 'Water',
           simplePronunciation: 'maa',
-          image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&h=300&fit=crop'
         },
         {
           arabic: 'بَيْت',
           english: 'Home',
           simplePronunciation: 'bayt',
-          image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop'
         },
         {
           arabic: 'عَائِلَة',
           english: 'Family',
           simplePronunciation: 'aa-ee-la',
-          image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -132,25 +137,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'لَعِب',
           english: 'Play',
           simplePronunciation: 'la-ib',
-          image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1519163219899-21d2bb723b3e?w=400&h=300&fit=crop'
         },
         {
           arabic: 'نَوْم',
           english: 'Sleep',
           simplePronunciation: 'nawm',
-          image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&h=300&fit=crop'
         },
         {
           arabic: 'أَكْل',
           english: 'Eat',
           simplePronunciation: 'akl',
-          image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop'
         },
         {
           arabic: 'مَشْي',
           english: 'Walk',
           simplePronunciation: 'mash-ee',
-          image: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1588392382834-a891154bca4d?w=400&h=300&fit=crop'
         }
       ]
     }
@@ -165,15 +170,42 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
   const handleNextWord = () => {
     if (selectedCategory && currentWordIndex < selectedCategory.words.length - 1) {
       markWordAsLearned(selectedCategory.id, currentWordIndex);
-      setCurrentWordIndex(currentWordIndex + 1);
+      const nextIndex = currentWordIndex + 1;
+      setCurrentWordIndex(nextIndex);
+      // Speak the next word
+      setTimeout(() => {
+        voiceOver.speak(selectedCategory.words[nextIndex].arabic, true);
+      }, 300);
     }
   };
 
   const handlePreviousWord = () => {
     if (currentWordIndex > 0) {
-      setCurrentWordIndex(currentWordIndex - 1);
+      const prevIndex = currentWordIndex - 1;
+      setCurrentWordIndex(prevIndex);
+      // Speak the previous word
+      setTimeout(() => {
+        voiceOver.speak(selectedCategory.words[prevIndex].arabic, true);
+      }, 300);
     }
   };
+
+  // Speak word when card is clicked
+  const handleWordClick = () => {
+    if (selectedCategory) {
+      const currentWord = selectedCategory.words[currentWordIndex];
+      voiceOver.speak(currentWord.arabic, true);
+    }
+  };
+
+  // Auto-speak word when category is first selected
+  useEffect(() => {
+    if (selectedCategory && currentWordIndex === 0) {
+      setTimeout(() => {
+        voiceOver.speak(selectedCategory.words[0].arabic, true);
+      }, 500);
+    }
+  }, [selectedCategory]);
 
   const renderCategorySelection = () => (
     <div className="words-categories">
@@ -239,24 +271,12 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           ))}
         </div>
 
-        {/* Celebration Animation */}
-        <AnimatePresence>
-          {showCelebration && (
-            <motion.div
-              className="celebration-overlay"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-            >
-              <div className="celebration-content">
-                <div className="celebration-emoji">🎉 ⭐ 🎊</div>
-                <div className="celebration-text">
-                  {language === 'ar' ? 'أحسنت!' : 'Great Job!'}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Celebration Popup */}
+        <CelebrationPopup
+          show={showCelebration}
+          language={language}
+          onClose={() => setShowCelebration(false)}
+        />
 
         <motion.div
           key={currentWordIndex}
@@ -264,6 +284,9 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
+          onClick={handleWordClick}
+          style={{ cursor: 'pointer' }}
+          title={language === 'ar' ? 'انقر لسماع النطق' : 'Click to hear pronunciation'}
         >
           <div className="word-image-container">
             <img

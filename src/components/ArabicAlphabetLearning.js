@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Speech from 'speak-tts';
 import './ArabicAlphabetLearning.css';
 import PointNotification from './PointNotification';
 import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 
 const arabicAlphabet = [
   { letter: 'ا', name: 'ألف', pronunciation: 'alif', english: 'A', word: 'أسد', wordMeaning: 'lion', emoji: '🦁', category: 'vowel' },
@@ -39,8 +42,66 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   const [currentIndex, setCurrentIndex] = useState(0);
   const [learnedLetters, setLearnedLetters] = useState([]);
   const [userEmail, setUserEmail] = useState(null);
+  const [speechReady, setSpeechReady] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const speechRef = useRef(null);
+
+  // Voice Over hook for accessibility
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   const currentLetter = arabicAlphabet[currentIndex];
+
+  // Initialize Speech TTS
+  useEffect(() => {
+    const initSpeech = async () => {
+      try {
+        const speech = new Speech();
+        speechRef.current = speech;
+
+        const result = await speech.init({
+          volume: 1,
+          lang: 'ar-SA',
+          rate: 0.8,
+          pitch: 1,
+          listeners: {
+            onvoiceschanged: (voices) => {
+              console.log('Voices loaded:', voices.filter(v => v.lang.includes('ar')));
+            }
+          }
+        });
+
+        console.log('✅ Speech initialized:', result);
+        setSpeechReady(true);
+
+        // Try to set Arabic voice if available
+        const voices = result.voices || [];
+        console.log('Total voices available:', voices.length);
+
+        const arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar'));
+
+        if (arabicVoice) {
+          speech.setVoice(arabicVoice.name);
+          console.log('✅ Arabic voice set:', arabicVoice.name);
+        } else {
+          console.warn('⚠️ No Arabic voice found on your system');
+          console.warn('📢 To hear proper Arabic pronunciation:');
+          console.warn('   1. Go to Windows Settings');
+          console.warn('   2. Time & Language → Speech');
+          console.warn('   3. Add voices → Download Arabic voice');
+        }
+      } catch (error) {
+        console.error('❌ Speech init failed:', error);
+      }
+    };
+
+    initSpeech();
+
+    return () => {
+      if (speechRef.current) {
+        speechRef.current.cancel();
+      }
+    };
+  }, []);
 
   // Get user email on mount
   useEffect(() => {
@@ -56,33 +117,6 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
     } catch (error) {
       console.error("Error loading user:", error);
     }
-
-    // Check if ResponsiveVoice is loaded
-    if (window.responsiveVoice) {
-      console.log('✅ ResponsiveVoice loaded successfully!');
-      console.log('Available voices:', window.responsiveVoice.getVoices());
-    } else {
-      console.warn('⚠️ ResponsiveVoice not loaded. Waiting...');
-      // Wait a bit for it to load
-      const checkInterval = setInterval(() => {
-        if (window.responsiveVoice) {
-          console.log('✅ ResponsiveVoice loaded!');
-          clearInterval(checkInterval);
-        }
-      }, 100);
-
-      // Clear interval after 5 seconds
-      setTimeout(() => clearInterval(checkInterval), 5000);
-    }
-
-    // Cleanup: Cancel any ongoing speech when component unmounts
-    return () => {
-      if (window.responsiveVoice) {
-        window.responsiveVoice.cancel();
-      } else if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
   }, []);
 
 
@@ -108,109 +142,105 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   }, [currentIndex]);
 
   const speakLetter = () => {
+    console.log('🔊 Speaking letter:', currentLetter.name);
+
+    if (!speechRef.current || !speechReady) {
+      console.warn('⚠️ Speech not ready yet');
+      return;
+    }
+
     try {
-      // Check if ResponsiveVoice is loaded
-      if (window.responsiveVoice) {
-        // Cancel any ongoing speech
-        window.responsiveVoice.cancel();
-
-        console.log('Speaking letter with ResponsiveVoice:', currentLetter.name);
-
-        // Use ResponsiveVoice with Arabic voice
-        window.responsiveVoice.speak(currentLetter.name, "Arabic Female", {
-          rate: 0.8, // Slower for clarity
-          pitch: 1,
-          volume: 1,
+      speechRef.current.speak({
+        text: currentLetter.name,
+        queue: false,
+        listeners: {
           onstart: () => {
-            console.log('Speech started');
+            console.log('✅ Speech started');
           },
           onend: () => {
-            console.log('Speech ended successfully');
+            console.log('✅ Speech ended');
           },
-          onerror: (error) => {
-            console.error('Speech error:', error);
+          onerror: (e) => {
+            console.error('❌ Speech error:', e);
           }
-        });
-      } else {
-        console.warn('ResponsiveVoice not loaded, falling back to Web Speech API');
-        // Fallback to browser's speech synthesis
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          setTimeout(() => {
-            const utterance = new SpeechSynthesisUtterance(currentLetter.name);
-            utterance.lang = 'ar-SA';
-            utterance.rate = 0.8;
-            window.speechSynthesis.speak(utterance);
-          }, 100);
         }
-      }
+      }).then(() => {
+        console.log('✅ Speech command sent');
+      }).catch((error) => {
+        console.error('❌ Speak failed:', error);
+      });
     } catch (error) {
-      console.error('Error speaking letter:', error);
+      console.error('❌ Error in speakLetter:', error);
     }
   };
 
   const speakWord = () => {
+    console.log('🔊 Speaking word:', currentLetter.word);
+
+    if (!speechRef.current || !speechReady) {
+      console.warn('⚠️ Speech not ready yet');
+      return;
+    }
+
     try {
-      // Check if ResponsiveVoice is loaded
-      if (window.responsiveVoice) {
-        // Cancel any ongoing speech
-        window.responsiveVoice.cancel();
-
-        console.log('Speaking word with ResponsiveVoice:', currentLetter.word);
-
-        // Use ResponsiveVoice with Arabic voice
-        window.responsiveVoice.speak(currentLetter.word, "Arabic Female", {
-          rate: 0.8, // Slower for clarity
-          pitch: 1,
-          volume: 1,
+      speechRef.current.speak({
+        text: currentLetter.word,
+        queue: false,
+        listeners: {
           onstart: () => {
-            console.log('Speech started');
+            console.log('✅ Word speech started');
           },
           onend: () => {
-            console.log('Speech ended successfully');
+            console.log('✅ Word speech ended');
           },
-          onerror: (error) => {
-            console.error('Speech error:', error);
+          onerror: (e) => {
+            console.error('❌ Word speech error:', e);
           }
-        });
-      } else {
-        console.warn('ResponsiveVoice not loaded, falling back to Web Speech API');
-        // Fallback to browser's speech synthesis
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          setTimeout(() => {
-            const utterance = new SpeechSynthesisUtterance(currentLetter.word);
-            utterance.lang = 'ar-SA';
-            utterance.rate = 0.8;
-            window.speechSynthesis.speak(utterance);
-          }, 100);
         }
-      }
+      }).then(() => {
+        console.log('✅ Word speech command sent');
+      }).catch((error) => {
+        console.error('❌ Word speak failed:', error);
+      });
     } catch (error) {
-      console.error('Error speaking word:', error);
+      console.error('❌ Error in speakWord:', error);
     }
   };
 
   const nextLetter = () => {
     // Cancel any ongoing speech when navigating
-    if (window.responsiveVoice) {
-      window.responsiveVoice.cancel();
-    } else if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+    if (speechRef.current) {
+      speechRef.current.cancel();
     }
     setCurrentIndex((prev) => (prev + 1) % arabicAlphabet.length);
     markLetterAsViewed();
+
+    // Voice over announcement
+    const nextIndex = (currentIndex + 1) % arabicAlphabet.length;
+    const nextLetter = arabicAlphabet[nextIndex];
+    voiceOver.speakAuto(
+      language === 'ar'
+        ? `الحرف ${nextLetter.name}`
+        : `Letter ${nextLetter.name}, ${nextLetter.pronunciation}`
+    );
   };
 
   const previousLetter = () => {
     // Cancel any ongoing speech when navigating
-    if (window.responsiveVoice) {
-      window.responsiveVoice.cancel();
-    } else if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+    if (speechRef.current) {
+      speechRef.current.cancel();
     }
     setCurrentIndex((prev) => (prev - 1 + arabicAlphabet.length) % arabicAlphabet.length);
     markLetterAsViewed();
+
+    // Voice over announcement
+    const prevIndex = (currentIndex - 1 + arabicAlphabet.length) % arabicAlphabet.length;
+    const prevLetter = arabicAlphabet[prevIndex];
+    voiceOver.speakAuto(
+      language === 'ar'
+        ? `الحرف ${prevLetter.name}`
+        : `Letter ${prevLetter.name}, ${prevLetter.pronunciation}`
+    );
   };
 
   // Mark letter as learned and award points
@@ -225,9 +255,30 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
     // Award points for learning a letter
     awardPoints(userEmail, 'LETTER_LEARNED');
 
+    // Show celebration popup
+    setShowCelebration(true);
+
+    // Voice over announcement
+    voiceOver.speak(
+      language === 'ar'
+        ? `تم تعليم الحرف ${currentLetter.name}. حصلت على ${POINT_VALUES.LETTER_LEARNED} نقطة`
+        : `Letter ${currentLetter.name} marked as learned. You earned ${POINT_VALUES.LETTER_LEARNED} points`,
+      true
+    );
+
     // Check if completed all letters
     if (newLearned.length === arabicAlphabet.length) {
       awardPoints(userEmail, 'MODULE_COMPLETED');
+
+      // Voice over for completion
+      setTimeout(() => {
+        voiceOver.speak(
+          language === 'ar'
+            ? `مبروك! أكملت جميع الحروف`
+            : `Congratulations! You completed all letters`,
+          true
+        );
+      }, 1500);
     }
   };
 
@@ -374,6 +425,13 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
           {language === 'ar' ? '←' : '→'}
         </motion.button>
       </div>
+
+      {/* Celebration Popup */}
+      <CelebrationPopup
+        show={showCelebration}
+        language={language}
+        onClose={() => setShowCelebration(false)}
+      />
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 import './SentenceBuilder.css';
 
 const SentenceBuilder = ({ language, fontSize, highContrast }) => {
@@ -9,6 +11,10 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [completedSentences, setCompletedSentences] = useState([]);
+  const [showCelebrationPopup, setShowCelebrationPopup] = useState(false);
+
+  // Voice Over hook for Arabic pronunciation
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // All sentences from the sentences section
   const sentences = [
@@ -140,11 +146,24 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
     const correct = userSentence === currentSentence.arabic;
 
     if (correct) {
+      // Speak the sentence in Arabic
+      voiceOver.speak(currentSentence.arabic, true);
+
       setIsCorrect(true);
       setShowCelebration(true);
+      setShowCelebrationPopup(true); // Show celebration popup!
       if (!completedSentences.includes(currentSentenceIndex)) {
         setCompletedSentences([...completedSentences, currentSentenceIndex]);
       }
+
+      // After a short delay, speak the English meaning
+      setTimeout(() => {
+        const message = language === 'ar'
+          ? `ممتاز! ${currentSentence.english}`
+          : `Excellent! ${currentSentence.english}`;
+        voiceOver.speak(message, true);
+      }, 1500);
+
       setTimeout(() => {
         setShowCelebration(false);
       }, 2500);
@@ -359,6 +378,13 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Celebration Popup */}
+      <CelebrationPopup
+        show={showCelebrationPopup}
+        language={language}
+        onClose={() => setShowCelebrationPopup(false)}
+      />
     </div>
   );
 };

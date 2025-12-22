@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 import './ArabicSentencesLearning.css';
 
 const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
@@ -9,6 +11,9 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
   const [learnedSentences, setLearnedSentences] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
   const videoRef = React.useRef(null);
+
+  // Voice Over hook for Arabic pronunciation
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // Mark sentence as learned
   const markSentenceAsLearned = (categoryId, sentenceIndex) => {
@@ -32,7 +37,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'السَّلامُ عَلَيْكُم',
           english: 'Peace be upon you',
           pronunciation: 'as-salamu alaykum',
-          image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1609619385002-f40b6faa3a30?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
           videoDescription: {
             en: 'Learn the traditional Islamic greeting and its proper usage in daily conversations',
@@ -47,7 +52,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'صَباحُ الخَيْر',
           english: 'Good morning',
           pronunciation: 'sabah al-khayr',
-          image: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
           videoDescription: {
             en: 'Master morning greetings in Arabic and learn when to use them in different contexts',
@@ -62,7 +67,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'كَيْفَ حالُكَ؟',
           english: 'How are you?',
           pronunciation: 'kayfa haluk',
-          image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
           videoDescription: {
             en: 'Practice asking about someone\'s wellbeing and understand the cultural context',
@@ -101,7 +106,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أُحِبُّ الطَّعام',
           english: 'I love food',
           pronunciation: 'uhibbu at-ta\'am',
-          image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
           videoDescription: {
             en: 'Express your love for food and learn food-related vocabulary',
@@ -116,7 +121,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أُريدُ ماء',
           english: 'I want water',
           pronunciation: 'uridu maa',
-          image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أُريدُ', english: 'I want', pronunciation: 'uridu' },
             { arabic: 'ماء', english: 'water', pronunciation: 'maa' }
@@ -126,7 +131,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'البَيْتُ جَميل',
           english: 'The house is beautiful',
           pronunciation: 'al-baytu jameel',
-          image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
           words: [
             { arabic: 'البَيْتُ', english: 'the house', pronunciation: 'al-baytu' },
             { arabic: 'جَميل', english: 'beautiful', pronunciation: 'jameel' }
@@ -136,7 +141,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'عائِلَتي كَبيرة',
           english: 'My family is big',
           pronunciation: 'aa\'ilati kabeera',
-          image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1475503572774-15a45e5d60b9?w=400&h=300&fit=crop',
           words: [
             { arabic: 'عائِلَتي', english: 'my family', pronunciation: 'aa\'ilati' },
             { arabic: 'كَبيرة', english: 'big', pronunciation: 'kabeera' }
@@ -155,7 +160,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَنا سَعيد',
           english: 'I am happy',
           pronunciation: 'ana sa\'eed',
-          image: 'https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَنا', english: 'I', pronunciation: 'ana' },
             { arabic: 'سَعيد', english: 'happy', pronunciation: 'sa\'eed' }
@@ -165,7 +170,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أُحِبُّكَ كَثيراً',
           english: 'I love you very much',
           pronunciation: 'uhibbuka katheeran',
-          image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أُحِبُّكَ', english: 'I love you', pronunciation: 'uhibbuka' },
             { arabic: 'كَثيراً', english: 'very much', pronunciation: 'katheeran' }
@@ -175,7 +180,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'صَديقي لَطيف',
           english: 'My friend is kind',
           pronunciation: 'sadeeqi lateef',
-          image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6?w=400&h=300&fit=crop',
           words: [
             { arabic: 'صَديقي', english: 'my friend', pronunciation: 'sadeeqi' },
             { arabic: 'لَطيف', english: 'kind', pronunciation: 'lateef' }
@@ -185,7 +190,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'شُكْراً جَزيلاً',
           english: 'Thank you very much',
           pronunciation: 'shukran jazeelan',
-          image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1582274528667-1e8a10ded835?w=400&h=300&fit=crop',
           words: [
             { arabic: 'شُكْراً', english: 'thank you', pronunciation: 'shukran' },
             { arabic: 'جَزيلاً', english: 'very much', pronunciation: 'jazeelan' }
@@ -204,7 +209,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَذْهَبُ إلى المَدْرَسة',
           english: 'I go to school',
           pronunciation: 'adh-habu ila al-madrasa',
-          image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَذْهَبُ', english: 'I go', pronunciation: 'adh-habu' },
             { arabic: 'إلى', english: 'to', pronunciation: 'ila' },
@@ -215,7 +220,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَلْعَبُ مَعَ أَصْدِقائي',
           english: 'I play with my friends',
           pronunciation: 'al\'abu ma\'a asdiqaa\'i',
-          image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَلْعَبُ', english: 'I play', pronunciation: 'al\'abu' },
             { arabic: 'مَعَ', english: 'with', pronunciation: 'ma\'a' },
@@ -226,7 +231,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَقْرَأُ كِتاباً',
           english: 'I read a book',
           pronunciation: 'aqra\'u kitaban',
-          image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَقْرَأُ', english: 'I read', pronunciation: 'aqra\'u' },
             { arabic: 'كِتاباً', english: 'a book', pronunciation: 'kitaban' }
@@ -254,23 +259,50 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
 
   const handleNextSentence = () => {
     if (selectedCategory && currentSentenceIndex < selectedCategory.sentences.length - 1) {
-      setCurrentSentenceIndex(currentSentenceIndex + 1);
+      const nextIndex = currentSentenceIndex + 1;
+      setCurrentSentenceIndex(nextIndex);
       setShowVideo(true);
       if (videoRef.current) {
         videoRef.current.load();
       }
+      // Speak the next sentence
+      setTimeout(() => {
+        voiceOver.speak(selectedCategory.sentences[nextIndex].arabic, true);
+      }, 500);
     }
   };
 
   const handlePreviousSentence = () => {
     if (currentSentenceIndex > 0) {
-      setCurrentSentenceIndex(currentSentenceIndex - 1);
+      const prevIndex = currentSentenceIndex - 1;
+      setCurrentSentenceIndex(prevIndex);
       setShowVideo(true);
       if (videoRef.current) {
         videoRef.current.load();
       }
+      // Speak the previous sentence
+      setTimeout(() => {
+        voiceOver.speak(selectedCategory.sentences[prevIndex].arabic, true);
+      }, 500);
     }
   };
+
+  // Speak sentence when clicked
+  const handleSentenceClick = () => {
+    if (selectedCategory) {
+      const currentSentence = selectedCategory.sentences[currentSentenceIndex];
+      voiceOver.speak(currentSentence.arabic, true);
+    }
+  };
+
+  // Auto-speak sentence when category is first selected
+  useEffect(() => {
+    if (selectedCategory && currentSentenceIndex === 0) {
+      setTimeout(() => {
+        voiceOver.speak(selectedCategory.sentences[0].arabic, true);
+      }, 700);
+    }
+  }, [selectedCategory]);
 
   const renderCategorySelection = () => (
     <div className="sentences-categories">
@@ -338,6 +370,9 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
+          onClick={handleSentenceClick}
+          style={{ cursor: 'pointer' }}
+          title={language === 'ar' ? 'انقر لسماع الجملة' : 'Click to hear the sentence'}
         >
           {currentSentence.video && (
             <div className="video-section">
@@ -449,34 +484,12 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           </motion.button>
         </motion.div>
 
-        {/* Celebration Animation */}
-        <AnimatePresence>
-          {showCelebration && (
-            <motion.div
-              className="celebration-overlay"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="celebration-content">
-                <motion.div
-                  className="celebration-emoji"
-                  animate={{ rotate: [0, 10, -10, 10, 0] }}
-                  transition={{ duration: 0.5, repeat: 1 }}
-                >
-                  🎉 ⭐ 🎊
-                </motion.div>
-                <div className="celebration-text">
-                  {language === 'ar' ? 'أحسنت!' : 'Great Job!'}
-                </div>
-                <div className="celebration-subtext">
-                  {language === 'ar' ? 'لقد أتقنت هذه الجملة!' : 'You mastered this sentence!'}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Celebration Popup */}
+        <CelebrationPopup
+          show={showCelebration}
+          language={language}
+          onClose={() => setShowCelebration(false)}
+        />
 
         <div className="sentence-navigation">
           <button

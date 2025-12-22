@@ -1,0 +1,173 @@
+/* Celebration Popup Overlay */
+.celebration-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+/* Balloons */
+.celebration-balloon {
+  position: absolute;
+  width: 50px;
+  height: 65px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  animation: balloon-sway 2s ease-in-out infinite;
+}
+
+.celebration-balloon::before {
+  content: '';
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 10px solid currentColor;
+}
+
+.balloon-string {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: 80px;
+  transform: translateX(-50%);
+  opacity: 0.8;
+}
+
+@keyframes balloon-sway {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(10px) rotate(5deg);
+  }
+  75% {
+    transform: translateX(-10px) rotate(-5deg);
+  }
+}
+
+/* Confetti */
+.celebration-confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* Stars */
+.celebration-star {
+  position: absolute;
+  font-size: 2rem;
+  pointer-events: none;
+}
+
+/* Message Box */
+.celebration-message-box {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 30px;
+  padding: 50px 60px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  max-width: 500px;
+  position: relative;
+  z-index: 10;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+}
+
+.celebration-icon {
+  font-size: 6rem;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+}
+
+.celebration-message {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: white;
+  margin: 20px 0;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: 2px;
+}
+
+.celebration-emoji-row {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.celebration-emoji {
+  font-size: 2.5rem;
+  display: inline-block;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+}
+
+.celebration-close-btn {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 50px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.celebration-close-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+}
+
+.celebration-close-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .celebration-message-box {
+    padding: 40px 30px;
+    max-width: 90%;
+  }
+
+  .celebration-icon {
+    font-size: 4rem;
+  }
+
+  .celebration-message {
+    font-size: 2.5rem;
+  }
+
+  .celebration-emoji {
+    font-size: 2rem;
+  }
+
+  .celebration-balloon {
+    width: 40px;
+    height: 52px;
+  }
+
+  .balloon-string {
+    height: 60px;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .celebration-message-box {
+  direction: rtl;
+}

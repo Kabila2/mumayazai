@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound } from '../utils/soundEffects';
+import { useVoiceOver } from '../hooks/useVoiceOver';
 import './InteractiveStoryReader.css';
 
 const stories = [
@@ -34,10 +35,59 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
   const [selectedStory, setSelectedStory] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
 
+  // Voice Over hook for accessibility
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
+
   const t = {
     en: { title: 'Story Reading', selectStory: 'Select a Story', next: 'Next', prev: 'Previous', finish: 'Finish', close: 'Close' },
     ar: { title: 'قراءة القصص', selectStory: 'اختر قصة', next: 'التالي', prev: 'السابق', finish: 'إنهاء', close: 'إغلاق' }
   }[language] || { title: 'Story Reading', selectStory: 'Select a Story', next: 'Next', prev: 'Previous', finish: 'Finish', close: 'Close' };
+
+  // Announce story content when page changes
+  useEffect(() => {
+    if (selectedStory && selectedStory.content[currentPage]) {
+      const content = selectedStory.content[currentPage];
+      voiceOver.speakAuto(
+        language === 'ar' ? content.ar : content.en,
+        true
+      );
+    }
+  }, [currentPage, selectedStory]);
+
+  const handleStorySelect = (story) => {
+    playClickSound();
+    setSelectedStory(story);
+
+    // Announce story title
+    voiceOver.speak(
+      language === 'ar'
+        ? `قصة ${story.title}`
+        : `Story: ${story.titleEn}`,
+      true
+    );
+  };
+
+  const handleNextPage = () => {
+    playClickSound();
+    setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    playClickSound();
+    setCurrentPage(Math.max(0, currentPage - 1));
+  };
+
+  const handleFinish = () => {
+    playClickSound();
+    voiceOver.speak(
+      language === 'ar'
+        ? 'أحسنت! أكملت القصة'
+        : 'Well done! Story completed',
+      true
+    );
+    setSelectedStory(null);
+    setCurrentPage(0);
+  };
 
   if (!selectedStory) {
     return (
@@ -64,7 +114,7 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
                 <motion.div
                   key={story.id}
                   className="story-card"
-                  onClick={() => { playClickSound(); setSelectedStory(story); }}
+                  onClick={() => handleStorySelect(story)}
                   whileHover={{ scale: 1.03, y: -5 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -107,11 +157,11 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
           <div className="story-progress">Page {currentPage + 1} of {selectedStory.content.length}</div>
         </div>
         <div className="story-navigation">
-          <button className="nav-btn" onClick={() => { playClickSound(); setCurrentPage(Math.max(0, currentPage - 1)); }} disabled={currentPage === 0}>{t.prev}</button>
+          <button className="nav-btn" onClick={handlePrevPage} disabled={currentPage === 0}>{t.prev}</button>
           {currentPage < selectedStory.content.length - 1 ? (
-            <button className="nav-btn" onClick={() => { playClickSound(); setCurrentPage(currentPage + 1); }}>{t.next}</button>
+            <button className="nav-btn" onClick={handleNextPage}>{t.next}</button>
           ) : (
-            <button className="nav-btn finish" onClick={() => { playClickSound(); setSelectedStory(null); setCurrentPage(0); }}>{t.finish}</button>
+            <button className="nav-btn finish" onClick={handleFinish}>{t.finish}</button>
           )}
         </div>
       </div>

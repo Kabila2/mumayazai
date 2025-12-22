@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { awardPoints } from '../utils/pointsUtils';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 import './QuizCenter.css';
 
 const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak, userEmail }) => {
@@ -20,6 +22,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   const [matchingPairs, setMatchingPairs] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Voice Over hook for accessibility
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // Quiz Types
   const quizTypes = [
@@ -409,9 +415,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
       if (correct) {
         setScore(score + 1);
-        speak && speak(language === 'ar' ? 'صحيح' : 'Correct!');
+        setShowCelebration(true); // Show celebration!
+        voiceOver.speak(language === 'ar' ? 'صحيح! رائع' : 'Correct! Great job', true);
       } else {
-        speak && speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again');
+        voiceOver.speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again', true);
       }
 
       setAnswers([...answers, { questionIndex: currentQuestionIndex, correct }]);
@@ -437,9 +444,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
       if (correct) {
         setScore(score + 1);
-        speak && speak(language === 'ar' ? 'صحيح' : 'Correct!');
+        setShowCelebration(true); // Show celebration!
+        voiceOver.speak(language === 'ar' ? 'صحيح! رائع' : 'Correct! Great job', true);
       } else {
-        speak && speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again');
+        voiceOver.speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again', true);
       }
 
       setAnswers([...answers, { questionIndex: currentQuestionIndex, correct }]);
@@ -922,6 +930,13 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           <span className="score-value">{score}/{content.length}</span>
         </div>
       </motion.div>
+
+      {/* Celebration Popup */}
+      <CelebrationPopup
+        show={showCelebration}
+        language={language}
+        onClose={() => setShowCelebration(false)}
+      />
     </div>
   );
 };

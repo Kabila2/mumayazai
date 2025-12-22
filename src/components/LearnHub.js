@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useVoiceOver } from '../hooks/useVoiceOver';
 import './LearnHub.css';
 
 const LearnHub = ({ language, onSectionSelect }) => {
+  // Voice Over hook for accessibility
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
   const t = {
     en: {
       title: 'Learning Center',
@@ -111,6 +114,17 @@ const LearnHub = ({ language, onSectionSelect }) => {
     { id: 'interactive', label: currentLang.interactive }
   ];
 
+  const handleSectionClick = (section) => {
+    // Voice over announcement
+    voiceOver.speak(
+      language === 'ar'
+        ? `${section.titleAr}, ${section.descriptionAr}`
+        : `${section.titleEn}, ${section.descriptionEn}`,
+      true
+    );
+    onSectionSelect(section.id);
+  };
+
   return (
     <div className="learn-hub-container">
       <motion.div
@@ -143,7 +157,7 @@ const LearnHub = ({ language, onSectionSelect }) => {
                   <motion.div
                     key={section.id}
                     className="learn-card"
-                    onClick={() => onSectionSelect(section.id)}
+                    onClick={() => handleSectionClick(section)}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{

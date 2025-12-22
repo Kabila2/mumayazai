@@ -303,6 +303,24 @@ const ArabicLearningPlatform = ({
         <StreakCounter language={language} />
       </motion.div>
 
+      {/* Learn Section */}
+      <motion.div
+        className="section-category-header"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h2 className="category-title">
+          📚 {language === 'ar' ? 'تعلّم' : 'Learn'}
+        </h2>
+        <p className="category-subtitle">
+          {language === 'ar'
+            ? 'ابدأ رحلة التعلم مع الدروس التفاعلية'
+            : 'Start your learning journey with interactive lessons'
+          }
+        </p>
+      </motion.div>
+
       <div className="learning-sections">
         <motion.div
           className="section-card alphabet-card"
@@ -407,106 +425,43 @@ const ArabicLearningPlatform = ({
         </motion.div>
 
         <motion.div
-          className="section-card wordbuilder-card"
-          onClick={() => handleSectionChange('wordbuilder')}
+          className="section-card handwriting-card"
+          onClick={() => handleSectionChange('handwriting')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.9 }}
         >
-          <div className="card-icon">🔤</div>
+          <div className="card-icon">✍️</div>
           <h3 className="card-title">
-            {language === 'ar' ? 'بناء الكلمات' : 'Word Builder'}
+            {language === 'ar' ? 'تمرين الكتابة اليدوية' : 'Handwriting Practice'}
           </h3>
           <p className="card-description">
             {language === 'ar'
-              ? 'شاهد الصورة ورتب الحروف لتكوين الكلمة'
-              : 'Look at the picture and arrange letters to form the word'
+              ? 'تدرب على كتابة الحروف العربية'
+              : 'Practice writing Arabic letters'
             }
           </p>
         </motion.div>
 
         <motion.div
-          className="section-card memory-card"
-          onClick={() => handleSectionChange('memory')}
+          className="section-card story-card"
+          onClick={() => handleSectionChange('story')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.0 }}
         >
-          <div className="card-icon">🧠</div>
+          <div className="card-icon">📖</div>
           <h3 className="card-title">
-            {language === 'ar' ? 'لعبة الذاكرة' : 'Memory Match Game'}
+            {language === 'ar' ? 'قصص تفاعلية' : 'Interactive Stories'}
           </h3>
           <p className="card-description">
             {language === 'ar'
-              ? 'طابق الصور مع الكلمات وحسّن ذاكرتك'
-              : 'Match pictures with words and improve your memory'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card sentencebuilder-card"
-          onClick={() => handleSectionChange('sentencebuilder')}
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.1 }}
-        >
-          <div className="card-icon">🔤</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'بناء الجمل' : 'Sentence Builder'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'رتب الكلمات لتكوين جمل صحيحة'
-              : 'Arrange words to form correct sentences'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card letterwordbuilder-card"
-          onClick={() => handleSectionChange('letterwordbuilder')}
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.2 }}
-        >
-          <div className="card-icon">🔡</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'بناء الكلمات' : 'Letter Builder'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'رتب الحروف لتكوين كلمات صحيحة'
-              : 'Arrange letters to form correct words'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card quiz-card"
-          onClick={() => handleSectionChange('quiz')}
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.3 }}
-        >
-          <div className="card-icon">🎯</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'اختبر معرفتك في جميع المواضيع'
-              : 'Test your knowledge on all topics'
+              ? 'اقرأ قصصاً ممتعة وتفاعلية'
+              : 'Read fun and interactive stories'
             }
           </p>
         </motion.div>
@@ -516,9 +471,9 @@ const ArabicLearningPlatform = ({
           onClick={() => handleSectionChange('drawing')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.4 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.1 }}
         >
           <div className="card-icon">🎨</div>
           <h3 className="card-title">
@@ -537,8 +492,8 @@ const ArabicLearningPlatform = ({
           onClick={() => handleSectionChange('chat')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.2 }}
         >
           <div className="card-icon">💬</div>
@@ -574,76 +529,13 @@ const ArabicLearningPlatform = ({
         </motion.div>
 
         <motion.div
-          className="section-card progress-card"
-          onClick={() => handleSectionChange('progress')}
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5 }}
-        >
-          <div className="card-icon">📊</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'لوحة التقدم' : 'Progress Dashboard'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تابع تقدمك وشاهد إنجازاتك'
-              : 'Track your progress and view achievements'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card handwriting-card"
-          onClick={() => handleSectionChange('handwriting')}
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.6 }}
-        >
-          <div className="card-icon">✍️</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'تمرين الكتابة اليدوية' : 'Handwriting Practice'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تدرب على كتابة الحروف العربية'
-              : 'Practice writing Arabic letters'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card story-card"
-          onClick={() => handleSectionChange('story')}
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.7 }}
-        >
-          <div className="card-icon">📖</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'قصص تفاعلية' : 'Interactive Stories'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'اقرأ قصصاً ممتعة وتفاعلية'
-              : 'Read fun and interactive stories'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
           className="section-card homework-card"
           onClick={() => handleSectionChange('homework')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.8 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.3 }}
         >
           <div className="card-icon">📚</div>
           <h3 className="card-title">
@@ -653,6 +545,168 @@ const ArabicLearningPlatform = ({
             {language === 'ar'
               ? 'شاهد واجباتك وأكملها'
               : 'View and complete your homework'
+            }
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Test Yourself Section */}
+      <motion.div
+        className="section-category-header"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.4 }}
+        style={{ marginTop: '40px' }}
+      >
+        <h2 className="category-title">
+          🎯 {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
+        </h2>
+        <p className="category-subtitle">
+          {language === 'ar'
+            ? 'اختبر معرفتك وحسّن مهاراتك'
+            : 'Test your knowledge and improve your skills'
+          }
+        </p>
+      </motion.div>
+
+      <div className="learning-sections">
+        <motion.div
+          className="section-card quiz-card"
+          onClick={() => handleSectionChange('quiz')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.5 }}
+        >
+          <div className="card-icon">🎯</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'مركز الاختبارات' : 'Quiz Center'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'اختبر معرفتك في جميع المواضيع'
+              : 'Test your knowledge on all topics'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card wordbuilder-card"
+          onClick={() => handleSectionChange('wordbuilder')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.6 }}
+        >
+          <div className="card-icon">🔤</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'بناء الكلمات' : 'Word Builder'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'شاهد الصورة ورتب الحروف لتكوين الكلمة'
+              : 'Look at the picture and arrange letters to form the word'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card letterwordbuilder-card"
+          onClick={() => handleSectionChange('letterwordbuilder')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.7 }}
+        >
+          <div className="card-icon">🔡</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'بناء الكلمات' : 'Letter Builder'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'رتب الحروف لتكوين كلمات صحيحة'
+              : 'Arrange letters to form correct words'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card sentencebuilder-card"
+          onClick={() => handleSectionChange('sentencebuilder')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.8 }}
+        >
+          <div className="card-icon">📝</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'بناء الجمل' : 'Sentence Builder'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'رتب الكلمات لتكوين جمل صحيحة'
+              : 'Arrange words to form correct sentences'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card memory-card"
+          onClick={() => handleSectionChange('memory')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.9 }}
+        >
+          <div className="card-icon">🧠</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'لعبة الذاكرة' : 'Memory Match Game'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'طابق الصور مع الكلمات وحسّن ذاكرتك'
+              : 'Match pictures with words and improve your memory'
+            }
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Progress Section */}
+      <motion.div
+        className="section-category-header"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 2.0 }}
+        style={{ marginTop: '40px' }}
+      >
+        <h2 className="category-title">
+          📊 {language === 'ar' ? 'تقدمك' : 'Your Progress'}
+        </h2>
+      </motion.div>
+
+      <div className="learning-sections">
+        <motion.div
+          className="section-card progress-card"
+          onClick={() => handleSectionChange('progress')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.1 }}
+        >
+          <div className="card-icon">📊</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'لوحة التقدم' : 'Progress Dashboard'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'تابع تقدمك وشاهد إنجازاتك'
+              : 'Track your progress and view achievements'
             }
           </p>
         </motion.div>
@@ -1022,7 +1076,7 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <MemoryGame />
+              <MemoryGame language={language} />
             </motion.div>
           )}
 

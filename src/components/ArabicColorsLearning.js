@@ -1,122 +1,129 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ArabicColorsLearning.css';
+import { useVoiceOver } from '../hooks/useVoiceOver';
+import CelebrationPopup from './CelebrationPopup';
 
 const arabicColors = [
   {
     arabic: 'أحمر',
     english: 'Red',
     pronunciation: 'ahmar',
-    pastelHex: '#ffb3ba',
-    darkHex: '#ff8a95',
+    hex: '#FF0000',
     objects: ['تفاحة', 'وردة', 'فراولة'],
-    objectsEnglish: ['apple', 'rose', 'strawberry']
+    objectsEnglish: ['apple', 'rose', 'strawberry'],
+    image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أزرق',
     english: 'Blue',
     pronunciation: 'azraq',
-    pastelHex: '#bae1ff',
-    darkHex: '#87ceeb',
+    hex: '#0000FF',
     objects: ['سماء', 'بحر', 'طائر'],
-    objectsEnglish: ['sky', 'sea', 'bird']
+    objectsEnglish: ['sky', 'sea', 'bird'],
+    image: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أخضر',
     english: 'Green',
     pronunciation: 'akhdar',
-    pastelHex: '#baffc9',
-    darkHex: '#98fb98',
+    hex: '#008000',
     objects: ['شجرة', 'عشب', 'خضار'],
-    objectsEnglish: ['tree', 'grass', 'vegetables']
+    objectsEnglish: ['tree', 'grass', 'vegetables'],
+    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أصفر',
     english: 'Yellow',
     pronunciation: 'asfar',
-    pastelHex: '#ffffba',
-    darkHex: '#f0e68c',
+    hex: '#FFD700',
     objects: ['شمس', 'ليمون', 'موز'],
-    objectsEnglish: ['sun', 'lemon', 'banana']
+    objectsEnglish: ['sun', 'lemon', 'banana'],
+    image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400&h=400&fit=crop'
   },
   {
     arabic: 'بنفسجي',
     english: 'Purple',
     pronunciation: 'banafsaji',
-    pastelHex: '#e1baff',
-    darkHex: '#dda0dd',
+    hex: '#800080',
     objects: ['عنب', 'زهرة', 'فراشة'],
-    objectsEnglish: ['grapes', 'flower', 'butterfly']
+    objectsEnglish: ['grapes', 'flower', 'butterfly'],
+    image: 'https://images.unsplash.com/photo-1599819177073-49388c33375b?w=400&h=400&fit=crop'
   },
   {
     arabic: 'وردي',
     english: 'Pink',
     pronunciation: 'wardi',
-    pastelHex: '#ffb3e6',
-    darkHex: '#ffc0cb',
+    hex: '#FF69B4',
     objects: ['وردة', 'فستان', 'حلوى'],
-    objectsEnglish: ['rose', 'dress', 'candy']
+    objectsEnglish: ['rose', 'dress', 'candy'],
+    image: 'https://images.unsplash.com/photo-1518709594023-6eab9bab7b23?w=400&h=400&fit=crop'
   },
   {
     arabic: 'برتقالي',
     english: 'Orange',
     pronunciation: 'burtuqali',
-    pastelHex: '#ffd9b3',
-    darkHex: '#ffa07a',
+    hex: '#FF8C00',
     objects: ['برتقال', 'جزر', 'قرع'],
-    objectsEnglish: ['orange', 'carrot', 'pumpkin']
+    objectsEnglish: ['orange', 'carrot', 'pumpkin'],
+    image: 'https://images.unsplash.com/photo-1557800636-894a64c1696f?w=400&h=400&fit=crop'
   },
   {
     arabic: 'بني',
     english: 'Brown',
     pronunciation: 'bunni',
-    pastelHex: '#d4c4a8',
-    darkHex: '#d2b48c',
+    hex: '#8B4513',
     objects: ['شجرة', 'شوكولاتة', 'أرض'],
-    objectsEnglish: ['tree', 'chocolate', 'earth']
+    objectsEnglish: ['tree', 'chocolate', 'earth'],
+    image: 'https://images.unsplash.com/photo-1606312619070-d48b4cbc5b52?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أبيض',
     english: 'White',
     pronunciation: 'abyad',
-    pastelHex: '#f8f8ff',
-    darkHex: '#f5f5f5',
+    hex: '#FFFFFF',
     objects: ['ثلج', 'حليب', 'سحاب'],
-    objectsEnglish: ['snow', 'milk', 'cloud']
+    objectsEnglish: ['snow', 'milk', 'cloud'],
+    image: 'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أسود',
     english: 'Black',
     pronunciation: 'aswad',
-    pastelHex: '#696969',
-    darkHex: '#2f2f2f',
+    hex: '#000000',
     objects: ['ليل', 'فحم', 'قط'],
-    objectsEnglish: ['night', 'coal', 'cat']
+    objectsEnglish: ['night', 'coal', 'cat'],
+    image: 'https://images.unsplash.com/photo-1518176258769-f227c798150e?w=400&h=400&fit=crop'
   },
   {
     arabic: 'رمادي',
     english: 'Gray',
     pronunciation: 'ramadi',
-    pastelHex: '#d3d3d3',
-    darkHex: '#a9a9a9',
+    hex: '#808080',
     objects: ['سحاب', 'فيل', 'حجر'],
-    objectsEnglish: ['cloud', 'elephant', 'stone']
+    objectsEnglish: ['cloud', 'elephant', 'stone'],
+    image: 'https://images.unsplash.com/photo-1534670007418-fbb7f6cf32c3?w=400&h=400&fit=crop'
   },
   {
     arabic: 'ذهبي',
     english: 'Gold',
     pronunciation: 'dhahabi',
-    pastelHex: '#f0e68c',
-    darkHex: '#ffd700',
+    hex: '#FFD700',
     objects: ['ذهب', 'تاج', 'شمس'],
-    objectsEnglish: ['gold', 'crown', 'sun']
+    objectsEnglish: ['gold', 'crown', 'sun'],
+    image: 'https://images.unsplash.com/photo-1610375461369-d8a76755f2b0?w=400&h=400&fit=crop'
   }
 ];
 
 const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
   const [selectedColor, setSelectedColor] = useState(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [viewedColors, setViewedColors] = useState([]);
   const containerRef = useRef(null);
+
+  // Voice Over hook for accessibility
+  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // Handle scroll indicator
   useEffect(() => {
@@ -162,10 +169,25 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
     if (containerRef.current) {
       containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    // Show celebration if color is viewed for the first time
+    if (!viewedColors.includes(color.english)) {
+      setViewedColors([...viewedColors, color.english]);
+      setShowCelebration(true);
+    }
+
+    // Voice over announcement
+    voiceOver.speak(
+      language === 'ar'
+        ? `لون ${color.arabic}, ${color.pronunciation}`
+        : `Color ${color.english}, ${color.pronunciation}`,
+      true
+    );
   };
 
   const handleCloseDetail = () => {
     setSelectedColor(null);
+    voiceOver.stop();
   };
 
   return (
@@ -186,60 +208,44 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
         </p>
       </motion.div>
 
-      {/* Color Detail Modal */}
+      {/* Expanded Color Display */}
       <AnimatePresence>
         {selectedColor && (
           <motion.div
-            className="color-detail-overlay"
+            className="color-fullscreen-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleCloseDetail}
           >
-            <motion.div
-              className="color-detail-modal"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: `linear-gradient(135deg, ${selectedColor.pastelHex}, ${selectedColor.darkHex}15)`
+            <button
+              className="close-fullscreen-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseDetail();
               }}
             >
-              <button className="close-detail-btn" onClick={handleCloseDetail}>
-                ✕
-              </button>
+              ✕
+            </button>
 
-              <div className="detail-color-circle-large" style={{ backgroundColor: selectedColor.darkHex }}>
-                <div className="detail-color-shine"></div>
-              </div>
-
-              <div className="detail-color-info">
-                <div className="detail-arabic-name">{selectedColor.arabic}</div>
-                <div className="detail-english-name">{selectedColor.english}</div>
-                <div className="detail-pronunciation">{selectedColor.pronunciation}</div>
-              </div>
-
-              <div className="detail-objects-section">
-                <h3 className="detail-objects-title">
-                  {language === 'ar' ? 'أمثلة من الحياة اليومية' : 'Everyday Examples'}
-                </h3>
-                <div className="detail-objects-grid">
-                  {selectedColor.objects.map((object, index) => (
-                    <motion.div
-                      key={index}
-                      className="detail-object-card"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <div className="detail-object-arabic">{object}</div>
-                      <div className="detail-object-english">{selectedColor.objectsEnglish[index]}</div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+            <motion.div
+              className="fullscreen-color-info"
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: selectedColor.hex
+              }}
+            >
+              <img
+                src={selectedColor.image}
+                alt={selectedColor.english}
+                className="fullscreen-color-image"
+              />
+              <div className="fullscreen-arabic-name">{selectedColor.arabic}</div>
+              <div className="fullscreen-english-name">{selectedColor.english}</div>
+              <div className="fullscreen-pronunciation">{selectedColor.pronunciation}</div>
             </motion.div>
           </motion.div>
         )}
@@ -257,21 +263,23 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
             whileHover={{ scale: 1.05, y: -8 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => handleColorSelect(color)}
+            style={{ backgroundColor: color.hex }}
           >
-            <div className="modern-color-top" style={{ backgroundColor: color.pastelHex }}>
-              <div className="modern-color-circle" style={{ backgroundColor: color.darkHex }}>
-                <div className="color-shine"></div>
-              </div>
+            <div className="color-image-container">
+              <img
+                src={color.image}
+                alt={color.english}
+                className="color-object-image"
+              />
             </div>
 
             <div className="modern-color-bottom">
               <div className="modern-color-arabic">{color.arabic}</div>
               <div className="modern-color-english">{color.english}</div>
-              <div className="modern-color-pronunciation">{color.pronunciation}</div>
             </div>
 
             <div className="tap-hint">
-              {language === 'ar' ? '← انقر لمزيد من التفاصيل' : 'Tap for details →'}
+              {language === 'ar' ? 'انقر للعرض ←' : 'Tap to view →'}
             </div>
           </motion.div>
         ))}
@@ -301,6 +309,13 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Celebration Popup */}
+      <CelebrationPopup
+        show={showCelebration}
+        language={language}
+        onClose={() => setShowCelebration(false)}
+      />
     </div>
   );
 };

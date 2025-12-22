@@ -1631,7 +1631,7 @@ export default function VoiceInterface({
         </AnimatePresence>
         <div ref={bottomRef} />
       </motion.div>
-
+          
       {/* Modals */}
       <SaveVoiceChatModal
         isOpen={showSaveModal}
