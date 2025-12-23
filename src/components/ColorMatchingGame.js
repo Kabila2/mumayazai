@@ -187,7 +187,6 @@ const ColorMatchingGame = ({ language = 'en' }) => {
             >
               <p className="instruction-text">{currentLang.instruction}</p>
               <div className="target-color-card">
-                <span className="target-emoji">{targetColor.emoji}</span>
                 <h2 className="target-color-name">
                   {language === 'ar' ? targetColor.nameAr : targetColor.name}
                 </h2>

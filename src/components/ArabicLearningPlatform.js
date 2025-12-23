@@ -10,8 +10,6 @@ import ChatInterface from "./ChatInterface";
 import VoiceInterface from "./VoiceInterface";
 import MemoryGame from "./MemoryGame";
 import ColorMatchingGame from "./ColorMatchingGame";
-import BubblePopGame from "./BubblePopGame";
-import CatchTheLettersGame from "./CatchTheLettersGame";
 import NumberLearningGame from "./NumberLearningGame";
 import CollaborativeDrawingBoard from "./CollaborativeDrawingBoard";
 import SentenceBuilder from "./SentenceBuilder";
@@ -72,7 +70,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'chat', 'voice', 'memory-game', 'color-matching', 'bubble-pop', 'catch-letters', 'number-learning', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport', 'teacherdashboard', 'parentdashboard'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'chat', 'voice', 'memory-game', 'color-matching', 'number-learning', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport', 'teacherdashboard', 'parentdashboard'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -1119,30 +1117,6 @@ const ArabicLearningPlatform = ({
               transition={{ duration: 0.3 }}
             >
               <ColorMatchingGame language={language} />
-            </motion.div>
-          )}
-
-          {currentSection === 'bubble-pop' && (
-            <motion.div
-              key="bubble-pop"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <BubblePopGame language={language} />
-            </motion.div>
-          )}
-
-          {currentSection === 'catch-letters' && (
-            <motion.div
-              key="catch-letters"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <CatchTheLettersGame language={language} />
             </motion.div>
           )}
 

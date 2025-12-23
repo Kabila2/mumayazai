@@ -34,7 +34,16 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(npm install:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(del srccomponentsBubblePopGame.js)",
+      "Bash(del srccomponentsBubblePopGame.css)",
+      "Bash(ls:*)",
+      "Bash(for file in LearnHub ArabicAlphabetLearning ArabicColorsLearning ArabicWordsLearning ArabicSentencesLearning ArabicWordBuilder ChatInterface VoiceInterface MemoryGame ColorMatchingGame NumberLearningGame CollaborativeDrawingBoard SentenceBuilder LetterWordBuilder QuizCenter TeacherParentChat DarkModeToggle ProfileSettings Leaderboard StreakCounter ProgressDashboard ArabicHandwritingPractice InteractiveStoryReader HomeworkSystem ClassManagement OnboardingTutorial StudentProgressReport TeacherDashboard ParentDashboard)",
+      "Bash(do)",
+      "Bash(if [ ! -f \"src/components/$file.js\" ])",
+      "Bash(then)",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

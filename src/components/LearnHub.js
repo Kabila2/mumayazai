@@ -129,26 +129,6 @@ const LearnHub = ({ language, onSectionSelect }) => {
       category: 'games'
     },
     {
-      id: 'bubble-pop',
-      icon: '🫧',
-      titleEn: 'Bubble Pop',
-      titleAr: 'فقاعات الحروف',
-      descriptionEn: 'Pop bubbles with letters',
-      descriptionAr: 'افقع الفقاعات بالحروف',
-      color: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-      category: 'games'
-    },
-    {
-      id: 'catch-letters',
-      icon: '🧺',
-      titleEn: 'Catch Letters',
-      titleAr: 'امسك الحروف',
-      descriptionEn: 'Catch falling letters',
-      descriptionAr: 'امسك الحروف المتساقطة',
-      color: 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)',
-      category: 'games'
-    },
-    {
       id: 'number-learning',
       icon: '🔢',
       titleEn: 'Number Learning',
