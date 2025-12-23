@@ -1,0 +1,391 @@
+.number-game-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.number-game-header {
+  text-align: center;
+  margin-bottom: 30px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.number-game-title {
+  font-size: 2.5rem;
+  color: white;
+  margin: 0 0 20px 0;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.title-icon {
+  font-size: 3rem;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.1);
+  }
+}
+
+.game-info {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 15px 30px;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1.8rem;
+  color: white;
+  font-weight: 800;
+}
+
+.number-game-content {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.counting-area {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 100%;
+  max-width: 700px;
+}
+
+.instruction-text {
+  font-size: 1.5rem;
+  color: #6b7280;
+  margin: 0 0 30px 0;
+  font-weight: 700;
+}
+
+.emoji-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  min-height: 120px;
+  align-items: center;
+}
+
+.emoji-item {
+  font-size: 3.5rem;
+  animation: pop-in 0.4s ease;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.number-option {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 3px solid #fbbf24;
+  border-radius: 20px;
+  padding: 30px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.number-option:hover {
+  transform: translateY(-5px);
+  border-color: #f59e0b;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.number-option.shake {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+.option-emoji {
+  font-size: 4rem;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.option-name {
+  font-size: 1.5rem;
+  color: #92400e;
+  font-weight: 800;
+}
+
+.feedback-message {
+  font-size: 1.8rem;
+  font-weight: 800;
+  padding: 20px 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.feedback-message.correct {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.feedback-message.wrong {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+/* Game Complete Screen */
+.game-complete-screen {
+  background: white;
+  padding: 60px 40px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.complete-title {
+  font-size: 2.5rem;
+  color: #f97316;
+  margin: 0 0 20px 0;
+  font-weight: 800;
+}
+
+.complete-message {
+  font-size: 1.5rem;
+  color: #6b7280;
+  margin: 0 0 30px 0;
+  font-weight: 600;
+}
+
+.final-score {
+  font-size: 1.3rem;
+  color: #374151;
+  margin: 0 0 40px 0;
+  font-weight: 700;
+}
+
+.score-number {
+  font-size: 3rem;
+  color: #f97316;
+  display: block;
+  margin-top: 10px;
+  font-weight: 900;
+}
+
+.play-again-btn {
+  padding: 15px 40px;
+  background: linear-gradient(135deg, #f97316, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+.play-again-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+}
+
+.play-again-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .number-game-title {
+    font-size: 2rem;
+  }
+
+  .title-icon {
+    font-size: 2.5rem;
+  }
+
+  .info-item {
+    padding: 12px 24px;
+  }
+
+  .info-value {
+    font-size: 1.5rem;
+  }
+
+  .counting-area {
+    padding: 30px 20px;
+  }
+
+  .instruction-text {
+    font-size: 1.3rem;
+  }
+
+  .emoji-item {
+    font-size: 3rem;
+  }
+
+  .options-grid {
+    gap: 15px;
+  }
+
+  .number-option {
+    padding: 25px 15px;
+  }
+
+  .option-emoji {
+    font-size: 3.5rem;
+  }
+
+  .option-name {
+    font-size: 1.3rem;
+  }
+
+  .feedback-message {
+    font-size: 1.4rem;
+    padding: 15px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .number-game-container {
+    padding: 20px 15px;
+  }
+
+  .number-game-title {
+    font-size: 1.6rem;
+  }
+
+  .title-icon {
+    font-size: 2rem;
+  }
+
+  .game-info {
+    gap: 15px;
+  }
+
+  .info-item {
+    padding: 10px 20px;
+  }
+
+  .info-label {
+    font-size: 0.8rem;
+  }
+
+  .info-value {
+    font-size: 1.3rem;
+  }
+
+  .counting-area {
+    padding: 25px 15px;
+  }
+
+  .instruction-text {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+
+  .emoji-grid {
+    gap: 10px;
+    min-height: 100px;
+  }
+
+  .emoji-item {
+    font-size: 2.5rem;
+  }
+
+  .options-grid {
+    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .number-option {
+    padding: 20px 10px;
+  }
+
+  .option-emoji {
+    font-size: 3rem;
+  }
+
+  .option-name {
+    font-size: 1.1rem;
+  }
+
+  .complete-title {
+    font-size: 2rem;
+  }
+
+  .complete-message {
+    font-size: 1.2rem;
+  }
+
+  .score-number {
+    font-size: 2.5rem;
+  }
+}

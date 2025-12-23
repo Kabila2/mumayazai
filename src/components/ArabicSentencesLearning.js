@@ -37,7 +37,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'السَّلامُ عَلَيْكُم',
           english: 'Peace be upon you',
           pronunciation: 'as-salamu alaykum',
-          image: 'https://images.unsplash.com/photo-1609619385002-f40b6faa3a30?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
           videoDescription: {
             en: 'Learn the traditional Islamic greeting and its proper usage in daily conversations',
@@ -52,7 +52,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'صَباحُ الخَيْر',
           english: 'Good morning',
           pronunciation: 'sabah al-khayr',
-          image: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
           videoDescription: {
             en: 'Master morning greetings in Arabic and learn when to use them in different contexts',
@@ -67,7 +67,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'كَيْفَ حالُكَ؟',
           english: 'How are you?',
           pronunciation: 'kayfa haluk',
-          image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1556484687-30636164638b?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
           videoDescription: {
             en: 'Practice asking about someone\'s wellbeing and understand the cultural context',
@@ -82,7 +82,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَنا بِخَيْر',
           english: "I'm fine",
           pronunciation: 'ana bi-khayr',
-          image: 'https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
           videoDescription: {
             en: 'Learn different ways to respond positively about your wellbeing in Arabic',
@@ -106,7 +106,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أُحِبُّ الطَّعام',
           english: 'I love food',
           pronunciation: 'uhibbu at-ta\'am',
-          image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
           video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
           videoDescription: {
             en: 'Express your love for food and learn food-related vocabulary',
@@ -121,7 +121,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أُريدُ ماء',
           english: 'I want water',
           pronunciation: 'uridu maa',
-          image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أُريدُ', english: 'I want', pronunciation: 'uridu' },
             { arabic: 'ماء', english: 'water', pronunciation: 'maa' }
@@ -131,7 +131,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'البَيْتُ جَميل',
           english: 'The house is beautiful',
           pronunciation: 'al-baytu jameel',
-          image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400&h=300&fit=crop',
           words: [
             { arabic: 'البَيْتُ', english: 'the house', pronunciation: 'al-baytu' },
             { arabic: 'جَميل', english: 'beautiful', pronunciation: 'jameel' }
@@ -141,7 +141,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'عائِلَتي كَبيرة',
           english: 'My family is big',
           pronunciation: 'aa\'ilati kabeera',
-          image: 'https://images.unsplash.com/photo-1475503572774-15a45e5d60b9?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop',
           words: [
             { arabic: 'عائِلَتي', english: 'my family', pronunciation: 'aa\'ilati' },
             { arabic: 'كَبيرة', english: 'big', pronunciation: 'kabeera' }
@@ -160,7 +160,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَنا سَعيد',
           english: 'I am happy',
           pronunciation: 'ana sa\'eed',
-          image: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَنا', english: 'I', pronunciation: 'ana' },
             { arabic: 'سَعيد', english: 'happy', pronunciation: 'sa\'eed' }
@@ -170,7 +170,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أُحِبُّكَ كَثيراً',
           english: 'I love you very much',
           pronunciation: 'uhibbuka katheeran',
-          image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أُحِبُّكَ', english: 'I love you', pronunciation: 'uhibbuka' },
             { arabic: 'كَثيراً', english: 'very much', pronunciation: 'katheeran' }
@@ -180,7 +180,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'صَديقي لَطيف',
           english: 'My friend is kind',
           pronunciation: 'sadeeqi lateef',
-          image: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop',
           words: [
             { arabic: 'صَديقي', english: 'my friend', pronunciation: 'sadeeqi' },
             { arabic: 'لَطيف', english: 'kind', pronunciation: 'lateef' }
@@ -190,7 +190,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'شُكْراً جَزيلاً',
           english: 'Thank you very much',
           pronunciation: 'shukran jazeelan',
-          image: 'https://images.unsplash.com/photo-1582274528667-1e8a10ded835?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400&h=300&fit=crop',
           words: [
             { arabic: 'شُكْراً', english: 'thank you', pronunciation: 'shukran' },
             { arabic: 'جَزيلاً', english: 'very much', pronunciation: 'jazeelan' }
@@ -209,7 +209,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَذْهَبُ إلى المَدْرَسة',
           english: 'I go to school',
           pronunciation: 'adh-habu ila al-madrasa',
-          image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَذْهَبُ', english: 'I go', pronunciation: 'adh-habu' },
             { arabic: 'إلى', english: 'to', pronunciation: 'ila' },
@@ -220,7 +220,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَلْعَبُ مَعَ أَصْدِقائي',
           english: 'I play with my friends',
           pronunciation: 'al\'abu ma\'a asdiqaa\'i',
-          image: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَلْعَبُ', english: 'I play', pronunciation: 'al\'abu' },
             { arabic: 'مَعَ', english: 'with', pronunciation: 'ma\'a' },
@@ -231,7 +231,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَقْرَأُ كِتاباً',
           english: 'I read a book',
           pronunciation: 'aqra\'u kitaban',
-          image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَقْرَأُ', english: 'I read', pronunciation: 'aqra\'u' },
             { arabic: 'كِتاباً', english: 'a book', pronunciation: 'kitaban' }
@@ -241,7 +241,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           arabic: 'أَكْتُبُ الدَّرْس',
           english: 'I write the lesson',
           pronunciation: 'aktubu ad-dars',
-          image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop',
+          image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=400&h=300&fit=crop',
           words: [
             { arabic: 'أَكْتُبُ', english: 'I write', pronunciation: 'aktubu' },
             { arabic: 'الدَّرْس', english: 'the lesson', pronunciation: 'ad-dars' }

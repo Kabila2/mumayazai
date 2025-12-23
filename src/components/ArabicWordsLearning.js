@@ -38,25 +38,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'تَعَلُّم',
           english: 'Learn',
           simplePronunciation: 'ta-al-lum',
-          image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop'
         },
         {
           arabic: 'كِتَاب',
           english: 'Book',
           simplePronunciation: 'ki-tab',
-          image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop'
         },
         {
           arabic: 'قَلَم',
           english: 'Pen',
           simplePronunciation: 'qa-lam',
-          image: 'https://images.unsplash.com/photo-1563297007-0686b7003af7?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&h=300&fit=crop'
         },
         {
           arabic: 'قِرَاءَة',
           english: 'Reading',
           simplePronunciation: 'qi-ra-a',
-          image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -71,25 +71,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'سَعِيد',
           english: 'Happy',
           simplePronunciation: 'sa-eed',
-          image: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop'
         },
         {
           arabic: 'حُبّ',
           english: 'Love',
           simplePronunciation: 'hubb',
-          image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop'
         },
         {
           arabic: 'صَدِيق',
           english: 'Friend',
           simplePronunciation: 'sa-deeq',
-          image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop'
         },
         {
           arabic: 'مُسَاعَدَة',
           english: 'Help',
           simplePronunciation: 'mu-sa-a-da',
-          image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -104,25 +104,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'طَعَام',
           english: 'Food',
           simplePronunciation: 'ta-am',
-          image: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop'
         },
         {
           arabic: 'مَاء',
           english: 'Water',
           simplePronunciation: 'maa',
-          image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop'
         },
         {
           arabic: 'بَيْت',
           english: 'Home',
           simplePronunciation: 'bayt',
-          image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400&h=300&fit=crop'
         },
         {
           arabic: 'عَائِلَة',
           english: 'Family',
           simplePronunciation: 'aa-ee-la',
-          image: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop'
         }
       ]
     },
@@ -137,25 +137,25 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           arabic: 'لَعِب',
           english: 'Play',
           simplePronunciation: 'la-ib',
-          image: 'https://images.unsplash.com/photo-1519163219899-21d2bb723b3e?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop'
         },
         {
           arabic: 'نَوْم',
           english: 'Sleep',
           simplePronunciation: 'nawm',
-          image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1511988617509-a57c8a288659?w=400&h=300&fit=crop'
         },
         {
           arabic: 'أَكْل',
           english: 'Eat',
           simplePronunciation: 'akl',
-          image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&h=300&fit=crop'
         },
         {
           arabic: 'مَشْي',
           english: 'Walk',
           simplePronunciation: 'mash-ee',
-          image: 'https://images.unsplash.com/photo-1588392382834-a891154bca4d?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1601758003122-53c40e686a19?w=400&h=300&fit=crop'
         }
       ]
     }

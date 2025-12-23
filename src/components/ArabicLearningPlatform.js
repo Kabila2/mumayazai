@@ -9,6 +9,10 @@ import ArabicWordBuilder from "./ArabicWordBuilder";
 import ChatInterface from "./ChatInterface";
 import VoiceInterface from "./VoiceInterface";
 import MemoryGame from "./MemoryGame";
+import ColorMatchingGame from "./ColorMatchingGame";
+import BubblePopGame from "./BubblePopGame";
+import CatchTheLettersGame from "./CatchTheLettersGame";
+import NumberLearningGame from "./NumberLearningGame";
 import CollaborativeDrawingBoard from "./CollaborativeDrawingBoard";
 import SentenceBuilder from "./SentenceBuilder";
 import LetterWordBuilder from "./LetterWordBuilder";
@@ -25,6 +29,8 @@ import HomeworkSystem from "./HomeworkSystem";
 import ClassManagement from "./ClassManagement";
 import OnboardingTutorial from "./OnboardingTutorial";
 import StudentProgressReport from "./StudentProgressReport";
+import TeacherDashboard from "./TeacherDashboard";
+import ParentDashboard from "./ParentDashboard";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
@@ -66,7 +72,7 @@ const ArabicLearningPlatform = ({
   setLanguage,
   speak
 }) => {
-  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'chat', 'voice', 'memory', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport'
+  const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'chat', 'voice', 'memory-game', 'color-matching', 'bubble-pop', 'catch-letters', 'number-learning', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport', 'teacherdashboard', 'parentdashboard'
   const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -912,6 +918,30 @@ const ArabicLearningPlatform = ({
               )}
             </button>
           )}
+          {/* Only show Teacher Dashboard for teachers */}
+          {getCurrentUserRole() === 'teacher' && (
+            <button
+              className={`nav-link ${currentSection === 'teacherdashboard' ? 'active' : ''}`}
+              onClick={() => setCurrentSection('teacherdashboard')}
+              style={{
+                background: currentSection === 'teacherdashboard' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : ''
+              }}
+            >
+              📊 {language === 'ar' ? 'لوحة المعلم' : 'Teacher Dashboard'}
+            </button>
+          )}
+          {/* Only show Parent Dashboard for parents */}
+          {getCurrentUserRole() === 'parent' && (
+            <button
+              className={`nav-link ${currentSection === 'parentdashboard' ? 'active' : ''}`}
+              onClick={() => setCurrentSection('parentdashboard')}
+              style={{
+                background: currentSection === 'parentdashboard' ? 'linear-gradient(135deg, #10b981, #059669)' : ''
+              }}
+            >
+              👪 {language === 'ar' ? 'لوحة الأهل' : 'Parent Dashboard'}
+            </button>
+          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
@@ -1068,9 +1098,9 @@ const ArabicLearningPlatform = ({
             </motion.div>
           )}
 
-          {currentSection === 'memory' && (
+          {currentSection === 'memory-game' && (
             <motion.div
-              key="memory"
+              key="memory-game"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -1080,6 +1110,53 @@ const ArabicLearningPlatform = ({
             </motion.div>
           )}
 
+          {currentSection === 'color-matching' && (
+            <motion.div
+              key="color-matching"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ColorMatchingGame language={language} />
+            </motion.div>
+          )}
+
+          {currentSection === 'bubble-pop' && (
+            <motion.div
+              key="bubble-pop"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <BubblePopGame language={language} />
+            </motion.div>
+          )}
+
+          {currentSection === 'catch-letters' && (
+            <motion.div
+              key="catch-letters"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CatchTheLettersGame language={language} />
+            </motion.div>
+          )}
+
+          {currentSection === 'number-learning' && (
+            <motion.div
+              key="number-learning"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <NumberLearningGame language={language} />
+            </motion.div>
+          )}
 
           {currentSection === 'sentencebuilder' && (
             <motion.div
@@ -1316,6 +1393,38 @@ const ArabicLearningPlatform = ({
               transition={{ duration: 0.3 }}
             >
               <StudentProgressReport
+                userEmail={getCurrentUserEmail()}
+                language={language}
+                onClose={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'teacherdashboard' && (
+            <motion.div
+              key="teacherdashboard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TeacherDashboard
+                userEmail={getCurrentUserEmail()}
+                language={language}
+                onClose={() => setCurrentSection('home')}
+              />
+            </motion.div>
+          )}
+
+          {currentSection === 'parentdashboard' && (
+            <motion.div
+              key="parentdashboard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ParentDashboard
                 userEmail={getCurrentUserEmail()}
                 language={language}
                 onClose={() => setCurrentSection('home')}

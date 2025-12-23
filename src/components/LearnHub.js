@@ -12,14 +12,16 @@ const LearnHub = ({ language, onSectionSelect }) => {
       subtitle: 'Choose what you want to learn today',
       basics: 'Core Lessons',
       practice: 'Practice & Activities',
-      interactive: 'Interactive Learning'
+      interactive: 'Interactive Learning',
+      games: 'Fun Games'
     },
     ar: {
       title: 'مركز التعلم',
       subtitle: 'اختر ما تريد تعلمه اليوم',
       basics: 'الدروس الأساسية',
       practice: 'التمرين والأنشطة',
-      interactive: 'التعلم التفاعلي'
+      interactive: 'التعلم التفاعلي',
+      games: 'ألعاب ممتعة'
     }
   };
 
@@ -105,13 +107,64 @@ const LearnHub = ({ language, onSectionSelect }) => {
       descriptionAr: 'ارسم وأبدع معاً',
       color: 'linear-gradient(135deg, #ec4899 0%, #d946ef 100%)',
       category: 'interactive'
+    },
+    {
+      id: 'memory-game',
+      icon: '🧠',
+      titleEn: 'Memory Match',
+      titleAr: 'لعبة الذاكرة',
+      descriptionEn: 'Match pictures with words',
+      descriptionAr: 'طابق الصور مع الكلمات',
+      color: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+      category: 'games'
+    },
+    {
+      id: 'color-matching',
+      icon: '🎨',
+      titleEn: 'Color Matching',
+      titleAr: 'مطابقة الألوان',
+      descriptionEn: 'Learn colors by matching',
+      descriptionAr: 'تعلم الألوان بالمطابقة',
+      color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      category: 'games'
+    },
+    {
+      id: 'bubble-pop',
+      icon: '🫧',
+      titleEn: 'Bubble Pop',
+      titleAr: 'فقاعات الحروف',
+      descriptionEn: 'Pop bubbles with letters',
+      descriptionAr: 'افقع الفقاعات بالحروف',
+      color: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+      category: 'games'
+    },
+    {
+      id: 'catch-letters',
+      icon: '🧺',
+      titleEn: 'Catch Letters',
+      titleAr: 'امسك الحروف',
+      descriptionEn: 'Catch falling letters',
+      descriptionAr: 'امسك الحروف المتساقطة',
+      color: 'linear-gradient(135deg, #a855f7 0%, #6b21a8 100%)',
+      category: 'games'
+    },
+    {
+      id: 'number-learning',
+      icon: '🔢',
+      titleEn: 'Number Learning',
+      titleAr: 'تعلم الأرقام',
+      descriptionEn: 'Learn numbers by counting',
+      descriptionAr: 'تعلم الأرقام بالعد',
+      color: 'linear-gradient(135deg, #f97316 0%, #dc2626 100%)',
+      category: 'games'
     }
   ];
 
   const categories = [
     { id: 'basics', label: currentLang.basics },
     { id: 'practice', label: currentLang.practice },
-    { id: 'interactive', label: currentLang.interactive }
+    { id: 'interactive', label: currentLang.interactive },
+    { id: 'games', label: currentLang.games }
   ];
 
   const handleSectionClick = (section) => {

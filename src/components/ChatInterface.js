@@ -1093,7 +1093,7 @@ const ChatInterface = ({
             whileFocus={!reducedMotion ? {
               scale: 1.01,
               transition: { duration: 0.2 }
-            } : {}}
+            } : {}}for 
           />
         </div>
 

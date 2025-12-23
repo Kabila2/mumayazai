@@ -12,7 +12,7 @@ const arabicColors = [
     hex: '#FF0000',
     objects: ['تفاحة', 'وردة', 'فراولة'],
     objectsEnglish: ['apple', 'rose', 'strawberry'],
-    image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أزرق',
@@ -21,7 +21,7 @@ const arabicColors = [
     hex: '#0000FF',
     objects: ['سماء', 'بحر', 'طائر'],
     objectsEnglish: ['sky', 'sea', 'bird'],
-    image: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أخضر',
@@ -30,7 +30,7 @@ const arabicColors = [
     hex: '#008000',
     objects: ['شجرة', 'عشب', 'خضار'],
     objectsEnglish: ['tree', 'grass', 'vegetables'],
-    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أصفر',
@@ -39,7 +39,7 @@ const arabicColors = [
     hex: '#FFD700',
     objects: ['شمس', 'ليمون', 'موز'],
     objectsEnglish: ['sun', 'lemon', 'banana'],
-    image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1587486937103-eea6b4bd51b0?w=400&h=400&fit=crop'
   },
   {
     arabic: 'بنفسجي',
@@ -48,7 +48,7 @@ const arabicColors = [
     hex: '#800080',
     objects: ['عنب', 'زهرة', 'فراشة'],
     objectsEnglish: ['grapes', 'flower', 'butterfly'],
-    image: 'https://images.unsplash.com/photo-1599819177073-49388c33375b?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&h=400&fit=crop'
   },
   {
     arabic: 'وردي',
@@ -57,7 +57,7 @@ const arabicColors = [
     hex: '#FF69B4',
     objects: ['وردة', 'فستان', 'حلوى'],
     objectsEnglish: ['rose', 'dress', 'candy'],
-    image: 'https://images.unsplash.com/photo-1518709594023-6eab9bab7b23?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=400&h=400&fit=crop'
   },
   {
     arabic: 'برتقالي',
@@ -66,7 +66,7 @@ const arabicColors = [
     hex: '#FF8C00',
     objects: ['برتقال', 'جزر', 'قرع'],
     objectsEnglish: ['orange', 'carrot', 'pumpkin'],
-    image: 'https://images.unsplash.com/photo-1557800636-894a64c1696f?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1580052614034-c55d20bfee3b?w=400&h=400&fit=crop'
   },
   {
     arabic: 'بني',
@@ -75,7 +75,7 @@ const arabicColors = [
     hex: '#8B4513',
     objects: ['شجرة', 'شوكولاتة', 'أرض'],
     objectsEnglish: ['tree', 'chocolate', 'earth'],
-    image: 'https://images.unsplash.com/photo-1606312619070-d48b4cbc5b52?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أبيض',
@@ -84,7 +84,7 @@ const arabicColors = [
     hex: '#FFFFFF',
     objects: ['ثلج', 'حليب', 'سحاب'],
     objectsEnglish: ['snow', 'milk', 'cloud'],
-    image: 'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1517299321609-52687d1bc55a?w=400&h=400&fit=crop'
   },
   {
     arabic: 'أسود',
@@ -93,7 +93,7 @@ const arabicColors = [
     hex: '#000000',
     objects: ['ليل', 'فحم', 'قط'],
     objectsEnglish: ['night', 'coal', 'cat'],
-    image: 'https://images.unsplash.com/photo-1518176258769-f227c798150e?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1545243424-0ce743321e11?w=400&h=400&fit=crop'
   },
   {
     arabic: 'رمادي',
@@ -102,7 +102,7 @@ const arabicColors = [
     hex: '#808080',
     objects: ['سحاب', 'فيل', 'حجر'],
     objectsEnglish: ['cloud', 'elephant', 'stone'],
-    image: 'https://images.unsplash.com/photo-1534670007418-fbb7f6cf32c3?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=400&h=400&fit=crop'
   },
   {
     arabic: 'ذهبي',
@@ -111,7 +111,7 @@ const arabicColors = [
     hex: '#FFD700',
     objects: ['ذهب', 'تاج', 'شمس'],
     objectsEnglish: ['gold', 'crown', 'sun'],
-    image: 'https://images.unsplash.com/photo-1610375461369-d8a76755f2b0?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=400&h=400&fit=crop'
   }
 ];
 
