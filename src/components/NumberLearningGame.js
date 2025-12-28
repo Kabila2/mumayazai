@@ -5,7 +5,7 @@ import { playClickSound } from '../utils/soundEffects';
 import CelebrationPopup from './CelebrationPopup';
 import './NumberLearningGame.css';
 
-const NumberLearningGame = ({ language = 'en' }) => {
+const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
   const [currentNumber, setCurrentNumber] = useState(null);
   const [options, setOptions] = useState([]);
   const [score, setScore] = useState(0);
@@ -13,6 +13,7 @@ const NumberLearningGame = ({ language = 'en' }) => {
   const [feedback, setFeedback] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
@@ -41,7 +42,12 @@ const NumberLearningGame = ({ language = 'en' }) => {
       complete: 'Game Complete!',
       finalScore: 'Final Score:',
       playAgain: 'Play Again',
-      wellDone: 'Well done!'
+      wellDone: 'Well done!',
+      timeLeft: 'Time:',
+      difficulty: 'Difficulty:',
+      easy: 'Easy',
+      medium: 'Medium',
+      hard: 'Hard'
     },
     ar: {
       title: 'تعلم الأرقام',
@@ -53,18 +59,59 @@ const NumberLearningGame = ({ language = 'en' }) => {
       complete: 'اكتملت اللعبة!',
       finalScore: 'النتيجة النهائية:',
       playAgain: 'العب مرة أخرى',
-      wellDone: 'أحسنت!'
+      wellDone: 'أحسنت!',
+      timeLeft: 'الوقت:',
+      difficulty: 'الصعوبة:',
+      easy: 'سهل',
+      medium: 'متوسط',
+      hard: 'صعب'
     }
   };
 
   const currentLang = t[language] || t.en;
-  const totalRounds = 10;
+
+  // Difficulty settings
+  const difficultySettings = {
+    easy: { rounds: 5, maxNumber: 5, numOptions: 3, timePerRound: null },      // 1-5, 3 options, no timer
+    medium: { rounds: 10, maxNumber: 10, numOptions: 4, timePerRound: null },  // 1-10, 4 options, no timer
+    hard: { rounds: 15, maxNumber: 15, numOptions: 4, timePerRound: 12 }       // 1-15, 4 options, 12 sec timer
+  };
+
+  const currentSettings = difficultySettings[difficulty] || difficultySettings.medium;
+  const totalRounds = currentSettings.rounds;
 
   const emojis = ['🍎', '⭐', '🌸', '🎈', '🦋', '🍇', '🌼', '🎁', '🐶', '🚗'];
 
   useEffect(() => {
     startNewRound();
   }, []);
+
+  // Timer effect for hard mode
+  useEffect(() => {
+    if (timeLeft === null || timeLeft === 0 || gameComplete) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          // Time's up - move to next round with no points
+          setFeedback('wrong');
+          voiceOver.speak(
+            language === 'ar' ? 'انتهى الوقت!' : 'Time is up!',
+            true
+          );
+          setTimeout(() => {
+            setRound(round + 1);
+            startNewRound();
+            setFeedback('');
+          }, 1500);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, gameComplete]);
 
   const startNewRound = () => {
     if (round >= totalRounds) {
@@ -76,21 +123,28 @@ const NumberLearningGame = ({ language = 'en' }) => {
       return;
     }
 
-    // Select a random number (1-10)
-    const targetNumber = numbers[Math.floor(Math.random() * (numbers.length - 1)) + 1];
+    // Select a random number based on difficulty
+    const maxNum = Math.min(currentSettings.maxNumber, numbers.length - 1);
+    const targetNumber = numbers[Math.floor(Math.random() * maxNum) + 1];
     setCurrentNumber(targetNumber);
 
-    // Create wrong options
+    // Create wrong options based on difficulty
+    const numWrongOptions = currentSettings.numOptions - 1;
     const wrongOptions = numbers
-      .filter(n => n.value !== targetNumber.value && n.value > 0)
+      .filter(n => n.value !== targetNumber.value && n.value > 0 && n.value <= maxNum)
       .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
+      .slice(0, numWrongOptions);
 
     // Shuffle all options
     const allOptions = [targetNumber, ...wrongOptions].sort(() => Math.random() - 0.5);
     setOptions(allOptions);
 
     setFeedback('');
+
+    // Set timer for hard mode
+    if (currentSettings.timePerRound) {
+      setTimeLeft(currentSettings.timePerRound);
+    }
 
     // Announce the question
     voiceOver.speak(
@@ -187,6 +241,16 @@ const NumberLearningGame = ({ language = 'en' }) => {
             <span className="info-label">{currentLang.round}</span>
             <span className="info-value">{round + 1}/{totalRounds}</span>
           </div>
+          {timeLeft !== null && (
+            <div className="info-item" style={{
+              backgroundColor: timeLeft <= 3 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.2)'
+            }}>
+              <span className="info-label">{currentLang.timeLeft}</span>
+              <span className="info-value" style={{ color: timeLeft <= 3 ? '#ef4444' : 'inherit' }}>
+                {timeLeft}s
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

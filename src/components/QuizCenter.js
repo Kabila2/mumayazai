@@ -7,7 +7,7 @@ import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
 import './QuizCenter.css';
 
-const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak, userEmail }) => {
+const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak, userEmail, onSectionSelect }) => {
   const [selectedQuizType, setSelectedQuizType] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -35,7 +35,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       nameAr: 'اختيار من متعدد',
       icon: '✓',
       color: '#6366f1',
-      description: 'Choose the correct answer from options'
+      description: 'Choose the correct answer from options',
+      category: 'quiz'
     },
     {
       id: 'scrambled-letters',
@@ -43,7 +44,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       nameAr: 'ترتيب الحروف',
       icon: '🔤',
       color: '#8b5cf6',
-      description: 'Arrange letters to form the correct word'
+      description: 'Arrange letters to form the correct word',
+      category: 'quiz'
     },
     {
       id: 'matching',
@@ -51,7 +53,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       nameAr: 'مطابقة الأزواج',
       icon: '🔗',
       color: '#ec4899',
-      description: 'Match Arabic words with their English translations'
+      description: 'Match Arabic words with their English translations',
+      category: 'quiz'
     },
     {
       id: 'fill-blanks',
@@ -59,7 +62,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       nameAr: 'املأ الفراغات',
       icon: '📝',
       color: '#10b981',
-      description: 'Complete the sentence with the correct word'
+      description: 'Complete the sentence with the correct word',
+      category: 'quiz'
     },
     {
       id: 'recall',
@@ -67,7 +71,38 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       nameAr: 'استدعاء الذاكرة',
       icon: '🧠',
       color: '#f59e0b',
-      description: 'Recall the meaning from memory'
+      description: 'Recall the meaning from memory',
+      category: 'quiz'
+    },
+    {
+      id: 'memory-game',
+      nameEn: 'Memory Match',
+      nameAr: 'لعبة الذاكرة',
+      icon: '🧠',
+      color: '#8b5cf6',
+      description: 'Match pictures with words',
+      category: 'game',
+      isGame: true
+    },
+    {
+      id: 'color-matching',
+      nameEn: 'Color Matching',
+      nameAr: 'مطابقة الألوان',
+      icon: '🎨',
+      color: '#667eea',
+      description: 'Learn colors by matching',
+      category: 'game',
+      isGame: true
+    },
+    {
+      id: 'number-learning',
+      nameEn: 'Number Learning',
+      nameAr: 'تعلم الأرقام',
+      icon: '🔢',
+      color: '#f97316',
+      description: 'Learn numbers by counting',
+      category: 'game',
+      isGame: true
     }
   ];
 
@@ -329,6 +364,12 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   }, [selectedQuizType, selectedTopic, currentQuestionIndex]);
 
   const handleQuizTypeSelect = (type) => {
+    // If it's a game, navigate to the game section instead
+    if (type.isGame && onSectionSelect) {
+      onSectionSelect(type.id);
+      return;
+    }
+
     setSelectedQuizType(type);
     setSelectedTopic(null);
     resetQuiz();
@@ -479,6 +520,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
   // Render Quiz Type Selection
   if (!selectedQuizType) {
+    const quizOptions = quizTypes.filter(type => type.category === 'quiz');
+    const gameOptions = quizTypes.filter(type => type.category === 'game');
+
     return (
       <div className="quiz-center">
         <motion.div
@@ -491,33 +535,79 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           </h2>
           <p className="quiz-subtitle">
             {language === 'ar'
-              ? 'اختر نوع الاختبار لبدء التعلم'
-              : 'Select a test type to start learning'}
+              ? 'اختر اختباراً أو لعبة لبدء التعلم'
+              : 'Select a quiz or game to start learning'}
           </p>
         </motion.div>
 
-        <div className="quiz-types-grid">
-          {quizTypes.map((type, index) => (
-            <motion.div
-              key={type.id}
-              className="quiz-type-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              onClick={() => handleQuizTypeSelect(type)}
-              style={{ borderColor: type.color }}
-            >
-              <div className="quiz-type-icon" style={{ color: type.color }}>
-                {type.icon}
-              </div>
-              <h3 className="quiz-type-name">
-                {language === 'ar' ? type.nameAr : type.nameEn}
-              </h3>
-              <p className="quiz-type-description">
-                {type.description}
-              </p>
-            </motion.div>
-          ))}
+        {/* Quizzes Section */}
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={{
+            fontSize: '1.5rem',
+            marginBottom: '1rem',
+            color: 'var(--text-color)',
+            textAlign: language === 'ar' ? 'right' : 'left'
+          }}>
+            {language === 'ar' ? '📝 الاختبارات' : '📝 Quizzes'}
+          </h3>
+          <div className="quiz-types-grid">
+            {quizOptions.map((type, index) => (
+              <motion.div
+                key={type.id}
+                className="quiz-type-card"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                onClick={() => handleQuizTypeSelect(type)}
+                style={{ borderColor: type.color }}
+              >
+                <div className="quiz-type-icon" style={{ color: type.color }}>
+                  {type.icon}
+                </div>
+                <h3 className="quiz-type-name">
+                  {language === 'ar' ? type.nameAr : type.nameEn}
+                </h3>
+                <p className="quiz-type-description">
+                  {type.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Interactive Games Section */}
+        <div>
+          <h3 style={{
+            fontSize: '1.5rem',
+            marginBottom: '1rem',
+            color: 'var(--text-color)',
+            textAlign: language === 'ar' ? 'right' : 'left'
+          }}>
+            {language === 'ar' ? '🎮 الألعاب التفاعلية' : '🎮 Interactive Games'}
+          </h3>
+          <div className="quiz-types-grid">
+            {gameOptions.map((type, index) => (
+              <motion.div
+                key={type.id}
+                className="quiz-type-card"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: (quizOptions.length + index) * 0.1 }}
+                onClick={() => handleQuizTypeSelect(type)}
+                style={{ borderColor: type.color }}
+              >
+                <div className="quiz-type-icon" style={{ color: type.color }}>
+                  {type.icon}
+                </div>
+                <h3 className="quiz-type-name">
+                  {language === 'ar' ? type.nameAr : type.nameEn}
+                </h3>
+                <p className="quiz-type-description">
+                  {type.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     );

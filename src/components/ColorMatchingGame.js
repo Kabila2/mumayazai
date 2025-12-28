@@ -5,7 +5,7 @@ import { playClickSound } from '../utils/soundEffects';
 import CelebrationPopup from './CelebrationPopup';
 import './ColorMatchingGame.css';
 
-const ColorMatchingGame = ({ language = 'en' }) => {
+const ColorMatchingGame = ({ language = 'en', difficulty = 'medium' }) => {
   const [score, setScore] = useState(0);
   const [currentRound, setCurrentRound] = useState(0);
   const [targetColor, setTargetColor] = useState(null);
@@ -13,6 +13,7 @@ const ColorMatchingGame = ({ language = 'en' }) => {
   const [feedback, setFeedback] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
@@ -40,7 +41,12 @@ const ColorMatchingGame = ({ language = 'en' }) => {
       complete: 'Game Complete!',
       finalScore: 'Final Score:',
       playAgain: 'Play Again',
-      wellDone: 'Well done!'
+      wellDone: 'Well done!',
+      timeLeft: 'Time:',
+      difficulty: 'Difficulty:',
+      easy: 'Easy',
+      medium: 'Medium',
+      hard: 'Hard'
     },
     ar: {
       title: 'لعبة مطابقة الألوان',
@@ -52,16 +58,57 @@ const ColorMatchingGame = ({ language = 'en' }) => {
       complete: 'اكتملت اللعبة!',
       finalScore: 'النتيجة النهائية:',
       playAgain: 'العب مرة أخرى',
-      wellDone: 'أحسنت!'
+      wellDone: 'أحسنت!',
+      timeLeft: 'الوقت:',
+      difficulty: 'الصعوبة:',
+      easy: 'سهل',
+      medium: 'متوسط',
+      hard: 'صعب'
     }
   };
 
   const currentLang = t[language] || t.en;
-  const totalRounds = 10;
+
+  // Difficulty settings
+  const difficultySettings = {
+    easy: { rounds: 5, options: 3, timePerRound: null },      // 5 rounds, 3 options, no timer
+    medium: { rounds: 10, options: 4, timePerRound: null },   // 10 rounds, 4 options, no timer
+    hard: { rounds: 15, options: 6, timePerRound: 10 }        // 15 rounds, 6 options, 10 sec timer
+  };
+
+  const currentSettings = difficultySettings[difficulty] || difficultySettings.medium;
+  const totalRounds = currentSettings.rounds;
 
   useEffect(() => {
     startNewRound();
   }, []);
+
+  // Timer effect for hard mode
+  useEffect(() => {
+    if (timeLeft === null || timeLeft === 0 || gameComplete) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          // Time's up - move to next round with no points
+          setFeedback('wrong');
+          voiceOver.speak(
+            language === 'ar' ? 'انتهى الوقت!' : 'Time is up!',
+            true
+          );
+          setTimeout(() => {
+            setCurrentRound(currentRound + 1);
+            startNewRound();
+            setFeedback('');
+          }, 1500);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, gameComplete]);
 
   const startNewRound = () => {
     if (currentRound >= totalRounds) {
@@ -77,13 +124,19 @@ const ColorMatchingGame = ({ language = 'en' }) => {
     const randomTarget = colors[Math.floor(Math.random() * colors.length)];
     setTargetColor(randomTarget);
 
-    // Create options (3 random colors + the target)
+    // Create options based on difficulty
+    const numOtherOptions = currentSettings.options - 1;
     const otherColors = colors.filter(c => c.name !== randomTarget.name);
-    const shuffled = [...otherColors].sort(() => Math.random() - 0.5).slice(0, 3);
+    const shuffled = [...otherColors].sort(() => Math.random() - 0.5).slice(0, numOtherOptions);
     const options = [...shuffled, randomTarget].sort(() => Math.random() - 0.5);
     setColorOptions(options);
 
     setFeedback('');
+
+    // Set timer for hard mode
+    if (currentSettings.timePerRound) {
+      setTimeLeft(currentSettings.timePerRound);
+    }
 
     // Announce the target color
     voiceOver.speak(
@@ -171,6 +224,16 @@ const ColorMatchingGame = ({ language = 'en' }) => {
             <span className="info-label">{currentLang.round}</span>
             <span className="info-value">{currentRound + 1}/{totalRounds}</span>
           </div>
+          {timeLeft !== null && (
+            <div className="info-item" style={{
+              backgroundColor: timeLeft <= 3 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.2)'
+            }}>
+              <span className="info-label">{currentLang.timeLeft}</span>
+              <span className="info-value" style={{ color: timeLeft <= 3 ? '#ef4444' : 'inherit' }}>
+                {timeLeft}s
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

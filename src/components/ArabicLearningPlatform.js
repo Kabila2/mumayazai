@@ -77,6 +77,8 @@ const ArabicLearningPlatform = ({
   const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [gameDifficulty, setGameDifficulty] = useState(null);
+  const [pendingGameSection, setPendingGameSection] = useState(null);
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
     colorsProgress: 0,
@@ -191,6 +193,15 @@ const ArabicLearningPlatform = ({
 
   const handleSectionChange = (section) => {
     playClickSound(); // Play click sound on section change
+
+    // Check if this is a game section that needs difficulty selection
+    const gameSections = ['memory-game', 'color-matching', 'number-learning'];
+    if (gameSections.includes(section) && !gameDifficulty) {
+      setPendingGameSection(section);
+      setCurrentSection('difficulty-selection');
+      return;
+    }
+
     setCurrentSection(section);
     if (section === 'alphabet' || section === 'colors') {
       updateSessionCount();
@@ -199,6 +210,12 @@ const ArabicLearningPlatform = ({
     if (section !== 'home') {
       setTimeout(() => playWhooshSound(), 100);
     }
+  };
+
+  const handleDifficultySelect = (difficulty) => {
+    setGameDifficulty(difficulty);
+    setCurrentSection(pendingGameSection);
+    setPendingGameSection(null);
   };
 
   const handleChatModeSwitch = (mode) => {
@@ -895,10 +912,22 @@ const ArabicLearningPlatform = ({
             🏆 {language === 'ar' ? 'المتصدرون' : 'Leaderboard'}
           </button>
           <button
-            className={`nav-link ${(currentSection === 'chat' || currentSection === 'voice') ? 'active' : ''}`}
-            onClick={() => setCurrentSection(chatMode === 'text' ? 'chat' : 'voice')}
+            className={`nav-link ${currentSection === 'chat' ? 'active' : ''}`}
+            onClick={() => {
+              handleChatModeSwitch('text');
+              setCurrentSection('chat');
+            }}
           >
-            🤖 {language === 'ar' ? 'المساعد' : 'Assistant'}
+            💬 {language === 'ar' ? 'محادثة نصية' : 'Chat'}
+          </button>
+          <button
+            className={`nav-link ${currentSection === 'voice' ? 'active' : ''}`}
+            onClick={() => {
+              handleChatModeSwitch('voice');
+              setCurrentSection('voice');
+            }}
+          >
+            🎤 {language === 'ar' ? 'مساعد صوتي' : 'Voice'}
           </button>
           {/* Only show Communication link for teachers and parents */}
           {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
@@ -1096,6 +1125,103 @@ const ArabicLearningPlatform = ({
             </motion.div>
           )}
 
+          {currentSection === 'difficulty-selection' && (
+            <motion.div
+              key="difficulty-selection"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '70vh',
+                padding: '2rem'
+              }}
+            >
+              <h2 style={{
+                fontSize: '2.5rem',
+                marginBottom: '1rem',
+                color: 'var(--text-color)',
+                textAlign: 'center'
+              }}>
+                {language === 'ar' ? 'اختر مستوى الصعوبة' : 'Select Difficulty Level'}
+              </h2>
+              <p style={{
+                fontSize: '1.2rem',
+                marginBottom: '3rem',
+                color: 'var(--text-secondary)',
+                textAlign: 'center'
+              }}>
+                {language === 'ar' ? 'اختر المستوى المناسب لك' : 'Choose the level that suits you'}
+              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '2rem',
+                maxWidth: '900px',
+                width: '100%'
+              }}>
+                {[
+                  { id: 'easy', labelEn: 'Easy', labelAr: 'سهل', emoji: '😊', color: '#10b981' },
+                  { id: 'medium', labelEn: 'Medium', labelAr: 'متوسط', emoji: '😎', color: '#f59e0b' },
+                  { id: 'hard', labelEn: 'Hard', labelAr: 'صعب', emoji: '😤', color: '#ef4444' }
+                ].map((level, index) => (
+                  <motion.button
+                    key={level.id}
+                    onClick={() => handleDifficultySelect(level.id)}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                      padding: '2rem',
+                      borderRadius: '20px',
+                      border: `3px solid ${level.color}`,
+                      background: `linear-gradient(135deg, ${level.color}15, ${level.color}30)`,
+                      cursor: 'pointer',
+                      fontSize: '1.5rem',
+                      fontWeight: '700',
+                      color: 'var(--text-color)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '4rem' }}>{level.emoji}</span>
+                    <span>{language === 'ar' ? level.labelAr : level.labelEn}</span>
+                  </motion.button>
+                ))}
+              </div>
+              <motion.button
+                onClick={() => {
+                  setCurrentSection('quiz');
+                  setPendingGameSection(null);
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                style={{
+                  marginTop: '3rem',
+                  padding: '1rem 2rem',
+                  borderRadius: '12px',
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(255,255,255,0.1)',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  color: 'var(--text-color)'
+                }}
+              >
+                ← {language === 'ar' ? 'رجوع' : 'Back'}
+              </motion.button>
+            </motion.div>
+          )}
+
           {currentSection === 'memory-game' && (
             <motion.div
               key="memory-game"
@@ -1104,7 +1230,7 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <MemoryGame language={language} />
+              <MemoryGame language={language} difficulty={gameDifficulty || 'medium'} />
             </motion.div>
           )}
 
@@ -1116,7 +1242,7 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <ColorMatchingGame language={language} />
+              <ColorMatchingGame language={language} difficulty={gameDifficulty || 'medium'} />
             </motion.div>
           )}
 
@@ -1128,7 +1254,7 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <NumberLearningGame language={language} />
+              <NumberLearningGame language={language} difficulty={gameDifficulty || 'medium'} />
             </motion.div>
           )}
 
@@ -1196,6 +1322,7 @@ const ArabicLearningPlatform = ({
                 reducedMotion={reducedMotion}
                 speak={speak}
                 userEmail={getCurrentUserEmail()}
+                onSectionSelect={handleSectionChange}
               />
             </motion.div>
           )}
