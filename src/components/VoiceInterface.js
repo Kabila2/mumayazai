@@ -551,6 +551,7 @@ export default function VoiceInterface({
   const bottomRef = useRef(null);
   const silenceTimeoutRef = useRef(null);
   const finalTranscriptRef = useRef("");
+  const handleVoiceInputCallbackRef = useRef(null);
 
   // Save messages to memory whenever they change (like chat interface)
   useEffect(() => {
@@ -697,7 +698,7 @@ export default function VoiceInterface({
           silenceTimeoutRef.current = setTimeout(() => {
             console.log("🔇 0.8-second silence detected, processing speech");
             if (finalTranscriptRef.current.trim()) {
-              handleVoiceInput(finalTranscriptRef.current.trim(), confidence);
+              handleVoiceInputCallbackRef.current?.(finalTranscriptRef.current.trim(), confidence);
               finalTranscriptRef.current = "";
             }
             // Stop listening after processing
@@ -744,7 +745,7 @@ export default function VoiceInterface({
         recognition.onerror = null;
       }
     };
-  }, [language, handleVoiceInput]);
+  }, [language]);
 
   // Audio Level Monitoring
   useEffect(() => {
@@ -990,8 +991,8 @@ export default function VoiceInterface({
     return false;
   }, [onSwitchMode, stopSpeaking, language]);
 
-  // Handle Voice Input (rewritten to match working chat interface pattern)
-  const handleVoiceInput = useCallback(async (transcript, confidence) => {
+  // Handle Voice Input - defined after speak and processVoiceCommand to satisfy dependencies
+  const handleVoiceInputCallback = useCallback(async (transcript, confidence) => {
     if (!transcript.trim()) return;
 
     console.log("🗣️ Voice input:", transcript, "confidence:", confidence);
@@ -1059,7 +1060,10 @@ export default function VoiceInterface({
     } finally {
       setIsProcessing(false);
     }
-  }, [messages, commandMode, processVoiceCommand, speak, autoSpeak]);
+  }, [messages, commandMode, processVoiceCommand, speak, autoSpeak, userEmail]);
+
+  // Keep ref in sync so the recognition useEffect always calls the latest version
+  handleVoiceInputCallbackRef.current = handleVoiceInputCallback;
 
   // Utility Functions
   const showNotification = (message, type = "info") => {
@@ -1115,7 +1119,7 @@ export default function VoiceInterface({
     // Process any accumulated speech before stopping
     if (finalTranscriptRef.current.trim()) {
       console.log("🔇 Manual stop - processing accumulated speech");
-      handleVoiceInput(finalTranscriptRef.current.trim(), confidence);
+      handleVoiceInputCallback(finalTranscriptRef.current.trim(), confidence);
       finalTranscriptRef.current = "";
     }
 

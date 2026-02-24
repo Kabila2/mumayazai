@@ -79,46 +79,86 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
 
   const loadStatistics = () => {
     try {
-      // Load progress data
-      const progress = JSON.parse(localStorage.getItem('arabic_learning_progress') || '{}');
+      console.log('📊 [ProgressDashboard] Loading statistics for user:', userEmail);
+
+      // Load progress data with proper defaults
+      const progressRaw = localStorage.getItem('arabic_learning_progress');
+      const progress = progressRaw ? JSON.parse(progressRaw) : {};
+      console.log('📊 [ProgressDashboard] Raw progress data:', progress);
+
+      // Ensure all progress fields have defaults
+      const safeProgress = {
+        alphabetProgress: progress.alphabetProgress || 0,
+        colorsProgress: progress.colorsProgress || 0,
+        wordsProgress: progress.wordsProgress || 0,
+        sentencesProgress: progress.sentencesProgress || 0,
+        totalSessions: progress.totalSessions || 0,
+        streak: progress.streak || 0,
+        lastSessionDate: progress.lastSessionDate || null
+      };
+      console.log('📊 [ProgressDashboard] Safe progress data:', safeProgress);
 
       // Load quiz history
       const quizKey = `mumayaz_quiz_history_${userEmail}`;
-      const quizHistory = JSON.parse(localStorage.getItem(quizKey) || '[]');
+      const quizHistoryRaw = localStorage.getItem(quizKey);
+      const quizHistory = quizHistoryRaw ? JSON.parse(quizHistoryRaw) : [];
 
       // Load points
       const pointsKey = `mumayaz_points_${userEmail}`;
-      const pointsData = JSON.parse(localStorage.getItem(pointsKey) || '{"total": 0, "history": []}');
+      const pointsRaw = localStorage.getItem(pointsKey);
+      const pointsData = pointsRaw ? JSON.parse(pointsRaw) : { total: 0, history: [] };
 
       // Load streak
       const streakKey = `mumayaz_streak_${userEmail}`;
-      const streakData = JSON.parse(localStorage.getItem(streakKey) || '{"currentStreak": 0}');
+      const streakRaw = localStorage.getItem(streakKey);
+      const streakData = streakRaw ? JSON.parse(streakRaw) : { currentStreak: 0, longestStreak: 0 };
 
       // Load achievements
       const achievementsKey = `mumayaz_achievements_${userEmail}`;
-      const achievements = JSON.parse(localStorage.getItem(achievementsKey) || '[]');
+      const achievementsRaw = localStorage.getItem(achievementsKey);
+      const achievements = achievementsRaw ? JSON.parse(achievementsRaw) : [];
+
+      // Load leaderboard stats for more accurate data
+      const leaderboardKey = 'mumayaz_leaderboard_stats';
+      const leaderboardRaw = localStorage.getItem(leaderboardKey);
+      const leaderboardStats = leaderboardRaw ? JSON.parse(leaderboardRaw) : {};
+      const userStats = leaderboardStats[userEmail?.toLowerCase()] || {
+        totalMessages: 0,
+        totalChatSessions: 0,
+        totalTimeSpent: 0,
+        lastActive: null
+      };
+      console.log('📊 [ProgressDashboard] User leaderboard stats:', userStats);
+      console.log('📊 [ProgressDashboard] Quiz history:', quizHistory.length, 'quizzes');
+      console.log('📊 [ProgressDashboard] Points:', pointsData.total);
+      console.log('📊 [ProgressDashboard] Streak:', streakData.currentStreak);
 
       // Calculate statistics
       const filteredQuizzes = filterByTimeRange(quizHistory);
       const avgScore = filteredQuizzes.length > 0
         ? Math.round(filteredQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / filteredQuizzes.length)
         : 0;
+      console.log('📊 [ProgressDashboard] Filtered quizzes:', filteredQuizzes.length, 'avg score:', avgScore);
 
       const topicsCompleted = [
-        progress.alphabetProgress >= 100 ? 'Alphabet' : null,
-        progress.colorsProgress >= 100 ? 'Colors' : null,
+        safeProgress.alphabetProgress >= 100 ? 'Alphabet' : null,
+        safeProgress.colorsProgress >= 100 ? 'Colors' : null,
+        safeProgress.wordsProgress >= 100 ? 'Words' : null,
+        safeProgress.sentencesProgress >= 100 ? 'Sentences' : null,
       ].filter(Boolean).length;
 
-      // Estimate time spent (5 minutes per session)
-      const estimatedTime = Math.round((progress.totalSessions || 0) * 5 / 60 * 10) / 10;
+      // Calculate time spent - use leaderboard stats if available, otherwise estimate
+      const estimatedTime = userStats.totalTimeSpent > 0
+        ? Math.round(userStats.totalTimeSpent / 60 * 10) / 10 // Convert minutes to hours
+        : Math.round((safeProgress.totalSessions || 0) * 5 / 60 * 10) / 10;
 
       // Analyze strengths and weaknesses
-      const analysis = analyzePerformance(quizHistory, progress);
+      const analysis = analyzePerformance(quizHistory, safeProgress);
 
       // Prepare chart data
-      const chartData = prepareChartData(filteredQuizzes, progress);
+      const chartData = prepareChartData(filteredQuizzes, safeProgress);
 
-      setStats({
+      const finalStats = {
         totalTime: estimatedTime,
         topicsCompleted,
         avgQuizScore: avgScore,
@@ -126,13 +166,32 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         totalQuizzes: filteredQuizzes.length,
         totalPoints: pointsData.total || 0,
         achievements: achievements.length,
+        totalMessages: userStats.totalMessages || 0,
+        totalChatSessions: userStats.totalChatSessions || 0,
         quizHistory: filteredQuizzes.slice(0, 10),
         strengths: analysis.strengths,
         weaknesses: analysis.weaknesses,
         recommendations: analysis.recommendations,
-        progressData: progress,
+        progressData: safeProgress,
         chartData
+      };
+
+      console.log('📊 [ProgressDashboard] Final stats:', {
+        totalTime: finalStats.totalTime,
+        topicsCompleted: finalStats.topicsCompleted,
+        avgQuizScore: finalStats.avgQuizScore,
+        currentStreak: finalStats.currentStreak,
+        totalQuizzes: finalStats.totalQuizzes,
+        totalPoints: finalStats.totalPoints,
+        achievements: finalStats.achievements,
+        totalMessages: finalStats.totalMessages,
+        totalChatSessions: finalStats.totalChatSessions,
+        strengthsCount: finalStats.strengths.length,
+        weaknessesCount: finalStats.weaknesses.length,
+        recommendationsCount: finalStats.recommendations.length
       });
+
+      setStats(finalStats);
     } catch (error) {
       console.error('Error loading statistics:', error);
       setStats({
@@ -176,9 +235,12 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
     const weaknesses = [];
     const recommendations = [];
 
+    // Ensure quizHistory is an array
+    const safeQuizHistory = Array.isArray(quizHistory) ? quizHistory : [];
+
     // Analyze test performance
-    if (quizHistory.length >= 3) {
-      const recentScores = quizHistory.slice(0, 3).map(q => q.score || 0);
+    if (safeQuizHistory.length >= 3) {
+      const recentScores = safeQuizHistory.slice(0, 3).map(q => q.score || 0);
       const avgRecent = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
 
       if (avgRecent >= 90) {
@@ -187,42 +249,62 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         weaknesses.push({ icon: '📝', text: 'Test scores need improvement' });
         recommendations.push({ icon: '💡', text: 'Review topics before taking tests' });
       }
+    } else if (safeQuizHistory.length === 0) {
+      recommendations.push({ icon: '💡', text: 'Take quizzes to test your knowledge' });
     }
 
     // Analyze alphabet progress
-    if (progress.alphabetProgress >= 80) {
+    const alphabetProgress = progress?.alphabetProgress || 0;
+    if (alphabetProgress >= 80) {
       strengths.push({ icon: '📚', text: 'Great progress on Arabic alphabet' });
-    } else if (progress.alphabetProgress < 30) {
+    } else if (alphabetProgress < 30 && alphabetProgress > 0) {
       weaknesses.push({ icon: '🔤', text: 'More practice needed on alphabet' });
       recommendations.push({ icon: '💡', text: 'Spend 10 minutes daily on alphabet lessons' });
+    } else if (alphabetProgress === 0) {
+      recommendations.push({ icon: '💡', text: 'Start with alphabet learning to build foundation' });
     }
 
     // Analyze streak
-    if ((progress.streak || 0) >= 7) {
+    const streak = progress?.streak || 0;
+    if (streak >= 7) {
       strengths.push({ icon: '🔥', text: 'Consistent learning streak!' });
-    } else if ((progress.streak || 0) === 0) {
-      recommendations.push({ icon: '💡', text: 'Build a daily learning habit' });
+    } else if (streak >= 3) {
+      strengths.push({ icon: '🔥', text: 'Building a good learning habit!' });
+    } else if (streak === 0) {
+      recommendations.push({ icon: '💡', text: 'Build a daily learning habit for better results' });
     }
 
     // Analyze session count
-    if ((progress.totalSessions || 0) >= 20) {
+    const totalSessions = progress?.totalSessions || 0;
+    if (totalSessions >= 20) {
       strengths.push({ icon: '⭐', text: 'Dedicated learner with many sessions' });
-    } else if ((progress.totalSessions || 0) < 5) {
-      recommendations.push({ icon: '💡', text: 'Try to practice more regularly' });
+    } else if (totalSessions >= 10) {
+      strengths.push({ icon: '⭐', text: 'Making good progress with regular practice' });
+    } else if (totalSessions < 5 && totalSessions > 0) {
+      recommendations.push({ icon: '💡', text: 'Try to practice more regularly for faster progress' });
+    } else if (totalSessions === 0) {
+      recommendations.push({ icon: '💡', text: 'Start your learning journey today!' });
     }
 
     return { strengths, weaknesses, recommendations };
   };
 
   const prepareChartData = (quizHistory, progress) => {
+    // Ensure quizHistory is an array
+    const safeQuizHistory = Array.isArray(quizHistory) ? quizHistory : [];
+
     // Progress trend (last 8 weeks)
     const progressTrend = [];
     for (let i = 7; i >= 0; i--) {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - i * 7);
-      const weekQuizzes = quizHistory.filter(q => {
-        const qDate = new Date(q.completedAt || q.timestamp);
-        return qDate >= weekAgo && qDate < new Date(weekAgo.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const weekQuizzes = safeQuizHistory.filter(q => {
+        try {
+          const qDate = new Date(q.completedAt || q.timestamp);
+          return qDate >= weekAgo && qDate < new Date(weekAgo.getTime() + 7 * 24 * 60 * 60 * 1000);
+        } catch (e) {
+          return false;
+        }
       });
       const avgScore = weekQuizzes.length > 0
         ? weekQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / weekQuizzes.length
@@ -233,21 +315,21 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       });
     }
 
-    // Topic scores
+    // Topic scores - use optional chaining for safety
     const topicScores = [
-      { name: 'Alphabet', score: progress.alphabetProgress || 0, color: '#10b981' },
-      { name: 'Colors', score: progress.colorsProgress || 0, color: '#3b82f6' },
-      { name: 'Words', score: progress.wordsProgress || 0, color: '#f59e0b' },
-      { name: 'Sentences', score: progress.sentencesProgress || 0, color: '#ef4444' }
+      { name: 'Alphabet', score: progress?.alphabetProgress || 0, color: '#10b981' },
+      { name: 'Colors', score: progress?.colorsProgress || 0, color: '#3b82f6' },
+      { name: 'Words', score: progress?.wordsProgress || 0, color: '#f59e0b' },
+      { name: 'Sentences', score: progress?.sentencesProgress || 0, color: '#ef4444' }
     ];
 
-    // Skills radar
+    // Skills radar - use optional chaining for safety
     const skills = [
-      { name: 'Reading', score: progress.alphabetProgress || 0 },
-      { name: 'Writing', score: (progress.alphabetProgress || 0) * 0.8 },
-      { name: 'Listening', score: progress.colorsProgress || 0 },
-      { name: 'Speaking', score: (progress.colorsProgress || 0) * 0.9 },
-      { name: 'Vocabulary', score: progress.wordsProgress || 0 }
+      { name: 'Reading', score: progress?.alphabetProgress || 0 },
+      { name: 'Writing', score: Math.round((progress?.alphabetProgress || 0) * 0.8) },
+      { name: 'Listening', score: progress?.colorsProgress || 0 },
+      { name: 'Speaking', score: Math.round((progress?.colorsProgress || 0) * 0.9) },
+      { name: 'Vocabulary', score: progress?.wordsProgress || 0 }
     ];
 
     return { progressTrend, topicScores, skills };

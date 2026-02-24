@@ -43,7 +43,8 @@
       "Bash(if [ ! -f \"src/components/$file.js\" ])",
       "Bash(then)",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []
