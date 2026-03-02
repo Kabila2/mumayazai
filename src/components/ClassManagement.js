@@ -72,13 +72,28 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
     loadStudents();
   }, [userEmail]);
 
+  const getClassesObject = () => {
+    try {
+      const raw = localStorage.getItem('mumayaz_classes');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        // Migrate old array format to object format
+        const obj = {};
+        parsed.forEach(c => { if (c.id) obj[c.id] = c; });
+        localStorage.setItem('mumayaz_classes', JSON.stringify(obj));
+        return obj;
+      }
+      return parsed;
+    } catch (error) {
+      return {};
+    }
+  };
+
   const loadClasses = () => {
     try {
-      const classesKey = 'mumayaz_classes';
-      const allClasses = JSON.parse(localStorage.getItem(classesKey) || '[]');
-
-      // Filter classes by teacher
-      const teacherClasses = allClasses.filter(c => c.teacherEmail === userEmail);
+      const allClassesObj = getClassesObject();
+      const teacherClasses = Object.values(allClassesObj).filter(c => c.teacherEmail === userEmail);
       setClasses(teacherClasses);
     } catch (error) {
       console.error('Error loading classes:', error);
@@ -108,10 +123,9 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
         classCode: generateClassCode()
       };
 
-      const classesKey = 'mumayaz_classes';
-      const allClasses = JSON.parse(localStorage.getItem(classesKey) || '[]');
-      allClasses.push(newClass);
-      localStorage.setItem(classesKey, JSON.stringify(allClasses));
+      const allClasses = getClassesObject();
+      allClasses[newClass.id] = newClass;
+      localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
 
       playSuccessSound();
       loadClasses();
@@ -123,10 +137,9 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   const deleteClass = (classId) => {
     try {
-      const classesKey = 'mumayaz_classes';
-      const allClasses = JSON.parse(localStorage.getItem(classesKey) || '[]');
-      const filtered = allClasses.filter(c => c.id !== classId);
-      localStorage.setItem(classesKey, JSON.stringify(filtered));
+      const allClasses = getClassesObject();
+      delete allClasses[classId];
+      localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
       playClickSound();
       loadClasses();
       setSelectedClass(null);
@@ -138,16 +151,16 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   const addStudentToClass = (classId, studentEmail) => {
     try {
-      const classesKey = 'mumayaz_classes';
-      const allClasses = JSON.parse(localStorage.getItem(classesKey) || '[]');
+      const email = studentEmail.trim().toLowerCase();
+      const allClasses = getClassesObject();
 
-      const classIndex = allClasses.findIndex(c => c.id === classId);
-      if (classIndex !== -1) {
-        if (!allClasses[classIndex].students.includes(studentEmail)) {
-          allClasses[classIndex].students.push(studentEmail);
-          localStorage.setItem(classesKey, JSON.stringify(allClasses));
+      if (allClasses[classId]) {
+        if (!allClasses[classId].students.includes(email)) {
+          allClasses[classId].students.push(email);
+          localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
           playSuccessSound();
           loadClasses();
+          setSelectedClass({ ...allClasses[classId] });
         }
       }
     } catch (error) {
@@ -157,17 +170,16 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   const removeStudentFromClass = (classId, studentEmail) => {
     try {
-      const classesKey = 'mumayaz_classes';
-      const allClasses = JSON.parse(localStorage.getItem(classesKey) || '[]');
+      const allClasses = getClassesObject();
 
-      const classIndex = allClasses.findIndex(c => c.id === classId);
-      if (classIndex !== -1) {
-        allClasses[classIndex].students = allClasses[classIndex].students.filter(
+      if (allClasses[classId]) {
+        allClasses[classId].students = allClasses[classId].students.filter(
           email => email !== studentEmail
         );
-        localStorage.setItem(classesKey, JSON.stringify(allClasses));
+        localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
         playClickSound();
         loadClasses();
+        setSelectedClass({ ...allClasses[classId] });
       }
     } catch (error) {
       console.error('Error removing student:', error);
@@ -514,6 +526,20 @@ const CreateClassModal = ({ onClose, onCreate, language, t }) => {
 };
 
 const AddStudentModal = ({ students, onClose, onAdd, language, t }) => {
+  const [emailInput, setEmailInput] = useState('');
+
+  const handleEmailAdd = () => {
+    const email = emailInput.trim().toLowerCase();
+    if (email) {
+      onAdd(email);
+      setEmailInput('');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleEmailAdd();
+  };
+
   return (
     <motion.div
       className="add-student-overlay"
@@ -532,31 +558,53 @@ const AddStudentModal = ({ students, onClose, onAdd, language, t }) => {
       >
         <h3>➕ {t.addStudents}</h3>
 
-        <div className="available-students-list">
-          {students.length === 0 ? (
-            <p className="no-students">No available students</p>
-          ) : (
-            students.map((student) => (
-              <div key={student.email} className="available-student-item">
-                <div className="student-info">
-                  <span className="student-avatar">
-                    {student.profilePicture || '👤'}
-                  </span>
-                  <div>
-                    <div className="student-name">{student.name}</div>
-                    <div className="student-email">{student.email}</div>
-                  </div>
-                </div>
-                <button
-                  className="add-btn"
-                  onClick={() => onAdd(student.email)}
-                >
-                  ➕ Add
-                </button>
-              </div>
-            ))
-          )}
+        <div className="add-by-email-section">
+          <div className="email-input-row">
+            <input
+              type="email"
+              className="email-input"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={language === 'ar' ? 'أدخل البريد الإلكتروني للطالب' : 'Enter student email address'}
+              autoFocus
+            />
+            <button
+              className="add-btn"
+              onClick={handleEmailAdd}
+              disabled={!emailInput.trim()}
+            >
+              ➕ {language === 'ar' ? 'إضافة' : 'Add'}
+            </button>
+          </div>
         </div>
+
+        {students.length > 0 && (
+          <>
+            <p className="or-divider">{language === 'ar' ? '— أو اختر من القائمة —' : '— or choose from registered students —'}</p>
+            <div className="available-students-list">
+              {students.map((student) => (
+                <div key={student.email} className="available-student-item">
+                  <div className="student-info">
+                    <span className="student-avatar">
+                      {student.profilePicture || '👤'}
+                    </span>
+                    <div>
+                      <div className="student-name">{student.name}</div>
+                      <div className="student-email">{student.email}</div>
+                    </div>
+                  </div>
+                  <button
+                    className="add-btn"
+                    onClick={() => onAdd(student.email)}
+                  >
+                    ➕ {language === 'ar' ? 'إضافة' : 'Add'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="modal-actions">
           <button className="cancel-btn" onClick={onClose}>{t.close}</button>

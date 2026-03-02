@@ -44,7 +44,10 @@
       "Bash(then)",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(git config:*)",
+      "Bash(grep:*)",
+      "Bash(tail:*)"
     ],
     "deny": [],
     "ask": []

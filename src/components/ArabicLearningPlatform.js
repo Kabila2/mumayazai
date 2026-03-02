@@ -238,14 +238,15 @@ const ArabicLearningPlatform = ({
   const getCurrentUserRole = () => {
     try {
       const userEmail = getCurrentUserEmail();
-      if (!userEmail) return null;
+      const storedRole = localStorage.getItem('mumayaz_role');
+      if (!userEmail) return storedRole || null;
 
       const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
       const user = users[userEmail.toLowerCase()];
-      return user?.role || null;
+      return user?.role || storedRole || null;
     } catch (error) {
       console.error('Error getting user role:', error);
-      return null;
+      return localStorage.getItem('mumayaz_role') || null;
     }
   };
 
@@ -1478,7 +1479,7 @@ const ArabicLearningPlatform = ({
               transition={{ duration: 0.3 }}
             >
               <ClassManagement
-                teacherEmail={getCurrentUserEmail()}
+                userEmail={getCurrentUserEmail()}
                 language={language}
                 onClose={() => setCurrentSection('home')}
               />

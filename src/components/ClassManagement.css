@@ -454,8 +454,38 @@
   transform: translateY(-2px);
 }
 
+.add-by-email-section {
+  margin-bottom: 16px;
+}
+
+.email-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.email-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.email-input:focus {
+  border-color: #6366f1;
+}
+
+.or-divider {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  margin: 12px 0 8px;
+}
+
 .available-students-list {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
 }
 

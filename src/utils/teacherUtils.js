@@ -73,7 +73,16 @@ export const getTeacherData = () => {
 export const getAllClasses = () => {
   try {
     const stored = localStorage.getItem(CLASSES_KEY);
-    return stored ? JSON.parse(stored) : {};
+    if (!stored) return {};
+    const parsed = JSON.parse(stored);
+    if (Array.isArray(parsed)) {
+      // Migrate old array format to object format
+      const obj = {};
+      parsed.forEach(c => { if (c.id) obj[c.id] = c; });
+      localStorage.setItem(CLASSES_KEY, JSON.stringify(obj));
+      return obj;
+    }
+    return parsed;
   } catch (error) {
     console.error("Error loading classes:", error);
     return {};
