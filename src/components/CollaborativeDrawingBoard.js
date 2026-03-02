@@ -95,7 +95,12 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
         setCurrentUser({ id: data.userId, username, role: selectedRole });
         setUsers(data.users);
 
-        // Load existing canvas state
+        // Replay existing drawings onto the canvas
+        if (data.canvasState && data.canvasState.drawings) {
+          data.canvasState.drawings.forEach(drawing => drawRemoteStroke(drawing));
+        }
+
+        // Load existing text annotations
         if (data.canvasState && data.canvasState.texts) {
           setTexts(data.canvasState.texts);
         }
@@ -147,6 +152,10 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
+    ctx.save();
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     if (drawing.tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
@@ -161,16 +170,17 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     ctx.moveTo(drawing.from.x, drawing.from.y);
     ctx.lineTo(drawing.to.x, drawing.to.y);
     ctx.stroke();
+
+    ctx.restore();
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
+      resizeCanvas();
       const ctx = canvas.getContext('2d');
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-
-      resizeCanvas();
       redrawCanvas();
     }
   }, [texts]);
@@ -248,12 +258,7 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
       return;
     }
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
     const point = getEventCoordinates(e);
-
-    ctx.beginPath();
-    ctx.moveTo(point.x, point.y);
     lastDrawPoint.current = point;
     setIsDrawing(true);
   };
@@ -279,6 +284,10 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
       ctx.lineWidth = lineWidth;
     }
 
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(lastDrawPoint.current.x, lastDrawPoint.current.y);
     ctx.lineTo(point.x, point.y);
     ctx.stroke();
 

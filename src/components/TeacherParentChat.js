@@ -19,6 +19,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const autoRefreshIntervalRef = useRef(null);
+  const selectedConversationRef = useRef(null);
 
   const translations = {
     en: {
@@ -85,15 +86,21 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
   const t = translations[language] || translations.en;
 
-  // Auto-refresh conversations and messages
+  // Keep ref in sync with selectedConversation so the interval always sees the latest value
+  // without needing to be recreated on every conversation change
+  useEffect(() => {
+    selectedConversationRef.current = selectedConversation;
+  }, [selectedConversation]);
+
+  // Auto-refresh conversations and messages — only depends on currentUserEmail
+  // so the interval is created once per session, not on every conversation click
   useEffect(() => {
     loadConversations();
 
-    // Set up auto-refresh every 3 seconds
     autoRefreshIntervalRef.current = setInterval(() => {
       loadConversations();
-      if (selectedConversation) {
-        loadMessages(selectedConversation.id, true); // Silent reload
+      if (selectedConversationRef.current) {
+        loadMessages(selectedConversationRef.current.id, true);
       }
     }, 3000);
 
@@ -102,7 +109,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
         clearInterval(autoRefreshIntervalRef.current);
       }
     };
-  }, [currentUserEmail, selectedConversation]);
+  }, [currentUserEmail, loadConversations, loadMessages]);
 
   // Load messages when conversation changes
   useEffect(() => {
@@ -181,12 +188,16 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
       if (!silent) {
         setMessages(conversationMessages);
       } else {
-        // Silent update - only update if there are new messages
+        // Silent update - update if there are new messages OR if read status changed
+        // (read status changes when the other user reads your sent messages — checkmark update)
         setMessages(prev => {
           if (prev.length !== conversationMessages.length) {
             return conversationMessages;
           }
-          return prev;
+          const hasReadStatusChange = prev.some(
+            (msg, i) => msg.read !== conversationMessages[i]?.read
+          );
+          return hasReadStatusChange ? conversationMessages : prev;
         });
       }
 
@@ -267,14 +278,18 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
       const allConversations = JSON.parse(allConversationsStored);
 
       if (allConversations[selectedConversation.id]) {
-        allConversations[selectedConversation.id].lastMessage = newMessage.trim();
+        const previewText = newMessage.trim() ||
+          (attachments.length > 0
+            ? (language === 'ar' ? '📎 مرفق' : '📎 Attachment')
+            : '');
+        allConversations[selectedConversation.id].lastMessage = previewText;
         allConversations[selectedConversation.id].lastMessageTime = Date.now();
         allConversations[selectedConversation.id].lastSender = currentUserEmail;
         localStorage.setItem('mumayaz_conversations', JSON.stringify(allConversations));
       }
 
-      // Update local state
-      setMessages([...messages, message]);
+      // Update local state — use functional update to avoid stale closure
+      setMessages(prev => [...prev, message]);
       setNewMessage('');
       setSelectedFiles([]);
       loadConversations();

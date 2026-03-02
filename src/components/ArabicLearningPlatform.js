@@ -902,17 +902,6 @@ const ArabicLearningPlatform = ({
             📊 {language === 'ar' ? 'تقدمي' : 'Progress'}
           </button>
           <button
-            className="nav-link"
-            onClick={() => {
-              playClickSound();
-              setShowLeaderboard(true);
-            }}
-            aria-label={language === 'ar' ? 'عرض لوحة المتصدرين' : 'View leaderboard'}
-            title={language === 'ar' ? 'لوحة المتصدرين' : 'Leaderboard'}
-          >
-            🏆 {language === 'ar' ? 'المتصدرون' : 'Leaderboard'}
-          </button>
-          <button
             className={`nav-link ${currentSection === 'chat' ? 'active' : ''}`}
             onClick={() => {
               handleChatModeSwitch('text');

@@ -63,7 +63,8 @@ wss.on('connection', (ws) => {
           break;
 
         case 'draw':
-          // Broadcast drawing action to all other users
+          // Persist drawing and broadcast to all other users
+          canvasState.drawings.push(data.drawing);
           broadcast({
             type: 'draw',
             userId: userId,
