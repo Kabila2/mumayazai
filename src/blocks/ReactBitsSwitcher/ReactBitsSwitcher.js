@@ -14,7 +14,7 @@ import "./ReactBitsSwitcher.css";
 
 export default function ReactBitsSwitcher() {
   const components = [
-    <ShinyText key="text" textEN="Mumayaz AI" textAR="ميميز الذكاء الاصطناعي" showArabic={false} />,
+    <ShinyText key="text" textEN="Mumayaz" textAR="مميّز" showArabic={false} />,
     <ScrollFloat key="scroll">Tailored for Every Learner</ScrollFloat>,
     <Ribbons key="ribbons" />,
     <SpotlightCard key="spotlight" spotlightColor="rgba(255,255,255,0.2)">
