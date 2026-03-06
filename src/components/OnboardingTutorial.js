@@ -44,8 +44,14 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
       steps: [
         {
           title: 'Welcome to Mumayaz!',
-          description: 'Choose your preferred font and text size to get started.',
+          description: 'Choose your preferred font — it will be applied across the whole app.',
           icon: '👋',
+          highlight: null
+        },
+        {
+          title: 'Text Size',
+          description: 'Adjust the text size to whatever feels comfortable for you.',
+          icon: '🔡',
           highlight: null
         },
         {
@@ -94,8 +100,14 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
       steps: [
         {
           title: 'مرحباً بك في ممتاز!',
-          description: 'اختر الخط وحجم النص المناسب لك للبدء.',
+          description: 'اختر الخط المفضل لديك — سيُطبَّق في كامل التطبيق.',
           icon: '👋',
+          highlight: null
+        },
+        {
+          title: 'حجم النص',
+          description: 'اضبط حجم النص حسب ما يناسبك.',
+          icon: '🔡',
           highlight: null
         },
         {
@@ -207,7 +219,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
             {t.skip}
           </button>
 
-          <div className={`onboarding-content${currentStep === 0 ? ' onboarding-content--appearance' : ''}`}>
+          <div className={`onboarding-content${currentStep <= 1 ? ' onboarding-content--appearance' : ''}`}>
             <motion.div
               key={currentStep}
               initial={{ opacity: 0, x: 20 }}
@@ -221,9 +233,6 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
 
               {currentStep === 0 && (
                 <div className="onboarding-appearance">
-                  <div className="onboarding-appearance-label">
-                    {language === 'ar' ? 'الخط' : 'Font'}
-                  </div>
                   <div className="onboarding-font-grid">
                     {FONTS.map(font => (
                       <button
@@ -238,10 +247,11 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
                       </button>
                     ))}
                   </div>
+                </div>
+              )}
 
-                  <div className="onboarding-appearance-label" style={{ marginTop: '20px' }}>
-                    {language === 'ar' ? 'حجم النص' : 'Text Size'}
-                  </div>
+              {currentStep === 1 && (
+                <div className="onboarding-appearance">
                   <div className="onboarding-size-control">
                     <button
                       className="onboarding-size-btn"

@@ -210,6 +210,7 @@ export default function App() {
       }
     }
 
+    localStorage.removeItem('mumayaz_onboarding_completed');
     setPendingEmail(key);
     localStorage.setItem("mumayaz_role", role || "student");
     setShowSetup(true);
