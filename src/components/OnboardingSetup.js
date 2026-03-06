@@ -10,15 +10,6 @@ const OnboardingSetup = ({
   const [language, setLanguage] = useState(defaultLanguage);
   const [error, setError] = useState("");
 
-  const FONTS = [
-    { label: 'OpenDyslexic', value: "'OpenDyslexic', sans-serif" },
-    { label: 'Roboto',       value: "'Roboto', sans-serif" },
-    { label: 'Cairo',        value: "'Cairo', sans-serif" },
-    { label: 'System',       value: 'system-ui, sans-serif' },
-  ];
-  const [selectedFont, setSelectedFont] = useState("'OpenDyslexic', sans-serif");
-  const [textSize, setTextSize] = useState(100);
-
   // Set initial direction on component mount
   React.useEffect(() => {
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
