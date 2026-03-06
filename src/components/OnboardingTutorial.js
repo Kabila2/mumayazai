@@ -3,9 +3,37 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { playClickSound, playSuccessSound } from '../utils/soundEffects';
 import './OnboardingTutorial.css';
 
+const FONTS = [
+  { label: 'OpenDyslexic', value: "'OpenDyslexic', sans-serif" },
+  { label: 'Roboto', value: "'Roboto', sans-serif" },
+  { label: 'Cairo', value: "'Cairo', sans-serif" },
+  { label: 'System Default', value: 'system-ui, sans-serif' },
+];
+
 const OnboardingTutorial = ({ language = 'en', onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [selectedFont, setSelectedFont] = useState(
+    localStorage.getItem('mumayaz_font') || "'OpenDyslexic', sans-serif"
+  );
+  const [textSize, setTextSize] = useState(
+    parseInt(localStorage.getItem('mumayaz_text_size') || '100', 10)
+  );
+
+  const handleFontChange = (fontValue) => {
+    setSelectedFont(fontValue);
+    localStorage.setItem('mumayaz_font', fontValue);
+    document.documentElement.style.setProperty('--font-sans', fontValue);
+  };
+
+  const handleTextSizeChange = (delta) => {
+    setTextSize(prev => {
+      const next = Math.min(150, Math.max(80, prev + delta));
+      localStorage.setItem('mumayaz_text_size', String(next));
+      document.documentElement.style.fontSize = next + '%';
+      return next;
+    });
+  };
 
   const translations = {
     en: {
@@ -16,7 +44,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
       steps: [
         {
           title: 'Welcome to Mumayaz!',
-          description: 'Your journey to mastering Arabic starts here. Let us show you around!',
+          description: 'Choose your preferred font and text size to get started.',
           icon: '👋',
           highlight: null
         },
@@ -66,7 +94,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
       steps: [
         {
           title: 'مرحباً بك في ممتاز!',
-          description: 'رحلتك لإتقان اللغة العربية تبدأ هنا. دعنا نريك المكان!',
+          description: 'اختر الخط وحجم النص المناسب لك للبدء.',
           icon: '👋',
           highlight: null
         },
@@ -179,7 +207,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
             {t.skip}
           </button>
 
-          <div className="onboarding-content">
+          <div className={`onboarding-content${currentStep === 0 ? ' onboarding-content--appearance' : ''}`}>
             <motion.div
               key={currentStep}
               initial={{ opacity: 0, x: 20 }}
@@ -190,6 +218,53 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
               <div className="onboarding-icon">{steps[currentStep].icon}</div>
               <h2 className="onboarding-title">{steps[currentStep].title}</h2>
               <p className="onboarding-description">{steps[currentStep].description}</p>
+
+              {currentStep === 0 && (
+                <div className="onboarding-appearance">
+                  <div className="onboarding-appearance-label">
+                    {language === 'ar' ? 'الخط' : 'Font'}
+                  </div>
+                  <div className="onboarding-font-grid">
+                    {FONTS.map(font => (
+                      <button
+                        key={font.value}
+                        className={`onboarding-font-btn${selectedFont === font.value ? ' active' : ''}`}
+                        onClick={() => handleFontChange(font.value)}
+                      >
+                        <span className="onboarding-font-name">{font.label}</span>
+                        <span className="onboarding-font-preview" style={{ fontFamily: font.value }}>
+                          أَبْجَد · Aa
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="onboarding-appearance-label" style={{ marginTop: '20px' }}>
+                    {language === 'ar' ? 'حجم النص' : 'Text Size'}
+                  </div>
+                  <div className="onboarding-size-control">
+                    <button
+                      className="onboarding-size-btn"
+                      onClick={() => handleTextSizeChange(-5)}
+                      disabled={textSize <= 80}
+                    >A-</button>
+                    <div className="onboarding-size-bar-wrap">
+                      <span className="onboarding-size-value">{textSize}%</span>
+                      <div className="onboarding-size-bar">
+                        <div
+                          className="onboarding-size-fill"
+                          style={{ width: `${((textSize - 80) / 70) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      className="onboarding-size-btn onboarding-size-btn--large"
+                      onClick={() => handleTextSizeChange(5)}
+                      disabled={textSize >= 150}
+                    >A+</button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
 

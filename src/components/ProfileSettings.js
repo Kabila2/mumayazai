@@ -39,10 +39,10 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
   // Appearance
   const FONTS = [
-    { label: 'OpenDyslexic', value: "'OpenDyslexic', sans-serif" },
-    { label: 'Roboto', value: "'Roboto', sans-serif" },
-    { label: 'Cairo', value: "'Cairo', sans-serif" },
-    { label: 'System Default', value: 'system-ui, sans-serif' },
+    { label: 'OpenDyslexic', value: "'OpenDyslexic', sans-serif", preview: 'أَبْجَد', previewEn: 'The quick fox' },
+    { label: 'Roboto', value: "'Roboto', sans-serif", preview: 'أَبْجَد', previewEn: 'The quick fox' },
+    { label: 'Cairo', value: "'Cairo', sans-serif", preview: 'أَبْجَد', previewEn: 'The quick fox' },
+    { label: 'System Default', value: 'system-ui, sans-serif', preview: 'أَبْجَد', previewEn: 'The quick fox' },
   ];
   const [selectedFont, setSelectedFont] = useState(
     localStorage.getItem('mumayaz_font') || "'OpenDyslexic', sans-serif"
@@ -797,11 +797,13 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
                     <button
                       key={font.value}
                       className={`font-option-btn ${selectedFont === font.value ? 'active' : ''}`}
-                      style={{ fontFamily: font.value }}
                       onClick={() => handleFontChange(font.value)}
                     >
-                      {font.label}
-                      <span className="font-preview">Aa</span>
+                      <span className="font-option-label">{font.label}</span>
+                      <span className="font-preview" style={{ fontFamily: font.value }}>
+                        <span className="font-preview-arabic">{font.preview}</span>
+                        <span className="font-preview-english">{font.previewEn}</span>
+                      </span>
                     </button>
                   ))}
                 </div>
