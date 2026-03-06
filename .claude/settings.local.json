@@ -47,7 +47,12 @@
       "Bash(ping:*)",
       "Bash(git config:*)",
       "Bash(grep:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "WebFetch(domain:opendyslexic.org)",
+      "WebFetch(domain:antijingoist.itch.io)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm show:*)",
+      "Bash(npm search:*)"
     ],
     "deny": [],
     "ask": []

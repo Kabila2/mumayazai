@@ -7,12 +7,12 @@ const DarkModeToggle = ({ language = 'en' }) => {
 
   const translations = {
     en: {
-      dark: 'Dark Mode',
-      light: 'Light Mode'
+      dark: 'Dark',
+      light: 'Light'
     },
     ar: {
-      dark: 'الوضع الداكن',
-      light: 'الوضع الفاتح'
+      dark: 'داكن',
+      light: 'فاتح'
     }
   };
 
@@ -65,7 +65,6 @@ const DarkModeToggle = ({ language = 'en' }) => {
       >
         {isDarkMode ? '🌙' : '☀️'}
       </motion.div>
-      <span className="toggle-label">{isDarkMode ? t.dark : t.light}</span>
     </motion.button>
   );
 };

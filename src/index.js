@@ -1,6 +1,8 @@
 // src/index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '@fontsource/opendyslexic'; // 400 normal
+import '@fontsource/opendyslexic/700.css'; // 700 bold
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';

@@ -170,10 +170,10 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
       <div className="onboarding-overlay" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <motion.div
           className="onboarding-modal"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
         >
           <button className="onboarding-skip" onClick={handleSkip}>
             {t.skip}

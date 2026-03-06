@@ -123,8 +123,16 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         lastActive: null
       };
 
-      // Points come from mumayaz_user_stats
-      const pointsData = { total: userStats.totalPoints || 0 };
+      // Points from learning + quiz activities (via pointsUtils → leaderboardUtils)
+      const learningAndQuizPoints = userStats.totalPoints || 0;
+
+      // Points from achievement bonuses (stored separately by achievementsSystem)
+      const achievementPointsRaw = localStorage.getItem(`mumayaz_points_${userEmail}`);
+      const achievementPoints = achievementPointsRaw
+        ? (JSON.parse(achievementPointsRaw).total || 0)
+        : 0;
+
+      const pointsData = { total: learningAndQuizPoints + achievementPoints };
       console.log('📊 [ProgressDashboard] User stats:', userStats);
       console.log('📊 [ProgressDashboard] Quiz history:', quizHistory.length, 'quizzes');
       console.log('📊 [ProgressDashboard] Points:', pointsData.total);

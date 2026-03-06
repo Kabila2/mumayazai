@@ -37,6 +37,20 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
   const [importing, setImporting] = useState(false);
   const dataFileInputRef = useRef(null);
 
+  // Appearance
+  const FONTS = [
+    { label: 'OpenDyslexic', value: "'OpenDyslexic', sans-serif" },
+    { label: 'Roboto', value: "'Roboto', sans-serif" },
+    { label: 'Cairo', value: "'Cairo', sans-serif" },
+    { label: 'System Default', value: 'system-ui, sans-serif' },
+  ];
+  const [selectedFont, setSelectedFont] = useState(
+    localStorage.getItem('mumayaz_font') || "'OpenDyslexic', sans-serif"
+  );
+  const [textSize, setTextSize] = useState(
+    parseInt(localStorage.getItem('mumayaz_text_size') || '100', 10)
+  );
+
   const translations = {
     en: {
       title: 'Profile Settings',
@@ -78,7 +92,11 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       clearButton: 'Delete All Data',
       importSuccess: 'Data imported successfully!',
       importError: 'Failed to import data',
-      exportSuccess: 'Data exported successfully!'
+      exportSuccess: 'Data exported successfully!',
+      appearance: 'Appearance',
+      fontLabel: 'Global Font',
+      textSizeLabel: 'Text Size',
+      appearanceSaved: 'Appearance saved!'
     },
     ar: {
       title: 'إعدادات الملف الشخصي',
@@ -120,7 +138,11 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       clearButton: 'حذف جميع البيانات',
       importSuccess: 'تم استيراد البيانات بنجاح!',
       importError: 'فشل استيراد البيانات',
-      exportSuccess: 'تم تصدير البيانات بنجاح!'
+      exportSuccess: 'تم تصدير البيانات بنجاح!',
+      appearance: 'المظهر',
+      fontLabel: 'الخط العام',
+      textSizeLabel: 'حجم النص',
+      appearanceSaved: 'تم حفظ المظهر!'
     }
   };
 
@@ -385,6 +407,27 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     }
   };
 
+  const applyAppearance = (font, size) => {
+    document.documentElement.style.setProperty('--font-sans', font);
+    document.documentElement.style.fontSize = size + '%';
+    localStorage.setItem('mumayaz_font', font);
+    localStorage.setItem('mumayaz_text_size', String(size));
+  };
+
+  const handleFontChange = (fontValue) => {
+    playClickSound();
+    setSelectedFont(fontValue);
+    applyAppearance(fontValue, textSize);
+    toast.success(t.appearanceSaved);
+  };
+
+  const handleTextSizeChange = (delta) => {
+    playClickSound();
+    const newSize = Math.min(150, Math.max(80, textSize + delta));
+    setTextSize(newSize);
+    applyAppearance(selectedFont, newSize);
+  };
+
   const getRoleLabel = (role) => {
     const roles = {
       student: language === 'ar' ? 'طالب' : 'Student',
@@ -440,6 +483,12 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
             onClick={() => { playClickSound(); setActiveTab('data'); }}
           >
             💾 {t.data}
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'appearance' ? 'active' : ''}`}
+            onClick={() => { playClickSound(); setActiveTab('appearance'); }}
+          >
+            🎨 {t.appearance}
           </button>
         </div>
 
@@ -730,6 +779,56 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
                     {t.clearButton}
                   </button>
                 </motion.div>
+              </div>
+            </motion.div>
+          )}
+          {activeTab === 'appearance' && (
+            <motion.div
+              className="settings-section"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+            >
+              {/* Font Selector */}
+              <div className="appearance-section">
+                <h3>{t.fontLabel}</h3>
+                <div className="font-options">
+                  {FONTS.map((font) => (
+                    <button
+                      key={font.value}
+                      className={`font-option-btn ${selectedFont === font.value ? 'active' : ''}`}
+                      style={{ fontFamily: font.value }}
+                      onClick={() => handleFontChange(font.value)}
+                    >
+                      {font.label}
+                      <span className="font-preview">Aa</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Text Size */}
+                <h3 style={{ marginTop: '30px' }}>{t.textSizeLabel}</h3>
+                <div className="text-size-control">
+                  <button
+                    className="size-btn"
+                    onClick={() => handleTextSizeChange(-5)}
+                    disabled={textSize <= 80}
+                  >A-</button>
+                  <div className="size-display">
+                    <span className="size-value">{textSize}%</span>
+                    <div className="size-bar">
+                      <div
+                        className="size-bar-fill"
+                        style={{ width: `${((textSize - 80) / 70) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    className="size-btn size-btn-large"
+                    onClick={() => handleTextSizeChange(5)}
+                    disabled={textSize >= 150}
+                  >A+</button>
+                </div>
               </div>
             </motion.div>
           )}

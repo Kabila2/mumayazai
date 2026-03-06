@@ -116,6 +116,12 @@ export default function App() {
     if (fs) setFontSize(parseFloat(fs));
     if (rm === "true") setReducedMotion(true);
 
+    // Load appearance preferences
+    const savedFont = localStorage.getItem('mumayaz_font');
+    const savedTextSize = localStorage.getItem('mumayaz_text_size');
+    if (savedFont) document.documentElement.style.setProperty('--font-sans', savedFont);
+    if (savedTextSize) document.documentElement.style.fontSize = savedTextSize + '%';
+
     // Load voice settings
     const savedSpeed = localStorage.getItem("voice-speed");
     const savedPitch = localStorage.getItem("voice-pitch");

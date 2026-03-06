@@ -70,7 +70,12 @@ body {
   bottom: 0;
 }
 
-/* 4. Gradient animation for chat-area background */
+/* 4. Force selected font on everything — overrides all component-level styles */
+*:not(.material-icons):not([class*="material-icons"]) {
+  font-family: var(--font-sans) !important;
+}
+
+/* 5. Gradient animation for chat-area background */
 @keyframes gradientBG {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }

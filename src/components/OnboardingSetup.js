@@ -10,6 +10,15 @@ const OnboardingSetup = ({
   const [language, setLanguage] = useState(defaultLanguage);
   const [error, setError] = useState("");
 
+  const FONTS = [
+    { label: 'OpenDyslexic', value: "'OpenDyslexic', sans-serif" },
+    { label: 'Roboto',       value: "'Roboto', sans-serif" },
+    { label: 'Cairo',        value: "'Cairo', sans-serif" },
+    { label: 'System',       value: 'system-ui, sans-serif' },
+  ];
+  const [selectedFont, setSelectedFont] = useState("'OpenDyslexic', sans-serif");
+  const [textSize, setTextSize] = useState(100);
+
   // Set initial direction on component mount
   React.useEffect(() => {
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
@@ -22,7 +31,12 @@ const OnboardingSetup = ({
       return;
     }
     setError("");
-    // Auto-set disability preference based on language
+    // Save and apply appearance preferences
+    localStorage.setItem('mumayaz_font', selectedFont);
+    localStorage.setItem('mumayaz_text_size', String(textSize));
+    document.documentElement.style.setProperty('--font-sans', selectedFont);
+    document.documentElement.style.fontSize = textSize + '%';
+
     const disability = language === "ar" ? "default" : "default";
     onComplete({ disability, lang: language });
   };
@@ -167,7 +181,7 @@ const OnboardingSetup = ({
             direction: language === "ar" ? "rtl" : "ltr",
             lineHeight: "1.4"
           }}>
-            {language === "ar" ? "اختر لغتك المفضلة للحصول على أفضل تجربة" : "Choose your preferred language for the best experience"}
+            {language === "ar" ? "اختر لغتك وخطك وحجم النص للحصول على أفضل تجربة" : "Choose your language, font, and text size for the best experience"}
           </p>
         </motion.div>
 
@@ -253,6 +267,122 @@ const OnboardingSetup = ({
                 )}
               </motion.div>
             ))}
+          </div>
+        </motion.div>
+
+        {/* Font Selection */}
+        <motion.div
+          style={{ marginBottom: "1.5rem" }}
+          initial={{ opacity: 0, x: language === "ar" ? -30 : 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
+          <label style={{
+            display: "block",
+            marginBottom: "0.75rem",
+            fontWeight: "600",
+            fontSize: "1.1rem",
+            color: "#444",
+            direction: language === "ar" ? "rtl" : "ltr"
+          }}>
+            {language === "ar" ? "الخط المفضل" : "Preferred Font"}
+          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+            {FONTS.map((font) => (
+              <motion.div
+                key={font.value}
+                onClick={() => setSelectedFont(font.value)}
+                style={{
+                  padding: "0.75rem",
+                  borderRadius: "12px",
+                  border: selectedFont === font.value ? "3px solid #667eea" : "2px solid rgba(0,0,0,0.1)",
+                  background: selectedFont === font.value
+                    ? "linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1))"
+                    : "rgba(0,0,0,0.02)",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  fontFamily: font.value,
+                  transition: "all 0.2s ease"
+                }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <div style={{
+                  fontWeight: "700",
+                  fontSize: "1.1rem",
+                  color: selectedFont === font.value ? "#667eea" : "#333",
+                  fontFamily: font.value
+                }}>
+                  Aa
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "#666", marginTop: "4px" }}>
+                  {font.label}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Text Size */}
+        <motion.div
+          style={{ marginBottom: "1.5rem" }}
+          initial={{ opacity: 0, x: language === "ar" ? -30 : 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.45, duration: 0.5 }}
+        >
+          <label style={{
+            display: "block",
+            marginBottom: "0.75rem",
+            fontWeight: "600",
+            fontSize: "1.1rem",
+            color: "#444",
+            direction: language === "ar" ? "rtl" : "ltr"
+          }}>
+            {language === "ar" ? "حجم النص" : "Text Size"}
+          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <motion.button
+              onClick={() => setTextSize(s => Math.max(80, s - 5))}
+              disabled={textSize <= 80}
+              style={{
+                width: "44px", height: "44px", borderRadius: "50%",
+                border: "2px solid #667eea", background: "white",
+                color: "#667eea", fontWeight: "700", fontSize: "1rem",
+                cursor: textSize <= 80 ? "not-allowed" : "pointer",
+                opacity: textSize <= 80 ? 0.4 : 1, flexShrink: 0
+              }}
+              whileTap={{ scale: 0.95 }}
+            >A-</motion.button>
+
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontSize: "1.3rem", fontWeight: "700", color: "#667eea" }}>
+                {textSize}%
+              </div>
+              <div style={{
+                height: "6px", background: "#e5e7eb", borderRadius: "3px",
+                marginTop: "6px", overflow: "hidden"
+              }}>
+                <div style={{
+                  height: "100%", borderRadius: "3px",
+                  width: `${((textSize - 80) / 70) * 100}%`,
+                  background: "linear-gradient(90deg, #667eea, #764ba2)",
+                  transition: "width 0.2s ease"
+                }} />
+              </div>
+            </div>
+
+            <motion.button
+              onClick={() => setTextSize(s => Math.min(150, s + 5))}
+              disabled={textSize >= 150}
+              style={{
+                width: "44px", height: "44px", borderRadius: "50%",
+                border: "2px solid #667eea", background: "white",
+                color: "#667eea", fontWeight: "700", fontSize: "1.1rem",
+                cursor: textSize >= 150 ? "not-allowed" : "pointer",
+                opacity: textSize >= 150 ? 0.4 : 1, flexShrink: 0
+              }}
+              whileTap={{ scale: 0.95 }}
+            >A+</motion.button>
           </div>
         </motion.div>
 

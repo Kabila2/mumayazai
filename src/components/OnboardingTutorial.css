@@ -53,16 +53,6 @@
 .onboarding-icon {
   font-size: 5rem;
   margin-bottom: 24px;
-  animation: bounce 1s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
 }
 
 .onboarding-title {
