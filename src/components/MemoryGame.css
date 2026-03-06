@@ -20,7 +20,7 @@
 
 /* RTL support for Arabic */
 .memory-game-container[dir="rtl"] {
-  font-family: 'Segoe UI', 'Arial', 'Tahoma', sans-serif;
+  font-family: 'OpenDyslexic', 'Cairo', sans-serif;
 }
 
 .memory-game-container[dir="rtl"] .card-word {

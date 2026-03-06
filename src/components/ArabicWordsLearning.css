@@ -20,7 +20,7 @@
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
   -ms-overflow-style: none;
-  font-family: 'Arial', 'Segoe UI', sans-serif; /* Simple, clear font */
+  font-family: 'OpenDyslexic', 'Cairo', sans-serif;
   contain: layout style;
   box-sizing: border-box;
 }

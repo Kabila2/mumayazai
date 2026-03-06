@@ -326,7 +326,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
     setSelectedCards([]);
   };
 
-  // Award points when quiz is completed
+  // Award points and save quiz history when quiz is completed
   useEffect(() => {
     if (showResults && userEmail && answers.length > 0) {
       const totalQuestions = answers.length;
@@ -334,11 +334,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
       // Award points based on performance
       if (percentage === 100) {
-        // Perfect score
         awardPoints(userEmail, 'QUIZ_PERFECT_SCORE');
         console.log('Awarded QUIZ_PERFECT_SCORE points');
       } else if (percentage >= 70) {
-        // Passed
         awardPoints(userEmail, 'QUIZ_COMPLETED');
         console.log('Awarded QUIZ_COMPLETED points');
       }
@@ -346,6 +344,25 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       // Award points for each correct answer
       awardPoints(userEmail, 'QUIZ_QUESTION_CORRECT', score);
       console.log(`Awarded points for ${score} correct answers`);
+
+      // Save quiz result to history
+      try {
+        const quizKey = `mumayaz_quiz_history_${userEmail}`;
+        const existing = JSON.parse(localStorage.getItem(quizKey) || '[]');
+        const result = {
+          quizName: selectedQuizType?.nameEn
+            ? `${selectedQuizType.nameEn}${selectedTopic ? ` - ${selectedTopic.nameEn || selectedTopic.id}` : ''}`
+            : 'Quiz',
+          score: percentage,
+          correctAnswers: score,
+          totalQuestions,
+          completedAt: new Date().toISOString()
+        };
+        existing.unshift(result); // newest first
+        localStorage.setItem(quizKey, JSON.stringify(existing.slice(0, 50))); // keep last 50
+      } catch (e) {
+        console.error('Error saving quiz history:', e);
+      }
     }
   }, [showResults, userEmail, score, answers]);
 

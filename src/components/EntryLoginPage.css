@@ -10,7 +10,7 @@
   height: 100dvh; /* mobile dynamic height */
   overflow: hidden;
   background: #00bcd4;
-  font-family: "Cairo", "Noto Kufi Arabic", "Segoe UI", sans-serif;
+  font-family: 'OpenDyslexic', 'Cairo', 'Noto Kufi Arabic', sans-serif;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);

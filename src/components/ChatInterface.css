@@ -35,7 +35,7 @@
   --shadow-xl: 0 24px 96px rgba(0, 0, 0, 0.2);
 
   /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family: 'OpenDyslexic', 'Cairo', sans-serif;
   --font-size-xs: 0.875rem;
   --font-size-sm: 1rem;
   --font-size-base: 1.125rem;

@@ -103,11 +103,6 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       const quizHistoryRaw = localStorage.getItem(quizKey);
       const quizHistory = quizHistoryRaw ? JSON.parse(quizHistoryRaw) : [];
 
-      // Load points
-      const pointsKey = `mumayaz_points_${userEmail}`;
-      const pointsRaw = localStorage.getItem(pointsKey);
-      const pointsData = pointsRaw ? JSON.parse(pointsRaw) : { total: 0, history: [] };
-
       // Load streak
       const streakKey = `mumayaz_streak_${userEmail}`;
       const streakRaw = localStorage.getItem(streakKey);
@@ -118,17 +113,19 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       const achievementsRaw = localStorage.getItem(achievementsKey);
       const achievements = achievementsRaw ? JSON.parse(achievementsRaw) : [];
 
-      // Load leaderboard stats for more accurate data
-      const leaderboardKey = 'mumayaz_leaderboard_stats';
-      const leaderboardRaw = localStorage.getItem(leaderboardKey);
-      const leaderboardStats = leaderboardRaw ? JSON.parse(leaderboardRaw) : {};
-      const userStats = leaderboardStats[userEmail?.toLowerCase()] || {
+      // Load user stats (points, time, messages all stored here)
+      const allUserStats = JSON.parse(localStorage.getItem('mumayaz_user_stats') || '{}');
+      const userStats = allUserStats[userEmail?.toLowerCase()] || {
         totalMessages: 0,
-        totalChatSessions: 0,
+        totalChats: 0,
         totalTimeSpent: 0,
+        totalPoints: 0,
         lastActive: null
       };
-      console.log('📊 [ProgressDashboard] User leaderboard stats:', userStats);
+
+      // Points come from mumayaz_user_stats
+      const pointsData = { total: userStats.totalPoints || 0 };
+      console.log('📊 [ProgressDashboard] User stats:', userStats);
       console.log('📊 [ProgressDashboard] Quiz history:', quizHistory.length, 'quizzes');
       console.log('📊 [ProgressDashboard] Points:', pointsData.total);
       console.log('📊 [ProgressDashboard] Streak:', streakData.currentStreak);
@@ -147,9 +144,9 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         safeProgress.sentencesProgress >= 100 ? 'Sentences' : null,
       ].filter(Boolean).length;
 
-      // Calculate time spent - use leaderboard stats if available, otherwise estimate
+      // Calculate time spent - totalTimeSpent is stored in minutes, convert to hours
       const estimatedTime = userStats.totalTimeSpent > 0
-        ? Math.round(userStats.totalTimeSpent / 60 * 10) / 10 // Convert minutes to hours
+        ? Math.round(userStats.totalTimeSpent / 60 * 10) / 10
         : Math.round((safeProgress.totalSessions || 0) * 5 / 60 * 10) / 10;
 
       // Analyze strengths and weaknesses
@@ -167,7 +164,7 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         totalPoints: pointsData.total || 0,
         achievements: achievements.length,
         totalMessages: userStats.totalMessages || 0,
-        totalChatSessions: userStats.totalChatSessions || 0,
+        totalChatSessions: userStats.totalChats || 0,
         quizHistory: filteredQuizzes.slice(0, 10),
         strengths: analysis.strengths,
         weaknesses: analysis.weaknesses,

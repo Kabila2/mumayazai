@@ -5,7 +5,7 @@ body {
   padding: 0;
   background-color: #000;
   color: #fff;
-  font-family: 'Cairo', sans-serif;
+  font-family: 'OpenDyslexic', 'Cairo', sans-serif;
   overflow-y: auto;
 }
 
@@ -27,8 +27,8 @@ html[dir="rtl"] body {
   --text-main: #e0d6ff;
   --text-secondary: #aaa;
 
-  /* typography */
-  --font-sans: 'Cairo', sans-serif;
+  /* typography — dyslexia-friendly */
+  --font-sans: 'OpenDyslexic', 'Cairo', sans-serif;
   --fs-base: 1rem;
   --fs-lg: 1.125rem;
 

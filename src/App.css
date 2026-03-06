@@ -1,7 +1,7 @@
 /* Professional App.css - Modern, Accessible Application Layout */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+/* OpenDyslexic loaded via CDN in public/index.html */
 
 :root {
   /* Soft Pastel Color System - Eye-friendly for learning */
@@ -37,16 +37,17 @@
   --pastel-yellow: #fef3c7;
   --pastel-orange: #fed7aa;
   
-  /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Typography — dyslexia-friendly */
+  --font-family: 'OpenDyslexic', 'Cairo', sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
-  --line-height-normal: 1.5;
-  --line-height-relaxed: 1.6;
-  --letter-spacing: -0.025em;
+  --line-height-normal: 1.7;
+  --line-height-relaxed: 1.85;
+  --letter-spacing: 0.05em;
+  --word-spacing: 0.12em;
   
   /* Spacing */
   --space-2: 0.5rem;
@@ -92,6 +93,7 @@ html {
   font-family: var(--font-family);
   line-height: var(--line-height-normal);
   letter-spacing: var(--letter-spacing);
+  word-spacing: var(--word-spacing);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
