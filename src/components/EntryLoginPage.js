@@ -5,6 +5,35 @@ import AuthModal from "./AuthModal";
 import { motion, AnimatePresence } from "framer-motion";
 import "./EntryLoginPage.css";
 import { FaUserPlus, FaSignInAlt } from "react-icons/fa";
+import { isElevenLabsConfigured, speakWithElevenLabs } from "../utils/elevenLabsTTS";
+
+const WELCOME_TEXT = {
+  ar: "مرحباً بك في مميز",
+  en: "Welcome To Mumayaz",
+};
+
+const speakWelcome = (lang) => {
+  const text = WELCOME_TEXT[lang] || WELCOME_TEXT.en;
+
+  if (lang === "ar" && isElevenLabsConfigured()) {
+    speakWithElevenLabs(text).catch(() => {
+      // silently fall back to browser TTS
+      browserSpeak(text, "ar-SA");
+    });
+    return;
+  }
+
+  browserSpeak(text, lang === "ar" ? "ar-SA" : "en-US");
+};
+
+const browserSpeak = (text, lang) => {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.95;
+  window.speechSynthesis.speak(utterance);
+};
 
 export default function EntryLoginPage({ onSignIn, onSignUp }) {
   const [showModal, setShowModal] = useState(false);
@@ -59,7 +88,9 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
           // Pass through to App; AuthModal will display success or error based on result
           onSubmit={async (type, payload) => {
             if (type === "signup") {
-              return await onSignUp(payload);   // {ok, message?}
+              const result = await onSignUp(payload);
+              if (result?.ok) speakWelcome(selectedLang);
+              return result;
             }
             return await onSignIn(payload);     // {ok, message?}
           }}

@@ -10,6 +10,7 @@ import {
 } from '../utils/leaderboardUtils';
 import "./VoiceInterface.css";
 import "./ChatInterface.css";
+import { isElevenLabsConfigured, speakWithElevenLabs, stopElevenLabsSpeech } from "../utils/elevenLabsTTS";
 
 /** ---------- Advanced Voice System ---------- */
 const VOICE_STORAGE_KEY = "mumayaz_voice_data";
@@ -803,6 +804,40 @@ export default function VoiceInterface({
       return;
     }
 
+    // Use ElevenLabs for Arabic when API key is configured
+    if (language === 'ar' && isElevenLabsConfigured()) {
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      }
+      setIsSpeaking(true);
+      const cleanText = text
+        .replace(/🎙️|📱|⚙️|🔊|🎯|✨|💬|📋|🗑️|💾|🧭/g, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\n+/g, '. ')
+        .replace(/\. \. +/g, '. ')
+        .trim();
+      speakWithElevenLabs(cleanText, {
+        rate: speedLocal,
+        onStart: () => setIsSpeaking(true),
+        onEnd: () => setIsSpeaking(false),
+      }).catch((err) => {
+        console.warn('ElevenLabs TTS error, falling back to browser TTS:', err);
+        setIsSpeaking(false);
+        // fall through to browser speech synthesis below
+        window.speechSynthesis?.cancel();
+        const fallbackUtterance = new SpeechSynthesisUtterance(cleanText);
+        fallbackUtterance.lang = 'ar-SA';
+        fallbackUtterance.rate = speedLocal;
+        fallbackUtterance.pitch = pitchLocal;
+        fallbackUtterance.volume = volumeLocal;
+        fallbackUtterance.onstart = () => setIsSpeaking(true);
+        fallbackUtterance.onend = () => setIsSpeaking(false);
+        window.speechSynthesis?.speak(fallbackUtterance);
+      });
+      return;
+    }
+
     if (!window.speechSynthesis) {
       console.warn('🚨 SpeechSynthesis not supported in this browser');
       return;
@@ -953,6 +988,7 @@ export default function VoiceInterface({
   }, [extSpeak, autoSpeak, voices, selectedVoiceLocal, speedLocal, pitchLocal, volumeLocal, language, isListening]);
 
   const stopSpeaking = useCallback(() => {
+    stopElevenLabsSpeech();
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   }, []);
