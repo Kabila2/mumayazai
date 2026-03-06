@@ -853,6 +853,9 @@ const ArabicLearningPlatform = ({
     );
   };
 
+  const _userRole = getCurrentUserRole();
+  const isCompactNav = _userRole === 'teacher' || _userRole === 'parent';
+
   return (
     <div className="arabic-learning-platform" ref={platformRef}>
       {currentSection !== 'learn' && currentSection !== 'chat' && currentSection !== 'voice' && currentSection !== 'teacherchat' && (
@@ -874,8 +877,9 @@ const ArabicLearningPlatform = ({
             role="menuitem"
             aria-label={language === 'ar' ? 'العودة إلى الصفحة الرئيسية' : 'Go to home page'}
             aria-current={currentSection === 'home' ? 'page' : undefined}
+            title={isCompactNav ? (language === 'ar' ? 'الرئيسية' : 'Home') : undefined}
           >
-            🏠 {language === 'ar' ? 'الرئيسية' : 'Home'}
+            🏠 {!isCompactNav && (language === 'ar' ? 'الرئيسية' : 'Home')}
           </button>
           <button
             className={`nav-link ${['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'active' : ''}`}
@@ -884,22 +888,25 @@ const ArabicLearningPlatform = ({
             aria-label={language === 'ar' ? 'الانتقال إلى مركز التعلم' : 'Go to learning hub'}
             aria-current={['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'page' : undefined}
             style={{ background: ['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'linear-gradient(135deg, #667eea, #764ba2)' : '' }}
+            title={isCompactNav ? (language === 'ar' ? 'تعلم' : 'Learn') : undefined}
           >
-            📚 {language === 'ar' ? 'تعلم' : 'Learn'}
+            📚 {!isCompactNav && (language === 'ar' ? 'تعلم' : 'Learn')}
           </button>
           <button
             className={`nav-link ${currentSection === 'quiz' ? 'active' : ''}`}
             onClick={() => setCurrentSection('quiz')}
             style={{ background: currentSection === 'quiz' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '' }}
+            title={isCompactNav ? (language === 'ar' ? 'اختبر نفسك' : 'Test Yourself') : undefined}
           >
-            🎯 {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
+            🎯 {!isCompactNav && (language === 'ar' ? 'اختبر نفسك' : 'Test Yourself')}
           </button>
           <button
             className={`nav-link ${currentSection === 'progress' ? 'active' : ''}`}
             onClick={() => setCurrentSection('progress')}
             style={{ background: currentSection === 'progress' ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : '' }}
+            title={isCompactNav ? (language === 'ar' ? 'تقدمي' : 'Progress') : undefined}
           >
-            📊 {language === 'ar' ? 'تقدمي' : 'Progress'}
+            📊 {!isCompactNav && (language === 'ar' ? 'تقدمي' : 'Progress')}
           </button>
           <button
             className={`nav-link ${currentSection === 'chat' ? 'active' : ''}`}
@@ -907,8 +914,9 @@ const ArabicLearningPlatform = ({
               handleChatModeSwitch('text');
               setCurrentSection('chat');
             }}
+            title={isCompactNav ? (language === 'ar' ? 'محادثة نصية' : 'Chat') : undefined}
           >
-            💬 {language === 'ar' ? 'محادثة نصية' : 'Chat'}
+            💬 {!isCompactNav && (language === 'ar' ? 'محادثة نصية' : 'Chat')}
           </button>
           <button
             className={`nav-link ${currentSection === 'voice' ? 'active' : ''}`}
@@ -916,11 +924,12 @@ const ArabicLearningPlatform = ({
               handleChatModeSwitch('voice');
               setCurrentSection('voice');
             }}
+            title={isCompactNav ? (language === 'ar' ? 'مساعد صوتي' : 'Voice') : undefined}
           >
-            🎤 {language === 'ar' ? 'مساعد صوتي' : 'Voice'}
+            🎤 {!isCompactNav && (language === 'ar' ? 'مساعد صوتي' : 'Voice')}
           </button>
           {/* Only show Communication link for teachers and parents */}
-          {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
+          {(_userRole === 'teacher' || _userRole === 'parent') && (
             <button
               className={`nav-link ${currentSection === 'teacherchat' ? 'active' : ''}`}
               onClick={() => setCurrentSection('teacherchat')}
@@ -928,40 +937,43 @@ const ArabicLearningPlatform = ({
                 background: currentSection === 'teacherchat' ? 'linear-gradient(135deg, #ec4899, #f472b6)' : '',
                 position: 'relative'
               }}
+              title={language === 'ar' ? 'التواصل' : 'Communication'}
             >
-              👨‍🏫 {language === 'ar' ? 'التواصل' : 'Communication'}
+              👨‍🏫 {language === 'ar' ? 'التواصل' : 'Comms'}
               {unreadMessagesCount > 0 && (
                 <span className="nav-unread-badge">{unreadMessagesCount}</span>
               )}
             </button>
           )}
           {/* Only show Teacher Dashboard for teachers */}
-          {getCurrentUserRole() === 'teacher' && (
+          {_userRole === 'teacher' && (
             <button
               className={`nav-link ${currentSection === 'teacherdashboard' ? 'active' : ''}`}
               onClick={() => setCurrentSection('teacherdashboard')}
               style={{
                 background: currentSection === 'teacherdashboard' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : ''
               }}
+              title={language === 'ar' ? 'لوحة المعلم' : 'Teacher Dashboard'}
             >
-              📊 {language === 'ar' ? 'لوحة المعلم' : 'Teacher Dashboard'}
+              🖥️ {language === 'ar' ? 'لوحتي' : 'Dashboard'}
             </button>
           )}
           {/* Only show Parent Dashboard for parents */}
-          {getCurrentUserRole() === 'parent' && (
+          {_userRole === 'parent' && (
             <button
               className={`nav-link ${currentSection === 'parentdashboard' ? 'active' : ''}`}
               onClick={() => setCurrentSection('parentdashboard')}
               style={{
                 background: currentSection === 'parentdashboard' ? 'linear-gradient(135deg, #10b981, #059669)' : ''
               }}
+              title={language === 'ar' ? 'لوحة الأهل' : 'Parent Dashboard'}
             >
-              👪 {language === 'ar' ? 'لوحة الأهل' : 'Parent Dashboard'}
+              👪 {language === 'ar' ? 'لوحتي' : 'Dashboard'}
             </button>
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isCompactNav ? '6px' : '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
           <button
             className="profile-settings-btn-with-text"
             onClick={() => {
@@ -971,15 +983,16 @@ const ArabicLearningPlatform = ({
             aria-label={language === 'ar' ? 'فتح الإعدادات' : 'Open settings'}
             title={language === 'ar' ? 'الإعدادات' : 'Settings'}
           >
-            ⚙️ {language === 'ar' ? 'الإعدادات' : 'Settings'}
+            ⚙️ {!isCompactNav && (language === 'ar' ? 'الإعدادات' : 'Settings')}
           </button>
           <DarkModeToggle language={language} />
           <button
             className="sign-out-btn"
             onClick={onSignOut}
             aria-label={language === 'ar' ? 'تسجيل الخروج من الحساب' : 'Sign out of account'}
+            title={isCompactNav ? (language === 'ar' ? 'تسجيل الخروج' : 'Sign Out') : undefined}
           >
-            <span aria-hidden="true">🚪</span> {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
+            <span aria-hidden="true">🚪</span> {!isCompactNav && (language === 'ar' ? 'تسجيل الخروج' : 'Sign Out')}
           </button>
         </div>
       </nav>
