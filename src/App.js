@@ -303,27 +303,47 @@ export default function App() {
 
   let content;
   if (view === "chat") {
-    content = (
-      <ArabicLearningPlatform
-        t={t}
-        language={appLanguage}
-        fontSize={fontSize}
-        highContrast={highContrast}
-        reducedMotion={reducedMotion}
-        assistantTitle={assistantTitle}
-        currentPreference={currentPreference}
-        onSignOut={handleSignOut}
-        voices={voices}
-        selectedVoice={selectedVoice}
-        setSelectedVoice={setSelectedVoice}
-        speed={speed}
-        setSpeed={setSpeed}
-        pitch={pitch}
-        setPitch={setPitch}
-        setLanguage={setLanguage}
-        speak={speak}
-      />
-    );
+    if (userRole === "teacher") {
+      content = (
+        <TeacherDashboard
+          onSignOut={handleSignOut}
+          t={t}
+          language={appLanguage}
+          reducedMotion={reducedMotion}
+        />
+      );
+    } else if (userRole === "parent") {
+      content = (
+        <ParentDashboard
+          onSignOut={handleSignOut}
+          t={t}
+          language={appLanguage}
+          reducedMotion={reducedMotion}
+        />
+      );
+    } else {
+      content = (
+        <ArabicLearningPlatform
+          t={t}
+          language={appLanguage}
+          fontSize={fontSize}
+          highContrast={highContrast}
+          reducedMotion={reducedMotion}
+          assistantTitle={assistantTitle}
+          currentPreference={currentPreference}
+          onSignOut={handleSignOut}
+          voices={voices}
+          selectedVoice={selectedVoice}
+          setSelectedVoice={setSelectedVoice}
+          speed={speed}
+          setSpeed={setSpeed}
+          pitch={pitch}
+          setPitch={setPitch}
+          setLanguage={setLanguage}
+          speak={speak}
+        />
+      );
+    }
   } else if (view === "profile") {
     content = (
       <div className="placeholder" style={{ position: "relative" }}>

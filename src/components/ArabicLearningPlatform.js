@@ -678,7 +678,7 @@ const ArabicLearningPlatform = ({
 
         <motion.div
           className="section-card memory-card"
-          onClick={() => handleSectionChange('memory')}
+          onClick={() => handleSectionChange('memory-game')}
           whileHover={{ scale: 1.05, y: -5 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
@@ -693,6 +693,48 @@ const ArabicLearningPlatform = ({
             {language === 'ar'
               ? 'طابق الصور مع الكلمات وحسّن ذاكرتك'
               : 'Match pictures with words and improve your memory'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card color-matching-card"
+          onClick={() => handleSectionChange('color-matching')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 2.0 }}
+        >
+          <div className="card-icon">🎨</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'مطابقة الألوان' : 'Color Matching Game'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'طابق الألوان وتعلم أسماءها بالعربية'
+              : 'Match colors and learn their Arabic names'
+            }
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="section-card number-learning-card"
+          onClick={() => handleSectionChange('number-learning')}
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 2.1 }}
+        >
+          <div className="card-icon">🔢</div>
+          <h3 className="card-title">
+            {language === 'ar' ? 'تعلم الأرقام' : 'Number Learning Game'}
+          </h3>
+          <p className="card-description">
+            {language === 'ar'
+              ? 'تعلم الأرقام العربية بطريقة ممتعة'
+              : 'Learn Arabic numbers in a fun and interactive way'
             }
           </p>
         </motion.div>
