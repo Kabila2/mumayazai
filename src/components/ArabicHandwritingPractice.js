@@ -79,6 +79,7 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
       brushColor: 'Color:',
       brushSize: 'Size:',
       close: 'Close',
+      back: 'Back',
       congratulations: 'Excellent!',
       completed: 'Letter Completed!'
     },
@@ -110,6 +111,7 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
       brushColor: 'اللون:',
       brushSize: 'الحجم:',
       close: 'إغلاق',
+      back: 'رجوع',
       congratulations: 'ممتاز!',
       completed: 'اكتمل الحرف!'
     }
@@ -317,7 +319,7 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
             fontSize: '1.1rem'
           }}
         >
-          ← {t.close}
+          ← {t.back}
         </motion.button>
       </motion.div>
     );
@@ -338,7 +340,7 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
         <div className="handwriting-practice-header">
           <div className="header-left">
             <button className="back-button" onClick={onClose}>
-              ← {t.close}
+              ← {t.back}
             </button>
             <h2>✍️ {t.title}</h2>
           </div>

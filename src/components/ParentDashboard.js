@@ -94,6 +94,7 @@ import {
 } from 'recharts';
 
 const ParentDashboard = ({
+  userEmail,
   onSignOut,
   t = {},
   language = "en",
@@ -126,7 +127,7 @@ const ParentDashboard = ({
   useEffect(() => {
     const loadData = () => {
       try {
-        const data = getParentData();
+        const data = getParentData(userEmail);
         setParentData(data);
 
         if (data && data.children.length > 0) {
@@ -162,7 +163,7 @@ const ParentDashboard = ({
 
     const result = linkChildToParent(childEmail, childName, parentData.email);
     if (result.success) {
-      const updatedData = getParentData();
+      const updatedData = getParentData(userEmail);
       setParentData(updatedData);
       setShowAddChild(false);
 

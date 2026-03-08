@@ -393,16 +393,194 @@ body {
   border-radius: 0 !important;
 }
 
-/* High Contrast Support */
+/* ═══════════════════════════════════════════
+   HIGH CONTRAST MODE — Dark on Light
+   ═══════════════════════════════════════════ */
+
+/* 1. Override all CSS custom properties */
 .high-contrast {
-  --bg-glass: rgba(255, 255, 255, 0.15);
-  --bg-card: rgba(255, 255, 255, 0.2);
+  --bg-gradient: #f8f8f8;
+  --bg-glass:    #ffffff;
+  --bg-card:     #ffffff;
+  --bg-overlay:  rgba(0, 0, 0, 0.6);
+  --primary:        #4a00c8;
+  --primary-hover:  #3700a0;
+  --primary-light:  #e9d5ff;
+  --secondary:      #b5006e;
+  --accent:         #b45000;
+  --text-color:  #000000;
+  --bg-color:    #ffffff;
+  --link-color:  #0000cc;
+  --shadow-md:   0 2px 8px rgba(0,0,0,0.35);
+  --shadow-lg:   0 4px 16px rgba(0,0,0,0.4);
 }
 
+/* 2. App shell — replace animated gradient with flat white */
+.high-contrast.app-container,
+.high-contrast .app-container {
+  background: #f8f8f8 !important;
+}
+/* Kill the animated radial gradient overlay */
+.high-contrast.app-container::before,
+.high-contrast .app-container::before {
+  display: none !important;
+}
+
+/* 3. Force all text dark */
+.high-contrast,
+.high-contrast h1, .high-contrast h2, .high-contrast h3,
+.high-contrast h4, .high-contrast h5, .high-contrast h6,
+.high-contrast p, .high-contrast span, .high-contrast label,
+.high-contrast li, .high-contrast td, .high-contrast th,
+.high-contrast div, .high-contrast section, .high-contrast article {
+  color: #000000 !important;
+}
+
+/* 4. Cards, modals, panels — solid white with a visible border */
+.high-contrast [class*="card"],
+.high-contrast [class*="modal"],
+.high-contrast [class*="panel"],
+.high-contrast [class*="container"],
+.high-contrast [class*="section"],
+.high-contrast [class*="box"],
+.high-contrast [class*="widget"],
+.high-contrast [class*="overlay"] > div,
+.high-contrast [class*="-header"],
+.high-contrast [class*="-body"],
+.high-contrast [class*="-footer"] {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* 5. Inputs, textareas, selects */
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #444444 !important;
+  opacity: 1 !important;
+}
+
+/* 6. Buttons — light background, dark text, clear border */
+.high-contrast button,
+.high-contrast [class*="btn"],
+.high-contrast [role="button"] {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+.high-contrast button:hover,
+.high-contrast [class*="btn"]:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+/* Keep destructive / primary intent visible */
+.high-contrast [class*="delete-btn"]:not(:hover),
+.high-contrast [class*="remove-btn"]:not(:hover) {
+  border-color: #cc0000 !important;
+  color: #cc0000 !important;
+}
+
+/* 7. Navigation dock */
+.high-contrast .mode-switcher button,
+.high-contrast .dock-btn {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+.high-contrast .mode-switcher button:hover,
+.high-contrast .dock-btn:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+.high-contrast .mode-switcher button.active,
+.high-contrast .dock-btn.active {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* 8. Placeholder / loading skeleton */
 .high-contrast .placeholder {
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #ffffff;
-  color: #ffffff;
+  background: #e0e0e0 !important;
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+
+/* 9. Chat bubbles */
+.high-contrast [class*="message"][class*="user"],
+.high-contrast [class*="user-message"],
+.high-contrast [class*="sent"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+.high-contrast [class*="message"][class*="ai"],
+.high-contrast [class*="ai-message"],
+.high-contrast [class*="received"],
+.high-contrast [class*="assistant"] {
+  background: #f0f0f0 !important;
+  color: #000000 !important;
+  border: 1px solid #888888 !important;
+}
+
+/* 10. Progress bars */
+.high-contrast [class*="progress-bar"],
+.high-contrast [class*="progress-fill"] {
+  background: #000000 !important;
+}
+.high-contrast [class*="progress-track"],
+.high-contrast [class*="progress-bg"] {
+  background: #cccccc !important;
+  border: 1px solid #000000 !important;
+}
+
+/* 11. Badges and chips */
+.high-contrast [class*="badge"],
+.high-contrast [class*="chip"],
+.high-contrast [class*="tag"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+/* 12. Gradient text — flatten to solid black */
+.high-contrast [style*="background-clip: text"],
+.high-contrast [style*="-webkit-background-clip: text"],
+.high-contrast [class*="gradient-text"] {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: #000000 !important;
+  color: #000000 !important;
+}
+
+/* 13. Emoji-only or icon-only elements — leave untouched */
+.high-contrast [class*="avatar"],
+.high-contrast [class*="emoji"],
+.high-contrast [class*="icon-only"] {
+  color: unset !important;
+}
+
+/* 14. Links */
+.high-contrast a,
+.high-contrast a:visited {
+  color: #0000cc !important;
+  text-decoration: underline !important;
+}
+.high-contrast a:hover {
+  color: #000066 !important;
+}
+
+/* 15. Focus ring — yellow for maximum visibility */
+.high-contrast *:focus-visible {
+  outline: 4px solid #ffcc00 !important;
+  outline-offset: 3px !important;
 }
 
 /* Dyslexia Support - Heavy Font Weight */
@@ -642,17 +820,7 @@ select:focus-visible,
   box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.2);
 }
 
-/* Ensure sufficient color contrast for text */
-.high-contrast {
-  --text-color: #000000;
-  --bg-color: #ffffff;
-  --link-color: #0000ff;
-}
-
-.high-contrast a {
-  color: var(--link-color);
-  text-decoration: underline;
-}
+/* (high-contrast variables and rules consolidated above) */
 
 /* Prefers reduced motion */
 @media (prefers-reduced-motion: reduce) {

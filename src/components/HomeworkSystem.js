@@ -29,7 +29,8 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
       noHomework: 'No homework assignments yet',
       assignedBy: 'Assigned by',
       description: 'Description',
-      close: 'Close'
+      close: 'Close',
+      back: 'Back'
     },
     ar: {
       title: 'نظام الواجبات المنزلية',
@@ -46,7 +47,8 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
       noHomework: 'لا توجد واجبات منزلية حتى الآن',
       assignedBy: 'تعيين من قبل',
       description: 'الوصف',
-      close: 'إغلاق'
+      close: 'إغلاق',
+      back: 'رجوع'
     }
   };
 
@@ -165,7 +167,7 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
         <div className="homework-system-header">
           <div className="header-left">
             <button className="back-button" onClick={onClose}>
-              ← {t.close}
+              ← {t.back}
             </button>
             <h2>📚 {t.title}</h2>
           </div>

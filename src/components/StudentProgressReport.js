@@ -94,10 +94,19 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
       const learningTime = parseFloat(localStorage.getItem(`mumayaz_learning_time_${userEmail}`) || '0');
       const topicsProgress = JSON.parse(localStorage.getItem(`mumayaz_topics_progress_${userEmail}`) || '{}');
 
+      // Filter quiz history by selected time range
+      const now = new Date();
+      const filteredHistory = quizHistory.filter(q => {
+        if (timeRange === 'all' || !q.completedAt) return true;
+        const date = new Date(q.completedAt);
+        const diffDays = (now - date) / (1000 * 60 * 60 * 24);
+        return timeRange === 'week' ? diffDays <= 7 : diffDays <= 30;
+      });
+
       // Calculate statistics
-      const totalQuizzes = quizHistory.length;
+      const totalQuizzes = filteredHistory.length;
       const avgScore = totalQuizzes > 0
-        ? Math.round(quizHistory.reduce((sum, q) => sum + (q.score || 0), 0) / totalQuizzes)
+        ? Math.round(filteredHistory.reduce((sum, q) => sum + (q.score || 0), 0) / totalQuizzes)
         : 0;
 
       // Topics progress
@@ -150,7 +159,7 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
         strengths,
         weaknesses,
         recommendations,
-        recentActivity: quizHistory.slice(-10).reverse()
+        recentActivity: filteredHistory.slice(-10).reverse()
       });
     } catch (error) {
       console.error('Error loading report data:', error);

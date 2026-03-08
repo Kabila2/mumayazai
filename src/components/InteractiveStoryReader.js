@@ -83,6 +83,7 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
       prev: 'Previous',
       finish: 'Finish',
       close: 'Close',
+      back: 'Back',
       readStory: 'Read Story Aloud',
       stopReading: 'Stop Reading',
       textMode: 'Text Mode',
@@ -95,6 +96,7 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
       prev: 'السابق',
       finish: 'إنهاء',
       close: 'إغلاق',
+      back: 'رجوع',
       readStory: 'اقرأ القصة بصوت عالٍ',
       stopReading: 'إيقاف القراءة',
       textMode: 'وضع النص',
@@ -107,6 +109,7 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
     prev: 'Previous',
     finish: 'Finish',
     close: 'Close',
+    back: 'Back',
     readStory: 'Read Story Aloud',
     stopReading: 'Stop Reading',
     textMode: 'Text Mode',
@@ -218,7 +221,7 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
           <div className="story-reader-header">
             <div className="header-left">
               <button className="back-button" onClick={onClose}>
-                ← {t.close}
+                ← {t.back}
               </button>
               <h2>📚 {t.title}</h2>
             </div>
@@ -280,7 +283,7 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
         <div className="story-reader-header">
           <div className="header-left">
             <button className="back-button" onClick={() => setSelectedStory(null)}>
-              ← {t.close}
+              ← {t.back}
             </button>
             <h2>📖 {language === 'ar' ? selectedStory.title : selectedStory.titleEn}</h2>
           </div>

@@ -1,6 +1,7 @@
 // src/utils/parentTrackingUtils.js - Parent Mode Tracking and Management Utilities
 
 const PARENT_DATA_KEY = "mumayaz_parent_data";
+const getParentKey = (email) => `mumayaz_parent_data_${email.toLowerCase()}`;
 const CHILD_ACTIVITY_KEY = "mumayaz_child_activity";
 const PARENT_CHILD_LINKS_KEY = "mumayaz_parent_child_links";
 
@@ -37,7 +38,7 @@ export const initializeParentAccount = (parentEmail, parentName) => {
       }
     };
 
-    localStorage.setItem(PARENT_DATA_KEY, JSON.stringify(parentData));
+    localStorage.setItem(getParentKey(parentEmail), JSON.stringify(parentData));
     return { success: true, parentId: parentData.id };
   } catch (error) {
     console.error("Error initializing parent account:", error);
@@ -48,10 +49,15 @@ export const initializeParentAccount = (parentEmail, parentName) => {
 /**
  * Get parent data
  */
-export const getParentData = () => {
+export const getParentData = (parentEmail) => {
   try {
-    const stored = localStorage.getItem(PARENT_DATA_KEY);
-    return stored ? JSON.parse(stored) : null;
+    // Use email-keyed storage; fall back to legacy single-key for migration
+    if (parentEmail) {
+      const stored = localStorage.getItem(getParentKey(parentEmail));
+      if (stored) return JSON.parse(stored);
+    }
+    const legacy = localStorage.getItem(PARENT_DATA_KEY);
+    return legacy ? JSON.parse(legacy) : null;
   } catch (error) {
     console.error("Error loading parent data:", error);
     return null;
@@ -76,7 +82,7 @@ const getUserFromSystem = (email) => {
  */
 export const linkChildToParent = (childEmail, childName, parentEmail) => {
   try {
-    const parentData = getParentData();
+    const parentData = getParentData(parentEmail);
     if (!parentData) {
       return { success: false, error: "Parent account not found" };
     }
@@ -147,7 +153,7 @@ export const linkChildToParent = (childEmail, childName, parentEmail) => {
     };
 
     parentData.children.push(childData);
-    localStorage.setItem(PARENT_DATA_KEY, JSON.stringify(parentData));
+    localStorage.setItem(getParentKey(parentEmail), JSON.stringify(parentData));
 
     // Create parent-child link record
     const links = getParentChildLinks();

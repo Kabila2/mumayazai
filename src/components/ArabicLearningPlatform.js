@@ -1524,6 +1524,7 @@ const ArabicLearningPlatform = ({
             >
               <ClassManagement
                 userEmail={getCurrentUserEmail()}
+                userRole={getCurrentUserRole()}
                 language={language}
                 onClose={() => setCurrentSection('home')}
               />
