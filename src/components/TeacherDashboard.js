@@ -68,7 +68,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Gift,
-  Zap
+  Zap,
+  Sun,
+  Moon
 } from 'lucide-react';
 import {
   getTeacherData,
@@ -112,6 +114,7 @@ const TeacherDashboard = ({
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('mumayaz_dark_mode') === 'true');
 
   // Modals
   const [showCreateClass, setShowCreateClass] = useState(false);
@@ -297,8 +300,11 @@ const TeacherDashboard = ({
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
-        p: { xs: 2, md: 3 }
+        background: darkMode
+          ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
+          : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+        p: { xs: 2, md: 3 },
+        transition: 'background 0.3s ease'
       }}
     >
       <Container maxWidth="xl">
@@ -313,8 +319,9 @@ const TeacherDashboard = ({
             sx={{
               mb: 3,
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)'
+              background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              color: darkMode ? '#f1f5f9' : 'inherit'
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -330,7 +337,7 @@ const TeacherDashboard = ({
                     <School size={28} />
                   </Avatar>
                   <Box>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant="h5" fontWeight={700} sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>
                       Teacher Dashboard
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -351,6 +358,21 @@ const TeacherDashboard = ({
                   >
                     Create Class
                   </Button>
+
+                  <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
+                    <IconButton onClick={() => {
+                      const next = !darkMode;
+                      setDarkMode(next);
+                      localStorage.setItem('mumayaz_dark_mode', next.toString());
+                      if (next) {
+                        document.documentElement.classList.add('dark-mode');
+                      } else {
+                        document.documentElement.classList.remove('dark-mode');
+                      }
+                    }} color="primary">
+                      {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </IconButton>
+                  </Tooltip>
 
                   <Tooltip title="Sign Out">
                     <IconButton
@@ -383,14 +405,15 @@ const TeacherDashboard = ({
                 elevation={0}
                 sx={{
                   borderRadius: 4,
-                  background: 'rgba(255, 255, 255, 0.95)',
+                  background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
-                  height: 'fit-content'
+                  height: 'fit-content',
+                  color: darkMode ? '#f1f5f9' : 'inherit'
                 }}
               >
                 <CardContent>
                   <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight={600}>
+                    <Typography variant="h6" fontWeight={600} sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>
                       My Classes
                     </Typography>
                     <Chip
@@ -494,15 +517,16 @@ const TeacherDashboard = ({
                 elevation={0}
                 sx={{
                   borderRadius: 4,
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(20px)'
+                  background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  color: darkMode ? '#f1f5f9' : 'inherit'
                 }}
               >
                 <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                   {!selectedClass ? (
                     <Box sx={{ textAlign: 'center', py: 8 }}>
                       <BarChart3 size={64} color="#d1d5db" style={{ margin: '0 auto 16px' }} />
-                      <Typography variant="h5" gutterBottom>Select a Class</Typography>
+                      <Typography variant="h5" gutterBottom sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>Select a Class</Typography>
                       <Typography variant="body2" color="text.secondary">
                         Choose a class from the sidebar to manage students and award points
                       </Typography>

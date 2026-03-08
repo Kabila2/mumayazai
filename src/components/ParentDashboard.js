@@ -107,7 +107,7 @@ const ParentDashboard = ({
   const [showAddChild, setShowAddChild] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('mumayaz_dark_mode') === 'true');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -292,8 +292,9 @@ const ParentDashboard = ({
             sx={{
               mb: 3,
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)'
+              background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              color: darkMode ? '#f1f5f9' : 'inherit'
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -309,7 +310,7 @@ const ParentDashboard = ({
                     <Users size={28} />
                   </Avatar>
                   <Box>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant="h5" fontWeight={700} sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>
                       Parent Dashboard
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -326,7 +327,16 @@ const ParentDashboard = ({
                   </Tooltip>
 
                   <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
-                    <IconButton onClick={() => setDarkMode(!darkMode)} color="primary">
+                    <IconButton onClick={() => {
+                      const next = !darkMode;
+                      setDarkMode(next);
+                      localStorage.setItem('mumayaz_dark_mode', next.toString());
+                      if (next) {
+                        document.documentElement.classList.add('dark-mode');
+                      } else {
+                        document.documentElement.classList.remove('dark-mode');
+                      }
+                    }} color="primary">
                       {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                     </IconButton>
                   </Tooltip>
@@ -383,14 +393,15 @@ const ParentDashboard = ({
                 elevation={0}
                 sx={{
                   borderRadius: 4,
-                  background: 'rgba(255, 255, 255, 0.95)',
+                  background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
-                  height: 'fit-content'
+                  height: 'fit-content',
+                  color: darkMode ? '#f1f5f9' : 'inherit'
                 }}
               >
                 <CardContent>
                   <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight={600}>
+                    <Typography variant="h6" fontWeight={600} sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>
                       Your Children
                     </Typography>
                     <Chip
@@ -526,15 +537,16 @@ const ParentDashboard = ({
                 elevation={0}
                 sx={{
                   borderRadius: 4,
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(20px)'
+                  background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  color: darkMode ? '#f1f5f9' : 'inherit'
                 }}
               >
                 <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                   {!selectedChild ? (
                     <Box sx={{ textAlign: 'center', py: 8 }}>
                       <BarChart3 size={64} color="#d1d5db" style={{ margin: '0 auto 16px' }} />
-                      <Typography variant="h5" gutterBottom>Select a Child</Typography>
+                      <Typography variant="h5" gutterBottom sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>Select a Child</Typography>
                       <Typography variant="body2" color="text.secondary">
                         Choose a child from the sidebar to view their learning progress
                       </Typography>

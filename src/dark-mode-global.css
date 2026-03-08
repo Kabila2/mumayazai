@@ -1,0 +1,267 @@
+/* ============================================================
+   Global dark-mode overrides for components that only define
+   light-mode colours. Activated when <html> has .dark-mode.
+   ============================================================ */
+
+/* ---- Arabic Alphabet Learning ---- */
+.dark-mode .arabic-alphabet-learning {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .alphabet-header,
+.dark-mode .alphabet-card,
+.dark-mode .letter-card,
+.dark-mode .alphabet-section {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .alphabet-nav,
+.dark-mode .alphabet-toolbar {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ---- Arabic Colors Learning ---- */
+.dark-mode .arabic-colors-learning {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .modern-color-card {
+  background: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .colors-header,
+.dark-mode .colors-toolbar {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ---- Arabic Words Learning ---- */
+.dark-mode .arabic-words-learning {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .arabic-words-learning .word-card,
+.dark-mode .arabic-words-learning .words-section,
+.dark-mode .arabic-words-learning .category-card {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .arabic-words-learning h1,
+.dark-mode .arabic-words-learning h2,
+.dark-mode .arabic-words-learning h3,
+.dark-mode .arabic-words-learning p {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Arabic Sentences Learning ---- */
+.dark-mode .arabic-sentences-learning {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .arabic-sentences-learning .category-card,
+.dark-mode .arabic-sentences-learning .sentence-card,
+.dark-mode .arabic-sentences-learning .sentences-section {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .arabic-sentences-learning h1,
+.dark-mode .arabic-sentences-learning h2,
+.dark-mode .arabic-sentences-learning h3,
+.dark-mode .arabic-sentences-learning p {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Arabic Word Builder ---- */
+.dark-mode .arabic-word-builder {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .arabic-word-builder .word-card,
+.dark-mode .arabic-word-builder .builder-section,
+.dark-mode .arabic-word-builder .letter-tile {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .arabic-word-builder h1,
+.dark-mode .arabic-word-builder h2,
+.dark-mode .arabic-word-builder h3,
+.dark-mode .arabic-word-builder p {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Quiz Center ---- */
+.dark-mode .quiz-center {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .quiz-center .quiz-type-card,
+.dark-mode .quiz-center .quiz-card,
+.dark-mode .quiz-center .quiz-header,
+.dark-mode .quiz-center .quiz-option {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .quiz-center .quiz-option:hover {
+  background: var(--hover-bg) !important;
+}
+
+.dark-mode .quiz-center h1,
+.dark-mode .quiz-center h2,
+.dark-mode .quiz-center h3,
+.dark-mode .quiz-center p,
+.dark-mode .quiz-center label {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Sentence Builder ---- */
+.dark-mode .sentence-builder {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .sentence-builder .builder-progress,
+.dark-mode .sentence-builder .word-bank,
+.dark-mode .sentence-builder .drop-zone,
+.dark-mode .sentence-builder .word-chip {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .sentence-builder h1,
+.dark-mode .sentence-builder h2,
+.dark-mode .sentence-builder h3,
+.dark-mode .sentence-builder p {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Letter Word Builder ---- */
+.dark-mode .letter-word-builder {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .letter-word-builder .word-hint,
+.dark-mode .letter-word-builder .letter-slot,
+.dark-mode .letter-word-builder .builder-card {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .letter-word-builder h1,
+.dark-mode .letter-word-builder h2,
+.dark-mode .letter-word-builder h3,
+.dark-mode .letter-word-builder p {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Memory Game ---- */
+.dark-mode .memory-game-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .memory-header,
+.dark-mode .memory-card,
+.dark-mode .memory-stats {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ---- Points Tracker ---- */
+.dark-mode .points-tracker {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .points-tracker .main-stats-card,
+.dark-mode .points-tracker .stat-item {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .points-tracker h1,
+.dark-mode .points-tracker h2,
+.dark-mode .points-tracker h3,
+.dark-mode .points-tracker p,
+.dark-mode .points-tracker span {
+  color: var(--text-primary) !important;
+}
+
+/* ---- Point Notification ---- */
+.dark-mode .point-notifications-container .point-notification {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ---- Collaborative Drawing Board ---- */
+.dark-mode .collaborative-drawing-board {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.dark-mode .drawing-toolbar,
+.dark-mode .drawing-controls {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ---- Explore Modal ---- */
+.dark-mode .explore-modal {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .explore-header {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ---- General: any white/light card inside dark mode ---- */
+.dark-mode [style*="background: #fff"],
+.dark-mode [style*="background: white"],
+.dark-mode [style*="background-color: white"],
+.dark-mode [style*="background-color: #fff"],
+.dark-mode [style*="background-color: #ffffff"],
+.dark-mode [style*="background: #ffffff"] {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ---- General: any light gradient backgrounds ---- */
+.dark-mode [style*="background: linear-gradient(135deg, #f"] {
+  background: var(--bg-secondary) !important;
+}
+
+/* ---- General text inside dark mode containers ---- */
+.dark-mode [style*="color: #1f2937"],
+.dark-mode [style*="color: #374151"],
+.dark-mode [style*="color: #111827"],
+.dark-mode [style*="color: #000"] {
+  color: var(--text-primary) !important;
+}

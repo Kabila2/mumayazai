@@ -24,6 +24,7 @@ import {
   initializeTeacherAccount
 } from "./utils/teacherUtils";
 import "./App.css";
+import "./dark-mode-global.css";
 
 /* ---------- LocalStorage keys ---------- */
 const USERS_KEY = "mumayaz_users";
