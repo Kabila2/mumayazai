@@ -850,6 +850,56 @@ const ArabicLearningPlatform = ({
             </p>
           </motion.div>
         )}
+
+        {/* Teacher Dashboard shortcut card */}
+        {getCurrentUserRole() === 'teacher' && (
+          <motion.div
+            className="section-card teacherdashboard-card"
+            onClick={() => handleSectionChange('teacherdashboard')}
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.2 }}
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff' }}
+          >
+            <div className="card-icon">🖥️</div>
+            <h3 className="card-title" style={{ color: '#fff' }}>
+              {language === 'ar' ? 'لوحة تحكم المعلم' : 'Teacher Dashboard'}
+            </h3>
+            <p className="card-description" style={{ color: 'rgba(255,255,255,0.85)' }}>
+              {language === 'ar'
+                ? 'إدارة الطلاب، المهام، والتحليلات'
+                : 'Manage students, assignments, and analytics'
+              }
+            </p>
+          </motion.div>
+        )}
+
+        {/* Parent Dashboard shortcut card */}
+        {getCurrentUserRole() === 'parent' && (
+          <motion.div
+            className="section-card parentdashboard-card"
+            onClick={() => handleSectionChange('parentdashboard')}
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.2 }}
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff' }}
+          >
+            <div className="card-icon">👨‍👩‍👧‍👦</div>
+            <h3 className="card-title" style={{ color: '#fff' }}>
+              {language === 'ar' ? 'لوحة تحكم ولي الأمر' : 'Parent Dashboard'}
+            </h3>
+            <p className="card-description" style={{ color: 'rgba(255,255,255,0.85)' }}>
+              {language === 'ar'
+                ? 'تابع تقدم أطفالك وإدارة وقت الشاشة'
+                : 'Monitor your children\'s progress and screen time'
+              }
+            </p>
+          </motion.div>
+        )}
       </div>
 
       <motion.div

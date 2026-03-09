@@ -298,53 +298,33 @@ export default function App() {
     );
   }
 
-  // All users (students, teachers, parents) get the same learning platform
-  // Teachers and parents get EXTRA features (communication) built into the platform
-  const userRole = localStorage.getItem("mumayaz_role");
+  // All users (students, teachers, parents) go through ArabicLearningPlatform.
+  // Teachers get a "Teacher Dashboard" nav item; parents get a "Parent Dashboard" nav item.
+  // All roles see the full set of learning features.
 
   let content;
   if (view === "chat") {
-    if (userRole === "teacher") {
-      content = (
-        <TeacherDashboard
-          onSignOut={handleSignOut}
-          t={t}
-          language={appLanguage}
-          reducedMotion={reducedMotion}
-        />
-      );
-    } else if (userRole === "parent") {
-      content = (
-        <ParentDashboard
-          onSignOut={handleSignOut}
-          t={t}
-          language={appLanguage}
-          reducedMotion={reducedMotion}
-        />
-      );
-    } else {
-      content = (
-        <ArabicLearningPlatform
-          t={t}
-          language={appLanguage}
-          fontSize={fontSize}
-          highContrast={highContrast}
-          reducedMotion={reducedMotion}
-          assistantTitle={assistantTitle}
-          currentPreference={currentPreference}
-          onSignOut={handleSignOut}
-          voices={voices}
-          selectedVoice={selectedVoice}
-          setSelectedVoice={setSelectedVoice}
-          speed={speed}
-          setSpeed={setSpeed}
-          pitch={pitch}
-          setPitch={setPitch}
-          setLanguage={setLanguage}
-          speak={speak}
-        />
-      );
-    }
+    content = (
+      <ArabicLearningPlatform
+        t={t}
+        language={appLanguage}
+        fontSize={fontSize}
+        highContrast={highContrast}
+        reducedMotion={reducedMotion}
+        assistantTitle={assistantTitle}
+        currentPreference={currentPreference}
+        onSignOut={handleSignOut}
+        voices={voices}
+        selectedVoice={selectedVoice}
+        setSelectedVoice={setSelectedVoice}
+        speed={speed}
+        setSpeed={setSpeed}
+        pitch={pitch}
+        setPitch={setPitch}
+        setLanguage={setLanguage}
+        speak={speak}
+      />
+    );
   } else if (view === "profile") {
     content = (
       <div className="placeholder" style={{ position: "relative" }}>
