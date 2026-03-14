@@ -374,18 +374,14 @@ const TeacherDashboard = ({
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Sign Out">
-                    <IconButton
-                      onClick={onSignOut}
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'error.main',
-                        color: 'error.main'
-                      }}
-                    >
-                      <LogOut size={20} />
-                    </IconButton>
-                  </Tooltip>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<LogOut size={18} />}
+                    onClick={onSignOut}
+                  >
+                    Sign Out
+                  </Button>
                 </Box>
               </Box>
             </CardContent>
@@ -561,20 +557,15 @@ const TeacherDashboard = ({
                             </Button>
                           </Tooltip>
 
-                          <Tooltip title="Delete Class">
-                            <IconButton
-                              onClick={() => handleDeleteClass(selectedClass.id, selectedClass.name)}
-                              sx={{
-                                border: '1px solid',
-                                borderColor: 'error.main',
-                                color: 'error.main',
-                                '&:hover': { background: 'rgba(239, 68, 68, 0.08)' }
-                              }}
-                              size="small"
-                            >
-                              <Trash2 size={16} />
-                            </IconButton>
-                          </Tooltip>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            startIcon={<Trash2 size={16} />}
+                            onClick={() => handleDeleteClass(selectedClass.id, selectedClass.name)}
+                          >
+                            Delete Class
+                          </Button>
                         </Box>
                       </Box>
 

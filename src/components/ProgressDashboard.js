@@ -75,6 +75,9 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
 
   useEffect(() => {
     loadStatistics();
+    // Poll every 5 seconds so charts update when points are gained
+    const interval = setInterval(loadStatistics, 5000);
+    return () => clearInterval(interval);
   }, [userEmail, timeRange]);
 
   const loadStatistics = () => {

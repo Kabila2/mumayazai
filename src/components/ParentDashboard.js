@@ -353,27 +353,22 @@ const ParentDashboard = ({
                     Add Child
                   </Button>
 
-                  <Tooltip title="Settings">
-                    <IconButton
-                      onClick={() => setShowSettings(true)}
-                      sx={{ border: '1px solid', borderColor: 'divider' }}
-                    >
-                      <Settings size={20} />
-                    </IconButton>
-                  </Tooltip>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Settings size={18} />}
+                    onClick={() => setShowSettings(true)}
+                  >
+                    Settings
+                  </Button>
 
-                  <Tooltip title="Sign Out">
-                    <IconButton
-                      onClick={onSignOut}
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'error.main',
-                        color: 'error.main'
-                      }}
-                    >
-                      <LogOut size={20} />
-                    </IconButton>
-                  </Tooltip>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<LogOut size={18} />}
+                    onClick={onSignOut}
+                  >
+                    Sign Out
+                  </Button>
                 </Box>
               </Box>
             </CardContent>
@@ -565,19 +560,15 @@ const ParentDashboard = ({
                           </Typography>
                         </Box>
 
-                        <Tooltip title="Remove Child">
-                          <IconButton
-                            onClick={() => handleRemoveChild(selectedChild.email, selectedChild.name)}
-                            sx={{
-                              border: '1px solid',
-                              borderColor: 'error.main',
-                              color: 'error.main',
-                              '&:hover': { background: 'rgba(239, 68, 68, 0.08)' }
-                            }}
-                          >
-                            <Trash2 size={18} />
-                          </IconButton>
-                        </Tooltip>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          startIcon={<Trash2 size={16} />}
+                          onClick={() => handleRemoveChild(selectedChild.email, selectedChild.name)}
+                        >
+                          Remove Child
+                        </Button>
                       </Box>
 
                       <Divider sx={{ mb: 3 }} />

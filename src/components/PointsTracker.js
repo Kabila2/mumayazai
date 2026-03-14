@@ -21,8 +21,15 @@ const PointsTracker = ({ language }) => {
 
   useEffect(() => {
     loadUserStats();
-    loadLeaderboard();
+    // Poll every 3 seconds so points/stats update in real time
+    const interval = setInterval(loadUserStats, 3000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Rebuild leaderboard whenever user's points or rank changes
+  useEffect(() => {
+    loadLeaderboard();
+  }, [userStats.totalPoints, userStats.rank, language]);
 
   const loadUserStats = () => {
     // Load from all different sources
