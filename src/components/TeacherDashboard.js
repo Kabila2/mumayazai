@@ -1,7 +1,6 @@
-// src/components/TeacherDashboard.js - Modern Teacher Dashboard with ClassDojo-like Features
+// src/components/TeacherDashboard.js - Clean, light teacher dashboard
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Card,
@@ -21,22 +20,13 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Skeleton,
   Tooltip,
-  Badge,
-  useTheme,
-  useMediaQuery,
   Container,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
-  ListItemAvatar,
   Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -44,123 +34,104 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  ButtonGroup
+  InputAdornment
 } from '@mui/material';
 import {
   Users,
   UserPlus,
-  Settings,
-  LogOut,
+  ArrowLeft,
   BookOpen,
   Award,
-  TrendingUp,
   Plus,
   Trash2,
-  Edit,
   School,
   BarChart3,
   Star,
   Trophy,
-  Sparkles,
   Target,
-  Calendar,
   Clock,
   ThumbsUp,
   ThumbsDown,
   Gift,
   Zap,
-  Sun,
-  Moon
+  Copy,
+  Check,
+  Search
 } from 'lucide-react';
 import {
   getTeacherData,
   createClass,
   getTeacherClasses,
-  getClass,
   enrollStudent,
   removeStudentFromClass,
   awardPoints,
   getClassLeaderboard,
-  getStudentInClass,
   getClassStatistics,
-  deleteClass,
-  updateTeacherSettings
+  deleteClass
 } from '../utils/teacherUtils';
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+
+const ACCENT = '#4f46e5';
+const ACCENT_SOFT = '#eef2ff';
+const TEXT = '#111827';
+const TEXT_MUTED = '#6b7280';
+const BORDER = '#e5e7eb';
+const SURFACE = '#ffffff';
+const BG = '#f9fafb';
+
+const cardSx = {
+  borderRadius: 2,
+  border: `1px solid ${BORDER}`,
+  boxShadow: 'none',
+  background: SURFACE
+};
 
 const TeacherDashboard = ({
+  onClose,
   onSignOut,
-  t = {},
-  language = "en",
-  reducedMotion = false
+  language = 'en'
 }) => {
   const [teacherData, setTeacherData] = useState(null);
   const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedClassId, setSelectedClassId] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('mumayaz_dark_mode') === 'true');
 
-  // Modals
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showAwardPoints, setShowAwardPoints] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [codeCopied, setCodeCopied] = useState(false);
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const selectedClassIdRef = useRef(null);
 
-  // Modern color palette
-  const colors = {
-    primary: ['#6366f1', '#8b5cf6', '#a855f7', '#c026d3'],
-    success: ['#10b981', '#059669'],
-    warning: ['#f59e0b', '#d97706'],
-    danger: ['#ef4444', '#dc2626'],
-    info: ['#3b82f6', '#2563eb']
-  };
-
-  // Load teacher data and classes
+  // Keep ref in sync so the interval reads the latest selected id without re-running
   useEffect(() => {
-    const loadData = () => {
-      try {
-        const data = getTeacherData();
-        setTeacherData(data);
+    selectedClassIdRef.current = selectedClassId;
+  }, [selectedClassId]);
 
-        if (data) {
-          const teacherClasses = getTeacherClasses(data.email);
-          setClasses(teacherClasses);
+  const reload = useCallback(() => {
+    const data = getTeacherData();
+    setTeacherData(data);
+    if (!data) return;
+    const list = getTeacherClasses(data.email);
+    setClasses(list);
+    // Auto-select first class if none selected
+    if (!selectedClassIdRef.current && list.length > 0) {
+      setSelectedClassId(list[0].id);
+    }
+  }, []);
 
-          if (!selectedClass && teacherClasses.length > 0) {
-            setSelectedClass(teacherClasses[0]);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading teacher data:', error);
-        showSnackbar('Error loading dashboard data', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-    const interval = setInterval(loadData, 30000);
+  // Initial load + light auto-refresh (30s). Does NOT depend on selected class
+  // so the interval is created once and selecting a class doesn't kill it.
+  useEffect(() => {
+    reload();
+    const interval = setInterval(reload, 30000);
     return () => clearInterval(interval);
-  }, [selectedClass]);
+  }, [reload]);
+
+  const selectedClass = selectedClassId
+    ? classes.find(c => c.id === selectedClassId) || null
+    : null;
 
   const showSnackbar = (message, severity = 'info') => {
     setSnackbar({ open: true, message, severity });
@@ -168,12 +139,12 @@ const TeacherDashboard = ({
 
   const handleCreateClass = (className, subject, gradeLevel) => {
     if (!teacherData) return;
-
     const result = createClass(teacherData.email, className, subject, gradeLevel);
     if (result.success) {
-      setClasses([...classes, result.class]);
       setShowCreateClass(false);
-      showSnackbar('Class created successfully!', 'success');
+      setSelectedClassId(result.classId);
+      reload();
+      showSnackbar('Class created', 'success');
     } else {
       showSnackbar(result.error || 'Failed to create class', 'error');
     }
@@ -181,14 +152,11 @@ const TeacherDashboard = ({
 
   const handleAddStudent = (studentEmail) => {
     if (!selectedClass) return;
-
     const result = enrollStudent(selectedClass.id, studentEmail);
     if (result.success) {
-      // Reload class data
-      const updatedClass = getClass(selectedClass.id);
-      setSelectedClass(updatedClass);
       setShowAddStudent(false);
-      showSnackbar('Student enrolled successfully!', 'success');
+      reload();
+      showSnackbar('Student enrolled', 'success');
     } else {
       showSnackbar(result.error || 'Failed to enroll student', 'error');
     }
@@ -196,15 +164,12 @@ const TeacherDashboard = ({
 
   const handleAwardPoints = (studentEmail, points, reason, category) => {
     if (!selectedClass) return;
-
     const result = awardPoints(selectedClass.id, studentEmail, points, reason, category);
     if (result.success) {
-      // Reload class data
-      const updatedClass = getClass(selectedClass.id);
-      setSelectedClass(updatedClass);
       setShowAwardPoints(false);
       setSelectedStudent(null);
-      showSnackbar(`${points > 0 ? 'Awarded' : 'Deducted'} ${Math.abs(points)} points!`, 'success');
+      reload();
+      showSnackbar(`${points > 0 ? '+' : ''}${points} points`, points > 0 ? 'success' : 'warning');
     } else {
       showSnackbar(result.error || 'Failed to award points', 'error');
     }
@@ -212,81 +177,51 @@ const TeacherDashboard = ({
 
   const handleRemoveStudent = (studentEmail, studentName) => {
     if (!selectedClass) return;
-
-    if (window.confirm(`Remove ${studentName} from this class?`)) {
-      const result = removeStudentFromClass(selectedClass.id, studentEmail);
-      if (result.success) {
-        const updatedClass = getClass(selectedClass.id);
-        setSelectedClass(updatedClass);
-        showSnackbar('Student removed from class', 'success');
-      } else {
-        showSnackbar('Failed to remove student', 'error');
-      }
+    if (!window.confirm(`Remove ${studentName} from this class?`)) return;
+    const result = removeStudentFromClass(selectedClass.id, studentEmail);
+    if (result.success) {
+      reload();
+      showSnackbar('Student removed', 'success');
+    } else {
+      showSnackbar('Failed to remove student', 'error');
     }
   };
 
   const handleDeleteClass = (classId, className) => {
     if (!teacherData) return;
-
-    if (window.confirm(`Delete class "${className}"? This action cannot be undone.`)) {
-      const result = deleteClass(classId, teacherData.email);
-      if (result.success) {
-        setClasses(classes.filter(c => c.id !== classId));
-        if (selectedClass?.id === classId) {
-          setSelectedClass(null);
-        }
-        showSnackbar('Class deleted successfully', 'success');
-      } else {
-        showSnackbar(result.error || 'Failed to delete class', 'error');
+    if (!window.confirm(`Delete class "${className}"? This cannot be undone.`)) return;
+    const result = deleteClass(classId, teacherData.email);
+    if (result.success) {
+      if (selectedClassId === classId) {
+        setSelectedClassId(null);
       }
+      reload();
+      showSnackbar('Class deleted', 'success');
+    } else {
+      showSnackbar(result.error || 'Failed to delete class', 'error');
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          p: 3
-        }}
-      >
-        <Container maxWidth="xl">
-          <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 3, mb: 3 }} />
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={3}>
-              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3 }} />
-            </Grid>
-            <Grid item xs={12} md={9}>
-              <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3 }} />
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-    );
-  }
+  const handleCopyCode = () => {
+    if (!selectedClass?.classCode) return;
+    navigator.clipboard?.writeText(selectedClass.classCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 1500);
+  };
 
   if (!teacherData) {
     return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <Card sx={{ maxWidth: 400, p: 4, textAlign: 'center' }}>
-          <School size={64} color="#ef4444" style={{ margin: '0 auto 16px' }} />
-          <Typography variant="h5" gutterBottom>Teacher Account Not Found</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            We couldn't find your teacher account. Please sign in again.
+      <Box sx={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+        <Card sx={{ ...cardSx, maxWidth: 420, p: 4, textAlign: 'center' }}>
+          <School size={40} color={ACCENT} style={{ margin: '0 auto 12px' }} />
+          <Typography variant="h6" gutterBottom sx={{ color: TEXT }}>Teacher account not found</Typography>
+          <Typography variant="body2" sx={{ color: TEXT_MUTED, mb: 3 }}>
+            We couldn't load your teacher data. Please sign in again.
           </Typography>
           <Button
             variant="contained"
-            startIcon={<LogOut />}
-            onClick={onSignOut}
+            onClick={onSignOut || onClose}
+            sx={{ background: ACCENT, '&:hover': { background: '#4338ca' }, textTransform: 'none' }}
             fullWidth
           >
             Back to Sign In
@@ -297,328 +232,196 @@ const TeacherDashboard = ({
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: darkMode
-          ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
-          : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
-        p: { xs: 2, md: 3 },
-        transition: 'background 0.3s ease'
-      }}
-    >
-      <Container maxWidth="xl">
+    <Box sx={{ minHeight: '100vh', background: BG, p: { xs: 2, md: 3 } }}>
+      <Container maxWidth="xl" disableGutters>
         {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card
-            elevation={0}
-            sx={{
-              mb: 3,
-              borderRadius: 4,
-              background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              color: darkMode ? '#f1f5f9' : 'inherit'
-            }}
-          >
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                    }}
-                  >
-                    <School size={28} />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h5" fontWeight={700} sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>
-                      Teacher Dashboard
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Welcome, {teacherData.name}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button
-                    variant="contained"
-                    startIcon={<Plus size={18} />}
-                    onClick={() => setShowCreateClass(true)}
-                    sx={{
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' }
-                    }}
-                  >
-                    Create Class
-                  </Button>
-
-                  <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
-                    <IconButton onClick={() => {
-                      const next = !darkMode;
-                      setDarkMode(next);
-                      localStorage.setItem('mumayaz_dark_mode', next.toString());
-                      if (next) {
-                        document.documentElement.classList.add('dark-mode');
-                      } else {
-                        document.documentElement.classList.remove('dark-mode');
-                      }
-                    }} color="primary">
-                      {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                    </IconButton>
-                  </Tooltip>
-
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<LogOut size={18} />}
-                    onClick={onSignOut}
-                  >
-                    Sign Out
-                  </Button>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Main Content */}
-        <Grid container spacing={3}>
-          {/* Sidebar - Class List */}
-          <Grid item xs={12} md={3}>
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {onClose && (
+              <IconButton onClick={onClose} sx={{ color: TEXT_MUTED }} aria-label="Back to home">
+                <ArrowLeft size={20} />
+              </IconButton>
+            )}
+            <Box>
+              <Typography variant="h6" sx={{ color: TEXT, fontWeight: 600, lineHeight: 1.2 }}>
+                Teacher Dashboard
+              </Typography>
+              <Typography variant="caption" sx={{ color: TEXT_MUTED }}>
+                {teacherData.name}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Plus size={16} />}
+              onClick={() => setShowCreateClass(true)}
+              sx={{ background: ACCENT, '&:hover': { background: '#4338ca' }, textTransform: 'none', boxShadow: 'none' }}
             >
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 4,
-                  background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(20px)',
-                  height: 'fit-content',
-                  color: darkMode ? '#f1f5f9' : 'inherit'
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight={600} sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>
-                      My Classes
+              New Class
+            </Button>
+          </Box>
+        </Box>
+
+        <Grid container spacing={3}>
+          {/* Sidebar */}
+          <Grid item xs={12} md={3}>
+            <Card sx={cardSx}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                  <Typography variant="subtitle2" sx={{ color: TEXT, fontWeight: 600 }}>
+                    Classes
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: TEXT_MUTED }}>
+                    {classes.length}
+                  </Typography>
+                </Box>
+                <Divider sx={{ mb: 1.5 }} />
+                {classes.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <BookOpen size={36} color="#d1d5db" style={{ marginBottom: 8 }} />
+                    <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+                      No classes yet
                     </Typography>
-                    <Chip
-                      label={classes.length}
-                      size="small"
-                      sx={{
-                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                        color: 'white',
-                        fontWeight: 600
-                      }}
-                    />
+                    <Typography variant="caption" sx={{ color: TEXT_MUTED }}>
+                      Click "New Class" to start
+                    </Typography>
                   </Box>
-
-                  {classes.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                      <BookOpen size={48} color="#d1d5db" style={{ marginBottom: 16 }} />
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        No classes created yet
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Click "Create Class" to get started
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <List sx={{ p: 0 }}>
-                      {classes.map((cls, index) => {
-                        const isSelected = selectedClass?.id === cls.id;
-
-                        return (
-                          <motion.div
-                            key={cls.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
+                ) : (
+                  <List dense sx={{ p: 0 }}>
+                    {classes.map(cls => {
+                      const isSelected = selectedClassId === cls.id;
+                      return (
+                        <ListItem key={cls.id} disablePadding sx={{ mb: 0.5 }}>
+                          <ListItemButton
+                            selected={isSelected}
+                            onClick={() => setSelectedClassId(cls.id)}
+                            sx={{
+                              borderRadius: 1.5,
+                              '&.Mui-selected': {
+                                background: ACCENT_SOFT,
+                                '&:hover': { background: ACCENT_SOFT }
+                              }
+                            }}
                           >
-                            <ListItem disablePadding sx={{ mb: 1 }}>
-                              <ListItemButton
-                                selected={isSelected}
-                                onClick={() => setSelectedClass(cls)}
-                                sx={{
-                                  borderRadius: 2,
-                                  background: isSelected
-                                    ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                                    : 'transparent',
-                                  color: isSelected ? 'white' : 'inherit',
-                                  '&:hover': {
-                                    background: isSelected
-                                      ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                                      : 'rgba(99, 102, 241, 0.08)'
-                                  }
-                                }}
-                              >
-                                <ListItemAvatar>
-                                  <Avatar
-                                    sx={{
-                                      background: isSelected
-                                        ? 'rgba(255, 255, 255, 0.2)'
-                                        : 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                                    }}
-                                  >
-                                    <BookOpen size={20} />
-                                  </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText
-                                  primary={
-                                    <Typography variant="body2" fontWeight={600}>
-                                      {cls.name}
-                                    </Typography>
-                                  }
-                                  secondary={
-                                    <Box>
-                                      <Typography variant="caption" sx={{ color: isSelected ? 'rgba(255,255,255,0.8)' : 'text.secondary' }}>
-                                        {cls.subject} • Grade {cls.gradeLevel}
-                                      </Typography>
-                                      <Typography variant="caption" sx={{ display: 'block', color: isSelected ? 'rgba(255,255,255,0.8)' : 'text.secondary' }}>
-                                        {cls.totalStudents || 0} students
-                                      </Typography>
-                                    </Box>
-                                  }
-                                />
-                              </ListItemButton>
-                            </ListItem>
-                          </motion.div>
-                        );
-                      })}
-                    </List>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                            <ListItemText
+                              primary={
+                                <Typography variant="body2" sx={{ color: TEXT, fontWeight: isSelected ? 600 : 500 }}>
+                                  {cls.name}
+                                </Typography>
+                              }
+                              secondary={
+                                <Typography variant="caption" sx={{ color: TEXT_MUTED }}>
+                                  {(cls.totalStudents || cls.students?.length || 0)} students
+                                </Typography>
+                              }
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
           </Grid>
 
-          {/* Main Dashboard Area */}
+          {/* Main */}
           <Grid item xs={12} md={9}>
-            <motion.div
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 4,
-                  background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(20px)',
-                  color: darkMode ? '#f1f5f9' : 'inherit'
-                }}
-              >
-                <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                  {!selectedClass ? (
-                    <Box sx={{ textAlign: 'center', py: 8 }}>
-                      <BarChart3 size={64} color="#d1d5db" style={{ margin: '0 auto 16px' }} />
-                      <Typography variant="h5" gutterBottom sx={{ color: darkMode ? '#f1f5f9' : 'inherit' }}>Select a Class</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Choose a class from the sidebar to manage students and award points
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <>
-                      {/* Class Header */}
-                      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                        <Box>
-                          <Typography variant="h5" fontWeight={700} gutterBottom>
-                            {selectedClass.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            <BookOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                            {selectedClass.subject} • Grade {selectedClass.gradeLevel} • {selectedClass.totalStudents || 0} Students
-                          </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Tooltip title="Add Student">
-                            <Button
-                              variant="contained"
-                              size="small"
-                              startIcon={<UserPlus size={16} />}
-                              onClick={() => setShowAddStudent(true)}
-                              sx={{
-                                background: 'linear-gradient(135deg, #10b981, #059669)',
-                                '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' }
-                              }}
-                            >
-                              Add Student
-                            </Button>
-                          </Tooltip>
-
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            startIcon={<Trash2 size={16} />}
-                            onClick={() => handleDeleteClass(selectedClass.id, selectedClass.name)}
-                          >
-                            Delete Class
-                          </Button>
-                        </Box>
+            <Card sx={cardSx}>
+              <CardContent>
+                {!selectedClass ? (
+                  <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <BarChart3 size={48} color="#d1d5db" style={{ marginBottom: 12 }} />
+                    <Typography variant="body1" sx={{ color: TEXT, fontWeight: 500 }}>
+                      Select a class
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+                      Choose a class from the sidebar, or create your first one
+                    </Typography>
+                  </Box>
+                ) : (
+                  <>
+                    {/* Class header */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+                      <Box>
+                        <Typography variant="h6" sx={{ color: TEXT, fontWeight: 600 }}>
+                          {selectedClass.name}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+                          {selectedClass.subject || '—'} • Grade {selectedClass.gradeLevel || '—'} • {(selectedClass.totalStudents || selectedClass.students?.length || 0)} students
+                        </Typography>
                       </Box>
-
-                      <Divider sx={{ mb: 3 }} />
-
-                      {/* Tabs */}
-                      <Tabs
-                        value={activeTab}
-                        onChange={(e, newValue) => setActiveTab(newValue)}
-                        variant="scrollable"
-                        scrollButtons="auto"
-                        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
-                      >
-                        <Tab icon={<Users size={18} />} label="Students" iconPosition="start" />
-                        <Tab icon={<Trophy size={18} />} label="Leaderboard" iconPosition="start" />
-                        <Tab icon={<BarChart3 size={18} />} label="Analytics" iconPosition="start" />
-                      </Tabs>
-
-                      {/* Tab Content */}
-                      <AnimatePresence mode="wait">
-                        {activeTab === 0 && (
-                          <StudentsTab
-                            selectedClass={selectedClass}
-                            onAwardPoints={(student) => {
-                              setSelectedStudent(student);
-                              setShowAwardPoints(true);
-                            }}
-                            onRemoveStudent={handleRemoveStudent}
-                            colors={colors}
-                          />
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        {selectedClass.classCode && (
+                          <Tooltip title={codeCopied ? 'Copied!' : 'Click to copy join code'}>
+                            <Chip
+                              icon={codeCopied ? <Check size={14} /> : <Copy size={14} />}
+                              label={selectedClass.classCode}
+                              onClick={handleCopyCode}
+                              size="small"
+                              sx={{ borderRadius: 1, background: ACCENT_SOFT, color: ACCENT, fontFamily: 'monospace', fontWeight: 600 }}
+                            />
+                          </Tooltip>
                         )}
-                        {activeTab === 1 && (
-                          <LeaderboardTab
-                            selectedClass={selectedClass}
-                            colors={colors}
-                          />
-                        )}
-                        {activeTab === 2 && (
-                          <AnalyticsTab
-                            selectedClass={selectedClass}
-                            colors={colors}
-                          />
-                        )}
-                      </AnimatePresence>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<UserPlus size={16} />}
+                          onClick={() => setShowAddStudent(true)}
+                          sx={{ textTransform: 'none', borderColor: BORDER, color: TEXT }}
+                        >
+                          Add student
+                        </Button>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteClass(selectedClass.id, selectedClass.name)}
+                          sx={{ color: '#ef4444' }}
+                          aria-label="Delete class"
+                        >
+                          <Trash2 size={16} />
+                        </IconButton>
+                      </Box>
+                    </Box>
+
+                    <Tabs
+                      value={activeTab}
+                      onChange={(e, v) => setActiveTab(v)}
+                      sx={{
+                        mb: 2,
+                        borderBottom: `1px solid ${BORDER}`,
+                        minHeight: 36,
+                        '& .MuiTab-root': { minHeight: 36, textTransform: 'none', color: TEXT_MUTED },
+                        '& .Mui-selected': { color: `${ACCENT} !important` },
+                        '& .MuiTabs-indicator': { background: ACCENT }
+                      }}
+                    >
+                      <Tab label="Students" />
+                      <Tab label="Leaderboard" />
+                      <Tab label="Analytics" />
+                    </Tabs>
+
+                    {activeTab === 0 && (
+                      <StudentsTab
+                        selectedClass={selectedClass}
+                        onAwardPoints={s => { setSelectedStudent(s); setShowAwardPoints(true); }}
+                        onRemoveStudent={handleRemoveStudent}
+                      />
+                    )}
+                    {activeTab === 1 && (
+                      <LeaderboardTab selectedClass={selectedClass} />
+                    )}
+                    {activeTab === 2 && (
+                      <AnalyticsTab selectedClass={selectedClass} />
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
 
-        {/* Modals */}
         <CreateClassModal
           open={showCreateClass}
           onClose={() => setShowCreateClass(false)}
@@ -634,27 +437,23 @@ const TeacherDashboard = ({
 
         <AwardPointsModal
           open={showAwardPoints}
-          onClose={() => {
-            setShowAwardPoints(false);
-            setSelectedStudent(null);
-          }}
+          onClose={() => { setShowAwardPoints(false); setSelectedStudent(null); }}
           onAward={handleAwardPoints}
           student={selectedStudent}
           defaultPoints={teacherData?.settings?.defaultPointValues}
         />
 
-        {/* Snackbar */}
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={4000}
+          autoHideDuration={3000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
           <Alert
             onClose={() => setSnackbar({ ...snackbar, open: false })}
             severity={snackbar.severity}
             variant="filled"
-            sx={{ width: '100%' }}
+            sx={{ borderRadius: 1.5 }}
           >
             {snackbar.message}
           </Alert>
@@ -664,580 +463,344 @@ const TeacherDashboard = ({
   );
 };
 
-// Students Tab Component
-const StudentsTab = ({ selectedClass, onAwardPoints, onRemoveStudent, colors }) => {
-  const students = selectedClass.students || [];
+// Students
+const StudentsTab = ({ selectedClass, onAwardPoints, onRemoveStudent }) => {
+  const [search, setSearch] = useState('');
+  const students = (selectedClass.students || []).filter(s => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (s.name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q);
+  });
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      {students.length === 0 ? (
-        <Card variant="outlined">
-          <CardContent sx={{ textAlign: 'center', py: 6 }}>
-            <Users size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
-            <Typography variant="h6" gutterBottom>
-              No Students Yet
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Add students to this class to start tracking their progress
-            </Typography>
-          </CardContent>
-        </Card>
-      ) : (
-        <Grid container spacing={2}>
-          {students.map((student, index) => (
-            <Grid item xs={12} sm={6} md={4} key={student.email}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card
-                  sx={{
-                    '&:hover': {
-                      boxShadow: 4,
-                      transform: 'translateY(-4px)',
-                      transition: 'all 0.3s ease'
-                    }
-                  }}
-                >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Avatar
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                          mr: 2
-                        }}
-                      >
-                        {student.name.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          {student.name}
-                        </Typography>
-                        <Chip
-                          label={`${student.totalPoints || 0} pts`}
-                          size="small"
-                          sx={{
-                            background: `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`,
-                            color: 'white',
-                            fontWeight: 600
-                          }}
-                        />
-                      </Box>
-                      <IconButton
-                        size="small"
-                        onClick={() => onRemoveStudent(student.email, student.name)}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <Trash2 size={16} />
-                      </IconButton>
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        size="small"
-                        startIcon={<Plus size={16} />}
-                        onClick={() => onAwardPoints(student)}
-                        sx={{
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
-                          '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' }
-                        }}
-                      >
-                        Points
-                      </Button>
-                    </Box>
-
-                    {student.achievements && student.achievements.length > 0 && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Recent Achievements:
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
-                          {student.achievements.slice(-3).map((ach, i) => (
-                            <Tooltip key={i} title={ach.name}>
-                              <span style={{ fontSize: '1.2rem' }}>{ach.icon}</span>
-                            </Tooltip>
-                          ))}
-                        </Box>
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </motion.div>
-  );
-};
-
-// Leaderboard Tab Component
-const LeaderboardTab = ({ selectedClass, colors }) => {
-  const leaderboardResult = getClassLeaderboard(selectedClass.id);
-  const leaderboard = leaderboardResult.success ? leaderboardResult.leaderboard : [];
-
-  const getMedalColor = (rank) => {
-    if (rank === 0) return '#FFD700'; // Gold
-    if (rank === 1) return '#C0C0C0'; // Silver
-    if (rank === 2) return '#CD7F32'; // Bronze
-    return '#9ca3af';
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
-        <Trophy size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-        Class Leaderboard
-      </Typography>
-
-      {leaderboard.length === 0 ? (
-        <Card variant="outlined">
-          <CardContent sx={{ textAlign: 'center', py: 6 }}>
-            <Trophy size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
-            <Typography variant="body2" color="text.secondary">
-              No leaderboard data yet. Award points to students to see rankings!
-            </Typography>
-          </CardContent>
-        </Card>
-      ) : (
-        <TableContainer component={Paper} variant="outlined">
-          <Table>
-            <TableHead>
-              <TableRow sx={{ background: 'rgba(99, 102, 241, 0.05)' }}>
-                <TableCell width={60}>Rank</TableCell>
-                <TableCell>Student</TableCell>
-                <TableCell align="center">Points</TableCell>
-                <TableCell align="center">Achievements</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {leaderboard.map((student, index) => (
-                <TableRow
-                  key={student.email}
-                  sx={{
-                    background: index < 3 ? `linear-gradient(90deg, ${getMedalColor(index)}15, transparent)` : 'transparent',
-                    '&:hover': { background: 'rgba(99, 102, 241, 0.05)' }
-                  }}
-                >
-                  <TableCell>
-                    <Chip
-                      label={index + 1}
-                      size="small"
-                      sx={{
-                        background: getMedalColor(index),
-                        color: 'white',
-                        fontWeight: 700,
-                        minWidth: 32
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          background: `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`
-                        }}
-                      >
-                        {student.name.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Typography variant="body2" fontWeight={500}>
-                        {student.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      label={student.totalPoints}
-                      size="small"
-                      sx={{
-                        background: `linear-gradient(135deg, ${colors.success[0]}, ${colors.success[1]})`,
-                        color: 'white',
-                        fontWeight: 600
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      label={student.achievements}
-                      size="small"
-                      icon={<Award size={14} />}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </motion.div>
-  );
-};
-
-// Analytics Tab Component
-const AnalyticsTab = ({ selectedClass, colors }) => {
-  const stats = getClassStatistics(selectedClass.id);
-
-  if (!stats) {
+  if ((selectedClass.students || []).length === 0) {
     return (
-      <Card variant="outlined">
-        <CardContent sx={{ textAlign: 'center', py: 6 }}>
-          <BarChart3 size={64} color="#d1d5db" style={{ marginBottom: 16 }} />
-          <Typography variant="body2" color="text.secondary">
-            No analytics data available yet
-          </Typography>
-        </CardContent>
-      </Card>
+      <Box sx={{ textAlign: 'center', py: 6, border: `1px dashed ${BORDER}`, borderRadius: 2 }}>
+        <Users size={40} color="#d1d5db" style={{ marginBottom: 8 }} />
+        <Typography variant="body1" sx={{ color: TEXT, fontWeight: 500 }}>No students yet</Typography>
+        <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+          Add students by email, or share the class code with them
+        </Typography>
+      </Box>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
-        <BarChart3 size={20} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-        Class Analytics
-      </Typography>
-
-      <Grid container spacing={3}>
-        {/* Stats Cards */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: `linear-gradient(135deg, ${colors.primary[0]}, ${colors.primary[1]})`, color: 'white' }}>
-            <CardContent>
-              <Users size={24} style={{ marginBottom: 8 }} />
-              <Typography variant="h4" fontWeight={700}>
-                {stats.totalStudents}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Total Students
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: `linear-gradient(135deg, ${colors.success[0]}, ${colors.success[1]})`, color: 'white' }}>
-            <CardContent>
-              <ThumbsUp size={24} style={{ marginBottom: 8 }} />
-              <Typography variant="h4" fontWeight={700}>
-                {stats.totalPointsAwarded}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Points Awarded
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: `linear-gradient(135deg, ${colors.warning[0]}, ${colors.warning[1]})`, color: 'white' }}>
-            <CardContent>
-              <ThumbsDown size={24} style={{ marginBottom: 8 }} />
-              <Typography variant="h4" fontWeight={700}>
-                {stats.totalPointsDeducted}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Points Deducted
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: `linear-gradient(135deg, ${colors.info[0]}, ${colors.info[1]})`, color: 'white' }}>
-            <CardContent>
-              <Target size={24} style={{ marginBottom: 8 }} />
-              <Typography variant="h4" fontWeight={700}>
-                {stats.averagePoints}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Average Points
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Top Student */}
-        {stats.topStudent && (
-          <Grid item xs={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                  <Star size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                  Top Student
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
-                  <Avatar
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      background: 'linear-gradient(135deg, #FFD700, #FFA500)'
-                    }}
-                  >
-                    <Trophy size={24} />
+    <Box>
+      <TextField
+        fullWidth
+        size="small"
+        placeholder="Search students..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search size={16} color={TEXT_MUTED} />
+            </InputAdornment>
+          )
+        }}
+        sx={{ mb: 2 }}
+      />
+      <Grid container spacing={1.5}>
+        {students.map(student => (
+          <Grid item xs={12} sm={6} md={4} key={student.email}>
+            <Card sx={{ ...cardSx, '&:hover': { borderColor: ACCENT } }}>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                  <Avatar sx={{ width: 36, height: 36, background: ACCENT_SOFT, color: ACCENT, fontSize: 14, fontWeight: 600 }}>
+                    {(student.name || '?').charAt(0).toUpperCase()}
                   </Avatar>
-                  <Box>
-                    <Typography variant="h6" fontWeight={600}>
-                      {stats.topStudent.name}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="body2" sx={{ color: TEXT, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {student.name}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {stats.topStudent.totalPoints} points
+                    <Typography variant="caption" sx={{ color: TEXT_MUTED, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {student.email}
                     </Typography>
                   </Box>
+                  <IconButton size="small" onClick={() => onRemoveStudent(student.email, student.name)} sx={{ color: TEXT_MUTED, '&:hover': { color: '#ef4444' } }}>
+                    <Trash2 size={14} />
+                  </IconButton>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Chip label={`${student.totalPoints || 0} pts`} size="small" sx={{ background: ACCENT_SOFT, color: ACCENT, fontWeight: 600, borderRadius: 1 }} />
+                  <Button
+                    size="small"
+                    variant="text"
+                    startIcon={<Zap size={14} />}
+                    onClick={() => onAwardPoints(student)}
+                    sx={{ textTransform: 'none', color: ACCENT }}
+                  >
+                    Award
+                  </Button>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-        )}
+        ))}
       </Grid>
-    </motion.div>
+    </Box>
   );
 };
 
-// Create Class Modal
+// Leaderboard
+const LeaderboardTab = ({ selectedClass }) => {
+  const result = getClassLeaderboard(selectedClass.id);
+  const leaderboard = result.success ? result.leaderboard : [];
+
+  if (leaderboard.length === 0) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 6, border: `1px dashed ${BORDER}`, borderRadius: 2 }}>
+        <Trophy size={40} color="#d1d5db" style={{ marginBottom: 8 }} />
+        <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+          No leaderboard data yet. Award points to see rankings.
+        </Typography>
+      </Box>
+    );
+  }
+
+  const medal = (rank) => {
+    if (rank === 0) return '#fbbf24';
+    if (rank === 1) return '#9ca3af';
+    if (rank === 2) return '#d97706';
+    return TEXT_MUTED;
+  };
+
+  return (
+    <TableContainer component={Paper} sx={{ ...cardSx, boxShadow: 'none' }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ color: TEXT_MUTED, fontWeight: 600, width: 60 }}>#</TableCell>
+            <TableCell sx={{ color: TEXT_MUTED, fontWeight: 600 }}>Student</TableCell>
+            <TableCell sx={{ color: TEXT_MUTED, fontWeight: 600 }} align="right">Points</TableCell>
+            <TableCell sx={{ color: TEXT_MUTED, fontWeight: 600 }} align="right">Badges</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {leaderboard.map((student, i) => (
+            <TableRow key={student.email} hover>
+              <TableCell sx={{ color: medal(i), fontWeight: 700 }}>{i + 1}</TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ width: 28, height: 28, background: ACCENT_SOFT, color: ACCENT, fontSize: 12, fontWeight: 600 }}>
+                    {(student.name || '?').charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Typography variant="body2" sx={{ color: TEXT }}>{student.name}</Typography>
+                </Box>
+              </TableCell>
+              <TableCell align="right" sx={{ color: TEXT, fontWeight: 600 }}>{student.totalPoints}</TableCell>
+              <TableCell align="right" sx={{ color: TEXT_MUTED }}>
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                  <Award size={14} /> {student.achievements}
+                </Box>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
+// Analytics
+const AnalyticsTab = ({ selectedClass }) => {
+  const stats = getClassStatistics(selectedClass.id);
+  if (!stats) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 6, border: `1px dashed ${BORDER}`, borderRadius: 2 }}>
+        <BarChart3 size={40} color="#d1d5db" style={{ marginBottom: 8 }} />
+        <Typography variant="body2" sx={{ color: TEXT_MUTED }}>No analytics yet</Typography>
+      </Box>
+    );
+  }
+
+  const Stat = ({ icon: Icon, label, value }) => (
+    <Card sx={cardSx}>
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: TEXT_MUTED }}>
+          <Icon size={16} />
+          <Typography variant="caption" sx={{ color: TEXT_MUTED }}>{label}</Typography>
+        </Box>
+        <Typography variant="h5" sx={{ color: TEXT, fontWeight: 700 }}>{value}</Typography>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={6} md={3}>
+        <Stat icon={Users} label="Students" value={stats.totalStudents} />
+      </Grid>
+      <Grid item xs={6} md={3}>
+        <Stat icon={ThumbsUp} label="Points awarded" value={stats.totalPointsAwarded} />
+      </Grid>
+      <Grid item xs={6} md={3}>
+        <Stat icon={ThumbsDown} label="Points deducted" value={stats.totalPointsDeducted} />
+      </Grid>
+      <Grid item xs={6} md={3}>
+        <Stat icon={Target} label="Average points" value={stats.averagePoints} />
+      </Grid>
+      {stats.topStudent && (
+        <Grid item xs={12}>
+          <Card sx={cardSx}>
+            <CardContent>
+              <Typography variant="caption" sx={{ color: TEXT_MUTED, display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                <Star size={14} /> Top student
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ background: ACCENT_SOFT, color: ACCENT, fontWeight: 700 }}>
+                  {(stats.topStudent.name || '?').charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="body1" sx={{ color: TEXT, fontWeight: 600 }}>
+                    {stats.topStudent.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+                    {stats.topStudent.totalPoints} points
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      )}
+    </Grid>
+  );
+};
+
+// Create Class modal
 const CreateClassModal = ({ open, onClose, onCreate }) => {
-  const [className, setClassName] = useState('');
+  const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
   const [gradeLevel, setGradeLevel] = useState('');
 
-  const handleSubmit = (e) => {
+  const reset = () => { setName(''); setSubject(''); setGradeLevel(''); };
+  const handleClose = () => { reset(); onClose(); };
+  const submit = (e) => {
     e.preventDefault();
-    if (className.trim() && subject.trim() && gradeLevel.trim()) {
-      onCreate(className.trim(), subject.trim(), gradeLevel.trim());
-      setClassName('');
-      setSubject('');
-      setGradeLevel('');
+    if (name.trim() && subject.trim() && gradeLevel.trim()) {
+      onCreate(name.trim(), subject.trim(), gradeLevel.trim());
+      reset();
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Plus size={24} />
-          Create New Class
-        </Box>
-      </DialogTitle>
-      <form onSubmit={handleSubmit}>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+      <DialogTitle sx={{ color: TEXT, fontWeight: 600 }}>New class</DialogTitle>
+      <form onSubmit={submit}>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Class Name"
-            fullWidth
-            variant="outlined"
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-            required
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Subject"
-            fullWidth
-            variant="outlined"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            required
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Grade Level"
-            fullWidth
-            variant="outlined"
-            value={gradeLevel}
-            onChange={(e) => setGradeLevel(e.target.value)}
-            required
-            placeholder="e.g., 5, 10-12, K-2"
-          />
+          <TextField autoFocus margin="dense" label="Class name" fullWidth value={name} onChange={e => setName(e.target.value)} required sx={{ mb: 2 }} />
+          <TextField margin="dense" label="Subject" fullWidth value={subject} onChange={e => setSubject(e.target.value)} required sx={{ mb: 2 }} />
+          <TextField margin="dense" label="Grade" fullWidth value={gradeLevel} onChange={e => setGradeLevel(e.target.value)} required placeholder="e.g. 5, K-2, 10-12" />
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={onClose} variant="outlined">
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' }
-            }}
-          >
-            Create Class
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleClose} sx={{ textTransform: 'none', color: TEXT_MUTED }}>Cancel</Button>
+          <Button type="submit" variant="contained" sx={{ background: ACCENT, '&:hover': { background: '#4338ca' }, textTransform: 'none', boxShadow: 'none' }}>Create</Button>
         </DialogActions>
       </form>
     </Dialog>
   );
 };
 
-// Add Student Modal
+// Add Student modal
 const AddStudentModal = ({ open, onClose, onAdd, className }) => {
-  const [studentEmail, setStudentEmail] = useState('');
-
-  const handleSubmit = (e) => {
+  const [email, setEmail] = useState('');
+  const submit = (e) => {
     e.preventDefault();
-    if (studentEmail.trim()) {
-      onAdd(studentEmail.trim());
-      setStudentEmail('');
-    }
+    if (email.trim()) { onAdd(email.trim()); setEmail(''); }
   };
-
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <UserPlus size={24} />
-          Add Student to {className}
-        </Box>
-      </DialogTitle>
-      <form onSubmit={handleSubmit}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+      <DialogTitle sx={{ color: TEXT, fontWeight: 600 }}>Add student{className ? ` to ${className}` : ''}</DialogTitle>
+      <form onSubmit={submit}>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="caption">
-              Enter the email address of a registered student. They must have already created a student account.
-            </Typography>
+          <Alert severity="info" sx={{ mb: 2, borderRadius: 1.5 }}>
+            The student must have already created a student account with this email.
           </Alert>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Student Email"
-            type="email"
-            fullWidth
-            variant="outlined"
-            value={studentEmail}
-            onChange={(e) => setStudentEmail(e.target.value)}
-            required
-          />
+          <TextField autoFocus margin="dense" label="Student email" type="email" fullWidth value={email} onChange={e => setEmail(e.target.value)} required />
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={onClose} variant="outlined">
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' }
-            }}
-          >
-            Add Student
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={onClose} sx={{ textTransform: 'none', color: TEXT_MUTED }}>Cancel</Button>
+          <Button type="submit" variant="contained" sx={{ background: ACCENT, '&:hover': { background: '#4338ca' }, textTransform: 'none', boxShadow: 'none' }}>Add</Button>
         </DialogActions>
       </form>
     </Dialog>
   );
 };
 
-// Award Points Modal (ClassDojo-like)
+// Award Points modal
 const AwardPointsModal = ({ open, onClose, onAward, student, defaultPoints }) => {
   const [points, setPoints] = useState(5);
   const [reason, setReason] = useState('');
   const [category, setCategory] = useState('custom');
 
-  const pointPresets = [
-    { label: 'Excellent Work', value: defaultPoints?.excellent || 5, color: '#10b981', icon: <Star size={20} />, category: 'excellent' },
-    { label: 'Good Job', value: defaultPoints?.good || 3, color: '#3b82f6', icon: <ThumbsUp size={20} />, category: 'good' },
-    { label: 'Participation', value: defaultPoints?.participation || 2, color: '#8b5cf6', icon: <Users size={20} />, category: 'participation' },
-    { label: 'Homework Done', value: defaultPoints?.homework || 4, color: '#06b6d4', icon: <BookOpen size={20} />, category: 'homework' },
-    { label: 'Helping Others', value: defaultPoints?.helpingOthers || 3, color: '#f59e0b', icon: <Gift size={20} />, category: 'helpingOthers' },
-    { label: 'Late Work', value: defaultPoints?.lateWork || -2, color: '#f97316', icon: <Clock size={20} />, category: 'lateWork' },
-    { label: 'Disruptive', value: defaultPoints?.disruptive || -3, color: '#ef4444', icon: <ThumbsDown size={20} />, category: 'disruptive' },
-    { label: 'Incomplete', value: defaultPoints?.incomplete || -1, color: '#dc2626', icon: <Target size={20} />, category: 'incomplete' }
+  useEffect(() => {
+    if (open) { setPoints(5); setReason(''); setCategory('custom'); }
+  }, [open]);
+
+  const presets = [
+    { label: 'Excellent', value: defaultPoints?.excellent ?? 5, icon: <Star size={16} />, category: 'excellent' },
+    { label: 'Good job', value: defaultPoints?.good ?? 3, icon: <ThumbsUp size={16} />, category: 'good' },
+    { label: 'Participation', value: defaultPoints?.participation ?? 2, icon: <Users size={16} />, category: 'participation' },
+    { label: 'Homework', value: defaultPoints?.homework ?? 4, icon: <BookOpen size={16} />, category: 'homework' },
+    { label: 'Helped others', value: defaultPoints?.helpingOthers ?? 3, icon: <Gift size={16} />, category: 'helpingOthers' },
+    { label: 'Late work', value: defaultPoints?.lateWork ?? -2, icon: <Clock size={16} />, category: 'lateWork' },
+    { label: 'Disruptive', value: defaultPoints?.disruptive ?? -3, icon: <ThumbsDown size={16} />, category: 'disruptive' },
+    { label: 'Incomplete', value: defaultPoints?.incomplete ?? -1, icon: <Target size={16} />, category: 'incomplete' }
   ];
 
-  const handlePresetClick = (preset) => {
-    setPoints(preset.value);
-    setReason(preset.label);
-    setCategory(preset.category);
-  };
-
-  const handleSubmit = (e) => {
+  const submit = (e) => {
     e.preventDefault();
     if (student && points !== 0) {
       onAward(student.email, points, reason || (points > 0 ? 'Points awarded' : 'Points deducted'), category);
-      setPoints(5);
-      setReason('');
-      setCategory('custom');
     }
   };
 
   if (!student) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Zap size={24} />
-          Award Points to {student.name}
-        </Box>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+      <DialogTitle sx={{ color: TEXT, fontWeight: 600 }}>
+        Award points to {student.name}
       </DialogTitle>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={submit}>
         <DialogContent>
-          <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
-            Quick Select:
-          </Typography>
-          <Grid container spacing={1} sx={{ mb: 3 }}>
-            {pointPresets.map((preset) => (
-              <Grid item xs={6} sm={3} key={preset.label}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => handlePresetClick(preset)}
-                  sx={{
-                    flexDirection: 'column',
-                    py: 2,
-                    borderColor: preset.color,
-                    color: preset.color,
-                    '&:hover': {
-                      borderColor: preset.color,
-                      background: `${preset.color}15`
-                    }
-                  }}
-                >
-                  {preset.icon}
-                  <Typography variant="caption" sx={{ mt: 0.5 }}>
-                    {preset.label}
-                  </Typography>
-                  <Typography variant="caption" fontWeight={700}>
-                    {preset.value > 0 ? '+' : ''}{preset.value}
-                  </Typography>
-                </Button>
-              </Grid>
-            ))}
+          <Typography variant="caption" sx={{ color: TEXT_MUTED, mb: 1, display: 'block' }}>Quick presets</Typography>
+          <Grid container spacing={1} sx={{ mb: 2 }}>
+            {presets.map(p => {
+              const positive = p.value > 0;
+              return (
+                <Grid item xs={6} sm={3} key={p.label}>
+                  <Button
+                    fullWidth
+                    onClick={() => { setPoints(p.value); setReason(p.label); setCategory(p.category); }}
+                    sx={{
+                      flexDirection: 'column',
+                      py: 1.5,
+                      textTransform: 'none',
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 1.5,
+                      color: positive ? ACCENT : '#ef4444',
+                      '&:hover': { borderColor: positive ? ACCENT : '#ef4444', background: positive ? ACCENT_SOFT : '#fef2f2' }
+                    }}
+                  >
+                    {p.icon}
+                    <Typography variant="caption" sx={{ mt: 0.5 }}>{p.label}</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 700 }}>{p.value > 0 ? '+' : ''}{p.value}</Typography>
+                  </Button>
+                </Grid>
+              );
+            })}
           </Grid>
-
-          <Divider sx={{ my: 3 }} />
-
+          <Divider sx={{ my: 2 }} />
           <TextField
             margin="dense"
             label="Points"
             type="number"
             fullWidth
-            variant="outlined"
             value={points}
-            onChange={(e) => setPoints(parseInt(e.target.value) || 0)}
+            onChange={e => setPoints(parseInt(e.target.value, 10) || 0)}
             required
             sx={{ mb: 2 }}
           />
@@ -1245,33 +808,26 @@ const AwardPointsModal = ({ open, onClose, onAward, student, defaultPoints }) =>
             margin="dense"
             label="Reason (optional)"
             fullWidth
-            variant="outlined"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={e => setReason(e.target.value)}
             multiline
             rows={2}
           />
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={onClose} variant="outlined">
-            Cancel
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={onClose} sx={{ textTransform: 'none', color: TEXT_MUTED }}>Cancel</Button>
           <Button
             type="submit"
             variant="contained"
             disabled={points === 0}
             sx={{
-              background: points > 0
-                ? 'linear-gradient(135deg, #10b981, #059669)'
-                : 'linear-gradient(135deg, #ef4444, #dc2626)',
-              '&:hover': {
-                background: points > 0
-                  ? 'linear-gradient(135deg, #059669, #047857)'
-                  : 'linear-gradient(135deg, #dc2626, #b91c1c)'
-              }
+              background: points >= 0 ? ACCENT : '#ef4444',
+              '&:hover': { background: points >= 0 ? '#4338ca' : '#dc2626' },
+              textTransform: 'none',
+              boxShadow: 'none'
             }}
           >
-            {points > 0 ? 'Award' : 'Deduct'} Points
+            {points >= 0 ? 'Award' : 'Deduct'} {Math.abs(points)} pts
           </Button>
         </DialogActions>
       </form>

@@ -1,810 +1,251 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { playClickSound, playSuccessSound } from '../utils/soundEffects';
-import './ClassManagement.css';
+// src/components/ClassManagement.js - Student-only "My Classes" / join-by-code view
+
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  IconButton,
+  Alert,
+  Snackbar,
+  Chip,
+  Divider
+} from '@mui/material';
+import { ArrowLeft, BookOpen, KeyRound, School, Users } from 'lucide-react';
+import { joinClassByCode, getStudentClasses } from '../utils/teacherUtils';
+
+const ACCENT = '#4f46e5';
+const ACCENT_SOFT = '#eef2ff';
+const TEXT = '#111827';
+const TEXT_MUTED = '#6b7280';
+const BORDER = '#e5e7eb';
+const SURFACE = '#ffffff';
+const BG = '#f9fafb';
+
+const cardSx = {
+  borderRadius: 2,
+  border: `1px solid ${BORDER}`,
+  boxShadow: 'none',
+  background: SURFACE
+};
 
 const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
+  const [codeInput, setCodeInput] = useState('');
   const [classes, setClasses] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [classToDelete, setClassToDelete] = useState(null);
-  const [joinMessage, setJoinMessage] = useState(null); // { type: 'success'|'error', text: string }
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [isJoining, setIsJoining] = useState(false);
 
-  const translations = {
-    en: {
-      title: 'Class Management',
-      createClass: 'Create Class',
-      myClasses: 'My Classes',
-      className: 'Class Name',
-      description: 'Description',
-      students: 'Students',
-      create: 'Create',
-      cancel: 'Cancel',
-      delete: 'Delete',
-      addStudents: 'Add Students',
-      noClasses: 'No classes yet',
-      studentCount: 'students',
-      viewClass: 'View Class',
-      classCode: 'Class Code',
-      copyCode: 'Copy Code',
-      removeStudent: 'Remove',
-      close: 'Close',
-      grade: 'Grade',
-      performance: 'Performance',
-      email: 'Email',
-      confirmDelete: 'Delete Class',
-      confirmDeleteMessage: 'Are you sure you want to delete this class? This action cannot be undone.',
-      confirmYes: 'Yes, Delete',
-      confirmNo: 'Cancel',
-      joinClass: 'Join a Class',
-      enterCode: 'Enter class code',
-      join: 'Join',
-      joinSuccess: 'You have joined the class!',
-      joinError: 'Invalid class code. Please try again.',
-      alreadyJoined: 'You are already in this class.',
-      myEnrolledClasses: 'My Classes'
-    },
-    ar: {
-      title: 'إدارة الصفوف',
-      createClass: 'إنشاء صف',
-      myClasses: 'صفوفي',
-      className: 'اسم الصف',
-      description: 'الوصف',
-      students: 'الطلاب',
-      create: 'إنشاء',
-      cancel: 'إلغاء',
-      delete: 'حذف',
-      addStudents: 'إضافة طلاب',
-      noClasses: 'لا توجد صفوف بعد',
-      studentCount: 'طالب',
-      viewClass: 'عرض الصف',
-      classCode: 'رمز الصف',
-      copyCode: 'نسخ الرمز',
-      removeStudent: 'إزالة',
-      close: 'إغلاق',
-      grade: 'الصف',
-      performance: 'الأداء',
-      email: 'البريد الإلكتروني',
-      confirmDelete: 'حذف الصف',
-      confirmDeleteMessage: 'هل أنت متأكد من حذف هذا الصف؟ لا يمكن التراجع عن هذا الإجراء.',
-      confirmYes: 'نعم، احذف',
-      confirmNo: 'إلغاء',
-      joinClass: 'انضم إلى صف',
-      enterCode: 'أدخل رمز الصف',
-      join: 'انضم',
-      joinSuccess: 'لقد انضممت إلى الصف!',
-      joinError: 'رمز الصف غير صحيح. يرجى المحاولة مرة أخرى.',
-      alreadyJoined: 'أنت مسجل بالفعل في هذا الصف.',
-      myEnrolledClasses: 'صفوفي'
-    }
-  };
+  const t = language === 'ar'
+    ? {
+        title: 'صفوفي',
+        subtitle: 'انضم إلى صف باستخدام الرمز الذي شاركه معك معلمك',
+        codeLabel: 'رمز الصف',
+        codePlaceholder: 'ABC123',
+        join: 'انضم',
+        myClasses: 'الصفوف المسجلة',
+        empty: 'لم تنضم إلى أي صف بعد',
+        emptyHint: 'اطلب من معلمك رمز الصف',
+        students: 'طلاب',
+        teacherOnly: 'يدير المعلمون الصفوف من لوحة تحكم المعلم',
+        back: 'رجوع'
+      }
+    : {
+        title: 'My Classes',
+        subtitle: 'Enter the code your teacher shared with you to join a class',
+        codeLabel: 'Class code',
+        codePlaceholder: 'ABC123',
+        join: 'Join',
+        myClasses: 'Joined classes',
+        empty: 'You haven\'t joined any classes yet',
+        emptyHint: 'Ask your teacher for the class code',
+        students: 'students',
+        teacherOnly: 'Teachers manage classes from the Teacher Dashboard',
+        back: 'Back'
+      };
 
-  const t = translations[language] || translations.en;
-
-  useEffect(() => {
-    loadClasses();
-    loadStudents();
+  const reload = useCallback(() => {
+    if (!userEmail) return;
+    setClasses(getStudentClasses(userEmail));
   }, [userEmail]);
 
-  const getClassesObject = () => {
-    try {
-      const raw = localStorage.getItem('mumayaz_classes');
-      if (!raw) return {};
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        // Migrate old array format to object format
-        const obj = {};
-        parsed.forEach(c => { if (c.id) obj[c.id] = c; });
-        localStorage.setItem('mumayaz_classes', JSON.stringify(obj));
-        return obj;
-      }
-      return parsed;
-    } catch (error) {
-      return {};
-    }
-  };
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
-  const loadClasses = () => {
-    try {
-      const allClassesObj = getClassesObject();
-      const teacherClasses = Object.values(allClassesObj).filter(c => c.teacherEmail === userEmail);
-      setClasses(teacherClasses);
-    } catch (error) {
-      console.error('Error loading classes:', error);
-    }
-  };
-
-  const loadStudents = () => {
-    try {
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
-      const studentList = Object.entries(users)
-        .filter(([email, user]) => user.role === 'student' || user.role === 'child')
-        .map(([email, user]) => ({ email, ...user }));
-      setStudents(studentList);
-    } catch (error) {
-      console.error('Error loading students:', error);
-    }
-  };
-
-  const createClass = (classData) => {
-    try {
-      const newClass = {
-        id: Date.now().toString(),
-        ...classData,
-        teacherEmail: userEmail,
-        createdAt: new Date().toISOString(),
-        students: [],
-        classCode: generateClassCode()
-      };
-
-      const allClasses = getClassesObject();
-      allClasses[newClass.id] = newClass;
-      localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
-
-      playSuccessSound();
-      loadClasses();
-      setShowCreateModal(false);
-    } catch (error) {
-      console.error('Error creating class:', error);
-    }
-  };
-
-  const deleteClass = (classId) => {
-    try {
-      const allClasses = getClassesObject();
-      delete allClasses[classId];
-      localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
-      playClickSound();
-      loadClasses();
-      setSelectedClass(null);
-      setClassToDelete(null);
-    } catch (error) {
-      console.error('Error deleting class:', error);
-    }
-  };
-
-  const addStudentToClass = (classId, studentEmail) => {
-    try {
-      const email = studentEmail.trim().toLowerCase();
-      if (!email) return;
-
-      const allClasses = getClassesObject();
-      if (!allClasses[classId]) return;
-
-      const currentStudents = allClasses[classId].students || [];
-
-      // Support both string and object formats in the students array
-      const alreadyEnrolled = currentStudents.some(s =>
-        typeof s === 'string' ? s === email : s.email === email
-      );
-
-      if (alreadyEnrolled) return;
-
-      // Look up the student's full data from registered users
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
-      const userData = users[email];
-
-      // Store as an object (consistent with teacherUtils.enrollStudent)
-      const studentData = {
-        email,
-        name: userData ? userData.name : email,
-        enrolledAt: new Date().toISOString(),
-        totalPoints: 0,
-        pointsHistory: [],
-        achievements: []
-      };
-
-      allClasses[classId].students.push(studentData);
-      allClasses[classId].totalStudents = allClasses[classId].students.length;
-      localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
-      playSuccessSound();
-      loadClasses();
-      setSelectedClass({ ...allClasses[classId] });
-    } catch (error) {
-      console.error('Error adding student:', error);
-    }
-  };
-
-  const removeStudentFromClass = (classId, studentEmail) => {
-    try {
-      const allClasses = getClassesObject();
-
-      if (allClasses[classId]) {
-        allClasses[classId].students = allClasses[classId].students.filter(s =>
-          typeof s === 'string' ? s !== studentEmail : s.email !== studentEmail
-        );
-        localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
-        playClickSound();
-        loadClasses();
-        setSelectedClass({ ...allClasses[classId] });
-      }
-    } catch (error) {
-      console.error('Error removing student:', error);
-    }
-  };
-
-  const generateClassCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
-  const joinByCode = (code) => {
-    try {
-      const allClasses = getClassesObject();
-      const match = Object.values(allClasses).find(
-        c => c.classCode && c.classCode.toUpperCase() === code.trim().toUpperCase()
-      );
-
-      if (!match) {
-        setJoinMessage({ type: 'error', text: t.joinError });
-        return;
-      }
-
-      const email = userEmail.trim().toLowerCase();
-      const alreadyIn = (match.students || []).some(s =>
-        typeof s === 'string' ? s === email : s.email === email
-      );
-
-      if (alreadyIn) {
-        setJoinMessage({ type: 'error', text: t.alreadyJoined });
-        return;
-      }
-
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
-      const userData = users[email];
-      const studentData = {
-        email,
-        name: userData ? userData.name : email,
-        enrolledAt: new Date().toISOString(),
-        totalPoints: 0,
-        pointsHistory: [],
-        achievements: []
-      };
-
-      allClasses[match.id].students = allClasses[match.id].students || [];
-      allClasses[match.id].students.push(studentData);
-      allClasses[match.id].totalStudents = allClasses[match.id].students.length;
-      localStorage.setItem('mumayaz_classes', JSON.stringify(allClasses));
-      playSuccessSound();
-      setJoinMessage({ type: 'success', text: t.joinSuccess });
-      loadClasses();
-    } catch (error) {
-      console.error('Error joining class:', error);
-      setJoinMessage({ type: 'error', text: t.joinError });
-    }
-  };
-
-  const getEnrolledClasses = () => {
-    try {
-      const allClasses = getClassesObject();
-      const email = userEmail.trim().toLowerCase();
-      return Object.values(allClasses).filter(c =>
-        (c.students || []).some(s =>
-          typeof s === 'string' ? s === email : s.email === email
-        )
-      );
-    } catch {
-      return [];
-    }
-  };
-
-  const copyClassCode = (code) => {
-    navigator.clipboard.writeText(code);
-    playClickSound();
-    // Class code copied notification shown via clipboard API
-  };
-
-  const getStudentEmail = (s) => (typeof s === 'string' ? s : s.email);
-
-  const getStudentInfo = (student) => {
-    const email = getStudentEmail(student);
-    // If student is already a full object (from teacherUtils), use it directly
-    if (typeof student === 'object' && student.name) return { ...student, email };
-    // Otherwise look up from registered users
-    return students.find(s => s.email === email) || { name: email, email };
-  };
-
-  return (
-    <motion.div
-      className="class-management-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        className="class-management-modal"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        dir={language === 'ar' ? 'rtl' : 'ltr'}
-      >
-        <div className="class-management-header">
-          <h2>🏫 {t.title}</h2>
-          <button className="close-button" onClick={onClose}>✕</button>
-        </div>
-
-        {!selectedClass ? (
-          <>
-            {userRole !== 'teacher' ? (
-              // ── Student view: join by code + enrolled classes ──
-              <StudentJoinView
-                t={t}
-                language={language}
-                joinMessage={joinMessage}
-                onJoin={joinByCode}
-                enrolledClasses={getEnrolledClasses()}
-              />
-            ) : (
-              // ── Teacher view: create + manage classes ──
-              <>
-                <div className="class-management-actions">
-                  <button
-                    className="create-class-btn"
-                    onClick={() => {
-                      playClickSound();
-                      setShowCreateModal(true);
-                    }}
-                  >
-                    ➕ {t.createClass}
-                  </button>
-                </div>
-
-                <div className="classes-list">
-                  {classes.length === 0 ? (
-                    <div className="no-classes">
-                      <div className="no-classes-icon">🏫</div>
-                      <p>{t.noClasses}</p>
-                    </div>
-                  ) : (
-                    classes.map((cls, index) => (
-                      <motion.div
-                        key={cls.id}
-                        className="class-card"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <div className="class-card-header">
-                          <h3>{cls.name}</h3>
-                          <div className="class-code-badge">
-                            🔑 {cls.classCode}
-                          </div>
-                        </div>
-
-                        <p className="class-description">{cls.description}</p>
-
-                        <div className="class-card-footer">
-                          <div className="class-stats">
-                            <span>👥 {cls.students.length} {t.studentCount}</span>
-                            <span>📅 {new Date(cls.createdAt).toLocaleDateString()}</span>
-                          </div>
-
-                          <div className="class-actions">
-                            <button
-                              className="action-btn view-btn"
-                              onClick={() => setSelectedClass(cls)}
-                            >
-                              👁️ {t.viewClass}
-                            </button>
-                            <button
-                              className="action-btn delete-btn"
-                              onClick={() => setClassToDelete(cls)}
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <ClassDetail
-            classData={selectedClass}
-            students={students}
-            onBack={() => setSelectedClass(null)}
-            onAddStudent={(studentEmail) => addStudentToClass(selectedClass.id, studentEmail)}
-            onRemoveStudent={(studentEmail) => removeStudentFromClass(selectedClass.id, studentEmail)}
-            onCopyCode={copyClassCode}
-            language={language}
-            t={t}
-            getStudentInfo={getStudentInfo}
-          />
-        )}
-      </motion.div>
-
-      <AnimatePresence>
-        {showCreateModal && (
-          <CreateClassModal
-            onClose={() => setShowCreateModal(false)}
-            onCreate={createClass}
-            language={language}
-            t={t}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {classToDelete && (
-          <motion.div
-            className="confirmation-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setClassToDelete(null)}
-          >
-            <motion.div
-              className="confirmation-modal"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3>{t.confirmDelete}</h3>
-              <p>{t.confirmDeleteMessage}</p>
-              <div className="confirmation-actions">
-                <button
-                  className="confirm-btn delete"
-                  onClick={() => deleteClass(classToDelete.id)}
-                >
-                  {t.confirmYes}
-                </button>
-                <button
-                  className="confirm-btn cancel"
-                  onClick={() => setClassToDelete(null)}
-                >
-                  {t.confirmNo}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-const ClassDetail = ({
-  classData,
-  students,
-  onBack,
-  onAddStudent,
-  onRemoveStudent,
-  onCopyCode,
-  language,
-  t,
-  getStudentInfo
-}) => {
-  const [showAddModal, setShowAddModal] = useState(false);
-
-  const enrolledEmails = new Set(
-    classData.students.map(s => typeof s === 'string' ? s : s.email)
-  );
-  const availableStudents = students.filter(s => !enrolledEmails.has(s.email));
-
-  return (
-    <div className="class-detail">
-      <div className="class-detail-header">
-        <button className="back-btn" onClick={onBack}>← {t.myClasses}</button>
-        <h3>{classData.name}</h3>
-        <div className="class-code-display">
-          <span>🔑 {classData.classCode}</span>
-          <button
-            className="copy-code-btn"
-            onClick={() => onCopyCode(classData.classCode)}
-          >
-            📋 {t.copyCode}
-          </button>
-        </div>
-      </div>
-
-      <div className="class-detail-content">
-        <div className="students-section">
-          <div className="section-header">
-            <h4>👥 {t.students} ({classData.students.length})</h4>
-            <button
-              className="add-student-btn"
-              onClick={() => setShowAddModal(true)}
-            >
-              ➕ {t.addStudents}
-            </button>
-          </div>
-
-          <div className="students-grid">
-            {classData.students.length === 0 ? (
-              <p className="no-students">No students enrolled yet</p>
-            ) : (
-              classData.students.map((entry) => {
-                const student = getStudentInfo(entry);
-                const email = typeof entry === 'string' ? entry : entry.email;
-                return (
-                  <div key={email} className="student-card">
-                    <div className="student-info">
-                      <div className="student-avatar">
-                        {student.profilePicture ? (
-                          student.profilePicture.startsWith('data:') ? (
-                            <img src={student.profilePicture} alt={student.name} />
-                          ) : (
-                            <span>{student.profilePicture}</span>
-                          )
-                        ) : (
-                          '👤'
-                        )}
-                      </div>
-                      <div>
-                        <div className="student-name">{student.name}</div>
-                        <div className="student-email">{email}</div>
-                      </div>
-                    </div>
-                    <button
-                      className="remove-btn"
-                      onClick={() => onRemoveStudent(email)}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showAddModal && (
-          <AddStudentModal
-            students={availableStudents}
-            onClose={() => setShowAddModal(false)}
-            onAdd={(email) => {
-              onAddStudent(email);
-              setShowAddModal(false);
-            }}
-            language={language}
-            t={t}
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-const CreateClassModal = ({ onClose, onCreate, language, t }) => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [grade, setGrade] = useState('');
-
-  const handleSubmit = () => {
-    if (!name || !description) {
-      alert('Please fill all fields');
-      return;
-    }
-
-    onCreate({ name, description, grade });
-  };
-
-  return (
-    <motion.div
-      className="create-class-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        className="create-class-modal"
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
-        onClick={(e) => e.stopPropagation()}
-        dir={language === 'ar' ? 'rtl' : 'ltr'}
-      >
-        <h3>➕ {t.createClass}</h3>
-
-        <div className="form-group">
-          <label>{t.className}</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t.className}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>{t.description}</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={t.description}
-            rows="3"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>{t.grade}</label>
-          <input
-            type="text"
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            placeholder={t.grade}
-          />
-        </div>
-
-        <div className="modal-actions">
-          <button className="cancel-btn" onClick={onClose}>{t.cancel}</button>
-          <button className="create-btn" onClick={handleSubmit}>✓ {t.create}</button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-const AddStudentModal = ({ students, onClose, onAdd, language, t }) => {
-  const [emailInput, setEmailInput] = useState('');
-
-  const handleEmailAdd = () => {
-    const email = emailInput.trim().toLowerCase();
-    if (email) {
-      onAdd(email);
-      setEmailInput('');
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') handleEmailAdd();
-  };
-
-  return (
-    <motion.div
-      className="add-student-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        className="add-student-modal"
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
-        onClick={(e) => e.stopPropagation()}
-        dir={language === 'ar' ? 'rtl' : 'ltr'}
-      >
-        <h3>➕ {t.addStudents}</h3>
-
-        <div className="add-by-email-section">
-          <div className="email-input-row">
-            <input
-              type="email"
-              className="email-input"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={language === 'ar' ? 'أدخل البريد الإلكتروني للطالب' : 'Enter student email address'}
-              autoFocus
-            />
-            <button
-              className="add-btn"
-              onClick={handleEmailAdd}
-              disabled={!emailInput.trim()}
-            >
-              ➕ {language === 'ar' ? 'إضافة' : 'Add'}
-            </button>
-          </div>
-        </div>
-
-        {students.length > 0 && (
-          <>
-            <p className="or-divider">{language === 'ar' ? '— أو اختر من القائمة —' : '— or choose from registered students —'}</p>
-            <div className="available-students-list">
-              {students.map((student) => (
-                <div key={student.email} className="available-student-item">
-                  <div className="student-info">
-                    <span className="student-avatar">
-                      {student.profilePicture || '👤'}
-                    </span>
-                    <div>
-                      <div className="student-name">{student.name}</div>
-                      <div className="student-email">{student.email}</div>
-                    </div>
-                  </div>
-                  <button
-                    className="add-btn"
-                    onClick={() => onAdd(student.email)}
-                  >
-                    ➕ {language === 'ar' ? 'إضافة' : 'Add'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        <div className="modal-actions">
-          <button className="cancel-btn" onClick={onClose}>{t.close}</button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-const StudentJoinView = ({ t, language, joinMessage, onJoin, enrolledClasses }) => {
-  const [codeInput, setCodeInput] = useState('');
+  const showSnackbar = (message, severity = 'info') =>
+    setSnackbar({ open: true, message, severity });
 
   const handleJoin = () => {
-    if (codeInput.trim()) {
-      onJoin(codeInput.trim());
+    const code = codeInput.trim();
+    if (!code) return;
+    setIsJoining(true);
+    const result = joinClassByCode(userEmail, code);
+    setIsJoining(false);
+    if (result.success) {
       setCodeInput('');
+      reload();
+      showSnackbar(`Joined "${result.className}"`, 'success');
+    } else {
+      showSnackbar(result.error || 'Could not join class', 'error');
     }
   };
 
-  return (
-    <div className="student-join-view" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="join-class-section">
-        <h3>🔑 {t.joinClass}</h3>
-        <div className="join-code-row">
-          <input
-            type="text"
-            className="code-input"
-            value={codeInput}
-            onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
-            onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
-            placeholder={t.enterCode}
-            maxLength={8}
-            style={{ textTransform: 'uppercase', letterSpacing: '0.2em' }}
-          />
-          <button
-            className="join-btn"
-            onClick={handleJoin}
-            disabled={!codeInput.trim()}
-          >
-            {t.join}
-          </button>
-        </div>
-        {joinMessage && (
-          <motion.p
-            className={`join-message ${joinMessage.type}`}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {joinMessage.type === 'success' ? '✅' : '❌'} {joinMessage.text}
-          </motion.p>
-        )}
-      </div>
+  const isTeacher = userRole === 'teacher';
 
-      {enrolledClasses.length > 0 && (
-        <div className="enrolled-classes-section">
-          <h3>📚 {t.myEnrolledClasses}</h3>
-          <div className="classes-list">
-            {enrolledClasses.map((cls, index) => (
-              <motion.div
-                key={cls.id}
-                className="class-card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div className="class-card-header">
-                  <h3>{cls.name}</h3>
-                </div>
-                <p className="class-description">{cls.description}</p>
-                <div className="class-card-footer">
-                  <div className="class-stats">
-                    <span>👥 {(cls.students || []).length} {t.studentCount}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+  return (
+    <Box sx={{ minHeight: '100vh', background: BG, p: { xs: 2, md: 3 } }}>
+      <Container maxWidth="md" disableGutters>
+        {/* Header */}
+        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1.5 }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+          {onClose && (
+            <IconButton onClick={onClose} sx={{ color: TEXT_MUTED }} aria-label={t.back}>
+              <ArrowLeft size={20} />
+            </IconButton>
+          )}
+          <Box>
+            <Typography variant="h6" sx={{ color: TEXT, fontWeight: 600, lineHeight: 1.2 }}>
+              {t.title}
+            </Typography>
+            <Typography variant="caption" sx={{ color: TEXT_MUTED }}>
+              {t.subtitle}
+            </Typography>
+          </Box>
+        </Box>
+
+        {isTeacher ? (
+          // Teachers shouldn't be here — guide them to the Teacher Dashboard
+          <Card sx={cardSx}>
+            <CardContent sx={{ textAlign: 'center', py: 6 }}>
+              <School size={40} color={ACCENT} style={{ marginBottom: 12 }} />
+              <Typography variant="body1" sx={{ color: TEXT, fontWeight: 500, mb: 1 }}>
+                {t.teacherOnly}
+              </Typography>
+              {onClose && (
+                <Button onClick={onClose} variant="text" sx={{ color: ACCENT, textTransform: 'none' }}>
+                  {t.back}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Join by code */}
+            <Card sx={{ ...cardSx, mb: 3 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: TEXT }}>
+                  <KeyRound size={18} color={ACCENT} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {t.codeLabel}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
+                    placeholder={t.codePlaceholder}
+                    inputProps={{ maxLength: 8, style: { letterSpacing: '0.25em', fontFamily: 'monospace', fontWeight: 600, textTransform: 'uppercase' } }}
+                    sx={{ flex: 1, minWidth: 220 }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleJoin}
+                    disabled={!codeInput.trim() || isJoining}
+                    sx={{ background: ACCENT, '&:hover': { background: '#4338ca' }, textTransform: 'none', boxShadow: 'none', px: 3 }}
+                  >
+                    {t.join}
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Joined classes */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+              <Typography variant="subtitle2" sx={{ color: TEXT, fontWeight: 600 }}>
+                {t.myClasses}
+              </Typography>
+              <Typography variant="caption" sx={{ color: TEXT_MUTED }}>
+                {classes.length}
+              </Typography>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {classes.length === 0 ? (
+              <Card sx={cardSx}>
+                <CardContent sx={{ textAlign: 'center', py: 6 }}>
+                  <BookOpen size={40} color="#d1d5db" style={{ marginBottom: 8 }} />
+                  <Typography variant="body1" sx={{ color: TEXT, fontWeight: 500 }}>
+                    {t.empty}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
+                    {t.emptyHint}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ) : (
+              <Grid container spacing={2}>
+                {classes.map(cls => {
+                  const me = (cls.students || []).find(s =>
+                    typeof s === 'string'
+                      ? s.toLowerCase() === userEmail.toLowerCase()
+                      : (s.email || '').toLowerCase() === userEmail.toLowerCase()
+                  );
+                  const myPoints = me && typeof me === 'object' ? (me.totalPoints || 0) : 0;
+                  return (
+                    <Grid item xs={12} sm={6} key={cls.id}>
+                      <Card sx={cardSx}>
+                        <CardContent>
+                          <Typography variant="subtitle1" sx={{ color: TEXT, fontWeight: 600 }}>
+                            {cls.name}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: TEXT_MUTED, display: 'block', mb: 1.5 }}>
+                            {cls.subject || ''}{cls.gradeLevel ? ` • Grade ${cls.gradeLevel}` : ''}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: TEXT_MUTED, mb: 1.5 }}>
+                            <Users size={14} />
+                            <Typography variant="caption">
+                              {(cls.students || []).length} {t.students}
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label={`${myPoints} pts`}
+                            size="small"
+                            sx={{ background: ACCENT_SOFT, color: ACCENT, fontWeight: 600, borderRadius: 1 }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            )}
+          </>
+        )}
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ borderRadius: 1.5 }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </Box>
   );
 };
 

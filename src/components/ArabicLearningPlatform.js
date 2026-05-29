@@ -775,8 +775,8 @@ const ArabicLearningPlatform = ({
           </p>
         </motion.div>
 
-        {/* Only show Class Management for teachers */}
-        {getCurrentUserRole() === 'teacher' && (
+        {/* Class joining for students (teachers use Teacher Dashboard instead) */}
+        {getCurrentUserRole() === 'student' && (
           <motion.div
             className="section-card class-card"
             onClick={() => handleSectionChange('classmanagement')}
@@ -788,12 +788,12 @@ const ArabicLearningPlatform = ({
           >
             <div className="card-icon">🏫</div>
             <h3 className="card-title">
-              {language === 'ar' ? 'إدارة الصفوف' : 'Class Management'}
+              {language === 'ar' ? 'صفوفي' : 'My Classes'}
             </h3>
             <p className="card-description">
               {language === 'ar'
-                ? 'إدارة الصفوف والطلاب'
-                : 'Manage classes and students'
+                ? 'انضم إلى صف بإستخدام رمز المعلم'
+                : 'Join a class using your teacher\'s code'
               }
             </p>
           </motion.div>
@@ -861,16 +861,15 @@ const ArabicLearningPlatform = ({
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2.2 }}
-            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: '#fff' }}
           >
             <div className="card-icon">🖥️</div>
-            <h3 className="card-title" style={{ color: '#fff' }}>
+            <h3 className="card-title">
               {language === 'ar' ? 'لوحة تحكم المعلم' : 'Teacher Dashboard'}
             </h3>
-            <p className="card-description" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            <p className="card-description">
               {language === 'ar'
-                ? 'إدارة الطلاب، المهام، والتحليلات'
-                : 'Manage students, assignments, and analytics'
+                ? 'إدارة الصفوف والطلاب والنقاط والتحليلات'
+                : 'Manage classes, students, points & analytics'
               }
             </p>
           </motion.div>
@@ -886,13 +885,12 @@ const ArabicLearningPlatform = ({
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2.2 }}
-            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff' }}
           >
             <div className="card-icon">👨‍👩‍👧‍👦</div>
-            <h3 className="card-title" style={{ color: '#fff' }}>
+            <h3 className="card-title">
               {language === 'ar' ? 'لوحة تحكم ولي الأمر' : 'Parent Dashboard'}
             </h3>
-            <p className="card-description" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            <p className="card-description">
               {language === 'ar'
                 ? 'تابع تقدم أطفالك وإدارة وقت الشاشة'
                 : 'Monitor your children\'s progress and screen time'
@@ -1609,6 +1607,7 @@ const ArabicLearningPlatform = ({
                 userEmail={getCurrentUserEmail()}
                 language={language}
                 onClose={() => setCurrentSection('home')}
+                onSignOut={onSignOut}
               />
             </motion.div>
           )}
@@ -1625,6 +1624,7 @@ const ArabicLearningPlatform = ({
                 userEmail={getCurrentUserEmail()}
                 language={language}
                 onClose={() => setCurrentSection('home')}
+                onSignOut={onSignOut}
               />
             </motion.div>
           )}

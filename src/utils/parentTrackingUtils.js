@@ -343,7 +343,12 @@ export const getChildActivityHistory = () => {
  */
 const updateChildProgressInParentData = (childEmail, sessionData) => {
   try {
-    const parentData = getParentData();
+    // Look up which parent this child is linked to so we can write to the right key
+    const link = isChildLinkedToParent(childEmail);
+    if (!link) return;
+    const parentEmail = link.parentEmail;
+
+    const parentData = getParentData(parentEmail);
     if (!parentData) return;
 
     const childIndex = parentData.children.findIndex(
@@ -374,7 +379,7 @@ const updateChildProgressInParentData = (childEmail, sessionData) => {
     checkAndAddAchievements(child, sessionData);
 
     parentData.children[childIndex] = child;
-    localStorage.setItem(PARENT_DATA_KEY, JSON.stringify(parentData));
+    localStorage.setItem(getParentKey(parentEmail), JSON.stringify(parentData));
   } catch (error) {
     console.error("Error updating child progress:", error);
   }
@@ -495,17 +500,34 @@ export const getChildStatistics = (childEmail, days = 7) => {
 };
 
 /**
+ * Get the email of the currently signed-in user
+ */
+const getSessionEmail = () => {
+  try {
+    const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+    return session.email || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
  * Update parent settings
  */
-export const updateParentSettings = (settings) => {
+export const updateParentSettings = (settings, parentEmail) => {
   try {
-    const parentData = getParentData();
+    const email = parentEmail || getSessionEmail();
+    if (!email) {
+      return { success: false, error: "Parent email not provided" };
+    }
+
+    const parentData = getParentData(email);
     if (!parentData) {
       return { success: false, error: "Parent account not found" };
     }
 
     parentData.settings = { ...parentData.settings, ...settings };
-    localStorage.setItem(PARENT_DATA_KEY, JSON.stringify(parentData));
+    localStorage.setItem(getParentKey(email), JSON.stringify(parentData));
 
     return { success: true };
   } catch (error) {
@@ -517,9 +539,19 @@ export const updateParentSettings = (settings) => {
 /**
  * Remove child from parent account
  */
-export const removeChildFromParent = (childEmail) => {
+export const removeChildFromParent = (childEmail, parentEmail) => {
   try {
-    const parentData = getParentData();
+    // Prefer explicit parentEmail; fall back to the link record for this child
+    let email = parentEmail;
+    if (!email) {
+      const link = isChildLinkedToParent(childEmail);
+      email = link?.parentEmail || getSessionEmail();
+    }
+    if (!email) {
+      return { success: false, error: "Parent account not found" };
+    }
+
+    const parentData = getParentData(email);
     if (!parentData) {
       return { success: false, error: "Parent account not found" };
     }
@@ -528,7 +560,7 @@ export const removeChildFromParent = (childEmail) => {
     parentData.children = parentData.children.filter(
       child => child.email.toLowerCase() !== childEmail.toLowerCase()
     );
-    localStorage.setItem(PARENT_DATA_KEY, JSON.stringify(parentData));
+    localStorage.setItem(getParentKey(email), JSON.stringify(parentData));
 
     // Remove parent-child link
     const links = getParentChildLinks();
@@ -552,8 +584,11 @@ export const removeChildFromParent = (childEmail) => {
  */
 export const isWithinAllowedHours = (childEmail) => {
   try {
-    const parentData = getParentData();
-    if (!parentData) return true; // Allow if no parent restrictions
+    const link = isChildLinkedToParent(childEmail);
+    if (!link) return true; // No parent linked => no restrictions
+
+    const parentData = getParentData(link.parentEmail);
+    if (!parentData) return true;
 
     const child = parentData.children.find(
       child => child.email.toLowerCase() === childEmail.toLowerCase()

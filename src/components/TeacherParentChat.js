@@ -93,7 +93,11 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
   }, [selectedConversation]);
 
   // Auto-refresh conversations and messages — only depends on currentUserEmail
-  // so the interval is created once per session, not on every conversation click
+  // so the interval is created once per session, not on every conversation click.
+  // loadConversations/loadMessages are intentionally NOT in deps: they're useCallbacks
+  // whose own deps change (loadConversations -> loadMessages -> markMessagesAsRead chain)
+  // and re-listing them here would tear down & rebuild the 3s interval continuously,
+  // which causes message-flicker and dropped reads.
   useEffect(() => {
     loadConversations();
 
@@ -109,13 +113,15 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
         clearInterval(autoRefreshIntervalRef.current);
       }
     };
-  }, [currentUserEmail, loadConversations, loadMessages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserEmail]);
 
   // Load messages when conversation changes
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
 
   // Auto scroll to bottom when new messages arrive

@@ -52,7 +52,9 @@
       "WebFetch(domain:antijingoist.itch.io)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(npm show:*)",
-      "Bash(npm search:*)"
+      "Bash(npm search:*)",
+      "Bash(sed 's/\".*$//')",
+      "Bash(timeout 90 npx react-scripts build)"
     ],
     "deny": [],
     "ask": []

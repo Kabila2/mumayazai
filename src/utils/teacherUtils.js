@@ -13,6 +13,19 @@ const generateId = () => {
 };
 
 /**
+ * Generate a short, easy-to-share class join code (6 chars, uppercase)
+ */
+const generateClassCode = () => {
+  // Avoid ambiguous chars (0/O, 1/I, etc.)
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < 6; i++) {
+    out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return out;
+};
+
+/**
  * Get current date string in YYYY-MM-DD format
  */
 const getCurrentDateString = () => {
@@ -102,6 +115,16 @@ export const createClass = (teacherEmail, className, subject, gradeLevel) => {
     const classes = getAllClasses();
     const classId = generateId();
 
+    // Ensure unique class code across all classes
+    const existingClasses = getAllClasses();
+    const existingCodes = new Set(
+      Object.values(existingClasses).map(c => (c.classCode || '').toUpperCase())
+    );
+    let classCode = generateClassCode();
+    while (existingCodes.has(classCode)) {
+      classCode = generateClassCode();
+    }
+
     const newClass = {
       id: classId,
       name: className,
@@ -109,6 +132,7 @@ export const createClass = (teacherEmail, className, subject, gradeLevel) => {
       gradeLevel: gradeLevel,
       teacherEmail: teacherEmail.toLowerCase(),
       teacherName: teacherData.name,
+      classCode,
       createdAt: new Date().toISOString(),
       students: [],
       totalStudents: 0,
@@ -579,6 +603,60 @@ export const deleteClass = (classId, teacherEmail) => {
     return { success: true };
   } catch (error) {
     console.error("Error deleting class:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Find a class by its share code (case-insensitive)
+ */
+export const findClassByCode = (code) => {
+  if (!code) return null;
+  const allClasses = getAllClasses();
+  const upper = code.trim().toUpperCase();
+  return Object.values(allClasses).find(
+    c => (c.classCode || '').toUpperCase() === upper
+  ) || null;
+};
+
+/**
+ * Get all classes a student is enrolled in
+ */
+export const getStudentClasses = (studentEmail) => {
+  try {
+    const allClasses = getAllClasses();
+    const email = studentEmail.toLowerCase();
+    return Object.values(allClasses).filter(c =>
+      (c.students || []).some(s =>
+        typeof s === 'string' ? s.toLowerCase() === email : (s.email || '').toLowerCase() === email
+      )
+    );
+  } catch (error) {
+    console.error("Error getting student classes:", error);
+    return [];
+  }
+};
+
+/**
+ * Student-initiated class join via share code
+ */
+export const joinClassByCode = (studentEmail, code) => {
+  try {
+    const cls = findClassByCode(code);
+    if (!cls) {
+      return { success: false, error: "Invalid class code" };
+    }
+    const result = enrollStudent(cls.id, studentEmail);
+    if (!result.success) {
+      // Translate "already enrolled" into a friendlier message for students
+      if ((result.error || '').toLowerCase().includes('already enrolled')) {
+        return { success: false, error: "You are already in this class" };
+      }
+      return result;
+    }
+    return { success: true, classId: cls.id, className: cls.name };
+  } catch (error) {
+    console.error("Error joining class by code:", error);
     return { success: false, error: error.message };
   }
 };
