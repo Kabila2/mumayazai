@@ -10,7 +10,6 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
   const [showVideo, setShowVideo] = useState(true);
   const [learnedSentences, setLearnedSentences] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
-  const videoRef = React.useRef(null);
 
   // Voice Over hook for Arabic pronunciation
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
@@ -38,7 +37,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           english: 'Peace be upon you',
           pronunciation: 'as-salamu alaykum',
           image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
-          video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+          video: 'https://www.youtube.com/embed/VDKK2-V_-ro?rel=0',
           videoDescription: {
             en: 'Learn the traditional Islamic greeting and its proper usage in daily conversations',
             ar: 'تعلم التحية الإسلامية التقليدية واستخدامها الصحيح في المحادثات اليومية'
@@ -53,7 +52,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           english: 'Good morning',
           pronunciation: 'sabah al-khayr',
           image: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=400&h=300&fit=crop',
-          video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+          video: 'https://www.youtube.com/embed/frUuoUIddf8?rel=0',
           videoDescription: {
             en: 'Master morning greetings in Arabic and learn when to use them in different contexts',
             ar: 'أتقن تحيات الصباح باللغة العربية وتعلم متى تستخدمها في سياقات مختلفة'
@@ -68,7 +67,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           english: 'How are you?',
           pronunciation: 'kayfa haluk',
           image: 'https://images.unsplash.com/photo-1556484687-30636164638b?w=400&h=300&fit=crop',
-          video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+          video: 'https://www.youtube.com/embed/KpcO9C4FVTo?rel=0',
           videoDescription: {
             en: 'Practice asking about someone\'s wellbeing and understand the cultural context',
             ar: 'تدرب على السؤال عن حال شخص ما وفهم السياق الثقافي'
@@ -83,7 +82,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           english: "I'm fine",
           pronunciation: 'ana bi-khayr',
           image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=300&fit=crop',
-          video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+          video: 'https://www.youtube.com/embed/KpcO9C4FVTo?rel=0',
           videoDescription: {
             en: 'Learn different ways to respond positively about your wellbeing in Arabic',
             ar: 'تعلم طرق مختلفة للرد بشكل إيجابي عن حالك باللغة العربية'
@@ -107,7 +106,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
           english: 'I love food',
           pronunciation: 'uhibbu at-ta\'am',
           image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
-          video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+          video: 'https://www.youtube.com/embed/238NKD8QTsI?rel=0',
           videoDescription: {
             en: 'Express your love for food and learn food-related vocabulary',
             ar: 'عبّر عن حبك للطعام وتعلم المفردات المتعلقة بالطعام'
@@ -262,9 +261,6 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
       const nextIndex = currentSentenceIndex + 1;
       setCurrentSentenceIndex(nextIndex);
       setShowVideo(true);
-      if (videoRef.current) {
-        videoRef.current.load();
-      }
       // Speak the next sentence
       setTimeout(() => {
         voiceOver.speak(selectedCategory.sentences[nextIndex].arabic, true);
@@ -277,9 +273,6 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
       const prevIndex = currentSentenceIndex - 1;
       setCurrentSentenceIndex(prevIndex);
       setShowVideo(true);
-      if (videoRef.current) {
-        videoRef.current.load();
-      }
       // Speak the previous sentence
       setTimeout(() => {
         voiceOver.speak(selectedCategory.sentences[prevIndex].arabic, true);
@@ -386,19 +379,15 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
               </div>
               {showVideo ? (
                 <div className="video-container">
-                  <video
-                    ref={videoRef}
+                  <iframe
+                    key={currentSentence.video}
                     className="sentence-video"
-                    controls
-                    controlsList="nodownload"
-                    preload="metadata"
-                  >
-                    <source src={currentSentence.video} type="video/mp4" />
-                    {language === 'ar'
-                      ? 'متصفحك لا يدعم تشغيل الفيديو.'
-                      : 'Your browser does not support the video tag.'
-                    }
-                  </video>
+                    src={currentSentence.video}
+                    title={currentSentence.english}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
                   <button
                     className="toggle-media-btn"
                     onClick={() => setShowVideo(false)}

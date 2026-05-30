@@ -56,7 +56,13 @@
       "Bash(sed 's/\".*$//')",
       "Bash(timeout 90 npx react-scripts build)",
       "Bash(where chrome *)",
-      "Bash(where msedge *)"
+      "Bash(where msedge *)",
+      "WebSearch",
+      "WebFetch(domain:www.youtube.com)",
+      "Bash(curl -s -o /dev/null -w \"css=%{http_code} html=\" http://localhost:8137/build/static/css/main.fb724fe4.css)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8137/_mock_video.html)",
+      "PowerShell(Out-Null *)",
+      "PowerShell(Get-NetTCPConnection *)"
     ],
     "deny": [],
     "ask": []

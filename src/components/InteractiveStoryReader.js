@@ -32,7 +32,7 @@ const stories = [
       }
     ],
     thumbnail: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&q=80',
-    videoUrl: 'https://www.youtube.com/embed/J---aiyznGQ'
+    videoUrl: 'https://www.youtube.com/embed/5BkHMIXLr_U?rel=0'
   },
   {
     id: 2,
@@ -61,7 +61,7 @@ const stories = [
       }
     ],
     thumbnail: 'https://images.unsplash.com/photo-1511497584788-876760111969?w=400&q=80',
-    videoUrl: 'https://www.youtube.com/embed/tRmRMnVULs8'
+    videoUrl: 'https://www.youtube.com/embed/A4Gc5-fkhfc?rel=0'
   }
 ];
 
