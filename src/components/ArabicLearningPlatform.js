@@ -349,7 +349,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card alphabet-card"
           onClick={() => handleSectionChange('alphabet')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -379,7 +379,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card colors-card"
           onClick={() => handleSectionChange('colors')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -409,7 +409,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card words-card"
           onClick={() => handleSectionChange('words')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -430,7 +430,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card sentences-card"
           onClick={() => handleSectionChange('sentences')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -451,7 +451,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card handwriting-card"
           onClick={() => handleSectionChange('handwriting')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -472,7 +472,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card story-card"
           onClick={() => handleSectionChange('story')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -493,7 +493,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card drawing-board-card"
           onClick={() => handleSectionChange('drawing')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -514,7 +514,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card chat-card"
           onClick={() => handleSectionChange('chat')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -555,7 +555,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card homework-card"
           onClick={() => handleSectionChange('homework')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -597,7 +597,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card quiz-card"
           onClick={() => handleSectionChange('quiz')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -618,7 +618,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card wordbuilder-card"
           onClick={() => handleSectionChange('wordbuilder')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -639,7 +639,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card letterwordbuilder-card"
           onClick={() => handleSectionChange('letterwordbuilder')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -660,7 +660,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card sentencebuilder-card"
           onClick={() => handleSectionChange('sentencebuilder')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -681,7 +681,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card memory-card"
           onClick={() => handleSectionChange('memory-game')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -702,7 +702,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card color-matching-card"
           onClick={() => handleSectionChange('color-matching')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -723,7 +723,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card number-learning-card"
           onClick={() => handleSectionChange('number-learning')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -759,7 +759,7 @@ const ArabicLearningPlatform = ({
         <motion.div
           className="section-card progress-card"
           onClick={() => handleSectionChange('progress')}
-          whileHover={{ scale: 1.05, y: -5 }}
+          whileHover={{ y: -3 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -782,7 +782,7 @@ const ArabicLearningPlatform = ({
           <motion.div
             className="section-card class-card"
             onClick={() => handleSectionChange('classmanagement')}
-            whileHover={{ scale: 1.05, y: -5 }}
+            whileHover={{ y: -3 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -806,7 +806,7 @@ const ArabicLearningPlatform = ({
           <motion.div
             className="section-card teacherchat-card"
             onClick={() => handleSectionChange('teacherchat')}
-            whileHover={{ scale: 1.05, y: -5 }}
+            whileHover={{ y: -3 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -834,7 +834,7 @@ const ArabicLearningPlatform = ({
           <motion.div
             className="section-card progressreport-card"
             onClick={() => handleSectionChange('progressreport')}
-            whileHover={{ scale: 1.05, y: -5 }}
+            whileHover={{ y: -3 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -858,7 +858,7 @@ const ArabicLearningPlatform = ({
           <motion.div
             className="section-card teacherdashboard-card"
             onClick={() => handleSectionChange('teacherdashboard')}
-            whileHover={{ scale: 1.05, y: -5 }}
+            whileHover={{ y: -3 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -882,7 +882,7 @@ const ArabicLearningPlatform = ({
           <motion.div
             className="section-card parentdashboard-card"
             onClick={() => handleSectionChange('parentdashboard')}
-            whileHover={{ scale: 1.05, y: -5 }}
+            whileHover={{ y: -3 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1270,7 +1270,7 @@ const ArabicLearningPlatform = ({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.05, y: -5 }}
+                    whileHover={{ y: -3 }}
                     whileTap={{ scale: 0.95 }}
                     style={{
                       padding: '2rem',

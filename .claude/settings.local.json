@@ -54,7 +54,9 @@
       "Bash(npm show:*)",
       "Bash(npm search:*)",
       "Bash(sed 's/\".*$//')",
-      "Bash(timeout 90 npx react-scripts build)"
+      "Bash(timeout 90 npx react-scripts build)",
+      "Bash(where chrome *)",
+      "Bash(where msedge *)"
     ],
     "deny": [],
     "ask": []
