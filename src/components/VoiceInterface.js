@@ -548,6 +548,7 @@ export default function VoiceInterface({
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const micStreamRef = useRef(null);
   const saveTimeoutRef = useRef(null);
   const bottomRef = useRef(null);
   const silenceTimeoutRef = useRef(null);
@@ -731,6 +732,24 @@ export default function VoiceInterface({
         clearTimeout(silenceTimeoutRef.current);
       }
       console.error("Speech recognition error:", event.error);
+
+      // Surface a clear, actionable message instead of failing silently
+      const messages = language === 'ar' ? {
+        'not-allowed': "تم رفض إذن الميكروفون. فعّله من إعدادات المتصفح.",
+        'service-not-allowed': "خدمة التعرّف على الصوت غير مسموح بها.",
+        'audio-capture': "لم يتم العثور على ميكروفون.",
+        'no-speech': "لم أسمع أي صوت. حاول مرة أخرى.",
+        'network': "تعذّر الاتصال بخدمة التعرّف على الصوت.",
+      } : {
+        'not-allowed': "Microphone permission denied. Enable it in your browser settings.",
+        'service-not-allowed': "Speech recognition service isn't allowed.",
+        'audio-capture': "No microphone was found.",
+        'no-speech': "I didn't hear anything. Please try again.",
+        'network': "Couldn't reach the speech recognition service.",
+      };
+      if (messages[event.error]) {
+        showNotification(messages[event.error], event.error === 'no-speech' ? "info" : "error");
+      }
     };
 
     recognitionRef.current = recognition;
@@ -755,6 +774,7 @@ export default function VoiceInterface({
     const setupAudioContext = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = stream;
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
         analyserRef.current = audioContextRef.current.createAnalyser();
 
@@ -786,6 +806,11 @@ export default function VoiceInterface({
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+      }
+      // Release the microphone so the browser's mic indicator turns off
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach((track) => track.stop());
+        micStreamRef.current = null;
       }
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close().catch(err => {
@@ -1134,9 +1159,13 @@ export default function VoiceInterface({
   };
 
 
-  const startListening = () => {
-    if (!recognitionRef.current) {
-      showNotification("Speech recognition not available", "error");
+  const startListening = async () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) {
+      showNotification(
+        language === 'ar' ? "التعرّف على الصوت غير متاح في هذا المتصفح" : "Speech recognition isn't available in this browser",
+        "error"
+      );
       return;
     }
 
@@ -1144,7 +1173,55 @@ export default function VoiceInterface({
       stopSpeaking();
     }
 
-    recognitionRef.current.start();
+    // Microphone needs a secure context (https) — except on localhost during dev
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    if (!window.isSecureContext && !isLocal) {
+      showNotification(
+        language === 'ar'
+          ? "يحتاج الميكروفون إلى اتصال آمن (https)."
+          : "Microphone needs a secure (https) connection.",
+        "error"
+      );
+      return;
+    }
+
+    // Proactively request mic permission so a denial is explicit rather than silent.
+    // SpeechRecognition opens its own stream, so we release this one immediately.
+    try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    } catch (err) {
+      console.error("Microphone permission error:", err);
+      showNotification(
+        language === 'ar'
+          ? "لا يمكن الوصول إلى الميكروفون. يرجى السماح بالإذن من المتصفح."
+          : "Can't access the microphone. Please allow mic permission in your browser.",
+        "error"
+      );
+      return;
+    }
+
+    // Guard against the common "recognition has already started" InvalidStateError,
+    // which otherwise throws and leaves the mic doing nothing.
+    try {
+      recognition.start();
+    } catch (err) {
+      if (err && err.name === 'InvalidStateError') {
+        try { recognition.stop(); } catch (_) { /* ignore */ }
+        setTimeout(() => {
+          try { recognition.start(); } catch (e) { console.error("Retry start failed:", e); }
+        }, 250);
+      } else {
+        console.error("recognition.start() failed:", err);
+        showNotification(
+          language === 'ar' ? "تعذّر بدء الاستماع. حاول مرة أخرى." : "Couldn't start listening. Please try again.",
+          "error"
+        );
+      }
+    }
   };
 
   const stopListening = () => {

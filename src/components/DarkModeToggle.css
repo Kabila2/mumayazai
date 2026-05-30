@@ -87,10 +87,11 @@
 }
 
 .dark-mode .platform-title {
-  color: #a78bfa;
-  background: linear-gradient(135deg, #a78bfa, #ec4899, #f59e0b);
+  color: #a5b4fc;
+  background: linear-gradient(135deg, #818cf8, #a78bfa, #c4b5fd);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .dark-mode .platform-subtitle,

@@ -1,10 +1,12 @@
+/* Auth modal — unified Calm Modern theme (tokens from theme.css) */
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--mz-scrim);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,73 +14,66 @@
 }
 
 .modal {
-  background-color: #111;
+  background: var(--mz-surface);
   padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 0 20px #00f2ff33;
+  border-radius: var(--mz-radius-xl);
+  border: 1px solid var(--mz-border);
+  box-shadow: var(--mz-shadow-lg);
   width: 90%;
   max-width: 420px;
-  color: #fff;
+  color: var(--mz-text);
   position: relative;
   font-family: 'OpenDyslexic', 'Cairo', sans-serif;
   transition: all 0.3s ease-in-out;
-}
-
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  background: none;
-  color: #ccc;
-  font-size: 1.4rem;
-  border: none;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.modal-close:hover {
-  color: #fff;
 }
 
 .modal h2 {
   font-size: 1.8rem;
   margin-bottom: 20px;
   text-align: center;
+  color: var(--mz-text);
 }
 
 .modal-input {
   width: 100%;
   padding: 10px 14px;
   margin: 10px 0;
-  border: 1px solid #333;
-  background-color: #1a1a1a;
-  color: #fff;
+  border: 1px solid var(--mz-border);
+  background-color: var(--mz-surface-2);
+  color: var(--mz-text);
   font-size: 1rem;
-  border-radius: 8px;
+  border-radius: var(--mz-radius-sm);
   outline: none;
-  transition: border-color 0.3s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.modal-input::placeholder { color: var(--mz-text-3); }
+
 .modal-input:focus {
-  border-color: #00f2ff;
+  border-color: var(--mz-accent);
+  box-shadow: 0 0 0 3px var(--mz-ring);
 }
+
+.modal label { color: var(--mz-text-2); }
 
 .modal-submit {
   width: 100%;
-  padding: 10px;
-  background: linear-gradient(135deg, #00f2ff, #a3ffe4);
-  color: #000;
-  font-weight: bold;
+  padding: 12px;
+  background: var(--mz-accent-grad);
+  color: #fff;
+  font-weight: 700;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--mz-radius-sm);
   margin-top: 16px;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  box-shadow: var(--mz-shadow-accent);
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .modal-submit:hover {
-  transform: scale(1.02);
+  transform: translateY(-1px) scale(1.01);
+  filter: brightness(1.06);
 }
 
 .success-message {
@@ -87,65 +82,48 @@
   margin-bottom: 10px;
 }
 
-.success-message.success {
-  color: #0f0;
-}
-
-.success-message.error {
-  color: #f66;
-}
+.success-message.success { color: var(--mz-success); font-weight: 700; }
+.success-message.error   { color: var(--mz-danger); }
 
 .error-text {
   font-size: 0.8rem;
-  color: #ff6b6b;
+  color: var(--mz-danger);
   margin: -4px 0 8px 4px;
 }
+
 .modal-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 24px;
-  background: #1e1e1e; /* dark button background */
-  color: white;         /* <-- change this to your desired color */
-  border: none;
-  border-radius: 12px;
-  padding: 8px 12px;
+  top: 12px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  line-height: 1;
+  background: var(--mz-surface-2);
+  color: var(--mz-text-2);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-sm);
   cursor: pointer;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .modal-close:hover {
-  background: #ff4d4f; /* optional hover color */
-  color: white;
-}
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 24px;
-  background: #6a0dad; /* Matching purple */
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 8px 12px;
-  cursor: pointer;
-  box-shadow: 0 0 8px #6a0dad;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.modal-close:hover {
-  background: #7c1fff;
+  background: var(--mz-danger);
+  border-color: var(--mz-danger);
+  color: #fff;
   transform: scale(1.05);
 }
 
-/* Enhanced Button Shine Effects for Auth Modal */
+/* Button shine */
 .modal-close,
 .modal-submit {
   position: relative;
   overflow: hidden;
 }
 
-.modal-close::before,
 .modal-submit::before {
   content: '';
   position: absolute;
@@ -159,12 +137,8 @@
   z-index: 1;
 }
 
-.modal-close:hover::before,
-.modal-submit:hover::before {
-  left: 100%;
-}
+.modal-submit:hover::before { left: 100%; }
 
-/* Ensure button content stays above shine effect */
 .modal-close > *,
 .modal-submit > * {
   position: relative;

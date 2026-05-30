@@ -76,20 +76,25 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--tp-border);
-  background: var(--tp-surface);
-  color: var(--tp-text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
+  padding: 8px 14px;
+  border: 1px solid var(--mz-border);
+  background: var(--mz-surface-2);
+  /* Primary (never-muted) text so the label is ALWAYS visible, not only on hover */
+  color: var(--mz-text);
+  font-size: 0.9rem;
+  font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
+/* Make sure the arrow + "Back" label always take the button's color */
+.back-button span { color: inherit; }
+
 .back-button:hover {
-  background: var(--tp-bg);
-  color: var(--tp-text);
+  background: var(--mz-accent);
+  border-color: var(--mz-accent);
+  color: #fff;
 }
 
 .new-conversation-btn {

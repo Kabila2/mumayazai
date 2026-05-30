@@ -181,7 +181,7 @@ export default function AuthModal({ lang, mode, setMode, onClose, onSubmit }) {
               : "ليس لديك حساب؟"}{" "}
           <span
             onClick={() => { setServerError(""); setSuccess(null); setMode(mode === "signup" ? "signin" : "signup"); }}
-            style={{ color: "#0ff", cursor: "pointer", textDecoration: "underline" }}
+            style={{ color: "var(--mz-accent-text)", cursor: "pointer", textDecoration: "underline", fontWeight: 700 }}
           >
             {lang === "en"
               ? mode === "signup" ? "Sign In" : "Sign Up"

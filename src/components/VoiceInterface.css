@@ -110,7 +110,12 @@
   align-items: center;
   justify-content: flex-start;
   padding: 0;
-  background: var(--bg-main);
+  /* Deep-indigo immersive conversation surface — matches the entry hero and
+     shares the brand accent, so it reads as one system with the light app */
+  background:
+    radial-gradient(1100px 760px at 50% 0%, #2a2570 0%, #161341 55%, #0e0c24 100%),
+    #0e0c24;
+  background-attachment: fixed;
   overflow-y: auto;
   overflow-x: hidden;
   color: rgba(255, 255, 255, 0.95);

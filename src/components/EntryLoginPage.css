@@ -9,7 +9,10 @@
   height: 100vh;
   height: 100dvh; /* mobile dynamic height */
   overflow: hidden;
-  background: #00bcd4;
+  /* Deep indigo hero — same accent family as the light app, lets the violet Orb glow */
+  background:
+    radial-gradient(1200px 820px at 50% 28%, #2e2576 0%, #1b1648 46%, #100e28 100%),
+    #0e0c24;
   font-family: 'OpenDyslexic', 'Cairo', 'Noto Kufi Arabic', sans-serif;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -50,38 +53,31 @@
   font-size: 1rem;
   font-weight: 600;
   color: #fff;
-  background: #5227ff;
-  border: none;
-  border-radius: 0.6rem;
+  /* Frosted glass on the dark hero; lifts to the brand accent on hover */
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.75rem;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  box-shadow: 0 4px 18px rgba(8, 6, 24, 0.35);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.auth-btn:hover       { background: #3a1eca; }
-.auth-btn:hover svg   { transform: translateX(4px) rotate(10deg); }
-.auth-btn:hover       { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+.auth-btn:hover svg   { transform: translateX(3px) rotate(8deg); }
 
-/* Arabic button styling */
-.arabic-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.arabic-btn:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
-/* English button styling */
+/* Arabic + English buttons share one unified look */
+.arabic-btn,
 .english-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
+.arabic-btn:hover,
 .english-btn:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(118, 75, 162, 0.4);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 26px rgba(99, 102, 241, 0.45);
 }
 
 /* slide-in animation */
@@ -136,51 +132,69 @@
 }
 
 .modal {
-  background: #121212;
+  background: var(--mz-surface);
   padding: 2rem;
   width: 90%;
-  max-width: 400px;
-  border-radius: 0.75rem;
+  max-width: 420px;
+  border-radius: var(--mz-radius-xl);
   position: relative;
-  box-shadow:
-    0 0 30px rgba(82,39,255,0.5),
-    0 10px 30px rgba(0,0,0,0.4);
-  color: #eee;
+  border: 1px solid var(--mz-border);
+  box-shadow: var(--mz-shadow-lg);
+  color: var(--mz-text);
 }
 
 .modal-close {               /* X icon */
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: var(--mz-surface-2);
+  border: 1px solid var(--mz-border);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--mz-radius-sm);
+  font-size: 1.4rem;
+  line-height: 1;
   cursor: pointer;
+  color: var(--mz-text-2);
+  transition: all 0.2s ease;
+}
+.modal-close:hover {
+  background: var(--mz-danger);
+  border-color: var(--mz-danger);
   color: #fff;
 }
 
 .modal-input {
   width: 100%;
   margin-bottom: 1rem;
-  padding: 0.5rem;
-  background: #1f1f1f;
-  color: #ddd;
-  border: 1px solid #333;
-  border-radius: 0.25rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-sm);
 }
-.modal-input::placeholder { color: #777; }
+.modal-input::placeholder { color: var(--mz-text-3); }
+.modal-input:focus {
+  outline: none;
+  border-color: var(--mz-accent);
+  box-shadow: 0 0 0 3px var(--mz-ring);
+}
 
 .modal-submit {
   width: 100%;
-  padding: 0.75rem;
-  background: #5227ff;
+  padding: 0.85rem;
+  background: var(--mz-accent-grad);
   color: #fff;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: var(--mz-radius-sm);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: var(--mz-shadow-accent);
 }
-.modal-submit:hover { background: #3a1eca; }
+.modal-submit:hover { filter: brightness(1.06); transform: translateY(-1px); }
 
 /* —————————————————————————————  
    FORCE ORB / CANVAS TO THE BACK  

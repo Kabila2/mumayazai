@@ -1,0 +1,281 @@
+/* ============================================================================
+   MUMAYAZ — UNIFIED DESIGN SYSTEM  ("Calm Modern")
+   ----------------------------------------------------------------------------
+   Single source of truth for the whole platform's look & feel.
+   Imported LAST in index.js so it wins the cascade over the older, conflicting
+   :root blocks scattered across the component stylesheets.
+
+   How it works:
+   1. Canonical tokens are the `--mz-*` variables (light in :root, dark in
+      :root.dark-mode).
+   2. Every LEGACY variable name used anywhere in the app (--primary,
+      --text-primary, --card-bg, --tp-*, --bg-gradient, --gray-*, …) is aliased
+      to a canonical token. Because the aliases reference --mz-* (not literals),
+      they automatically flip when dark mode is on — defined once, works in both.
+   3. A small set of global element styles + a contrast safety-net guarantee
+      readable text on every button/control.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1. CANONICAL TOKENS — LIGHT  (Calm Modern: soft off-white + indigo/violet)
+   ---------------------------------------------------------------------------- */
+:root {
+  /* Surfaces */
+  --mz-bg:            #eef1f8;                                   /* page */
+  --mz-bg-grad:       linear-gradient(160deg, #f4f6fc 0%, #e9edf8 55%, #eef1fb 100%);
+  --mz-surface:       #ffffff;                                   /* cards / panels */
+  --mz-surface-2:     #f4f6fc;                                   /* raised / inset */
+  --mz-surface-3:     #e9edf7;                                   /* tracks / wells */
+  --mz-border:        #e2e6f1;
+  --mz-border-strong: #cdd4e6;
+
+  /* Text */
+  --mz-text:          #1c2333;                                   /* primary */
+  --mz-text-2:        #515a70;                                   /* secondary */
+  --mz-text-3:        #8a93aa;                                   /* muted */
+
+  /* Brand accent (indigo → violet) */
+  --mz-accent:         #6366f1;                                  /* fills / buttons */
+  --mz-accent-2:       #8b5cf6;
+  --mz-accent-hover:   #4f46e5;
+  --mz-accent-press:   #4338ca;
+  --mz-accent-text:    #4f46e5;                                  /* accent used as text/icons on page */
+  --mz-accent-contrast:#ffffff;                                  /* text on top of accent */
+  --mz-accent-soft:    #eef2ff;                                  /* tinted background */
+  --mz-accent-grad:    linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --mz-ring:           rgba(99, 102, 241, 0.40);
+
+  /* Semantic */
+  --mz-success: #16a34a; --mz-success-soft: #dcfce7;
+  --mz-warning: #d97706; --mz-warning-soft: #fef3c7;
+  --mz-danger:  #dc2626; --mz-danger-soft:  #fee2e2;
+  --mz-info:    #2563eb; --mz-info-soft:    #dbeafe;
+
+  /* Elevation */
+  --mz-shadow-sm: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+  --mz-shadow-md: 0 4px 12px rgba(16, 24, 40, .08), 0 2px 6px rgba(16, 24, 40, .06);
+  --mz-shadow-lg: 0 12px 32px rgba(16, 24, 40, .12), 0 4px 12px rgba(16, 24, 40, .08);
+  --mz-shadow-accent: 0 8px 22px rgba(99, 102, 241, .30);
+
+  /* Radius */
+  --mz-radius-sm: 8px;
+  --mz-radius-md: 12px;
+  --mz-radius-lg: 18px;
+  --mz-radius-xl: 24px;
+  --mz-radius-pill: 999px;
+
+  /* Modal scrim */
+  --mz-scrim: rgba(17, 22, 36, 0.55);
+
+  /* ---- Neutral gray scale (light) ---- */
+  --gray-50:#f8fafc; --gray-100:#f1f5f9; --gray-200:#e2e8f0; --gray-300:#cbd5e1;
+  --gray-400:#94a3b8; --gray-500:#64748b; --gray-600:#475569; --gray-700:#334155;
+  --gray-800:#1e293b; --gray-900:#0f172a;
+
+  /* ---- Soft pastels (kept gentle for friendly learning cards) ---- */
+  --pastel-purple:#ede9fe; --pastel-pink:#fce7f3; --pastel-blue:#e0e7ff;
+  --pastel-green:#dcfce7;  --pastel-yellow:#fef9c3; --pastel-orange:#ffedd5;
+}
+
+/* ----------------------------------------------------------------------------
+   2. CANONICAL TOKENS — DARK  (deep slate + brighter indigo)
+   Aliases below reference --mz-* so they flip automatically; only redefine the
+   canonical tokens + the scales that aren't simple aliases.
+   ---------------------------------------------------------------------------- */
+:root.dark-mode {
+  --mz-bg:            #0e1525;
+  --mz-bg-grad:       linear-gradient(160deg, #0e1525 0%, #121b30 60%, #0e1525 100%);
+  --mz-surface:       #18223a;
+  --mz-surface-2:     #1f2a45;
+  --mz-surface-3:     #263350;
+  --mz-border:        #2c3a58;
+  --mz-border-strong: #3a4a6e;
+
+  --mz-text:          #eef2fb;
+  --mz-text-2:        #c2cbdd;
+  --mz-text-3:        #8b97b2;
+
+  --mz-accent:         #6d74f4;
+  --mz-accent-2:       #9d7bf7;
+  --mz-accent-hover:   #818cf8;
+  --mz-accent-press:   #a5b4fc;
+  --mz-accent-text:    #a5b4fc;                                  /* readable accent on dark */
+  --mz-accent-contrast:#ffffff;
+  --mz-accent-soft:    rgba(129, 140, 248, 0.16);
+  --mz-accent-grad:    linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --mz-ring:           rgba(129, 140, 248, 0.55);
+
+  --mz-success: #34d399; --mz-success-soft: rgba(52, 211, 153, .16);
+  --mz-warning: #fbbf24; --mz-warning-soft: rgba(251, 191, 36, .16);
+  --mz-danger:  #f87171; --mz-danger-soft:  rgba(248, 113, 113, .16);
+  --mz-info:    #60a5fa; --mz-info-soft:    rgba(96, 165, 250, .16);
+
+  --mz-shadow-sm: 0 1px 2px rgba(0, 0, 0, .40);
+  --mz-shadow-md: 0 6px 18px rgba(0, 0, 0, .45);
+  --mz-shadow-lg: 0 16px 40px rgba(0, 0, 0, .55);
+  --mz-shadow-accent: 0 8px 24px rgba(99, 102, 241, .45);
+
+  --mz-scrim: rgba(2, 6, 18, 0.72);
+
+  /* ---- Neutral gray scale (dark) — inverted so gray-based text stays light
+     and gray-based fills stay dark ---- */
+  --gray-50:#0e1525; --gray-100:#16203a; --gray-200:#1f2940; --gray-300:#2c3a55;
+  --gray-400:#64748b; --gray-500:#94a3b8; --gray-600:#c2cbdd;
+  --gray-700:#d7deeb; --gray-800:#e8edf6; --gray-900:#f8fafc;
+
+  /* ---- Pastels (dark, faintly tinted surfaces) ---- */
+  --pastel-purple:#241f3a; --pastel-pink:#33203a; --pastel-blue:#1f2745;
+  --pastel-green:#13332a;  --pastel-yellow:#332f1c; --pastel-orange:#33271f;
+}
+
+/* ----------------------------------------------------------------------------
+   3. LEGACY ALIASES — map every old variable name onto a canonical token.
+   Defined once in :root; they inherit the dark values through --mz-*.
+   ---------------------------------------------------------------------------- */
+:root {
+  /* index.css */
+  --bg-page:        var(--mz-bg);
+  --bg-panel:       var(--mz-surface);
+  --accent-light:   var(--mz-accent-text);
+  --accent:         var(--mz-accent);
+  --accent-dark:    var(--mz-accent-hover);
+  --text-main:      var(--mz-text);
+  --text-secondary: var(--mz-text-2);
+  --font-sans:      'OpenDyslexic', 'Cairo', 'Noto Kufi Arabic', sans-serif;
+
+  /* App.css */
+  --primary:        var(--mz-accent);
+  --primary-hover:  var(--mz-accent-hover);
+  --primary-light:  var(--mz-accent-2);
+  --secondary:      var(--mz-accent-2);
+  --bg-gradient:    var(--mz-bg-grad);
+  --bg-glass:       var(--mz-surface);
+  --bg-card:        var(--mz-surface);
+  --bg-overlay:     var(--mz-scrim);
+  --font-family:    'OpenDyslexic', 'Cairo', sans-serif;
+  --shadow-md:      var(--mz-shadow-md);
+  --shadow-lg:      var(--mz-shadow-lg);
+  --shadow-xl:      var(--mz-shadow-lg);
+
+  /* ChatInterface.css */
+  --primary-solid:  var(--mz-accent);
+  --secondary-grad: var(--mz-accent-grad);
+  --text-primary:   var(--mz-text);
+  --text-tertiary:  var(--mz-text-3);
+  --text-light:     #ffffff;
+  --bg-main:        var(--mz-bg-grad);
+  --glass-bg:       var(--mz-surface);
+  --glass-border:   var(--mz-border);
+  --glass-hover:    var(--mz-surface-2);
+  --glass-strong:   var(--mz-surface);
+  --success:        var(--mz-success);
+  --warning:        var(--mz-warning);
+  --error:          var(--mz-danger);
+  --shadow-sm:      var(--mz-shadow-sm);
+
+  /* DarkModeToggle.css contract (used by dark-mode-global.css) */
+  --bg-primary:     var(--mz-bg);
+  --bg-secondary:   var(--mz-surface-2);
+  --bg-tertiary:    var(--mz-surface-3);
+  --border-color:   var(--mz-border);
+  --card-bg:        var(--mz-surface);
+  --hover-bg:       var(--mz-surface-2);
+  --gradient-start: var(--mz-accent);
+  --gradient-end:   var(--mz-accent-2);
+
+  /* TeacherParentChat.css (comms) — this is also what fixes the back button:
+     muted text now resolves to a proper, readable secondary color. */
+  --tp-bg:              var(--mz-bg);
+  --tp-surface:         var(--mz-surface);
+  --tp-border:          var(--mz-border);
+  --tp-text:            var(--mz-text);
+  --tp-text-muted:      var(--mz-text-2);
+  --tp-accent:          var(--mz-accent);
+  --tp-accent-soft:     var(--mz-accent-soft);
+  --tp-bubble-received: var(--mz-surface-2);
+  --tp-bubble-sent:     var(--mz-accent);
+  --tp-danger:          var(--mz-danger);
+}
+
+/* ----------------------------------------------------------------------------
+   4. GLOBAL BASE — page, typography, links, selection
+   ---------------------------------------------------------------------------- */
+html, body {
+  background: var(--mz-bg);
+  color: var(--mz-text);
+}
+body {
+  background: var(--mz-bg-grad);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--mz-accent);
+  color: var(--mz-accent-contrast);
+}
+
+a:not([class]) { color: var(--mz-accent-text); }
+a:not([class]):hover { color: var(--mz-accent-hover); }
+
+/* ----------------------------------------------------------------------------
+   5. CONTRAST SAFETY-NET
+   Buttons & controls inherit the readable page text color unless a component
+   explicitly overrides it. This is the structural fix for "button text only
+   shows on hover": no control can fall back to an invisible UA / mismatched
+   color. Element-level selectors stay low-specificity so component classes
+   still win when they set their own colors.
+   ---------------------------------------------------------------------------- */
+button,
+[role="button"] {
+  color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder { color: var(--mz-text-3); }
+
+/* Themed focus ring everywhere (keeps the high-contrast mode override intact) */
+:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------------------
+   6. SHARED OVERRIDES
+   The big screens (entry, hub, comms, chat, voice) are redesigned directly in
+   their own stylesheets, so they are intentionally NOT background-overridden
+   here — theme.css loads last and would otherwise clobber those redesigns.
+   We only normalise text color + modal scrims globally.
+   ---------------------------------------------------------------------------- */
+.app-container {
+  color: var(--mz-text);
+}
+
+/* ----------------------------------------------------------------------------
+   7. IMMERSIVE CONVERSATION SURFACES (text chat + voice)
+   These two screens are a deliberate deep-indigo immersive surface (see their
+   own stylesheets). The shared tokens they consume are re-scoped here to
+   translucent-on-dark glass + white text, so every panel/bubble/label inside
+   stays readable instead of inheriting the light theme tokens.
+   ---------------------------------------------------------------------------- */
+.voice-area,
+.chat-container {
+  --text-primary:   #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.86);
+  --text-tertiary:  rgba(255, 255, 255, 0.62);
+  --glass-bg:       rgba(255, 255, 255, 0.08);
+  --bg-glass:       rgba(255, 255, 255, 0.08);
+  --glass-border:   rgba(255, 255, 255, 0.16);
+  --glass-hover:    rgba(255, 255, 255, 0.14);
+  --glass-strong:   rgba(255, 255, 255, 0.20);
+  --card-bg:        rgba(255, 255, 255, 0.08);
+  --bg-card:        rgba(255, 255, 255, 0.10);
+  --bg-secondary:   rgba(255, 255, 255, 0.10);
+  --bg-tertiary:    rgba(255, 255, 255, 0.14);
+  --border-color:   rgba(255, 255, 255, 0.16);
+}
+
+/* Generic modal scrims across the app */
+.modal-overlay,
+.modal-backdrop {
+  background: var(--mz-scrim) !important;
+}

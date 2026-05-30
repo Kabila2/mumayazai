@@ -7,6 +7,9 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
+// Unified design system — imported LAST so its tokens win over the older,
+// conflicting :root blocks in the component stylesheets.
+import './theme.css';
 
 // Dynamically load Puter.js so `puter` is available globally
 ;(function loadPuter() {

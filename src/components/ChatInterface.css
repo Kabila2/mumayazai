@@ -90,7 +90,12 @@ html, body {
 /* Main Container with Dynamic Background */
 .chat-container {
   height: 100vh;
-  background: var(--bg-main);
+  /* Deep-indigo immersive conversation surface — matches the voice screen
+     and the entry hero (white chat text stays readable) */
+  background:
+    radial-gradient(1100px 760px at 50% 0%, #2a2570 0%, #161341 55%, #0e0c24 100%),
+    #0e0c24;
+  background-attachment: fixed;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
