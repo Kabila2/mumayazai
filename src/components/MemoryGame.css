@@ -116,10 +116,10 @@
 
 .difficulty-btn {
   padding: var(--space-2) var(--space-4);
-  background: rgba(255, 255, 255, 0.6);
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  background: var(--mz-surface-2);
+  border: 2px solid var(--mz-border);
   border-radius: var(--radius-lg);
-  color: var(--gray-700);
+  color: var(--mz-text-2);
   font-size: var(--font-size-sm);
   font-weight: 600;
   font-family: var(--font-family);
@@ -130,7 +130,9 @@
 }
 
 .difficulty-btn:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--mz-surface);
+  border-color: var(--mz-accent);
+  color: var(--mz-text);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }

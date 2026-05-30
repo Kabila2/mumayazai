@@ -230,6 +230,26 @@ button,
   color: inherit;
 }
 
+/* ---- Unified button baseline ----------------------------------------------
+   Element-level (specificity 0,0,1) so component classes still override it.
+   It only fills the GAPS that make buttons look inconsistent — height floor,
+   centered content, weight, radius — without flattening intentional designs.
+   MUI controls carry their own classes and are excluded. NOTE: deliberately no
+   global min-height — that would inflate tiny icon/utility buttons (e.g. an 18px
+   "×"). Per-screen heights are set in the screens that need them. */
+button:not(.dock-btn):not([class*="Mui"]) {
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  border-radius: var(--mz-radius-md);
+}
+button:not([class*="Mui"]):disabled { cursor: not-allowed; opacity: 0.6; }
+
 input::placeholder,
 textarea::placeholder { color: var(--mz-text-3); }
 

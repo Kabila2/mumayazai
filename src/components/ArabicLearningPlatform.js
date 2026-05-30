@@ -29,6 +29,8 @@ import OnboardingTutorial from "./OnboardingTutorial";
 import StudentProgressReport from "./StudentProgressReport";
 import TeacherDashboard from "./TeacherDashboard";
 import ParentDashboard from "./ParentDashboard";
+import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
+import mumayazMuiTheme from "../muiTheme";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
@@ -1603,12 +1605,14 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <TeacherDashboard
-                userEmail={getCurrentUserEmail()}
-                language={language}
-                onClose={() => setCurrentSection('home')}
-                onSignOut={onSignOut}
-              />
+              <MuiThemeProvider theme={mumayazMuiTheme}>
+                <TeacherDashboard
+                  userEmail={getCurrentUserEmail()}
+                  language={language}
+                  onClose={() => setCurrentSection('home')}
+                  onSignOut={onSignOut}
+                />
+              </MuiThemeProvider>
             </motion.div>
           )}
 
@@ -1620,12 +1624,14 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <ParentDashboard
-                userEmail={getCurrentUserEmail()}
-                language={language}
-                onClose={() => setCurrentSection('home')}
-                onSignOut={onSignOut}
-              />
+              <MuiThemeProvider theme={mumayazMuiTheme}>
+                <ParentDashboard
+                  userEmail={getCurrentUserEmail()}
+                  language={language}
+                  onClose={() => setCurrentSection('home')}
+                  onSignOut={onSignOut}
+                />
+              </MuiThemeProvider>
             </motion.div>
           )}
         </AnimatePresence>
