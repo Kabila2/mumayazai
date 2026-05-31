@@ -1239,7 +1239,7 @@ const ArabicLearningPlatform = ({
               <h2 style={{
                 fontSize: '2.5rem',
                 marginBottom: '1rem',
-                color: 'var(--text-color)',
+                color: 'var(--mz-text)',
                 textAlign: 'center'
               }}>
                 {language === 'ar' ? 'اختر مستوى الصعوبة' : 'Select Difficulty Level'}
@@ -1280,7 +1280,7 @@ const ArabicLearningPlatform = ({
                       cursor: 'pointer',
                       fontSize: '1.5rem',
                       fontWeight: '700',
-                      color: 'var(--text-color)',
+                      color: 'var(--mz-text)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1305,11 +1305,11 @@ const ArabicLearningPlatform = ({
                   marginTop: '3rem',
                   padding: '1rem 2rem',
                   borderRadius: '12px',
-                  border: '2px solid rgba(255,255,255,0.2)',
-                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid var(--mz-border)',
+                  background: 'var(--mz-surface-2)',
                   cursor: 'pointer',
                   fontSize: '1.1rem',
-                  color: 'var(--text-color)'
+                  color: 'var(--mz-text)'
                 }}
               >
                 ← {language === 'ar' ? 'رجوع' : 'Back'}

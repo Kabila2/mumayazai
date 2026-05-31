@@ -558,13 +558,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
         </motion.div>
 
         {/* Quizzes Section */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{
-            fontSize: '1.5rem',
-            marginBottom: '1rem',
-            color: 'var(--text-color)',
-            textAlign: language === 'ar' ? 'right' : 'left'
-          }}>
+        <div className="quiz-section">
+          <h3 className="quiz-section-title">
             {language === 'ar' ? '📝 الاختبارات' : '📝 Quizzes'}
           </h3>
           <div className="quiz-types-grid">
@@ -576,9 +571,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleQuizTypeSelect(type)}
-                style={{ borderColor: type.color }}
+                style={{ '--quiz-accent': type.color }}
               >
-                <div className="quiz-type-icon" style={{ color: type.color }}>
+                <div className="quiz-type-icon">
                   {type.icon}
                 </div>
                 <h3 className="quiz-type-name">
@@ -593,13 +588,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
         </div>
 
         {/* Interactive Games Section */}
-        <div>
-          <h3 style={{
-            fontSize: '1.5rem',
-            marginBottom: '1rem',
-            color: 'var(--text-color)',
-            textAlign: language === 'ar' ? 'right' : 'left'
-          }}>
+        <div className="quiz-section">
+          <h3 className="quiz-section-title">
             {language === 'ar' ? '🎮 الألعاب التفاعلية' : '🎮 Interactive Games'}
           </h3>
           <div className="quiz-types-grid">
@@ -611,9 +601,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: (quizOptions.length + index) * 0.1 }}
                 onClick={() => handleQuizTypeSelect(type)}
-                style={{ borderColor: type.color }}
+                style={{ '--quiz-accent': type.color }}
               >
-                <div className="quiz-type-icon" style={{ color: type.color }}>
+                <div className="quiz-type-icon">
                   {type.icon}
                 </div>
                 <h3 className="quiz-type-name">
@@ -659,9 +649,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => handleTopicSelect(topic)}
-              style={{ borderColor: topic.color }}
+              style={{ '--quiz-accent': topic.color }}
             >
-              <div className="topic-icon" style={{ color: topic.color }}>
+              <div className="topic-icon">
                 {topic.icon}
               </div>
               <h3 className="topic-name">

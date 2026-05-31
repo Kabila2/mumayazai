@@ -1,4 +1,8 @@
-/* Arabic Sentences Learning */
+/* ============================================================================
+   ARABIC SENTENCES LEARNING — aligned to --mz-* design system.
+   All selectors are scoped under .arabic-sentences-learning to avoid the global
+   class-name collisions this module shares with the other learning modules.
+   ============================================================================ */
 
 .arabic-sentences-learning *,
 .arabic-sentences-learning *::before,
@@ -11,8 +15,8 @@
   width: 100vw;
   max-width: 100vw;
   margin: 0;
-  padding: 40px 20px;
-  background: #ffffff;
+  padding: 40px 20px 64px;
+  background: transparent;            /* inherits the platform's calm gradient */
   min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -24,34 +28,30 @@
   box-sizing: border-box;
 }
 
-.arabic-sentences-learning::-webkit-scrollbar {
-  display: none;
-}
+.arabic-sentences-learning::-webkit-scrollbar { display: none; }
 
 /* Header */
-.sentences-header {
-  text-align: center;
-  margin-bottom: 50px;
-}
+.arabic-sentences-learning .sentences-header { text-align: center; margin-bottom: 44px; }
 
-.sentences-title {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 15px 0;
+.arabic-sentences-learning .sentences-title {
+  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--mz-text);
+  margin: 0 0 12px;
   text-align: center;
 }
 
-.sentences-subtitle {
-  font-size: 1.5rem;
-  color: #374151;
+.arabic-sentences-learning .sentences-subtitle {
+  font-size: 1.35rem;
+  color: var(--mz-text-2);
   margin: 0;
   font-weight: 600;
 }
 
 /* Categories */
-.sentences-categories {
-  max-width: 1400px;
+.arabic-sentences-learning .sentences-categories {
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 20px;
   min-height: calc(100vh - 240px);
@@ -59,39 +59,41 @@
   box-sizing: border-box;
 }
 
-.categories-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #1f2937;
+.arabic-sentences-learning .categories-title {
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  font-weight: 800;
+  color: var(--mz-text);
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
 }
 
-.categories-grid {
+.arabic-sentences-learning .categories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
+  gap: 26px;
   margin-bottom: 40px;
   width: 100%;
   box-sizing: border-box;
 }
 
-.category-card {
-  background: white;
-  border: 4px solid;
-  border-radius: 20px;
+/* border-color set inline (category identity) */
+.arabic-sentences-learning .category-card {
+  background: var(--mz-surface);
+  border: 2px solid var(--mz-border);
+  border-radius: var(--mz-radius-xl);
   padding: 40px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: var(--mz-shadow-sm);
 }
 
-.category-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+.arabic-sentences-learning .category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--mz-shadow-lg);
 }
 
-.category-icon {
+.arabic-sentences-learning .category-icon {
   width: 100px;
   height: 100px;
   border-radius: 50%;
@@ -102,22 +104,22 @@
   margin: 0 auto 20px;
 }
 
-.category-name {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 10px 0;
+.arabic-sentences-learning .category-name {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--mz-text);
+  margin: 0 0 10px;
 }
 
-.category-count {
-  font-size: 1.3rem;
-  color: #6b7280;
+.arabic-sentences-learning .category-count {
+  font-size: 1.2rem;
+  color: var(--mz-text-2);
   margin: 0;
   font-weight: 600;
 }
 
 /* Sentence Learning */
-.sentence-learning {
+.arabic-sentences-learning .sentence-learning {
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 20px;
@@ -126,36 +128,37 @@
   box-sizing: border-box;
 }
 
-.learning-navigation {
+.arabic-sentences-learning .learning-navigation {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   gap: 15px;
   flex-wrap: wrap;
 }
 
-.back-to-categories-btn {
+.arabic-sentences-learning .back-to-categories-btn {
   padding: 12px 24px;
-  border: 2px solid #6b7280;
-  border-radius: 12px;
-  background: white;
-  color: #374151;
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface);
+  color: var(--mz-text-2);
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease;
   font-size: 1.1rem;
 }
 
-.back-to-categories-btn:hover {
-  background: #f3f4f6;
-  border-color: #374151;
+.arabic-sentences-learning .back-to-categories-btn:hover {
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
 }
 
-.category-badge {
+/* badge background set inline (category identity) */
+.arabic-sentences-learning .category-badge {
   padding: 12px 24px;
-  border-radius: 12px;
-  color: white;
+  border-radius: var(--mz-radius-md);
+  color: #fff;
   font-weight: 700;
   font-size: 1.3rem;
   display: flex;
@@ -163,97 +166,89 @@
   gap: 10px;
 }
 
-.recall-mode-btn {
+.arabic-sentences-learning .recall-mode-btn {
   padding: 12px 24px;
-  border: 2px solid #8b5cf6;
-  border-radius: 12px;
-  background: white;
-  color: #8b5cf6;
+  border: 2px solid var(--mz-accent);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface);
+  color: var(--mz-accent-text);
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease;
   font-size: 1.1rem;
 }
 
-.recall-mode-btn:hover {
-  background: #f3e8ff;
-}
+.arabic-sentences-learning .recall-mode-btn:hover { background: var(--mz-accent-soft); }
+.arabic-sentences-learning .recall-mode-btn.active { background: var(--mz-accent); color: var(--mz-accent-contrast); }
 
-.recall-mode-btn.active {
-  background: #8b5cf6;
-  color: white;
-}
-
-.sentence-progress {
+.arabic-sentences-learning .sentence-progress {
   display: flex;
   justify-content: center;
   gap: 15px;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
 }
 
-.progress-dot {
+/* progress-dot background set inline (state color) */
+.arabic-sentences-learning .progress-dot {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
-.progress-dot.active {
-  transform: scale(1.5);
-}
+.arabic-sentences-learning .progress-dot.active { transform: scale(1.5); }
 
 /* Sentence Card */
-.sentence-card {
-  background: white;
-  border-radius: 20px;
+.arabic-sentences-learning .sentence-card {
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-xl);
   padding: 40px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  margin-bottom: 40px;
+  box-shadow: var(--mz-shadow-md);
+  margin-bottom: 36px;
 }
 
 /* Video Section */
-.video-section {
-  margin-bottom: 30px;
-}
+.arabic-sentences-learning .video-section { margin-bottom: 30px; }
 
-.video-header {
+.arabic-sentences-learning .video-header {
   text-align: center;
   margin-bottom: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--mz-accent-grad);
   padding: 20px;
-  border-radius: 15px;
-  color: white;
+  border-radius: var(--mz-radius-lg);
+  color: #fff;
 }
 
-.video-title {
-  font-size: 2rem;
+.arabic-sentences-learning .video-title {
+  font-size: 1.8rem;
   font-weight: 700;
-  margin: 0 0 10px 0;
+  margin: 0 0 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
 }
 
-.video-description {
-  font-size: 1.2rem;
+.arabic-sentences-learning .video-description {
+  font-size: 1.15rem;
   margin: 0;
   font-weight: 500;
   opacity: 0.95;
 }
 
-.video-container {
+.arabic-sentences-learning .video-container {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  border-radius: 15px;
+  border-radius: var(--mz-radius-lg);
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--mz-shadow-md);
   background: #000;
   position: relative;
 }
 
-.sentence-video {
+.arabic-sentences-learning .sentence-video {
   width: 100%;
   height: auto;
   min-height: 400px;
@@ -262,67 +257,64 @@
   background: #000;
 }
 
-.sentence-image-container {
+.arabic-sentences-learning .sentence-image-container {
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
-  border-radius: 15px;
+  border-radius: var(--mz-radius-lg);
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--mz-shadow-md);
   position: relative;
 }
 
-.sentence-image {
+.arabic-sentences-learning .sentence-image {
   width: 100%;
   height: 300px;
   object-fit: cover;
   display: block;
 }
 
-.toggle-media-btn {
-  margin-top: 15px;
+.arabic-sentences-learning .toggle-media-btn {
+  margin: 15px auto 0;
   padding: 12px 24px;
-  border: 2px solid #667eea;
-  border-radius: 10px;
-  background: white;
-  color: #667eea;
+  border: 2px solid var(--mz-accent);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface);
+  color: var(--mz-accent-text);
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   display: block;
   width: 100%;
   max-width: 300px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
-.toggle-media-btn:hover {
-  background: #667eea;
-  color: white;
+.arabic-sentences-learning .toggle-media-btn:hover {
+  background: var(--mz-accent);
+  color: var(--mz-accent-contrast);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.sentence-main {
+.arabic-sentences-learning .sentence-main {
   text-align: center;
   margin-bottom: 40px;
   padding-bottom: 40px;
-  border-bottom: 3px solid #e5e7eb;
+  border-bottom: 1px solid var(--mz-border);
 }
 
-.arabic-sentence {
+.arabic-sentences-learning .arabic-sentence {
   font-size: 3rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--mz-text);
   margin-bottom: 20px;
   font-family: 'Amiri', 'Traditional Arabic', serif;
   line-height: 1.5;
 }
 
-.sentence-translation {
+.arabic-sentences-learning .sentence-translation {
   font-size: 1.8rem;
-  color: #374151;
+  color: var(--mz-text-2);
   margin-bottom: 15px;
   font-weight: 600;
   min-height: 50px;
@@ -331,162 +323,143 @@
   justify-content: center;
 }
 
-.recall-clickable {
+.arabic-sentences-learning .recall-clickable {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease;
   padding: 10px 20px;
-  border-radius: 12px;
+  border-radius: var(--mz-radius-md);
 }
 
-.recall-clickable:hover {
-  background: #f9fafb;
+.arabic-sentences-learning .recall-clickable:hover {
+  background: var(--mz-surface-2);
   transform: scale(1.02);
 }
 
-.sentence-pronunciation {
+.arabic-sentences-learning .sentence-pronunciation {
   font-size: 1.3rem;
-  color: #6b7280;
+  color: var(--mz-text-2);
   font-style: italic;
   font-weight: 600;
 }
 
 /* Word Breakdown */
-.word-breakdown {
-  margin-top: 30px;
-}
+.arabic-sentences-learning .word-breakdown { margin-top: 30px; }
 
-.breakdown-title {
+.arabic-sentences-learning .breakdown-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--mz-text);
   text-align: center;
   margin-bottom: 30px;
 }
 
-.words-grid {
+.arabic-sentences-learning .words-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
 }
 
-.word-item {
-  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-  border: 3px solid #0ea5e9;
-  border-radius: 15px;
+.arabic-sentences-learning .word-item {
+  background: var(--mz-info-soft);
+  border: 1px solid var(--mz-info);
+  border-radius: var(--mz-radius-lg);
   padding: 20px;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.word-item:hover {
+.arabic-sentences-learning .word-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.2);
+  box-shadow: var(--mz-shadow-md);
 }
 
-.word-arabic {
+.arabic-sentences-learning .word-arabic {
   font-size: 2rem;
   font-weight: 700;
-  color: #0369a1;
+  color: var(--mz-info);
   margin-bottom: 10px;
   font-family: 'Amiri', 'Traditional Arabic', serif;
 }
 
-.word-english {
+.arabic-sentences-learning .word-english {
   font-size: 1.2rem;
-  color: #374151;
+  color: var(--mz-text-2);
   margin-bottom: 8px;
   font-weight: 600;
 }
 
-.word-pronunciation {
+.arabic-sentences-learning .word-pronunciation {
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--mz-text-3);
   font-style: italic;
   font-weight: 500;
 }
 
 /* Navigation */
-.sentence-navigation {
+.arabic-sentences-learning .sentence-navigation {
   display: flex;
   justify-content: space-between;
   gap: 20px;
   margin-top: 30px;
 }
 
-.nav-btn-large {
+.arabic-sentences-learning .nav-btn-large {
   flex: 1;
   padding: 20px 30px;
-  border: 3px solid #8b5cf6;
-  border-radius: 15px;
-  background: white;
-  color: #8b5cf6;
+  border: 2px solid var(--mz-accent);
+  border-radius: var(--mz-radius-lg);
+  background: var(--mz-surface);
+  color: var(--mz-accent-text);
   font-weight: 700;
   font-size: 1.3rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
 }
 
-.nav-btn-large:hover:not(:disabled) {
-  background: #8b5cf6;
-  color: white;
+.arabic-sentences-learning .nav-btn-large:hover:not(:disabled) {
+  background: var(--mz-accent);
+  color: var(--mz-accent-contrast);
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+  box-shadow: var(--mz-shadow-accent);
 }
 
-.nav-btn-large:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.arabic-sentences-learning .nav-btn-large:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.nav-icon {
-  font-size: 1.5rem;
-}
+.arabic-sentences-learning .nav-icon { font-size: 1.5rem; }
+.arabic-sentences-learning .nav-text { font-size: 1.3rem; }
 
-.nav-text {
-  font-size: 1.3rem;
-}
-
-/* I Got It Button */
-.got-it-btn {
+/* I Got It Button (background set inline) */
+.arabic-sentences-learning .got-it-btn {
   width: 100%;
   max-width: 400px;
   margin: 30px auto 0;
   padding: 20px 40px;
   border: none;
-  border-radius: 15px;
-  color: white;
+  border-radius: var(--mz-radius-lg);
+  color: #fff;
   font-weight: 700;
   font-size: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--mz-shadow-md);
 }
 
-.got-it-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
+.arabic-sentences-learning .got-it-btn:hover { transform: translateY(-3px); box-shadow: var(--mz-shadow-lg); }
+.arabic-sentences-learning .got-it-btn.learned { cursor: default; }
 
-.got-it-btn.learned {
-  cursor: default;
-}
-
-/* Celebration Overlay */
-.celebration-overlay {
+/* Celebration */
+.arabic-sentences-learning .celebration-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background: var(--mz-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -494,17 +467,18 @@
   backdrop-filter: blur(5px);
 }
 
-.celebration-content {
-  background: white;
-  padding: 60px;
-  border-radius: 30px;
+.arabic-sentences-learning .celebration-content {
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  padding: 56px;
+  border-radius: var(--mz-radius-xl);
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--mz-shadow-lg);
   max-width: 500px;
 }
 
-.celebration-emoji {
-  font-size: 5rem;
+.arabic-sentences-learning .celebration-emoji {
+  font-size: 4.5rem;
   margin-bottom: 20px;
   display: flex;
   align-items: center;
@@ -512,122 +486,71 @@
   gap: 15px;
 }
 
-.celebration-text {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #10b981;
+.arabic-sentences-learning .celebration-text {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--mz-success);
   margin-bottom: 15px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-.celebration-subtext {
-  font-size: 1.5rem;
-  color: #6b7280;
+.arabic-sentences-learning .celebration-subtext {
+  font-size: 1.4rem;
+  color: var(--mz-text-2);
   font-weight: 600;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .sentences-title {
-    font-size: 2rem;
-  }
-
-  .sentences-subtitle {
-    font-size: 1.2rem;
-  }
-
-  .categories-title {
-    font-size: 2rem;
-  }
-
-  .category-card {
-    padding: 30px;
-  }
-
-  .category-icon {
-    width: 80px;
-    height: 80px;
-    font-size: 2.5rem;
-  }
-
-  .category-name {
-    font-size: 1.5rem;
-  }
-
-  .sentence-card {
-    padding: 25px;
-  }
-
-  .video-title {
-    font-size: 1.5rem;
-  }
-
-  .video-description {
-    font-size: 1rem;
-  }
-
-  .sentence-video {
-    min-height: 250px;
-    max-height: 350px;
-  }
-
-  .arabic-sentence {
-    font-size: 2rem;
-  }
-
-  .sentence-translation {
-    font-size: 1.4rem;
-  }
-
-  .words-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .nav-btn-large {
-    padding: 15px 20px;
-  }
-
-  .learning-navigation {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .back-to-categories-btn,
-  .recall-mode-btn,
-  .category-badge {
+  .arabic-sentences-learning .sentences-title { font-size: 2rem; }
+  .arabic-sentences-learning .sentences-subtitle { font-size: 1.2rem; }
+  .arabic-sentences-learning .categories-title { font-size: 1.8rem; }
+  .arabic-sentences-learning .category-card { padding: 30px; }
+  .arabic-sentences-learning .category-icon { width: 80px; height: 80px; font-size: 2.5rem; }
+  .arabic-sentences-learning .category-name { font-size: 1.5rem; }
+  .arabic-sentences-learning .sentence-card { padding: 25px; }
+  .arabic-sentences-learning .video-title { font-size: 1.5rem; }
+  .arabic-sentences-learning .video-description { font-size: 1rem; }
+  .arabic-sentences-learning .sentence-video { min-height: 250px; max-height: 350px; }
+  .arabic-sentences-learning .arabic-sentence { font-size: 2rem; }
+  .arabic-sentences-learning .sentence-translation { font-size: 1.4rem; }
+  .arabic-sentences-learning .words-grid { grid-template-columns: 1fr; }
+  .arabic-sentences-learning .nav-btn-large { padding: 15px 20px; }
+  .arabic-sentences-learning .learning-navigation { flex-direction: column; align-items: stretch; }
+  .arabic-sentences-learning .back-to-categories-btn,
+  .arabic-sentences-learning .recall-mode-btn,
+  .arabic-sentences-learning .category-badge {
     width: 100%;
     text-align: center;
     justify-content: center;
   }
+  .arabic-sentences-learning .toggle-media-btn { font-size: 0.9rem; padding: 10px 20px; }
+  .arabic-sentences-learning .got-it-btn { font-size: 1.2rem; padding: 15px 30px; }
+  .arabic-sentences-learning .celebration-content { padding: 40px 30px; max-width: 90%; }
+  .arabic-sentences-learning .celebration-emoji { font-size: 3.5rem; gap: 10px; }
+  .arabic-sentences-learning .celebration-text { font-size: 2rem; }
+  .arabic-sentences-learning .celebration-subtext { font-size: 1.1rem; }
+}
 
-  .toggle-media-btn {
-    font-size: 0.9rem;
-    padding: 10px 20px;
-  }
+/* High Contrast */
+.high-contrast .arabic-sentences-learning .category-card,
+.high-contrast .arabic-sentences-learning .sentence-card { background: #1a1a1a; border-color: #fff; }
+.high-contrast .arabic-sentences-learning .category-name,
+.high-contrast .arabic-sentences-learning .arabic-sentence { color: #fff; }
 
-  .got-it-btn {
-    font-size: 1.2rem;
-    padding: 15px 30px;
-  }
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .arabic-sentences-learning .category-card,
+  .arabic-sentences-learning .sentence-card,
+  .arabic-sentences-learning .nav-btn-large,
+  .arabic-sentences-learning .word-item,
+  .arabic-sentences-learning .progress-dot { transition: none !important; }
+}
 
-  .celebration-content {
-    padding: 40px 30px;
-    max-width: 90%;
-  }
-
-  .celebration-emoji {
-    font-size: 3.5rem;
-    gap: 10px;
-  }
-
-  .celebration-text {
-    font-size: 2rem;
-  }
-
-  .celebration-subtext {
-    font-size: 1.1rem;
-  }
+/* Focus */
+.arabic-sentences-learning .category-card:focus-visible,
+.arabic-sentences-learning .nav-btn-large:focus-visible,
+.arabic-sentences-learning .got-it-btn:focus-visible,
+.arabic-sentences-learning .back-to-categories-btn:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
 }

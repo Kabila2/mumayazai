@@ -1,102 +1,119 @@
-/* Learn Hub Container */
+/* ============================================================================
+   LEARN HUB — aligned to the unified --mz-* design system (light + dark)
+   ============================================================================ */
+
 .learn-hub-container {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  padding: 40px 20px;
+  background: transparent;            /* inherits the platform's calm --mz-bg-grad */
+  padding: 48px 24px 64px;
   overflow-y: auto;
 }
 
 /* Header Section */
 .learn-hub-header {
   text-align: center;
-  margin-bottom: 50px;
-  padding: 20px;
+  max-width: 720px;
+  margin: 0 auto 44px;
+  padding: 0 16px;
 }
 
 .learn-hub-title {
-  font-size: 3.5rem;
-  font-weight: 900;
-  color: white;
-  margin: 0 0 15px 0;
-  text-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  letter-spacing: 1px;
+  font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+  background: var(--mz-accent-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .learn-hub-subtitle {
-  font-size: 1.5rem;
+  font-size: 1.05rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--mz-text-2);
   margin: 0;
-  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  line-height: 1.6;
 }
 
 /* Content Area */
 .learn-hub-content {
-  max-width: 1400px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 8px;
 }
 
 /* Category Section */
 .learn-category {
-  margin-bottom: 60px;
+  margin-bottom: 44px;
 }
 
-.category-title {
-  font-size: 2rem;
+.learn-category .category-title {
+  font-size: 1.25rem;
   font-weight: 700;
-  color: white;
-  margin: 0 0 30px 0;
-  padding: 0 15px;
-  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.5px;
+  color: var(--mz-text);
+  margin: 0 0 18px;
+  padding: 0 6px;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Grid Layout for Cards */
+.learn-category .category-title::before {
+  content: "";
+  width: 4px;
+  height: 1.1em;
+  border-radius: 999px;
+  background: var(--mz-accent-grad);
+}
+
+/* Grid Layout */
 .learn-sections-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 25px;
-  padding: 0 10px;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 18px;
+  padding: 0 6px;
 }
 
 /* Individual Learn Card */
 .learn-card {
   position: relative;
-  background: white;
-  border-radius: 24px;
-  padding: 40px 30px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-xl);
+  padding: 30px 24px 26px;
   cursor: pointer;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 280px;
+  box-shadow: var(--mz-shadow-sm);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  min-height: 196px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
 .learn-card:hover {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  transform: translateY(-8px);
+  transform: translateY(-4px);
+  box-shadow: var(--mz-shadow-lg);
+  border-color: var(--mz-border-strong);
 }
 
-/* Gradient Background Layer */
+/* Per-card accent: the inline `section.color` gradient becomes a clean top bar */
 .learn-card-gradient {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 140px;
-  opacity: 0.15;
-  transition: opacity 0.4s ease, height 0.4s ease;
-  border-radius: 24px 24px 0 0;
+  height: 5px;
+  opacity: 1;
+  border-radius: 0;
+  transition: height 0.18s ease;
 }
 
 .learn-card:hover .learn-card-gradient {
-  opacity: 0.25;
-  height: 160px;
+  height: 7px;
 }
 
 /* Card Content */
@@ -107,183 +124,94 @@
 }
 
 .learn-card-icon {
-  font-size: 5rem;
-  margin-bottom: 20px;
-  display: inline-block;
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 18px;
+  background: var(--mz-surface-2);
+  transition: transform 0.18s ease;
 }
 
 .learn-card:hover .learn-card-icon {
-  transform: scale(1.1) translateY(-5px);
+  transform: translateY(-3px) scale(1.04);
 }
 
 .learn-card-title {
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 12px 0;
-  transition: color 0.3s ease;
-  line-height: 1.2;
+  color: var(--mz-text);
+  margin: 0 0 8px;
+  line-height: 1.25;
+  transition: color 0.18s ease;
 }
 
 .learn-card:hover .learn-card-title {
-  color: #667eea;
+  color: var(--mz-accent-text);
 }
 
 .learn-card-description {
-  font-size: 1.1rem;
+  font-size: 0.92rem;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--mz-text-2);
   margin: 0;
   line-height: 1.5;
-  transition: color 0.3s ease;
-}
-
-.learn-card:hover .learn-card-description {
-  color: #4b5563;
-}
-
-/* Shimmer Effect on Hover */
-.learn-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.4) 50%,
-    transparent 100%
-  );
-  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-}
-
-.learn-card:hover::before {
-  left: 100%;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
   .learn-sections-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-  }
-
-  .learn-hub-title {
-    font-size: 3rem;
-  }
-
-  .learn-hub-subtitle {
-    font-size: 1.3rem;
-  }
-
-  .category-title {
-    font-size: 1.8rem;
-    margin-bottom: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
 @media (max-width: 768px) {
   .learn-hub-container {
-    padding: 30px 15px;
+    padding: 36px 16px 48px;
   }
-
   .learn-hub-header {
-    margin-bottom: 40px;
+    margin-bottom: 32px;
   }
-
-  .learn-hub-title {
-    font-size: 2.5rem;
-  }
-
-  .learn-hub-subtitle {
-    font-size: 1.2rem;
-  }
-
   .learn-sections-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
   }
-
   .learn-card {
-    padding: 35px 25px;
-    min-height: 260px;
+    padding: 26px 20px 22px;
+    min-height: 180px;
   }
-
   .learn-card-icon {
-    font-size: 4.5rem;
-    margin-bottom: 18px;
+    width: 60px;
+    height: 60px;
+    font-size: 2.6rem;
   }
-
   .learn-card-title {
-    font-size: 1.6rem;
-  }
-
-  .learn-card-description {
-    font-size: 1rem;
-  }
-
-  .category-title {
-    font-size: 1.6rem;
-    margin-bottom: 20px;
-  }
-
-  .learn-category {
-    margin-bottom: 50px;
+    font-size: 1.1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .learn-hub-container {
-    padding: 25px 12px;
+  .learn-sections-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
-
-  .learn-hub-title {
-    font-size: 2rem;
-    margin-bottom: 12px;
-  }
-
-  .learn-hub-subtitle {
-    font-size: 1.1rem;
-  }
-
   .learn-card {
-    padding: 30px 20px;
-    min-height: 240px;
-  }
-
-  .learn-card-icon {
-    font-size: 4rem;
-    margin-bottom: 15px;
-  }
-
-  .learn-card-title {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-  }
-
-  .learn-card-description {
-    font-size: 0.95rem;
-  }
-
-  .category-title {
-    font-size: 1.4rem;
-    padding: 0 10px;
+    padding: 22px 16px 18px;
+    min-height: 168px;
   }
 }
 
-/* Accessibility - Focus States */
+/* Accessibility — Focus States */
 .learn-card:focus-visible {
-  outline: 4px solid rgba(255, 255, 255, 0.9);
-  outline-offset: 4px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.9);
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
 }
 
-/* Touch Feedback for Mobile */
+/* Touch Feedback */
 @media (hover: none) {
   .learn-card:active {
     transform: scale(0.98);
@@ -291,31 +219,33 @@
   }
 }
 
-/* Loading Animation for Cards */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .learn-card,
+  .learn-card-icon,
+  .learn-card-gradient {
+    transition: none;
   }
 }
 
-/* Print Styles */
+/* High Contrast */
+.high-contrast .learn-card {
+  background: #1a1a1a;
+  border-color: #ffffff;
+}
+.high-contrast .learn-card-title,
+.high-contrast .learn-card-description {
+  color: #ffffff;
+}
+
+/* Print */
 @media print {
   .learn-hub-container {
     background: white;
   }
-
   .learn-card {
     box-shadow: none;
     border: 2px solid #e5e7eb;
     page-break-inside: avoid;
-  }
-
-  .learn-card:hover {
-    transform: none;
   }
 }

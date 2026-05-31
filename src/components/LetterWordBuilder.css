@@ -1,21 +1,25 @@
-/* Letter Word Builder */
+/* ============================================================================
+   LETTER WORD BUILDER — aligned to the unified --mz-* design system
+   ============================================================================ */
+
 .letter-word-builder {
-  padding: 2rem;
-  max-width: 1200px;
+  padding: 2.5rem 2rem 4rem;
+  max-width: 1100px;
   margin: 0 auto;
   min-height: calc(100vh - 140px);
 }
 
-/* Reuse builder header styles */
+/* Header */
 .letter-word-builder .builder-header {
   text-align: center;
   margin-bottom: 2rem;
 }
 
 .letter-word-builder .builder-title {
-  font-size: 3rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--mz-accent-grad);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -23,9 +27,9 @@
 }
 
 .letter-word-builder .builder-subtitle {
-  font-size: 1.3rem;
-  color: #6b7280;
-  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--mz-text-2);
+  font-weight: 500;
 }
 
 /* Word Image Section */
@@ -38,31 +42,32 @@
   max-width: 400px;
   height: 300px;
   object-fit: cover;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border-radius: var(--mz-radius-lg);
+  box-shadow: var(--mz-shadow-md);
   display: block;
   margin: 0 auto 1.5rem;
 }
 
-.word-hint {
-  background: white;
-  border-radius: 15px;
+.letter-word-builder .word-hint {
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
   padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--mz-shadow-sm);
 }
 
 .hint-label {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #374151;
+  color: var(--mz-text-2);
   margin-bottom: 0.75rem;
 }
 
 .hint-english {
-  font-size: 2rem;
+  font-size: 1.85rem;
   font-weight: 600;
-  color: #ec4899;
+  color: var(--mz-accent-text);
 }
 
 /* Building Area for Letters */
@@ -72,41 +77,41 @@
 }
 
 .letter-word-builder .area-label {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--mz-text);
   margin-bottom: 1rem;
   text-align: center;
 }
 
 .selected-letters-container {
   min-height: 140px;
-  background: white;
-  border: 3px dashed #d1d5db;
-  border-radius: 15px;
+  background: var(--mz-surface);
+  border: 2px dashed var(--mz-border-strong);
+  border-radius: var(--mz-radius-lg);
   padding: 1.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, background 0.3s ease;
 }
 
 .selected-letters-container.correct {
-  border-color: #10b981;
-  background: #ecfdf5;
-  animation: successPulse 0.5s ease;
+  border-color: var(--mz-success);
+  background: var(--mz-success-soft);
+  animation: lwbSuccessPulse 0.5s ease;
 }
 
-@keyframes successPulse {
+@keyframes lwbSuccessPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.02); }
 }
 
 .letter-word-builder .placeholder-text {
-  color: #9ca3af;
-  font-size: 1.3rem;
+  color: var(--mz-text-3);
+  font-size: 1.2rem;
   font-style: italic;
   font-weight: 500;
 }
@@ -117,42 +122,43 @@
   gap: 0.75rem;
   justify-content: center;
   padding: 1.5rem;
-  background: #f9fafb;
-  border-radius: 15px;
+  background: var(--mz-surface-2);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
   min-height: 120px;
 }
 
-/* Letter Chips */
+/* Letter Chips (available chip background set inline = category color) */
 .letter-chip {
-  width: 70px;
-  height: 70px;
+  width: 68px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  font-size: 2.5rem;
+  border-radius: var(--mz-radius-md);
+  font-size: 2.4rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: var(--mz-shadow-sm);
   font-family: 'Amiri', 'Traditional Arabic', serif;
   user-select: none;
 }
 
 .letter-chip.available {
-  color: white;
-  border: 3px solid transparent;
+  color: #fff;
+  border: 2px solid transparent;
 }
 
 .letter-chip.selected {
-  background: white;
-  border: 3px solid;
-  color: #1f2937;
+  background: var(--mz-surface);
+  border: 2px solid var(--mz-accent);
+  color: var(--mz-text);
 }
 
 .letter-chip:hover {
-  transform: translateY(-5px) scale(1.1);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: var(--mz-shadow-md);
 }
 
 .letter-chip:active {
@@ -162,29 +168,29 @@
 /* Action Buttons */
 .letter-word-builder .builder-actions {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.25rem;
   justify-content: center;
   margin-bottom: 2rem;
 }
 
 .letter-word-builder .action-btn {
-  padding: 1rem 2.5rem;
+  padding: 0.95rem 2.25rem;
   border: none;
-  border-radius: 12px;
-  font-size: 1.3rem;
+  border-radius: var(--mz-radius-md);
+  font-size: 1.2rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  color: #fff;
+  box-shadow: var(--mz-shadow-sm);
 }
 
 .letter-word-builder .reset-btn {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: var(--mz-warning);
 }
 
 .letter-word-builder .check-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--mz-success);
 }
 
 .letter-word-builder .action-btn:disabled {
@@ -195,34 +201,34 @@
 
 .letter-word-builder .action-btn:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--mz-shadow-md);
 }
 
 /* Navigation */
 .letter-word-builder .builder-navigation {
   display: flex;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .letter-word-builder .nav-btn-builder {
   flex: 1;
-  padding: 1.2rem 2rem;
-  border: 3px solid #ec4899;
-  border-radius: 12px;
-  background: white;
-  color: #ec4899;
-  font-size: 1.2rem;
+  padding: 1.1rem 2rem;
+  border: 2px solid var(--mz-accent);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface);
+  color: var(--mz-accent-text);
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
 .letter-word-builder .nav-btn-builder:hover:not(:disabled) {
-  background: #ec4899;
-  color: white;
+  background: var(--mz-accent);
+  color: var(--mz-accent-contrast);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+  box-shadow: var(--mz-shadow-accent);
 }
 
 .letter-word-builder .nav-btn-builder:disabled {
@@ -230,13 +236,14 @@
   cursor: not-allowed;
 }
 
-/* Progress styles (reuse from SentenceBuilder) */
+/* Progress */
 .letter-word-builder .builder-progress {
-  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-  border-radius: 15px;
+  background: var(--mz-surface-2);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--mz-shadow-sm);
 }
 
 .letter-word-builder .progress-info {
@@ -246,21 +253,21 @@
 }
 
 .letter-word-builder .progress-label {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--mz-text-2);
 }
 
 .letter-word-builder .progress-count {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #ec4899;
+  color: var(--mz-accent-text);
 }
 
 .letter-word-builder .progress-bar-container {
-  height: 12px;
-  background: #e5e7eb;
-  border-radius: 10px;
+  height: 10px;
+  background: var(--mz-surface-3);
+  border-radius: 999px;
   overflow: hidden;
   margin-bottom: 1rem;
 }
@@ -268,35 +275,33 @@
 .letter-word-builder .progress-bar-fill {
   height: 100%;
   transition: width 0.3s ease;
-  border-radius: 10px;
+  border-radius: 999px;
+  background: var(--mz-accent-grad);
 }
 
 .letter-word-builder .completed-count {
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #10b981;
+  color: var(--mz-success);
 }
 
 .letter-word-builder .category-badge-builder {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  color: white;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--mz-radius-md);
+  color: #fff;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--mz-shadow-sm);
 }
 
 /* Celebration */
 .letter-word-builder .celebration-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  inset: 0;
+  background: var(--mz-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -305,91 +310,54 @@
 }
 
 .letter-word-builder .celebration-content {
-  background: white;
-  padding: 60px;
-  border-radius: 30px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  padding: 56px;
+  border-radius: var(--mz-radius-xl);
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--mz-shadow-lg);
   max-width: 500px;
 }
 
 .letter-word-builder .celebration-emoji {
-  font-size: 5rem;
-  margin-bottom: 20px;
+  font-size: 4.5rem;
+  margin-bottom: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
+  gap: 14px;
 }
 
 .letter-word-builder .celebration-text {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #10b981;
-  margin-bottom: 15px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--mz-success);
+  margin-bottom: 12px;
 }
 
 .letter-word-builder .celebration-subtext {
-  font-size: 1.5rem;
-  color: #6b7280;
+  font-size: 1.4rem;
+  color: var(--mz-text-2);
   font-weight: 600;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .letter-word-builder {
-    padding: 1rem;
-  }
+  .letter-word-builder { padding: 1.5rem 1rem 3rem; }
+  .word-builder-image { max-width: 100%; height: 250px; }
+  .hint-english { font-size: 1.5rem; }
+  .letter-chip { width: 58px; height: 58px; font-size: 2rem; }
+  .letter-word-builder .builder-actions { flex-direction: column; }
+  .letter-word-builder .action-btn { width: 100%; }
+  .letter-word-builder .celebration-content { padding: 40px 30px; max-width: 90%; }
+  .letter-word-builder .celebration-emoji { font-size: 3.5rem; }
+  .letter-word-builder .celebration-text { font-size: 2rem; }
+  .letter-word-builder .celebration-subtext { font-size: 1.1rem; }
+}
 
-  .letter-word-builder .builder-title {
-    font-size: 2rem;
-  }
-
-  .letter-word-builder .builder-subtitle {
-    font-size: 1rem;
-  }
-
-  .word-builder-image {
-    max-width: 100%;
-    height: 250px;
-  }
-
-  .hint-english {
-    font-size: 1.5rem;
-  }
-
-  .letter-chip {
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
-  }
-
-  .letter-word-builder .builder-actions {
-    flex-direction: column;
-  }
-
-  .letter-word-builder .action-btn {
-    width: 100%;
-  }
-
-  .letter-word-builder .celebration-content {
-    padding: 40px 30px;
-    max-width: 90%;
-  }
-
-  .letter-word-builder .celebration-emoji {
-    font-size: 3.5rem;
-  }
-
-  .letter-word-builder .celebration-text {
-    font-size: 2rem;
-  }
-
-  .letter-word-builder .celebration-subtext {
-    font-size: 1.1rem;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .letter-chip,
+  .letter-word-builder .action-btn,
+  .letter-word-builder .nav-btn-builder { transition: none; }
+  .selected-letters-container.correct { animation: none; }
 }

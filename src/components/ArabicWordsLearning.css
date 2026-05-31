@@ -1,4 +1,9 @@
-/* Arabic Words Learning - Down Syndrome Friendly Design */
+/* ============================================================================
+   ARABIC WORDS LEARNING — aligned to --mz-* design system.
+   All selectors are scoped under .arabic-words-learning to avoid the global
+   class-name collisions this module shares with the other learning/game modules.
+   (Down-syndrome-friendly large layout preserved.)
+   ============================================================================ */
 
 .arabic-words-learning *,
 .arabic-words-learning *::before,
@@ -11,13 +16,12 @@
   width: 100vw;
   max-width: 100vw;
   margin: 0;
-  padding: 40px 20px;
-  background: #ffffff; /* Simple white background for clarity */
+  padding: 40px 20px 64px;
+  background: transparent;            /* inherits the platform's calm gradient */
   min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
   -ms-overflow-style: none;
   font-family: 'OpenDyslexic', 'Cairo', sans-serif;
@@ -25,66 +29,53 @@
   box-sizing: border-box;
 }
 
-.recall-mode-btn {
+.arabic-words-learning::-webkit-scrollbar { display: none; }
+
+.arabic-words-learning .recall-mode-btn {
   padding: 10px 20px;
-  border: 2px solid #8b5cf6;
-  border-radius: 12px;
-  background: white;
-  color: #8b5cf6;
+  border: 2px solid var(--mz-accent);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface);
+  color: var(--mz-accent-text);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease;
   font-size: 1rem;
 }
 
-.recall-mode-btn:hover {
-  background: #f3e8ff;
-}
+.arabic-words-learning .recall-mode-btn:hover { background: var(--mz-accent-soft); }
+.arabic-words-learning .recall-mode-btn.active { background: var(--mz-accent); color: var(--mz-accent-contrast); }
 
-.recall-mode-btn.active {
-  background: #8b5cf6;
-  color: white;
-}
-
-.recall-clickable {
-  transition: all 0.2s ease;
-}
-
-.recall-clickable:hover {
+.arabic-words-learning .recall-clickable { transition: transform 0.2s ease, background 0.2s ease; }
+.arabic-words-learning .recall-clickable:hover {
   transform: scale(1.02);
-  background: #f9fafb;
-  border-radius: 8px;
+  background: var(--mz-surface-2);
+  border-radius: var(--mz-radius-sm);
   padding: 5px;
 }
 
-.arabic-words-learning::-webkit-scrollbar {
-  display: none;
-}
-
 /* Header */
-.words-header {
-  text-align: center;
-  margin-bottom: 50px;
-}
+.arabic-words-learning .words-header { text-align: center; margin-bottom: 44px; }
 
-.words-title {
-  font-size: 3rem; /* Larger for better readability */
-  font-weight: 700;
-  color: #1f2937; /* Solid color instead of gradient */
-  margin: 0 0 15px 0;
+.arabic-words-learning .words-title {
+  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--mz-text);
+  margin: 0 0 12px;
   text-align: center;
 }
 
-.words-subtitle {
-  font-size: 1.5rem; /* Larger subtitle */
-  color: #374151; /* Higher contrast */
+.arabic-words-learning .words-subtitle {
+  font-size: 1.35rem;
+  color: var(--mz-text-2);
   margin: 0;
   font-weight: 600;
 }
 
 /* Categories */
-.words-categories {
-  max-width: 1400px;
+.arabic-words-learning .words-categories {
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 20px;
   min-height: calc(100vh - 240px);
@@ -92,77 +83,74 @@
   box-sizing: border-box;
 }
 
-.categories-title {
-  font-size: 2rem;
-  font-weight: 700;
+.arabic-words-learning .categories-title {
+  font-size: clamp(1.6rem, 2.6vw, 2rem);
+  font-weight: 800;
   text-align: center;
-  color: #374151;
-  margin-bottom: 40px;
+  color: var(--mz-text);
+  margin-bottom: 36px;
 }
 
-.categories-grid {
+.arabic-words-learning .categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 40px; /* More spacing */
-  margin-bottom: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
+  margin: 0 auto 40px;
   max-width: 1000px;
-  margin-left: auto;
-  margin-right: auto;
   width: 100%;
   box-sizing: border-box;
 }
 
-.category-card {
-  background: white;
-  border-radius: 24px;
-  padding: 40px; /* Larger padding */
+.arabic-words-learning .category-card {
+  background: var(--mz-surface);
+  border-radius: var(--mz-radius-xl);
+  padding: 40px;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.2s ease;
-  border: 4px solid #e5e7eb; /* Visible border */
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  min-height: 280px; /* Larger touch target */
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--mz-border);
+  box-shadow: var(--mz-shadow-sm);
+  min-height: 280px;
 }
 
-.category-card:hover {
-  transform: scale(1.05);
-  border-color: #a78bfa;
-  box-shadow: 0 12px 40px rgba(167, 139, 250, 0.3);
+.arabic-words-learning .category-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--mz-accent);
+  box-shadow: var(--mz-shadow-lg);
 }
 
-.category-card:active {
-  transform: scale(0.98);
-}
+.arabic-words-learning .category-card:active { transform: scale(0.98); }
 
-.category-icon {
-  width: 100px; /* Larger icon */
+/* icon background set inline (category identity) */
+.arabic-words-learning .category-icon {
+  width: 100px;
   height: 100px;
-  margin: 0 auto 25px;
+  margin: 0 auto 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.5rem; /* Much larger emoji */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  font-size: 3.5rem;
+  box-shadow: var(--mz-shadow-md);
 }
 
-.category-name {
-  font-size: 2rem; /* Larger category name */
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 15px 0;
+.arabic-words-learning .category-name {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--mz-text);
+  margin: 0 0 12px;
   line-height: 1.3;
 }
 
-.category-count {
+.arabic-words-learning .category-count {
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--mz-text-2);
   margin: 0;
   font-weight: 600;
 }
 
 /* Word Learning */
-.word-learning {
+.arabic-words-learning .word-learning {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 20px;
@@ -171,131 +159,125 @@
   box-sizing: border-box;
 }
 
-.learning-navigation {
+.arabic-words-learning .learning-navigation {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
   gap: 15px;
 }
 
-.back-to-categories-btn {
+.arabic-words-learning .back-to-categories-btn {
   padding: 12px 24px;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  color: #374151;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+  color: var(--mz-text-2);
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   font-family: inherit;
 }
 
-.back-to-categories-btn:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+.arabic-words-learning .back-to-categories-btn:hover {
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.category-badge {
+/* badge background set inline (category identity) */
+.arabic-words-learning .category-badge {
   padding: 12px 24px;
-  border-radius: 12px;
-  color: white;
+  border-radius: var(--mz-radius-md);
+  color: #fff;
   font-weight: 700;
   font-size: 1.1rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--mz-shadow-sm);
 }
 
 /* Progress */
-.word-progress {
-  margin-bottom: 40px;
-}
+.arabic-words-learning .word-progress { margin-bottom: 36px; }
 
-.progress-text {
+.arabic-words-learning .progress-text {
   text-align: center;
   font-size: 1.2rem;
   font-weight: 700;
-  color: #374151;
+  color: var(--mz-text-2);
   margin-bottom: 15px;
 }
 
-.progress-bar-container {
+.arabic-words-learning .progress-bar-container {
   width: 100%;
   height: 12px;
-  background: #e5e7eb;
-  border-radius: 6px;
+  background: var(--mz-surface-3);
+  border-radius: 999px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.progress-bar-fill {
+/* fill width + color set inline (category identity) */
+.arabic-words-learning .progress-bar-fill {
   height: 100%;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 6px;
+  border-radius: 999px;
 }
 
 /* Word Card */
-.word-card {
-  background: white;
-  border-radius: 24px;
+.arabic-words-learning .word-card {
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-xl);
   overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-  margin-bottom: 40px;
+  box-shadow: var(--mz-shadow-md);
+  margin-bottom: 36px;
 }
 
-.word-image-container {
+.arabic-words-learning .word-image-container {
   width: 100%;
   height: 400px;
   overflow: hidden;
-  background: #f3f4f6;
+  background: var(--mz-surface-2);
   position: relative;
 }
 
-.word-image {
+.arabic-words-learning .word-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
 
-.word-card:hover .word-image {
-  transform: scale(1.05);
-}
+.arabic-words-learning .word-card:hover .word-image { transform: scale(1.05); }
 
-.word-content {
-  padding: 40px;
-  text-align: center;
-}
+.arabic-words-learning .word-content { padding: 40px; text-align: center; }
 
-.arabic-word {
+.arabic-words-learning .arabic-word {
   font-size: 4rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--mz-text);
   margin-bottom: 20px;
   line-height: 1.2;
 }
 
-/* Syllables Section */
-.syllables-section {
+/* Syllables */
+.arabic-words-learning .syllables-section {
   margin: 30px 0;
   padding: 25px;
-  background: #f9fafb;
-  border-radius: 16px;
-  border: 2px solid #e5e7eb;
+  background: var(--mz-surface-2);
+  border-radius: var(--mz-radius-lg);
+  border: 1px solid var(--mz-border);
 }
 
-.syllables-title {
+.arabic-words-learning .syllables-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #374151;
-  margin: 0 0 20px 0;
+  color: var(--mz-text-2);
+  margin: 0 0 20px;
   text-align: center;
 }
 
-.syllables-container {
+.arabic-words-learning .syllables-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -303,72 +285,62 @@
   flex-wrap: wrap;
 }
 
-.syllable-item {
+.arabic-words-learning .syllable-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   padding: 15px 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 2px solid #e5e7eb;
-  transition: all 0.3s ease;
+  background: var(--mz-surface);
+  border-radius: var(--mz-radius-md);
+  box-shadow: var(--mz-shadow-sm);
+  border: 1px solid var(--mz-border);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   min-width: 80px;
 }
 
-.syllable-item:hover {
+.arabic-words-learning .syllable-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  border-color: #a78bfa;
+  box-shadow: var(--mz-shadow-md);
+  border-color: var(--mz-accent);
 }
 
-.syllable-arabic {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-}
+.arabic-words-learning .syllable-arabic { font-size: 2rem; font-weight: 700; color: var(--mz-text); }
+.arabic-words-learning .syllable-pronunciation { font-size: 1rem; color: var(--mz-text-2); font-style: italic; font-weight: 500; }
 
-.syllable-pronunciation {
-  font-size: 1rem;
-  color: #6b7280;
-  font-style: italic;
-  font-weight: 500;
-}
-
-.translation-toggle-btn {
+.arabic-words-learning .translation-toggle-btn {
   padding: 12px 30px;
   background: transparent;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  color: #374151;
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+  color: var(--mz-text-2);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   margin-bottom: 20px;
   font-family: inherit;
 }
 
-.translation-toggle-btn:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+.arabic-words-learning .translation-toggle-btn:hover {
+  background: var(--mz-surface-2);
+  border-color: var(--mz-border-strong);
   transform: translateY(-2px);
 }
 
-.translation {
+.arabic-words-learning .translation {
   font-size: 2rem;
   font-weight: 700;
-  color: #059669;
+  color: var(--mz-success);
   margin-top: 20px;
   padding: 20px;
-  background: rgba(5, 150, 105, 0.1);
-  border-radius: 12px;
+  background: var(--mz-success-soft);
+  border-radius: var(--mz-radius-md);
   overflow: hidden;
 }
 
-/* Navigation */
-.word-navigation {
+/* Standard navigation */
+.arabic-words-learning .word-navigation {
   display: flex;
   justify-content: space-between;
   gap: 20px;
@@ -376,232 +348,65 @@
   margin: 0 auto;
 }
 
-.nav-btn {
+.arabic-words-learning .nav-btn {
   flex: 1;
   padding: 15px 30px;
-  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  background: var(--mz-accent-grad);
   border: none;
-  border-radius: 12px;
-  color: white;
+  border-radius: var(--mz-radius-md);
+  color: #fff;
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--mz-shadow-accent);
   font-family: inherit;
 }
 
-.nav-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+.arabic-words-learning .nav-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+  box-shadow: var(--mz-shadow-lg);
 }
 
-.nav-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
+.arabic-words-learning .nav-btn:active:not(:disabled) { transform: translateY(0); }
+.arabic-words-learning .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.nav-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .words-title {
-    font-size: 2rem;
-  }
-
-  .words-subtitle {
-    font-size: 1rem;
-  }
-
-  .categories-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-  }
-
-  .category-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
-  }
-
-  .category-name {
-    font-size: 1.2rem;
-  }
-
-  .word-image-container {
-    height: 300px;
-  }
-
-  .arabic-word {
-    font-size: 3rem;
-  }
-
-  .word-content {
-    padding: 30px 20px;
-  }
-
-  .syllable-arabic {
-    font-size: 1.5rem;
-  }
-
-  .syllable-pronunciation {
-    font-size: 0.9rem;
-  }
-
-  .syllables-section {
-    padding: 20px 15px;
-  }
-
-  .word-navigation {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 480px) {
-  .arabic-words-learning {
-    padding: 20px 10px;
-  }
-
-  .words-title {
-    font-size: 1.5rem;
-  }
-
-  .categories-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .word-image-container {
-    height: 250px;
-  }
-
-  .arabic-word {
-    font-size: 2.5rem;
-  }
-
-  .syllable-item {
-    padding: 12px 15px;
-    min-width: 70px;
-  }
-
-  .syllable-arabic {
-    font-size: 1.3rem;
-  }
-
-  .syllable-pronunciation {
-    font-size: 0.85rem;
-  }
-
-  .syllables-title {
-    font-size: 1.1rem;
-  }
-
-  .translation {
-    font-size: 1.5rem;
-  }
-}
-
-/* High Contrast Mode */
-.high-contrast .category-card {
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #ffffff;
-}
-
-.high-contrast .category-name,
-.high-contrast .arabic-word {
-  color: #ffffff;
-}
-
-.high-contrast .word-card {
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #ffffff;
-}
-
-/* Dyslexia Support */
-.dyslexia-friendly .arabic-word,
-.dyslexia-friendly .category-name,
-.dyslexia-friendly .pronunciation {
-  letter-spacing: 0.12em !important;
-  word-spacing: 0.16em !important;
-}
-
-/* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-  .category-card,
-  .word-card,
-  .nav-btn,
-  .syllable-item,
-  .word-image {
-    transition: none !important;
-    animation: none !important;
-  }
-
-  .word-card:hover .word-image {
-    transform: none;
-  }
-
-  .syllable-item:hover {
-    transform: none;
-  }
-}
-
-/* Focus Styles */
-.category-card:focus-visible,
-.nav-btn:focus-visible,
-.syllable-item:focus-visible,
-.translation-toggle-btn:focus-visible,
-.back-to-categories-btn:focus-visible {
-  outline: 4px solid #a78bfa;
-  outline-offset: 3px;
-}
-
-/* ========================================
-   DOWN SYNDROME FRIENDLY STYLES
-   ======================================== */
-
-/* Large Arabic Word */
-.arabic-word-large {
+/* ===== Down-syndrome-friendly large layout ===== */
+.arabic-words-learning .arabic-word-large {
   font-size: 5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--mz-text);
   margin: 30px 0;
   line-height: 1.2;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-.arabic-word-large:hover {
-  transform: scale(1.1);
-}
+.arabic-words-learning .arabic-word-large:hover { transform: scale(1.1); }
 
-/* Large Translation - Always Visible */
-.translation-large {
+.arabic-words-learning .translation-large {
   font-size: 3rem;
   font-weight: 700;
-  color: #059669;
+  color: var(--mz-success);
   margin: 20px 0;
   padding: 25px;
-  background: #d1fae5;
-  border-radius: 20px;
-  border: 4px solid #059669;
+  background: var(--mz-success-soft);
+  border-radius: var(--mz-radius-xl);
+  border: 2px solid var(--mz-success);
 }
 
-/* Simple Pronunciation */
-.pronunciation-simple {
+.arabic-words-learning .pronunciation-simple {
   font-size: 2rem;
-  color: #6b7280;
+  color: var(--mz-text-2);
   font-style: italic;
   margin: 25px 0;
   font-weight: 600;
   padding: 20px;
-  background: #f3f4f6;
-  border-radius: 15px;
+  background: var(--mz-surface-2);
+  border-radius: var(--mz-radius-lg);
 }
 
-/* Star Progress Indicator */
-.word-progress-stars {
+.arabic-words-learning .word-progress-stars {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -610,31 +415,14 @@
   font-size: 3rem;
 }
 
-.progress-star {
-  transition: transform 0.3s ease;
-  cursor: default;
-}
+.arabic-words-learning .progress-star { transition: transform 0.3s ease; cursor: default; }
+.arabic-words-learning .progress-star.active { animation: wlStarPulse 0.5s ease; }
+.arabic-words-learning .progress-star.learned { animation: wlStarBounce 0.6s ease; }
 
-.progress-star.active {
-  animation: starPulse 0.5s ease;
-}
+@keyframes wlStarPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+@keyframes wlStarBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-.progress-star.learned {
-  animation: starBounce 0.6s ease;
-}
-
-@keyframes starPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-}
-
-@keyframes starBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-/* Large Navigation Buttons */
-.word-navigation-large {
+.arabic-words-learning .word-navigation-large {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -643,17 +431,17 @@
   flex-wrap: wrap;
 }
 
-.nav-btn-large {
+.arabic-words-learning .nav-btn-large {
   padding: 30px 50px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: var(--mz-success);
   border: none;
-  border-radius: 20px;
-  color: white;
+  border-radius: var(--mz-radius-xl);
+  color: #fff;
   font-size: 2rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--mz-shadow-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -662,188 +450,156 @@
   min-height: 90px;
 }
 
-.nav-btn-large:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
-}
+.arabic-words-learning .nav-btn-large:hover:not(:disabled) { transform: scale(1.05); box-shadow: var(--mz-shadow-lg); }
+.arabic-words-learning .nav-btn-large:active:not(:disabled) { transform: scale(0.98); }
+.arabic-words-learning .nav-btn-large:disabled { opacity: 0.4; cursor: not-allowed; background: var(--mz-text-3); }
 
-.nav-btn-large:active:not(:disabled) {
-  transform: scale(0.98);
-}
+.arabic-words-learning .nav-btn-large.nav-repeat { background: var(--mz-warning); }
 
-.nav-btn-large:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  background: #9ca3af;
-}
+.arabic-words-learning .nav-icon { font-size: 2.5rem; }
+.arabic-words-learning .nav-text { font-size: 2rem; }
 
-.nav-btn-large.nav-repeat {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
-}
-
-.nav-btn-large.nav-repeat:hover {
-  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.5);
-}
-
-.nav-icon {
-  font-size: 2.5rem;
-}
-
-.nav-text {
-  font-size: 2rem;
-}
-
-/* Celebration Overlay */
-.celebration-overlay {
+/* Celebration */
+.arabic-words-learning .celebration-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--mz-scrim);
   padding: 0 20px;
 }
 
-.celebration-content {
-  background: white;
+.arabic-words-learning .celebration-content {
+  background: var(--mz-surface);
   padding: 50px 40px;
-  border-radius: 24px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  border-radius: var(--mz-radius-xl);
+  box-shadow: var(--mz-shadow-lg);
   text-align: center;
-  border: 5px solid #10b981;
+  border: 2px solid var(--mz-success);
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
 }
 
-.celebration-emoji {
+.arabic-words-learning .celebration-emoji {
   font-size: 6rem;
   margin-bottom: 20px;
-  animation: celebrateBounce 0.6s ease infinite alternate;
+  animation: wlCelebrateBounce 0.6s ease infinite alternate;
 }
 
-@keyframes celebrateBounce {
-  from { transform: translateY(0); }
-  to { transform: translateY(-20px); }
-}
+@keyframes wlCelebrateBounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
 
-.celebration-text {
+.arabic-words-learning .celebration-text {
   font-size: 3.5rem;
-  font-weight: 700;
-  color: #10b981;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 800;
+  color: var(--mz-success);
 }
 
-/* Learned Badge */
-.learned-badge {
+/* Learned badge (fixed pill) */
+.arabic-words-learning .learned-badge {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: #10b981;
-  color: white;
+  background: var(--mz-success);
+  color: #fff;
   padding: 15px 30px;
-  border-radius: 50px;
+  border-radius: var(--mz-radius-pill);
   font-size: 1.8rem;
   font-weight: 700;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
-  animation: badgePop 0.5s ease;
+  box-shadow: var(--mz-shadow-md);
+  animation: wlBadgePop 0.5s ease;
 }
 
-@keyframes badgePop {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
+@keyframes wlBadgePop { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-/* Encouragement Message */
-.encouragement-message {
+.arabic-words-learning .encouragement-message {
   text-align: center;
   font-size: 2rem;
   font-weight: 700;
-  color: #8b5cf6;
+  color: var(--mz-accent-text);
   margin: 40px 0;
   padding: 25px;
-  background: #f3e8ff;
-  border-radius: 20px;
-  border: 3px solid #8b5cf6;
+  background: var(--mz-accent-soft);
+  border-radius: var(--mz-radius-xl);
+  border: 2px solid var(--mz-accent);
 }
 
-/* Down Syndrome Content Adjustments */
-.ds-content {
-  padding: 50px 40px;
-}
+.arabic-words-learning .ds-content { padding: 50px 40px; }
+.arabic-words-learning .ds-card { border: 1px solid var(--mz-border); box-shadow: var(--mz-shadow-md); }
+.arabic-words-learning .ds-btn { min-width: 150px; min-height: 70px; font-size: 1.5rem; padding: 20px 35px; }
+.ds-friendly .arabic-words-learning .word-image-container { height: 450px; }
+.ds-friendly .arabic-words-learning .syllables-section { display: none; }
 
-.ds-card {
-  border: 5px solid #e5e7eb;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-}
-
-.ds-btn {
-  min-width: 150px;
-  min-height: 70px;
-  font-size: 1.5rem;
-  padding: 20px 35px;
-}
-
-/* Word Image Larger */
-.ds-friendly .word-image-container {
-  height: 450px;
-}
-
-/* Remove complex syllable breakdown for simplicity */
-.ds-friendly .syllables-section {
-  display: none;
-}
-
-/* Responsive for DS-Friendly */
+/* Responsive */
 @media (max-width: 768px) {
-  .arabic-word-large {
-    font-size: 3.5rem;
-  }
+  .arabic-words-learning .words-title { font-size: 2rem; }
+  .arabic-words-learning .words-subtitle { font-size: 1rem; }
+  .arabic-words-learning .categories-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .arabic-words-learning .category-icon { width: 70px; height: 70px; font-size: 2.4rem; }
+  .arabic-words-learning .category-name { font-size: 1.4rem; }
+  .arabic-words-learning .word-image-container { height: 300px; }
+  .arabic-words-learning .arabic-word { font-size: 3rem; }
+  .arabic-words-learning .word-content { padding: 30px 20px; }
+  .arabic-words-learning .syllable-arabic { font-size: 1.5rem; }
+  .arabic-words-learning .syllable-pronunciation { font-size: 0.9rem; }
+  .arabic-words-learning .syllables-section { padding: 20px 15px; }
+  .arabic-words-learning .word-navigation { flex-direction: column; }
+  .arabic-words-learning .arabic-word-large { font-size: 3.5rem; }
+  .arabic-words-learning .translation-large { font-size: 2.5rem; padding: 20px; }
+  .arabic-words-learning .pronunciation-simple { font-size: 1.8rem; }
+  .arabic-words-learning .nav-btn-large { font-size: 1.8rem; padding: 25px 40px; min-width: 180px; min-height: 80px; }
+  .arabic-words-learning .word-progress-stars { font-size: 2.5rem; gap: 15px; }
+  .arabic-words-learning .celebration-emoji { font-size: 5rem; }
+  .arabic-words-learning .celebration-text { font-size: 3rem; }
+  .arabic-words-learning .encouragement-message { font-size: 1.8rem; padding: 20px; }
+}
 
-  .translation-large {
-    font-size: 2.5rem;
-    padding: 20px;
-  }
+@media (max-width: 480px) {
+  .arabic-words-learning { padding: 20px 10px 48px; }
+  .arabic-words-learning .words-title { font-size: 1.6rem; }
+  .arabic-words-learning .categories-grid { grid-template-columns: 1fr; }
+  .arabic-words-learning .word-image-container { height: 250px; }
+  .arabic-words-learning .arabic-word { font-size: 2.5rem; }
+  .arabic-words-learning .syllable-item { padding: 12px 15px; min-width: 70px; }
+  .arabic-words-learning .syllable-arabic { font-size: 1.3rem; }
+  .arabic-words-learning .translation { font-size: 1.5rem; }
+}
 
-  .pronunciation-simple {
-    font-size: 1.8rem;
-  }
+/* High Contrast */
+.high-contrast .arabic-words-learning .category-card,
+.high-contrast .arabic-words-learning .word-card { background: #1a1a1a; border: 2px solid #fff; }
+.high-contrast .arabic-words-learning .category-name,
+.high-contrast .arabic-words-learning .arabic-word { color: #fff; }
 
-  .audio-btn-large {
-    font-size: 1.8rem;
-    padding: 20px 40px;
-    min-width: 240px;
-    min-height: 70px;
-  }
+/* Dyslexia */
+.dyslexia-friendly .arabic-words-learning .arabic-word,
+.dyslexia-friendly .arabic-words-learning .category-name {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
 
-  .nav-btn-large {
-    font-size: 1.8rem;
-    padding: 25px 40px;
-    min-width: 180px;
-    min-height: 80px;
-  }
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .arabic-words-learning .category-card,
+  .arabic-words-learning .word-card,
+  .arabic-words-learning .nav-btn,
+  .arabic-words-learning .nav-btn-large,
+  .arabic-words-learning .syllable-item,
+  .arabic-words-learning .word-image,
+  .arabic-words-learning .celebration-emoji { transition: none !important; animation: none !important; }
+  .arabic-words-learning .word-card:hover .word-image { transform: none; }
+  .arabic-words-learning .syllable-item:hover { transform: none; }
+}
 
-  .word-progress-stars {
-    font-size: 2.5rem;
-    gap: 15px;
-  }
-
-  .celebration-emoji {
-    font-size: 5rem;
-  }
-
-  .celebration-text {
-    font-size: 3rem;
-  }
-
-  .encouragement-message {
-    font-size: 1.8rem;
-    padding: 20px;
-  }
+/* Focus */
+.arabic-words-learning .category-card:focus-visible,
+.arabic-words-learning .nav-btn:focus-visible,
+.arabic-words-learning .nav-btn-large:focus-visible,
+.arabic-words-learning .syllable-item:focus-visible,
+.arabic-words-learning .translation-toggle-btn:focus-visible,
+.arabic-words-learning .back-to-categories-btn:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
 }
