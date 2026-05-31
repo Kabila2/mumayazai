@@ -1223,3 +1223,149 @@ html {
   background: rgba(51, 65, 85, 0.95);
   border-color: #8b5cf6;
 }
+
+/* ============================================================
+   Home page ambient animations
+   All rules are scoped under .home-section so the generic class
+   names (.card-icon, .progress-fill, .progress-bar) don't leak
+   into the learning/game modules that reuse them. The global
+   ".reduced-motion *" rule above already neutralizes these; the
+   prefers-reduced-motion guard at the end covers OS-level prefs.
+   The hero title stays static by design — only the soft glow
+   behind it moves.
+   ============================================================ */
+
+/* Soft, slowly drifting color glow behind the hero band */
+.home-section .welcome-header::before,
+.home-section .welcome-header::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.18;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.home-section .welcome-header::before {
+  top: -150px;
+  left: -70px;
+  background: #6366f1;
+  animation: homeBlobDrift 16s ease-in-out infinite;
+}
+
+.home-section .welcome-header::after {
+  bottom: -170px;
+  right: -50px;
+  background: #ec4899;
+  animation: homeBlobDrift 21s ease-in-out infinite reverse;
+}
+
+@keyframes homeBlobDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(45px, 30px) scale(1.12); }
+  66%      { transform: translate(-30px, 22px) scale(0.94); }
+}
+
+/* Gently floating category icons (staggered across the grid) */
+.home-section .card-icon {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: homeIconFloat 3.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes homeIconFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-5px) rotate(-4deg); }
+}
+
+.home-section .learning-sections .section-card:nth-child(3n + 2) .card-icon {
+  animation-delay: 0.6s;
+}
+.home-section .learning-sections .section-card:nth-child(3n + 3) .card-icon {
+  animation-delay: 1.2s;
+}
+
+/* Icon springs to life when its card is hovered */
+.home-section .section-card:hover .card-icon {
+  transform: scale(1.14) rotate(8deg);
+  animation-play-state: paused;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--card-accent) 35%, transparent);
+}
+
+/* Diagonal light sheen that sweeps across a card on hover */
+.home-section .section-card::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, var(--card-accent) 16%, transparent) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.home-section .section-card:hover::before {
+  animation: homeCardSheen 0.85s ease;
+}
+
+@keyframes homeCardSheen {
+  0%   { left: -75%; }
+  100% { left: 135%; }
+}
+
+/* Keep card content above the sheen (without disturbing the
+   absolutely-positioned unread badge) */
+.home-section .card-icon,
+.home-section .card-title,
+.home-section .card-description,
+.home-section .card-progress {
+  position: relative;
+  z-index: 2;
+}
+
+/* A highlight that travels along a filled progress bar */
+.home-section .progress-fill {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-section .progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: homeProgressShine 2.6s ease-in-out infinite;
+}
+
+@keyframes homeProgressShine {
+  0%        { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(200%); }
+}
+
+/* Respect OS-level reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .home-section .welcome-header::before,
+  .home-section .welcome-header::after,
+  .home-section .card-icon,
+  .home-section .section-card:hover::before,
+  .home-section .progress-fill::after {
+    animation: none !important;
+  }
+}
