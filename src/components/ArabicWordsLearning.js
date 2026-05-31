@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
+import { recordModuleItemLearned, getLearnedItems } from '../utils/progressUtils';
 import CelebrationPopup from './CelebrationPopup';
 import './ArabicWordsLearning.css';
 
@@ -11,9 +12,23 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
   const [learnedWords, setLearnedWords] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
 
   // Voice Over hook for Arabic pronunciation
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
+
+  // Load user and restore previously learned words so progress persists
+  useEffect(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+      if (session.email) {
+        setUserEmail(session.email);
+        setLearnedWords(getLearnedItems(session.email, 'words'));
+      }
+    } catch (error) {
+      console.error('Error loading user:', error);
+    }
+  }, []);
 
   // Mark word as learned
   const markWordAsLearned = (categoryId, wordIndex) => {
@@ -22,6 +37,9 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
       setLearnedWords([...learnedWords, wordKey]);
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 2000);
+      // Track for the Progress Dashboard
+      const totalWords = wordCategories.reduce((sum, cat) => sum + cat.words.length, 0);
+      recordModuleItemLearned(userEmail, 'words', wordKey, totalWords);
     }
   };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ArabicColorsLearning.css';
 import { useVoiceOver } from '../hooks/useVoiceOver';
+import { recordModuleItemLearned, getLearnedItems } from '../utils/progressUtils';
 import CelebrationPopup from './CelebrationPopup';
 
 const arabicColors = [
@@ -120,10 +121,24 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [viewedColors, setViewedColors] = useState([]);
+  const [userEmail, setUserEmail] = useState(null);
   const containerRef = useRef(null);
 
   // Voice Over hook for accessibility
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
+
+  // Load user and restore previously viewed colors so progress persists
+  useEffect(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+      if (session.email) {
+        setUserEmail(session.email);
+        setViewedColors(getLearnedItems(session.email, 'colors'));
+      }
+    } catch (error) {
+      console.error('Error loading user:', error);
+    }
+  }, []);
 
   // Handle scroll indicator
   useEffect(() => {
@@ -174,6 +189,8 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
     if (!viewedColors.includes(color.english)) {
       setViewedColors([...viewedColors, color.english]);
       setShowCelebration(true);
+      // Track for the Progress Dashboard
+      recordModuleItemLearned(userEmail, 'colors', color.english, arabicColors.length);
     }
 
     // Voice over announcement

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound } from '../utils/soundEffects';
+import { getModuleProgress } from '../utils/progressUtils';
 import AnalyticsCharts from './AnalyticsCharts';
 import './ProgressDashboard.css';
 
@@ -89,12 +90,17 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       const progress = progressRaw ? JSON.parse(progressRaw) : {};
       console.log('📊 [ProgressDashboard] Raw progress data:', progress);
 
+      // Per-user module progress is the source of truth for topic completion.
+      // (The legacy `arabic_learning_progress` key only ever stored sessions/
+      // streak, so its topic-progress fields were always 0.)
+      const moduleProgress = getModuleProgress(userEmail);
+
       // Ensure all progress fields have defaults
       const safeProgress = {
-        alphabetProgress: progress.alphabetProgress || 0,
-        colorsProgress: progress.colorsProgress || 0,
-        wordsProgress: progress.wordsProgress || 0,
-        sentencesProgress: progress.sentencesProgress || 0,
+        alphabetProgress: moduleProgress.alphabetProgress || progress.alphabetProgress || 0,
+        colorsProgress: moduleProgress.colorsProgress || progress.colorsProgress || 0,
+        wordsProgress: moduleProgress.wordsProgress || progress.wordsProgress || 0,
+        sentencesProgress: moduleProgress.sentencesProgress || progress.sentencesProgress || 0,
         totalSessions: progress.totalSessions || 0,
         streak: progress.streak || 0,
         lastSessionDate: progress.lastSessionDate || null

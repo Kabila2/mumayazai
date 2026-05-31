@@ -4,6 +4,7 @@ import Speech from 'speak-tts';
 import './ArabicAlphabetLearning.css';
 import PointNotification from './PointNotification';
 import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
+import { recordModuleItemLearned, syncModuleLearned } from '../utils/progressUtils';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
 
@@ -113,6 +114,9 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
         // Load learned letters
         const learned = JSON.parse(localStorage.getItem(`alphabet_learned_${session.email}`) || '[]');
         setLearnedLetters(learned);
+
+        // Mirror existing progress into the central store the dashboard reads
+        syncModuleLearned(session.email, 'alphabet', learned, arabicAlphabet.length);
       }
     } catch (error) {
       console.error("Error loading user:", error);
@@ -251,6 +255,9 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
     setLearnedLetters(newLearned);
 
     localStorage.setItem(`alphabet_learned_${userEmail}`, JSON.stringify(newLearned));
+
+    // Track for the Progress Dashboard
+    recordModuleItemLearned(userEmail, 'alphabet', currentLetter.letter, arabicAlphabet.length);
 
     // Award points for learning a letter
     awardPoints(userEmail, 'LETTER_LEARNED');
