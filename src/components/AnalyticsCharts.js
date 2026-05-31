@@ -28,6 +28,21 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
 
   const t = translations[language] || translations.en;
 
+  // Pull structural colors from the unified design tokens so the canvas charts
+  // stay readable in both light and dark mode. Re-read on every draw (charts
+  // redraw when `data` updates) so a theme switch is picked up automatically.
+  const getPalette = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const read = (name, fallback) => (cs.getPropertyValue(name).trim() || fallback);
+    return {
+      axis: read('--mz-border-strong', '#cdd4e6'),
+      grid: read('--mz-border', '#e2e6f1'),
+      label: read('--mz-text-3', '#8a93aa'),
+      value: read('--mz-text', '#1c2333'),
+      series: read('--mz-success', '#10b981'),
+    };
+  };
+
   // Draw Line Chart
   useEffect(() => {
     if (!lineChartRef.current || !data?.progressTrend?.length) return;
@@ -40,6 +55,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
+    const palette = getPalette();
     const points = data.progressTrend;
     const maxScore = 100;
     const padding = 40;
@@ -47,7 +63,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
     const chartHeight = height - padding * 2;
 
     // Draw axes
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = palette.axis;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(padding, padding);
@@ -56,7 +72,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
     ctx.stroke();
 
     // Draw grid lines
-    ctx.strokeStyle = '#f3f4f6';
+    ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const y = padding + (chartHeight / 4) * i;
@@ -66,7 +82,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
       ctx.stroke();
 
       // Y-axis labels
-      ctx.fillStyle = '#6b7280';
+      ctx.fillStyle = palette.label;
       ctx.font = '12px Arial';
       ctx.textAlign = 'right';
       ctx.fillText(`${100 - i * 25}%`, padding - 10, y + 4);
@@ -74,7 +90,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
 
     // Draw line
     if (points.length > 1) {
-      ctx.strokeStyle = '#10b981';
+      ctx.strokeStyle = palette.series;
       ctx.lineWidth = 3;
       ctx.beginPath();
 
@@ -97,13 +113,13 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
         const y = height - padding - (point.score / maxScore) * chartHeight;
 
         // Point circle
-        ctx.fillStyle = '#10b981';
+        ctx.fillStyle = palette.series;
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fill();
 
         // X-axis labels
-        ctx.fillStyle = '#6b7280';
+        ctx.fillStyle = palette.label;
         ctx.font = '12px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(point.label, x, height - padding + 20);
@@ -122,6 +138,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
 
     ctx.clearRect(0, 0, width, height);
 
+    const palette = getPalette();
     const topics = data.topicScores;
     const padding = 40;
     const chartWidth = width - padding * 2;
@@ -129,7 +146,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
     const barWidth = chartWidth / topics.length - 10;
 
     // Draw axes
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = palette.axis;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(padding, padding);
@@ -152,13 +169,13 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
       ctx.fillRect(x, y, barWidth, barHeight);
 
       // Score text
-      ctx.fillStyle = '#1f2937';
+      ctx.fillStyle = palette.value;
       ctx.font = 'bold 14px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(`${topic.score}%`, x + barWidth / 2, y - 5);
 
       // Topic label
-      ctx.fillStyle = '#6b7280';
+      ctx.fillStyle = palette.label;
       ctx.font = '12px Arial';
       ctx.save();
       ctx.translate(x + barWidth / 2, height - padding + 15);
@@ -180,6 +197,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
 
     ctx.clearRect(0, 0, width, height);
 
+    const palette = getPalette();
     const skills = data.skills;
     const centerX = width / 2;
     const centerY = height / 2;
@@ -187,7 +205,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
     const angleStep = (Math.PI * 2) / skills.length;
 
     // Draw concentric circles
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 1;
     for (let i = 1; i <= 5; i++) {
       ctx.beginPath();
@@ -196,7 +214,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
     }
 
     // Draw axes
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = palette.axis;
     skills.forEach((skill, index) => {
       const angle = angleStep * index - Math.PI / 2;
       const x = centerX + Math.cos(angle) * radius;
@@ -210,7 +228,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
       // Labels
       const labelX = centerX + Math.cos(angle) * (radius + 30);
       const labelY = centerY + Math.sin(angle) * (radius + 30);
-      ctx.fillStyle = '#374151';
+      ctx.fillStyle = palette.value;
       ctx.font = 'bold 12px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -219,7 +237,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
 
     // Draw data polygon
     ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
-    ctx.strokeStyle = '#10b981';
+    ctx.strokeStyle = palette.series;
     ctx.lineWidth = 2;
     ctx.beginPath();
 
@@ -247,7 +265,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
       const x = centerX + Math.cos(angle) * distance;
       const y = centerY + Math.sin(angle) * distance;
 
-      ctx.fillStyle = '#10b981';
+      ctx.fillStyle = palette.series;
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, Math.PI * 2);
       ctx.fill();
