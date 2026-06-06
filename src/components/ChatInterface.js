@@ -408,8 +408,8 @@ const ChatInterface = ({
   // Enhanced translations
   const translations = {
     en: {
-      chatAssistant: "Mumayaz Chat Assistant",
-      welcomeMessage: "Welcome to Mumayaz Chat Assistant! I'm here to help answer questions, provide information, and assist with various tasks. How can I help you today?",
+      chatAssistant: "Stellar Chat Assistant",
+      welcomeMessage: "Welcome to Stellar Chat Assistant! I'm here to help answer questions, provide information, and assist with various tasks. How can I help you today?",
       placeholder: "Type your message here...",
       send: "Send Message",
       saveChat: "Save Conversation",

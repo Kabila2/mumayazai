@@ -1,13 +1,13 @@
 export const translations = {
   en: {
-    // Mumayaz UI keys
+    // Stellar UI keys
     chooseRole: "Are you a student or a parent?",
     student: "Student",
     parent: "Parent",
     selectDisability: "Select your preference",
     dyslexia: "Dyslexia",
     default: "Default",
-    welcome: "Welcome to Mumayaz!",
+    welcome: "Welcome to Stellar!",
     start: "Start",
     chooseSubject: "Choose a subject",
     math: "Math",
@@ -84,7 +84,7 @@ export const translations = {
     speed: "Speed",
     pitch: "Pitch",
     test: "Test Voice",
-    welcome_ai: "Welcome To Mumayaz",
+    welcome_ai: "Welcome To Stellar",
     speak: "Speak",
     summary: "Summary",
     you: "You",
@@ -129,7 +129,7 @@ export const translations = {
     learnArabic: "Learn Arabic",
   },
   ar: {
-    // Mumayaz UI keys
+    // Stellar UI keys
     chooseRole: "هل أنت طالب أم ولي أمر؟",
     student: "طالب",
     parent: "ولي الأمر",
@@ -213,7 +213,7 @@ export const translations = {
     speed: "السرعة",
     pitch: "النغمة",
     test: "اختبار الصوت",
-    welcome_ai: "مرحبًا بك في Mumayaz",
+    welcome_ai: "مرحبًا بك في Stellar",
     speak: "تحدث",
     summary: "الملخص",
     you: "أنت",

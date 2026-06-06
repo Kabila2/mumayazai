@@ -14,7 +14,7 @@ import "./ReactBitsSwitcher.css";
 
 export default function ReactBitsSwitcher() {
   const components = [
-    <ShinyText key="text" textEN="Mumayaz" textAR="مميّز" showArabic={false} />,
+    <ShinyText key="text" textEN="Stellar" textAR="مميّز" showArabic={false} />,
     <ScrollFloat key="scroll">Tailored for Every Learner</ScrollFloat>,
     <Ribbons key="ribbons" />,
     <SpotlightCard key="spotlight" spotlightColor="rgba(255,255,255,0.2)">
@@ -37,7 +37,7 @@ export default function ReactBitsSwitcher() {
       { content: "Lesson 3: Quiz" },
     ]} />,
     <Stepper key="stepper" initialStep={1} backButtonText="‹ Back" nextButtonText="Next ›">
-      <Step><h3>Step 1</h3><p>Welcome to Mumayaz!</p></Step>
+      <Step><h3>Step 1</h3><p>Welcome to Stellar!</p></Step>
       <Step><h3>Step 2</h3><p>Let’s get started.</p></Step>
     </Stepper>,
   ];

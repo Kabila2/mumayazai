@@ -455,7 +455,7 @@ export default function VoiceInterface({
   // Translations for Arabic/English
   const translations = {
     en: {
-      voiceAssistant: "Mumayaz Voice Assistant",
+      voiceAssistant: "Stellar Voice Assistant",
       listening: "Listening...",
       speaking: "Speaking...",
       processing: "Processing...",
@@ -465,7 +465,7 @@ export default function VoiceInterface({
       chatMode: "Switch to Chat",
       stop: "Stop Speaking",
       clear: "Clear History",
-      welcomeMessage: "Welcome to Mumayaz Voice Assistant! I'm ready to help with voice-powered conversations. You can speak naturally and I'll respond to your questions.",
+      welcomeMessage: "Welcome to Stellar Voice Assistant! I'm ready to help with voice-powered conversations. You can speak naturally and I'll respond to your questions.",
       newSession: "Voice session started. What would you like to discuss today?",
       chatCleared: "Conversation history cleared",
       conversationSaved: "Your conversation has been saved successfully!",

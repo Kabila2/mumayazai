@@ -154,7 +154,7 @@ export const exportUserData = (userEmail) => {
     const exportData = {
       exportDate: new Date().toISOString(),
       exportVersion: '1.0',
-      platform: 'Mumayaz Arabic Learning Platform',
+      platform: 'Stellar Arabic Learning Platform',
 
       profile: getUserProfile(userEmail),
       progress: getProgress(userEmail),

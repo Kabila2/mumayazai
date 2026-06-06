@@ -9,7 +9,7 @@ import { isElevenLabsConfigured, speakWithElevenLabs } from "../utils/elevenLabs
 
 const WELCOME_TEXT = {
   ar: "مرحباً بك في مميز",
-  en: "Welcome To Mumayaz",
+  en: "Welcome To Stellar",
 };
 
 const speakWelcome = (lang) => {

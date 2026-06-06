@@ -43,7 +43,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
       finish: 'Get Started!',
       steps: [
         {
-          title: 'Welcome to Mumayaz!',
+          title: 'Welcome to Stellar!',
           description: 'Choose your preferred font — it will be applied across the whole app.',
           icon: '👋',
           highlight: null

@@ -6,7 +6,7 @@ import "./ShinyTextSwitcher.css";
 
 
  const texts = [
-   { textEN: "Mumayaz", textAR: "مميّز" }
+   { textEN: "Stellar", textAR: "مميّز" }
  ];
 
 export default function ShinyTextSwitcher() {

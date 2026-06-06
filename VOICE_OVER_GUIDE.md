@@ -1,6 +1,6 @@
 # Voice Over Integration Guide
 
-This guide explains how to add voice over functionality to any component in the Mumayaz application.
+This guide explains how to add voice over functionality to any component in the Stellar application.
 
 ## Overview
 
