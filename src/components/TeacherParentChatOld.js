@@ -71,7 +71,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
   const loadConversations = () => {
     try {
-      const stored = localStorage.getItem('mumayaz_conversations') || '{}';
+      const stored = localStorage.getItem('stellar_conversations') || '{}';
       const allConversations = JSON.parse(stored);
 
       // Filter conversations for current user
@@ -95,7 +95,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
   const loadMessages = (conversationId) => {
     try {
-      const stored = localStorage.getItem(`mumayaz_messages_${conversationId}`) || '[]';
+      const stored = localStorage.getItem(`stellar_messages_${conversationId}`) || '[]';
       const conversationMessages = JSON.parse(stored);
       setMessages(conversationMessages);
 
@@ -108,7 +108,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
   const markMessagesAsRead = (conversationId) => {
     try {
-      const stored = localStorage.getItem(`mumayaz_messages_${conversationId}`) || '[]';
+      const stored = localStorage.getItem(`stellar_messages_${conversationId}`) || '[]';
       const conversationMessages = JSON.parse(stored);
 
       const updatedMessages = conversationMessages.map(msg => ({
@@ -116,7 +116,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
         read: msg.sender !== currentUserEmail ? true : msg.read
       }));
 
-      localStorage.setItem(`mumayaz_messages_${conversationId}`, JSON.stringify(updatedMessages));
+      localStorage.setItem(`stellar_messages_${conversationId}`, JSON.stringify(updatedMessages));
 
       // Update unread count in conversation
       updateConversationUnreadCount(conversationId);
@@ -127,12 +127,12 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
   const updateConversationUnreadCount = (conversationId) => {
     try {
-      const stored = localStorage.getItem('mumayaz_conversations') || '{}';
+      const stored = localStorage.getItem('stellar_conversations') || '{}';
       const allConversations = JSON.parse(stored);
 
       if (allConversations[conversationId]) {
         allConversations[conversationId].unreadCount = 0;
-        localStorage.setItem('mumayaz_conversations', JSON.stringify(allConversations));
+        localStorage.setItem('stellar_conversations', JSON.stringify(allConversations));
         loadConversations();
       }
     } catch (error) {
@@ -155,13 +155,13 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
       };
 
       // Add message to conversation
-      const stored = localStorage.getItem(`mumayaz_messages_${selectedConversation.id}`) || '[]';
+      const stored = localStorage.getItem(`stellar_messages_${selectedConversation.id}`) || '[]';
       const conversationMessages = JSON.parse(stored);
       conversationMessages.push(message);
-      localStorage.setItem(`mumayaz_messages_${selectedConversation.id}`, JSON.stringify(conversationMessages));
+      localStorage.setItem(`stellar_messages_${selectedConversation.id}`, JSON.stringify(conversationMessages));
 
       // Update conversation's last message
-      const allConversationsStored = localStorage.getItem('mumayaz_conversations') || '{}';
+      const allConversationsStored = localStorage.getItem('stellar_conversations') || '{}';
       const allConversations = JSON.parse(allConversationsStored);
 
       if (allConversations[selectedConversation.id]) {
@@ -176,7 +176,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
             (allConversations[selectedConversation.id].unreadCount || 0) + 1;
         }
 
-        localStorage.setItem('mumayaz_conversations', JSON.stringify(allConversations));
+        localStorage.setItem('stellar_conversations', JSON.stringify(allConversations));
       }
 
       // Update local state
@@ -207,7 +207,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
   const getParticipantName = (email) => {
     try {
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const user = users[email?.toLowerCase()];
       return user?.name || email || 'Unknown User';
     } catch (error) {
@@ -217,7 +217,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
   const getParticipantRole = (email) => {
     try {
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const user = users[email?.toLowerCase()];
       return user?.role || 'user';
     } catch (error) {
@@ -259,7 +259,7 @@ const TeacherParentChat = ({ currentUserEmail, userRole, language = 'en', onBack
 
     // Find and select the newly created conversation
     setTimeout(() => {
-      const stored = localStorage.getItem('mumayaz_conversations') || '{}';
+      const stored = localStorage.getItem('stellar_conversations') || '{}';
       const allConversations = JSON.parse(stored);
       const newConv = allConversations[conversationId];
 

@@ -10,7 +10,7 @@ const INDIGO_DARK = '#4338ca';
 const INDIGO_LIGHT = '#6366f1';
 const BORDER = '#e5e7eb';
 
-const mumayazMuiTheme = createTheme({
+const stellarMuiTheme = createTheme({
   palette: {
     mode: 'light',
     primary: { main: INDIGO, dark: INDIGO_DARK, light: INDIGO_LIGHT, contrastText: '#ffffff' },
@@ -94,4 +94,4 @@ const mumayazMuiTheme = createTheme({
   },
 });
 
-export default mumayazMuiTheme;
+export default stellarMuiTheme;

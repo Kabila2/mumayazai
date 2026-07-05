@@ -237,7 +237,7 @@ export const ACHIEVEMENTS = {
  */
 export const getUserAchievements = (userEmail) => {
   try {
-    const achievementsKey = `mumayaz_achievements_${userEmail}`;
+    const achievementsKey = `stellar_achievements_${userEmail}`;
     const saved = localStorage.getItem(achievementsKey);
     return saved ? JSON.parse(saved) : [];
   } catch (error) {
@@ -251,7 +251,7 @@ export const getUserAchievements = (userEmail) => {
  */
 const saveUserAchievements = (userEmail, achievements) => {
   try {
-    const achievementsKey = `mumayaz_achievements_${userEmail}`;
+    const achievementsKey = `stellar_achievements_${userEmail}`;
     localStorage.setItem(achievementsKey, JSON.stringify(achievements));
   } catch (error) {
     console.error('Error saving achievements:', error);
@@ -315,7 +315,7 @@ export const unlockAchievement = (userEmail, achievementId) => {
  */
 const awardPoints = (userEmail, points) => {
   try {
-    const pointsKey = `mumayaz_points_${userEmail}`;
+    const pointsKey = `stellar_points_${userEmail}`;
     const saved = localStorage.getItem(pointsKey);
     const pointsData = saved ? JSON.parse(saved) : { total: 0, history: [] };
 
@@ -460,7 +460,7 @@ const checkTimeBasedAchievements = (userEmail, achievements) => {
 
   // Weekend learner (Saturday=6, Sunday=0)
   if ((currentDay === 0 || currentDay === 6) && !isAchievementUnlocked(userEmail, 'weekend_learner')) {
-    const weekendKey = `mumayaz_weekend_studied_${userEmail}`;
+    const weekendKey = `stellar_weekend_studied_${userEmail}`;
     const weekendData = JSON.parse(localStorage.getItem(weekendKey) || '{}');
 
     if (currentDay === 6) weekendData.saturday = true;

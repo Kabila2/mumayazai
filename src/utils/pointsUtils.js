@@ -2,7 +2,7 @@
 
 import { updateUserStats, getUserStats, recordLearningPoints } from './leaderboardUtils';
 
-const POINTS_STORAGE_KEY = "mumayaz_points";
+const POINTS_STORAGE_KEY = "stellar_points";
 const NOTIFICATION_THRESHOLD = 25; // Show notification every 25 points
 
 // Point values for different activities
@@ -375,8 +375,8 @@ export const getPointDescription = (pointType, language = 'en') => {
  */
 export const getClassLeaderboard = (className) => {
   try {
-    const teacherData = JSON.parse(localStorage.getItem('mumayaz_teachers') || '{}');
-    const userStats = JSON.parse(localStorage.getItem('mumayaz_user_stats') || '{}');
+    const teacherData = JSON.parse(localStorage.getItem('stellar_teachers') || '{}');
+    const userStats = JSON.parse(localStorage.getItem('stellar_user_stats') || '{}');
 
     // Find students in this class
     const classStudents = [];

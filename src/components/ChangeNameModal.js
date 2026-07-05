@@ -45,7 +45,7 @@ const ChangeNameModal = ({ currentUser, onUpdate, onClose, language = 'en' }) =>
 
   useEffect(() => {
     // Load current name
-    const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+    const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
     const user = users[currentUser.toLowerCase()];
     if (user?.name) {
       setCurrentName(user.name);
@@ -82,18 +82,18 @@ const ChangeNameModal = ({ currentUser, onUpdate, onClose, language = 'en' }) =>
     playSuccessSound();
 
     // Update user name in localStorage
-    const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+    const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
     const userKey = currentUser.toLowerCase();
     if (users[userKey]) {
       users[userKey].name = trimmedName;
-      localStorage.setItem('mumayaz_users', JSON.stringify(users));
+      localStorage.setItem('stellar_users', JSON.stringify(users));
     }
 
     // Update session if exists
-    const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+    const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
     if (session.email && session.email.toLowerCase() === userKey) {
       session.name = trimmedName;
-      localStorage.setItem('mumayaz_session', JSON.stringify(session));
+      localStorage.setItem('stellar_session', JSON.stringify(session));
     }
 
     // Call parent callback

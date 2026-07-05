@@ -1,7 +1,7 @@
 // Smart Notification System
 export const createNotification = (userEmail, notification) => {
   try {
-    const notificationsKey = `mumayaz_notifications_${userEmail}`;
+    const notificationsKey = `stellar_notifications_${userEmail}`;
     const notifications = JSON.parse(localStorage.getItem(notificationsKey) || '[]');
     
     const newNotification = {
@@ -30,7 +30,7 @@ export const createNotification = (userEmail, notification) => {
 
 export const getNotifications = (userEmail) => {
   try {
-    const notificationsKey = `mumayaz_notifications_${userEmail}`;
+    const notificationsKey = `stellar_notifications_${userEmail}`;
     return JSON.parse(localStorage.getItem(notificationsKey) || '[]');
   } catch (error) {
     console.error('Error getting notifications:', error);
@@ -40,7 +40,7 @@ export const getNotifications = (userEmail) => {
 
 export const markAsRead = (userEmail, notificationId) => {
   try {
-    const notificationsKey = `mumayaz_notifications_${userEmail}`;
+    const notificationsKey = `stellar_notifications_${userEmail}`;
     const notifications = JSON.parse(localStorage.getItem(notificationsKey) || '[]');
     
     const updated = notifications.map(n => 

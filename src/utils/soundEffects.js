@@ -3,7 +3,7 @@
  * Provides audio feedback for user interactions
  */
 
-const SOUND_ENABLED_KEY = 'mumayaz_sounds_enabled';
+const SOUND_ENABLED_KEY = 'stellar_sounds_enabled';
 
 // Check if sounds are enabled
 export const areSoundsEnabled = () => {

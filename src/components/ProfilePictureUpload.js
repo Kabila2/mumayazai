@@ -18,7 +18,7 @@ const ProfilePictureUpload = ({ currentUser, onUpdate, onClose }) => {
 
   useEffect(() => {
     // Load current profile picture
-    const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+    const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
     const user = users[currentUser.toLowerCase()];
     if (user?.profilePicture) {
       setCurrentPicture(user.profilePicture);
@@ -102,11 +102,11 @@ const ProfilePictureUpload = ({ currentUser, onUpdate, onClose }) => {
     playSuccessSound();
 
     // Update user profile in localStorage
-    const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+    const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
     const userKey = currentUser.toLowerCase();
     if (users[userKey]) {
       users[userKey].profilePicture = selectedImage;
-      localStorage.setItem('mumayaz_users', JSON.stringify(users));
+      localStorage.setItem('stellar_users', JSON.stringify(users));
     }
 
     // Call parent callback
@@ -125,11 +125,11 @@ const ProfilePictureUpload = ({ currentUser, onUpdate, onClose }) => {
   const handleRemove = () => {
     playClickSound();
 
-    const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+    const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
     const userKey = currentUser.toLowerCase();
     if (users[userKey]) {
       delete users[userKey].profilePicture;
-      localStorage.setItem('mumayaz_users', JSON.stringify(users));
+      localStorage.setItem('stellar_users', JSON.stringify(users));
     }
 
     setCurrentPicture(null);

@@ -131,8 +131,8 @@ A comprehensive Profile Settings system has been successfully implemented, conso
 
 ### LocalStorage Integration
 All changes are saved to:
-- `mumayaz_users` - User profile data
-- `mumayaz_session` - Active session updates
+- `stellar_users` - User profile data
+- `stellar_session` - Active session updates
 
 ### Events Dispatched
 - `userDataUpdated` - When profile changes

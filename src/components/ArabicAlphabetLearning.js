@@ -107,7 +107,7 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   // Get user email on mount
   useEffect(() => {
     try {
-      const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+      const session = JSON.parse(localStorage.getItem("stellar_session") || "{}");
       if (session.email) {
         setUserEmail(session.email);
 

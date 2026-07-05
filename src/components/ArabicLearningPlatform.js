@@ -30,7 +30,7 @@ import StudentProgressReport from "./StudentProgressReport";
 import TeacherDashboard from "./TeacherDashboard";
 import ParentDashboard from "./ParentDashboard";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
-import mumayazMuiTheme from "../muiTheme";
+import stellarMuiTheme from "../muiTheme";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
 
@@ -91,7 +91,7 @@ const ArabicLearningPlatform = ({
 
   // Check if first-time user
   useEffect(() => {
-    const hasCompletedOnboarding = localStorage.getItem('mumayaz_onboarding_completed');
+    const hasCompletedOnboarding = localStorage.getItem('stellar_onboarding_completed');
     if (!hasCompletedOnboarding && currentSection === 'home') {
       // Show onboarding after a short delay
       setTimeout(() => setShowOnboarding(true), 1000);
@@ -113,7 +113,7 @@ const ArabicLearningPlatform = ({
   // Monitor unread messages count
   useEffect(() => {
     const updateUnreadCount = () => {
-      const count = parseInt(localStorage.getItem('mumayaz_unread_messages') || '0', 10);
+      const count = parseInt(localStorage.getItem('stellar_unread_messages') || '0', 10);
       setUnreadMessagesCount(count);
     };
 
@@ -137,7 +137,7 @@ const ArabicLearningPlatform = ({
     const loadProfilePicture = () => {
       const userEmail = getCurrentUserEmail();
       if (userEmail) {
-        const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+        const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
         const user = users[userEmail.toLowerCase()];
         setCurrentProfilePicture(user?.profilePicture || null);
       }
@@ -228,7 +228,7 @@ const ArabicLearningPlatform = ({
   // Get current user email from session
   const getCurrentUserEmail = () => {
     try {
-      const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+      const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
       return session.email || null;
     } catch (error) {
       console.error('Error getting user email:', error);
@@ -240,15 +240,15 @@ const ArabicLearningPlatform = ({
   const getCurrentUserRole = () => {
     try {
       const userEmail = getCurrentUserEmail();
-      const storedRole = localStorage.getItem('mumayaz_role');
+      const storedRole = localStorage.getItem('stellar_role');
       if (!userEmail) return storedRole || null;
 
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const user = users[userEmail.toLowerCase()];
       return user?.role || storedRole || null;
     } catch (error) {
       console.error('Error getting user role:', error);
-      return localStorage.getItem('mumayaz_role') || null;
+      return localStorage.getItem('stellar_role') || null;
     }
   };
 
@@ -1605,7 +1605,7 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <MuiThemeProvider theme={mumayazMuiTheme}>
+              <MuiThemeProvider theme={stellarMuiTheme}>
                 <TeacherDashboard
                   userEmail={getCurrentUserEmail()}
                   language={language}
@@ -1624,7 +1624,7 @@ const ArabicLearningPlatform = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <MuiThemeProvider theme={mumayazMuiTheme}>
+              <MuiThemeProvider theme={stellarMuiTheme}>
                 <ParentDashboard
                   userEmail={getCurrentUserEmail()}
                   language={language}
@@ -1645,7 +1645,7 @@ const ArabicLearningPlatform = ({
             language={language}
             onUpdate={() => {
               // Reload user data
-              const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+              const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
               const user = users[getCurrentUserEmail().toLowerCase()];
               if (user?.profilePicture) {
                 setCurrentProfilePicture(user.profilePicture);

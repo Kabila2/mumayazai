@@ -15,7 +15,7 @@ export const createConversation = (teacherEmail, parentEmail, childName = '') =>
     const conversationId = `conv_${teacherEmail}_${parentEmail}_${Date.now()}`;
 
     // Get existing conversations
-    const stored = localStorage.getItem('mumayaz_conversations') || '{}';
+    const stored = localStorage.getItem('stellar_conversations') || '{}';
     const conversations = JSON.parse(stored);
 
     // Check if conversation already exists
@@ -44,7 +44,7 @@ export const createConversation = (teacherEmail, parentEmail, childName = '') =>
     };
 
     conversations[conversationId] = newConversation;
-    localStorage.setItem('mumayaz_conversations', JSON.stringify(conversations));
+    localStorage.setItem('stellar_conversations', JSON.stringify(conversations));
 
     console.log('Created new conversation:', conversationId);
     return { success: true, conversationId, existing: false };
@@ -61,7 +61,7 @@ export const createConversation = (teacherEmail, parentEmail, childName = '') =>
  */
 export const getUserConversations = (userEmail) => {
   try {
-    const stored = localStorage.getItem('mumayaz_conversations') || '{}';
+    const stored = localStorage.getItem('stellar_conversations') || '{}';
     const allConversations = JSON.parse(stored);
 
     const userConversations = Object.entries(allConversations)
@@ -98,14 +98,14 @@ export const sendMessage = (conversationId, senderEmail, messageText) => {
     };
 
     // Add message to conversation messages
-    const messagesKey = `mumayaz_messages_${conversationId}`;
+    const messagesKey = `stellar_messages_${conversationId}`;
     const stored = localStorage.getItem(messagesKey) || '[]';
     const messages = JSON.parse(stored);
     messages.push(message);
     localStorage.setItem(messagesKey, JSON.stringify(messages));
 
     // Update conversation metadata
-    const conversationsStored = localStorage.getItem('mumayaz_conversations') || '{}';
+    const conversationsStored = localStorage.getItem('stellar_conversations') || '{}';
     const conversations = JSON.parse(conversationsStored);
 
     if (conversations[conversationId]) {
@@ -117,7 +117,7 @@ export const sendMessage = (conversationId, senderEmail, messageText) => {
       conversations[conversationId].unreadCount =
         (conversations[conversationId].unreadCount || 0) + 1;
 
-      localStorage.setItem('mumayaz_conversations', JSON.stringify(conversations));
+      localStorage.setItem('stellar_conversations', JSON.stringify(conversations));
     }
 
     return { success: true, message };
@@ -134,7 +134,7 @@ export const sendMessage = (conversationId, senderEmail, messageText) => {
  */
 export const getConversationMessages = (conversationId) => {
   try {
-    const messagesKey = `mumayaz_messages_${conversationId}`;
+    const messagesKey = `stellar_messages_${conversationId}`;
     const stored = localStorage.getItem(messagesKey) || '[]';
     return JSON.parse(stored);
   } catch (error) {
@@ -151,7 +151,7 @@ export const getConversationMessages = (conversationId) => {
  */
 export const markConversationAsRead = (conversationId, userEmail) => {
   try {
-    const messagesKey = `mumayaz_messages_${conversationId}`;
+    const messagesKey = `stellar_messages_${conversationId}`;
     const stored = localStorage.getItem(messagesKey) || '[]';
     const messages = JSON.parse(stored);
 
@@ -163,12 +163,12 @@ export const markConversationAsRead = (conversationId, userEmail) => {
     localStorage.setItem(messagesKey, JSON.stringify(updatedMessages));
 
     // Update unread count in conversation
-    const conversationsStored = localStorage.getItem('mumayaz_conversations') || '{}';
+    const conversationsStored = localStorage.getItem('stellar_conversations') || '{}';
     const conversations = JSON.parse(conversationsStored);
 
     if (conversations[conversationId]) {
       conversations[conversationId].unreadCount = 0;
-      localStorage.setItem('mumayaz_conversations', JSON.stringify(conversations));
+      localStorage.setItem('stellar_conversations', JSON.stringify(conversations));
     }
 
     return { success: true };
@@ -185,12 +185,12 @@ export const markConversationAsRead = (conversationId, userEmail) => {
  */
 export const archiveConversation = (conversationId) => {
   try {
-    const conversationsStored = localStorage.getItem('mumayaz_conversations') || '{}';
+    const conversationsStored = localStorage.getItem('stellar_conversations') || '{}';
     const conversations = JSON.parse(conversationsStored);
 
     if (conversations[conversationId]) {
       conversations[conversationId].archived = true;
-      localStorage.setItem('mumayaz_conversations', JSON.stringify(conversations));
+      localStorage.setItem('stellar_conversations', JSON.stringify(conversations));
       return { success: true };
     }
 
@@ -209,13 +209,13 @@ export const archiveConversation = (conversationId) => {
 export const deleteConversation = (conversationId) => {
   try {
     // Delete conversation
-    const conversationsStored = localStorage.getItem('mumayaz_conversations') || '{}';
+    const conversationsStored = localStorage.getItem('stellar_conversations') || '{}';
     const conversations = JSON.parse(conversationsStored);
     delete conversations[conversationId];
-    localStorage.setItem('mumayaz_conversations', JSON.stringify(conversations));
+    localStorage.setItem('stellar_conversations', JSON.stringify(conversations));
 
     // Delete messages
-    const messagesKey = `mumayaz_messages_${conversationId}`;
+    const messagesKey = `stellar_messages_${conversationId}`;
     localStorage.removeItem(messagesKey);
 
     return { success: true };
@@ -254,7 +254,7 @@ export const getTotalUnreadCount = (userEmail) => {
 export const initializeDemoConversation = () => {
   try {
     // Get all users
-    const usersStored = localStorage.getItem('mumayaz_users') || '{}';
+    const usersStored = localStorage.getItem('stellar_users') || '{}';
     const users = JSON.parse(usersStored);
 
     // Find a teacher and a parent

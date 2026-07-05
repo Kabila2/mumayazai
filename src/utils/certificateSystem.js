@@ -1,7 +1,7 @@
 // Certificates & Completion Tracking System
 export const awardCertificate = (userEmail, certificateData) => {
   try {
-    const certificatesKey = `mumayaz_certificates_${userEmail}`;
+    const certificatesKey = `stellar_certificates_${userEmail}`;
     const certificates = JSON.parse(localStorage.getItem(certificatesKey) || '[]');
 
     const certificate = {
@@ -21,7 +21,7 @@ export const awardCertificate = (userEmail, certificateData) => {
 
 export const getCertificates = (userEmail) => {
   try {
-    const certificatesKey = `mumayaz_certificates_${userEmail}`;
+    const certificatesKey = `stellar_certificates_${userEmail}`;
     return JSON.parse(localStorage.getItem(certificatesKey) || '[]');
   } catch (error) {
     console.error('Error getting certificates:', error);
@@ -31,7 +31,7 @@ export const getCertificates = (userEmail) => {
 
 export const trackCompletion = (userEmail, moduleType, moduleId) => {
   try {
-    const completionKey = `mumayaz_completions_${userEmail}`;
+    const completionKey = `stellar_completions_${userEmail}`;
     const completions = JSON.parse(localStorage.getItem(completionKey) || '{}');
 
     if (!completions[moduleType]) {
@@ -52,7 +52,7 @@ export const trackCompletion = (userEmail, moduleType, moduleId) => {
 
 export const getCompletionRate = (userEmail, moduleType) => {
   try {
-    const completionKey = `mumayaz_completions_${userEmail}`;
+    const completionKey = `stellar_completions_${userEmail}`;
     const completions = JSON.parse(localStorage.getItem(completionKey) || '{}');
 
     const completed = completions[moduleType]?.length || 0;

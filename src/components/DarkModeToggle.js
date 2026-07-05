@@ -20,7 +20,7 @@ const DarkModeToggle = ({ language = 'en' }) => {
 
   useEffect(() => {
     // Load dark mode preference
-    const savedMode = localStorage.getItem('mumayaz_dark_mode');
+    const savedMode = localStorage.getItem('stellar_dark_mode');
     const prefersDark = savedMode === 'true';
     setIsDarkMode(prefersDark);
     applyDarkMode(prefersDark);
@@ -37,7 +37,7 @@ const DarkModeToggle = ({ language = 'en' }) => {
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    localStorage.setItem('mumayaz_dark_mode', newMode.toString());
+    localStorage.setItem('stellar_dark_mode', newMode.toString());
     applyDarkMode(newMode);
 
     // Haptic feedback

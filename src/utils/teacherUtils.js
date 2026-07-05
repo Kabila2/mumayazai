@@ -1,9 +1,9 @@
 // src/utils/teacherUtils.js - Teacher Class Management and Student Tracking Utilities
 
-const TEACHER_DATA_KEY = "mumayaz_teacher_data";
-const CLASSES_KEY = "mumayaz_classes";
-const STUDENT_ENROLLMENTS_KEY = "mumayaz_student_enrollments";
-const TEACHER_POINTS_KEY = "mumayaz_teacher_points";
+const TEACHER_DATA_KEY = "stellar_teacher_data";
+const CLASSES_KEY = "stellar_classes";
+const STUDENT_ENROLLMENTS_KEY = "stellar_student_enrollments";
+const TEACHER_POINTS_KEY = "stellar_teacher_points";
 
 /**
  * Generate a unique ID for tracking
@@ -186,7 +186,7 @@ export const getClass = (classId) => {
  */
 const getUserFromSystem = (email) => {
   try {
-    const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+    const users = JSON.parse(localStorage.getItem("stellar_users") || "{}");
     return users[email.toLowerCase()] || null;
   } catch (error) {
     console.error("Error getting user from system:", error);

@@ -192,7 +192,7 @@ Features needed:
 
 **Data Structure:**
 ```javascript
-// localStorage: mumayaz_assignments
+// localStorage: stellar_assignments
 
 {
   "assignment_123": {
@@ -235,7 +235,7 @@ src/components/homework/
 
 **System Design:**
 ```javascript
-// localStorage: mumayaz_classes
+// localStorage: stellar_classes
 
 {
   "class_grade3_arabic": {

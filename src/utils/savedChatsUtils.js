@@ -1,6 +1,6 @@
 // src/utils/savedChatsUtils.js - Saved Chats Management Utilities
 
-const SAVED_CHATS_KEY = "mumayaz_saved_chats";
+const SAVED_CHATS_KEY = "stellar_saved_chats";
 const MAX_SAVED_CHATS = 50; // Limit to prevent storage overflow
 
 /**
@@ -202,7 +202,7 @@ export const exportSavedChats = () => {
 
     const link = document.createElement('a');
     link.href = URL.createObjectURL(dataBlob);
-    link.download = `mumayaz_saved_chats_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `stellar_saved_chats_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

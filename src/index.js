@@ -11,6 +11,27 @@ import { BrowserRouter } from 'react-router-dom';
 // conflicting :root blocks in the component stylesheets.
 import './theme.css';
 
+// One-time migration: the app was rebranded from "mumayaz" to "stellar" and
+// its localStorage key prefix changed to match. Carry forward any data saved
+// under the old prefix so existing users don't lose progress/sessions.
+;(function migrateLegacyStorageKeys() {
+  const OLD_PREFIX = 'mumayaz_';
+  const NEW_PREFIX = 'stellar_';
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith(OLD_PREFIX))
+      .forEach((oldKey) => {
+        const newKey = NEW_PREFIX + oldKey.slice(OLD_PREFIX.length);
+        if (localStorage.getItem(newKey) === null) {
+          localStorage.setItem(newKey, localStorage.getItem(oldKey));
+        }
+        localStorage.removeItem(oldKey);
+      });
+  } catch {
+    // localStorage unavailable (e.g. privacy mode) — nothing to migrate.
+  }
+})();
+
 // Dynamically load Puter.js so `puter` is available globally
 ;(function loadPuter() {
   const script = document.createElement('script');

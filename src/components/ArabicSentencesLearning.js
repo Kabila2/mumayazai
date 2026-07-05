@@ -19,7 +19,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
   // Load user and restore previously learned sentences so progress persists
   useEffect(() => {
     try {
-      const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+      const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
       if (session.email) {
         setUserEmail(session.email);
         setLearnedSentences(getLearnedItems(session.email, 'sentences'));

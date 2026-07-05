@@ -1,7 +1,7 @@
 // Learning Schedule/Calendar System
 export const createScheduleEvent = (userEmail, event) => {
   try {
-    const scheduleKey = `mumayaz_schedule_${userEmail}`;
+    const scheduleKey = `stellar_schedule_${userEmail}`;
     const schedule = JSON.parse(localStorage.getItem(scheduleKey) || '[]');
     
     const newEvent = {
@@ -21,7 +21,7 @@ export const createScheduleEvent = (userEmail, event) => {
 
 export const getScheduleEvents = (userEmail, date = null) => {
   try {
-    const scheduleKey = `mumayaz_schedule_${userEmail}`;
+    const scheduleKey = `stellar_schedule_${userEmail}`;
     const schedule = JSON.parse(localStorage.getItem(scheduleKey) || '[]');
     
     if (date) {
@@ -40,7 +40,7 @@ export const getScheduleEvents = (userEmail, date = null) => {
 
 export const deleteScheduleEvent = (userEmail, eventId) => {
   try {
-    const scheduleKey = `mumayaz_schedule_${userEmail}`;
+    const scheduleKey = `stellar_schedule_${userEmail}`;
     const schedule = JSON.parse(localStorage.getItem(scheduleKey) || '[]');
     
     const filtered = schedule.filter(event => event.id !== eventId);

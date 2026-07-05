@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  * for accessibility and user preference
  */
 
-const VOICE_STORAGE_KEY = "mumayaz_voice_settings";
+const VOICE_STORAGE_KEY = "stellar_voice_settings";
 
 // Get natural voices for Arabic and English
 const getNaturalVoices = (language, availableVoices) => {

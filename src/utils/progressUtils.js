@@ -6,7 +6,7 @@
 // percentages. This keeps the dashboard in sync with what the user has
 // actually done instead of fields that were never written.
 
-const MODULE_PROGRESS_KEY = "mumayaz_module_progress";
+const MODULE_PROGRESS_KEY = "stellar_module_progress";
 
 const VALID_MODULES = ["alphabet", "colors", "words", "sentences"];
 

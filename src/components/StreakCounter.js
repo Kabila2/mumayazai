@@ -59,7 +59,7 @@ const StreakCounter = ({ language = 'en' }) => {
       const userEmail = getCurrentUserEmail();
       if (!userEmail) return;
 
-      const streakKey = `mumayaz_streak_${userEmail}`;
+      const streakKey = `stellar_streak_${userEmail}`;
       const savedStreak = localStorage.getItem(streakKey);
 
       if (savedStreak) {
@@ -84,7 +84,7 @@ const StreakCounter = ({ language = 'en' }) => {
 
   const getCurrentUserEmail = () => {
     try {
-      const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+      const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
       return session.email || null;
     } catch (error) {
       console.error('Error getting user email:', error);
@@ -97,7 +97,7 @@ const StreakCounter = ({ language = 'en' }) => {
       const userEmail = getCurrentUserEmail();
       if (!userEmail) return;
 
-      const streakKey = `mumayaz_streak_${userEmail}`;
+      const streakKey = `stellar_streak_${userEmail}`;
       localStorage.setItem(streakKey, JSON.stringify(data));
       setStreakData(data);
     } catch (error) {

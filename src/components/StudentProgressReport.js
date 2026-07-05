@@ -87,12 +87,12 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
   const loadReportData = () => {
     try {
       // Gather data from various localStorage keys
-      const pointsData = JSON.parse(localStorage.getItem(`mumayaz_points_${userEmail}`) || '{"total": 0, "history": []}');
-      const achievements = JSON.parse(localStorage.getItem(`mumayaz_achievements_${userEmail}`) || '[]');
-      const quizHistory = JSON.parse(localStorage.getItem(`mumayaz_quiz_history_${userEmail}`) || '[]');
-      const streak = parseInt(localStorage.getItem(`mumayaz_streak_${userEmail}`) || '0');
-      const learningTime = parseFloat(localStorage.getItem(`mumayaz_learning_time_${userEmail}`) || '0');
-      const topicsProgress = JSON.parse(localStorage.getItem(`mumayaz_topics_progress_${userEmail}`) || '{}');
+      const pointsData = JSON.parse(localStorage.getItem(`stellar_points_${userEmail}`) || '{"total": 0, "history": []}');
+      const achievements = JSON.parse(localStorage.getItem(`stellar_achievements_${userEmail}`) || '[]');
+      const quizHistory = JSON.parse(localStorage.getItem(`stellar_quiz_history_${userEmail}`) || '[]');
+      const streak = parseInt(localStorage.getItem(`stellar_streak_${userEmail}`) || '0');
+      const learningTime = parseFloat(localStorage.getItem(`stellar_learning_time_${userEmail}`) || '0');
+      const topicsProgress = JSON.parse(localStorage.getItem(`stellar_topics_progress_${userEmail}`) || '{}');
 
       // Filter quiz history by selected time range
       const now = new Date();
@@ -258,7 +258,7 @@ ${new Date().toLocaleString()}
 
   const getUserName = (email) => {
     try {
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const user = users[email.toLowerCase()];
       return user?.name || email.split('@')[0];
     } catch {

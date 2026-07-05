@@ -108,22 +108,22 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       console.log('📊 [ProgressDashboard] Safe progress data:', safeProgress);
 
       // Load quiz history
-      const quizKey = `mumayaz_quiz_history_${userEmail}`;
+      const quizKey = `stellar_quiz_history_${userEmail}`;
       const quizHistoryRaw = localStorage.getItem(quizKey);
       const quizHistory = quizHistoryRaw ? JSON.parse(quizHistoryRaw) : [];
 
       // Load streak
-      const streakKey = `mumayaz_streak_${userEmail}`;
+      const streakKey = `stellar_streak_${userEmail}`;
       const streakRaw = localStorage.getItem(streakKey);
       const streakData = streakRaw ? JSON.parse(streakRaw) : { currentStreak: 0, longestStreak: 0 };
 
       // Load achievements
-      const achievementsKey = `mumayaz_achievements_${userEmail}`;
+      const achievementsKey = `stellar_achievements_${userEmail}`;
       const achievementsRaw = localStorage.getItem(achievementsKey);
       const achievements = achievementsRaw ? JSON.parse(achievementsRaw) : [];
 
       // Load user stats (points, time, messages all stored here)
-      const allUserStats = JSON.parse(localStorage.getItem('mumayaz_user_stats') || '{}');
+      const allUserStats = JSON.parse(localStorage.getItem('stellar_user_stats') || '{}');
       const userStats = allUserStats[userEmail?.toLowerCase()] || {
         totalMessages: 0,
         totalChats: 0,
@@ -136,7 +136,7 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       const learningAndQuizPoints = userStats.totalPoints || 0;
 
       // Points from achievement bonuses (stored separately by achievementsSystem)
-      const achievementPointsRaw = localStorage.getItem(`mumayaz_points_${userEmail}`);
+      const achievementPointsRaw = localStorage.getItem(`stellar_points_${userEmail}`);
       const achievementPoints = achievementPointsRaw
         ? (JSON.parse(achievementPointsRaw).total || 0)
         : 0;

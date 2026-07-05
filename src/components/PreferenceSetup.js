@@ -15,16 +15,16 @@ export default function PreferenceSetup({ onComplete }) {
     }
 
     // --- Cookies (7 days)
-    Cookies.set("mumayaz_language", language, { expires: 7 });
-    Cookies.set("mumayaz_disability", disability, { expires: 7 });
+    Cookies.set("stellar_language", language, { expires: 7 });
+    Cookies.set("stellar_disability", disability, { expires: 7 });
 
     // --- LocalStorage (primary lookup in app)
     localStorage.setItem("language", language);
     localStorage.setItem("disability", disability);
 
     // Per-child preferences in cookies (existing behavior)
-    const prefs = JSON.parse(Cookies.get("mumayaz_preferences") || "{}");
-    const role = Cookies.get("mumayaz_role");
+    const prefs = JSON.parse(Cookies.get("stellar_preferences") || "{}");
+    const role = Cookies.get("stellar_role");
     const currentChild = Object.keys(prefs)[0] || "default";
 
     prefs[currentChild] = {
@@ -36,7 +36,7 @@ export default function PreferenceSetup({ onComplete }) {
       adhdMode: false,
       role: role || "child"
     };
-    Cookies.set("mumayaz_preferences", JSON.stringify(prefs), { expires: 7 });
+    Cookies.set("stellar_preferences", JSON.stringify(prefs), { expires: 7 });
 
     setError("");
     onComplete(language, disability);

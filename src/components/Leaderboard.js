@@ -45,7 +45,7 @@ const Leaderboard = ({ userEmail, language, onClose }) => {
   }, [timeFilter, userEmail]);
 
   const calculateLeaderboard = () => {
-    const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+    const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
     const allUserData = [];
 
     // Get current date for filtering

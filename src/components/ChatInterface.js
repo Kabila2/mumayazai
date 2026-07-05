@@ -19,7 +19,7 @@ import {
 import { awardPoints } from '../utils/pointsUtils';
 
 /** ---------- Enhanced Memory System ---------- */
-const MEMORY_STORAGE_KEY = "mumayaz_chat_memory";
+const MEMORY_STORAGE_KEY = "stellar_chat_memory";
 const MAX_MEMORY_MESSAGES = 100;
 const CONTEXT_WINDOW = 20; // Increased for better memory
 
@@ -548,12 +548,12 @@ const ChatInterface = ({
     const initChildTracking = () => {
       try {
         // Get user email from session
-        const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+        const session = JSON.parse(localStorage.getItem("stellar_session") || "{}");
         if (session.email) {
           setUserEmail(session.email);
 
           // Initialize user stats for leaderboard
-          const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+          const users = JSON.parse(localStorage.getItem("stellar_users") || "{}");
           const user = users[session.email.toLowerCase()];
           if (user) {
             initializeUserStats(session.email, user.name);

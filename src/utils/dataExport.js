@@ -10,7 +10,7 @@ import { playSuccessSound, playClickSound } from './soundEffects';
  */
 const getUserProfile = (userEmail) => {
   try {
-    const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+    const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
     const user = users[userEmail.toLowerCase()];
     if (!user) return null;
 
@@ -45,7 +45,7 @@ const getProgress = (userEmail) => {
  */
 const getPoints = (userEmail) => {
   try {
-    const pointsKey = `mumayaz_points_${userEmail}`;
+    const pointsKey = `stellar_points_${userEmail}`;
     const points = localStorage.getItem(pointsKey);
     return points ? JSON.parse(points) : { total: 0, history: [] };
   } catch (error) {
@@ -59,7 +59,7 @@ const getPoints = (userEmail) => {
  */
 const getStreakData = (userEmail) => {
   try {
-    const streakKey = `mumayaz_streak_${userEmail}`;
+    const streakKey = `stellar_streak_${userEmail}`;
     const streak = localStorage.getItem(streakKey);
     return streak ? JSON.parse(streak) : null;
   } catch (error) {
@@ -73,7 +73,7 @@ const getStreakData = (userEmail) => {
  */
 const getQuizHistory = (userEmail) => {
   try {
-    const quizKey = `mumayaz_quiz_history_${userEmail}`;
+    const quizKey = `stellar_quiz_history_${userEmail}`;
     const history = localStorage.getItem(quizKey);
     return history ? JSON.parse(history) : [];
   } catch (error) {
@@ -87,8 +87,8 @@ const getQuizHistory = (userEmail) => {
  */
 const getMessages = (userEmail) => {
   try {
-    const conversations = JSON.parse(localStorage.getItem('mumayaz_conversations') || '{}');
-    const messages = JSON.parse(localStorage.getItem('mumayaz_messages') || '{}');
+    const conversations = JSON.parse(localStorage.getItem('stellar_conversations') || '{}');
+    const messages = JSON.parse(localStorage.getItem('stellar_messages') || '{}');
 
     const userConversations = Object.values(conversations).filter(conv =>
       conv.participants.includes(userEmail.toLowerCase())
@@ -112,7 +112,7 @@ const getMessages = (userEmail) => {
  */
 const getAchievements = (userEmail) => {
   try {
-    const achievementsKey = `mumayaz_achievements_${userEmail}`;
+    const achievementsKey = `stellar_achievements_${userEmail}`;
     const achievements = localStorage.getItem(achievementsKey);
     return achievements ? JSON.parse(achievements) : [];
   } catch (error) {
@@ -127,9 +127,9 @@ const getAchievements = (userEmail) => {
 const getUserPreferences = () => {
   try {
     return {
-      darkMode: localStorage.getItem('mumayaz_dark_mode') === 'true',
-      soundsEnabled: localStorage.getItem('mumayaz_sounds_enabled') !== 'false',
-      language: localStorage.getItem('mumayaz_language') || 'en'
+      darkMode: localStorage.getItem('stellar_dark_mode') === 'true',
+      soundsEnabled: localStorage.getItem('stellar_sounds_enabled') !== 'false',
+      language: localStorage.getItem('stellar_language') || 'en'
     };
   } catch (error) {
     console.error('Error getting preferences:', error);
@@ -181,7 +181,7 @@ export const exportUserData = (userEmail) => {
 
     // Generate filename with timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    link.download = `mumayaz-data-${userEmail.split('@')[0]}-${timestamp}.json`;
+    link.download = `stellar-data-${userEmail.split('@')[0]}-${timestamp}.json`;
 
     // Trigger download
     document.body.appendChild(link);
@@ -243,31 +243,31 @@ export const importUserData = (file, userEmail) => {
         }
 
         if (importedData.points) {
-          const pointsKey = `mumayaz_points_${userEmail}`;
+          const pointsKey = `stellar_points_${userEmail}`;
           localStorage.setItem(pointsKey, JSON.stringify(importedData.points));
         }
 
         if (importedData.streak) {
-          const streakKey = `mumayaz_streak_${userEmail}`;
+          const streakKey = `stellar_streak_${userEmail}`;
           localStorage.setItem(streakKey, JSON.stringify(importedData.streak));
         }
 
         if (importedData.achievements) {
-          const achievementsKey = `mumayaz_achievements_${userEmail}`;
+          const achievementsKey = `stellar_achievements_${userEmail}`;
           localStorage.setItem(achievementsKey, JSON.stringify(importedData.achievements));
         }
 
         if (importedData.quizHistory) {
-          const quizKey = `mumayaz_quiz_history_${userEmail}`;
+          const quizKey = `stellar_quiz_history_${userEmail}`;
           localStorage.setItem(quizKey, JSON.stringify(importedData.quizHistory));
         }
 
         if (importedData.preferences) {
           if (importedData.preferences.darkMode !== undefined) {
-            localStorage.setItem('mumayaz_dark_mode', importedData.preferences.darkMode.toString());
+            localStorage.setItem('stellar_dark_mode', importedData.preferences.darkMode.toString());
           }
           if (importedData.preferences.soundsEnabled !== undefined) {
-            localStorage.setItem('mumayaz_sounds_enabled', importedData.preferences.soundsEnabled.toString());
+            localStorage.setItem('stellar_sounds_enabled', importedData.preferences.soundsEnabled.toString());
           }
         }
 
@@ -303,10 +303,10 @@ export const clearAllUserData = (userEmail) => {
     // Remove user-specific data
     const keysToRemove = [
       'arabic_learning_progress',
-      `mumayaz_points_${userEmail}`,
-      `mumayaz_streak_${userEmail}`,
-      `mumayaz_achievements_${userEmail}`,
-      `mumayaz_quiz_history_${userEmail}`
+      `stellar_points_${userEmail}`,
+      `stellar_streak_${userEmail}`,
+      `stellar_achievements_${userEmail}`,
+      `stellar_quiz_history_${userEmail}`
     ];
 
     keysToRemove.forEach(key => {

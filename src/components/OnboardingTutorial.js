@@ -14,22 +14,22 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [selectedFont, setSelectedFont] = useState(
-    localStorage.getItem('mumayaz_font') || "'OpenDyslexic', sans-serif"
+    localStorage.getItem('stellar_font') || "'OpenDyslexic', sans-serif"
   );
   const [textSize, setTextSize] = useState(
-    parseInt(localStorage.getItem('mumayaz_text_size') || '100', 10)
+    parseInt(localStorage.getItem('stellar_text_size') || '100', 10)
   );
 
   const handleFontChange = (fontValue) => {
     setSelectedFont(fontValue);
-    localStorage.setItem('mumayaz_font', fontValue);
+    localStorage.setItem('stellar_font', fontValue);
     document.documentElement.style.setProperty('--font-sans', fontValue);
   };
 
   const handleTextSizeChange = (delta) => {
     setTextSize(prev => {
       const next = Math.min(150, Math.max(80, prev + delta));
-      localStorage.setItem('mumayaz_text_size', String(next));
+      localStorage.setItem('stellar_text_size', String(next));
       document.documentElement.style.fontSize = next + '%';
       return next;
     });
@@ -196,7 +196,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
 
   const handleComplete = () => {
     playSuccessSound();
-    localStorage.setItem('mumayaz_onboarding_completed', 'true');
+    localStorage.setItem('stellar_onboarding_completed', 'true');
     setIsVisible(false);
     setTimeout(() => {
       if (onComplete) onComplete();

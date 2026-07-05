@@ -45,10 +45,10 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     { label: 'System Default', value: 'system-ui, sans-serif', preview: 'أَبْجَد', previewEn: 'The quick fox' },
   ];
   const [selectedFont, setSelectedFont] = useState(
-    localStorage.getItem('mumayaz_font') || "'OpenDyslexic', sans-serif"
+    localStorage.getItem('stellar_font') || "'OpenDyslexic', sans-serif"
   );
   const [textSize, setTextSize] = useState(
-    parseInt(localStorage.getItem('mumayaz_text_size') || '100', 10)
+    parseInt(localStorage.getItem('stellar_text_size') || '100', 10)
   );
 
   const translations = {
@@ -154,7 +154,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
   const loadUserData = () => {
     try {
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const user = users[userEmail.toLowerCase()];
 
       if (user) {
@@ -184,7 +184,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       setLoading(true);
       playClickSound();
 
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const userKey = userEmail.toLowerCase();
 
       if (users[userKey]) {
@@ -196,13 +196,13 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
           updatedAt: new Date().toISOString()
         };
 
-        localStorage.setItem('mumayaz_users', JSON.stringify(users));
+        localStorage.setItem('stellar_users', JSON.stringify(users));
 
         // Update session
-        const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+        const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
         if (session.email && session.email.toLowerCase() === userKey) {
           session.name = name.trim();
-          localStorage.setItem('mumayaz_session', JSON.stringify(session));
+          localStorage.setItem('stellar_session', JSON.stringify(session));
         }
 
         playSuccessSound();
@@ -240,7 +240,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       setLoading(true);
       playClickSound();
 
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const userKey = userEmail.toLowerCase();
 
       if (users[userKey]) {
@@ -253,7 +253,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
         users[userKey].password = newPassword;
         users[userKey].passwordUpdatedAt = new Date().toISOString();
-        localStorage.setItem('mumayaz_users', JSON.stringify(users));
+        localStorage.setItem('stellar_users', JSON.stringify(users));
 
         playSuccessSound();
         toast.success('Password changed successfully!');
@@ -333,12 +333,12 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
   const updateProfilePicture = (imageData) => {
     try {
-      const users = JSON.parse(localStorage.getItem('mumayaz_users') || '{}');
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
       const userKey = userEmail.toLowerCase();
 
       if (users[userKey]) {
         users[userKey].profilePicture = imageData;
-        localStorage.setItem('mumayaz_users', JSON.stringify(users));
+        localStorage.setItem('stellar_users', JSON.stringify(users));
         setProfilePicture(imageData);
         playSuccessSound();
         window.dispatchEvent(new Event('profilePictureUpdated'));
@@ -410,8 +410,8 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
   const applyAppearance = (font, size) => {
     document.documentElement.style.setProperty('--font-sans', font);
     document.documentElement.style.fontSize = size + '%';
-    localStorage.setItem('mumayaz_font', font);
-    localStorage.setItem('mumayaz_text_size', String(size));
+    localStorage.setItem('stellar_font', font);
+    localStorage.setItem('stellar_text_size', String(size));
   };
 
   const handleFontChange = (fontValue) => {

@@ -81,12 +81,12 @@ Users can navigate to these sections via the main navigation menu or quick actio
 ## Data Structure
 
 ### localStorage Keys:
-- `mumayaz_conversations` - All teacher-parent conversations
-- `mumayaz_messages_{conversationId}` - Messages for each conversation
-- `mumayaz_classes` - All classes created by teachers
-- `mumayaz_homework` - All homework assignments
-- `mumayaz_users` - User accounts (teachers, parents, students)
-- `mumayaz_unread_messages` - Unread message count
+- `stellar_conversations` - All teacher-parent conversations
+- `stellar_messages_{conversationId}` - Messages for each conversation
+- `stellar_classes` - All classes created by teachers
+- `stellar_homework` - All homework assignments
+- `stellar_users` - User accounts (teachers, parents, students)
+- `stellar_unread_messages` - Unread message count
 
 ## New Games Added ✨
 

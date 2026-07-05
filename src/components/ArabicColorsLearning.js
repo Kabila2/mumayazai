@@ -130,7 +130,7 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
   // Load user and restore previously viewed colors so progress persists
   useEffect(() => {
     try {
-      const session = JSON.parse(localStorage.getItem('mumayaz_session') || '{}');
+      const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
       if (session.email) {
         setUserEmail(session.email);
         setViewedColors(getLearnedItems(session.email, 'colors'));

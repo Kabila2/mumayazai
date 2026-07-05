@@ -60,7 +60,7 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   const loadHomework = () => {
     try {
-      const homeworkKey = 'mumayaz_homework';
+      const homeworkKey = 'stellar_homework';
       const allHomework = JSON.parse(localStorage.getItem(homeworkKey) || '[]');
 
       // Filter based on role
@@ -91,7 +91,7 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
         completions: []
       };
 
-      const homeworkKey = 'mumayaz_homework';
+      const homeworkKey = 'stellar_homework';
       const allHomework = JSON.parse(localStorage.getItem(homeworkKey) || '[]');
       allHomework.push(newHomework);
       localStorage.setItem(homeworkKey, JSON.stringify(allHomework));
@@ -106,7 +106,7 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   const completeHomework = (homeworkId) => {
     try {
-      const homeworkKey = 'mumayaz_homework';
+      const homeworkKey = 'stellar_homework';
       const allHomework = JSON.parse(localStorage.getItem(homeworkKey) || '[]');
 
       const hwIndex = allHomework.findIndex(hw => hw.id === homeworkId);
@@ -131,7 +131,7 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   const deleteHomework = (homeworkId) => {
     try {
-      const homeworkKey = 'mumayaz_homework';
+      const homeworkKey = 'stellar_homework';
       const allHomework = JSON.parse(localStorage.getItem(homeworkKey) || '[]');
       const filtered = allHomework.filter(hw => hw.id !== homeworkId);
       localStorage.setItem(homeworkKey, JSON.stringify(filtered));

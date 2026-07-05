@@ -10,7 +10,7 @@ import { playSuccessSound, playClickSound } from './soundEffects';
  */
 export const createAssignment = (teacherEmail, assignmentData) => {
   try {
-    const assignments = JSON.parse(localStorage.getItem('mumayaz_assignments') || '{}');
+    const assignments = JSON.parse(localStorage.getItem('stellar_assignments') || '{}');
 
     const assignmentId = `assignment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -23,7 +23,7 @@ export const createAssignment = (teacherEmail, assignmentData) => {
     };
 
     assignments[assignmentId] = newAssignment;
-    localStorage.setItem('mumayaz_assignments', JSON.stringify(assignments));
+    localStorage.setItem('stellar_assignments', JSON.stringify(assignments));
 
     playSuccessSound();
     return newAssignment;
@@ -38,7 +38,7 @@ export const createAssignment = (teacherEmail, assignmentData) => {
  */
 export const getUserAssignments = (userEmail, userRole) => {
   try {
-    const assignments = JSON.parse(localStorage.getItem('mumayaz_assignments') || '{}');
+    const assignments = JSON.parse(localStorage.getItem('stellar_assignments') || '{}');
 
     return Object.values(assignments).filter(assignment => {
       if (userRole === 'teacher') {
@@ -58,7 +58,7 @@ export const getUserAssignments = (userEmail, userRole) => {
  */
 export const submitAssignment = (assignmentId, studentEmail, submissionData) => {
   try {
-    const assignments = JSON.parse(localStorage.getItem('mumayaz_assignments') || '{}');
+    const assignments = JSON.parse(localStorage.getItem('stellar_assignments') || '{}');
     const assignment = assignments[assignmentId];
 
     if (!assignment) {
@@ -73,7 +73,7 @@ export const submitAssignment = (assignmentId, studentEmail, submissionData) => 
     };
 
     assignments[assignmentId] = assignment;
-    localStorage.setItem('mumayaz_assignments', JSON.stringify(assignments));
+    localStorage.setItem('stellar_assignments', JSON.stringify(assignments));
 
     playSuccessSound();
     return true;
@@ -88,7 +88,7 @@ export const submitAssignment = (assignmentId, studentEmail, submissionData) => 
  */
 export const gradeAssignment = (assignmentId, studentEmail, gradeData) => {
   try {
-    const assignments = JSON.parse(localStorage.getItem('mumayaz_assignments') || '{}');
+    const assignments = JSON.parse(localStorage.getItem('stellar_assignments') || '{}');
     const assignment = assignments[assignmentId];
 
     if (!assignment || !assignment.submissions[studentEmail]) {
@@ -103,7 +103,7 @@ export const gradeAssignment = (assignmentId, studentEmail, gradeData) => {
     };
 
     assignments[assignmentId] = assignment;
-    localStorage.setItem('mumayaz_assignments', JSON.stringify(assignments));
+    localStorage.setItem('stellar_assignments', JSON.stringify(assignments));
 
     playSuccessSound();
     return true;
@@ -118,9 +118,9 @@ export const gradeAssignment = (assignmentId, studentEmail, gradeData) => {
  */
 export const deleteAssignment = (assignmentId) => {
   try {
-    const assignments = JSON.parse(localStorage.getItem('mumayaz_assignments') || '{}');
+    const assignments = JSON.parse(localStorage.getItem('stellar_assignments') || '{}');
     delete assignments[assignmentId];
-    localStorage.setItem('mumayaz_assignments', JSON.stringify(assignments));
+    localStorage.setItem('stellar_assignments', JSON.stringify(assignments));
     playClickSound();
     return true;
   } catch (error) {

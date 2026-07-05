@@ -27,8 +27,8 @@ import "./App.css";
 import "./dark-mode-global.css";
 
 /* ---------- LocalStorage keys ---------- */
-const USERS_KEY = "mumayaz_users";
-const SESSION_KEY = "mumayaz_session";
+const USERS_KEY = "stellar_users";
+const SESSION_KEY = "stellar_session";
 const DISABILITY_KEY = "disability";
 const LANGUAGE_KEY = "app-language";
 
@@ -118,8 +118,8 @@ export default function App() {
     if (rm === "true") setReducedMotion(true);
 
     // Load appearance preferences
-    const savedFont = localStorage.getItem('mumayaz_font');
-    const savedTextSize = localStorage.getItem('mumayaz_text_size');
+    const savedFont = localStorage.getItem('stellar_font');
+    const savedTextSize = localStorage.getItem('stellar_text_size');
     if (savedFont) document.documentElement.style.setProperty('--font-sans', savedFont);
     if (savedTextSize) document.documentElement.style.fontSize = savedTextSize + '%';
 
@@ -211,9 +211,9 @@ export default function App() {
       }
     }
 
-    localStorage.removeItem('mumayaz_onboarding_completed');
+    localStorage.removeItem('stellar_onboarding_completed');
     setPendingEmail(key);
-    localStorage.setItem("mumayaz_role", role || "student");
+    localStorage.setItem("stellar_role", role || "student");
     setShowSetup(true);
     setIsLoggedIn(false);
     return { ok: true };
@@ -230,14 +230,14 @@ export default function App() {
     const hasLanguage   = !!localStorage.getItem(LANGUAGE_KEY);
     if (!hasPreference || !hasLanguage) {
       setPendingEmail(key);
-      localStorage.setItem("mumayaz_role", user.role || "student");
+      localStorage.setItem("stellar_role", user.role || "student");
       setShowSetup(true);
       setIsLoggedIn(false);
       return { ok: true };
     }
     openSession(key);
     setIsLoggedIn(true);
-    localStorage.setItem("mumayaz_role", user.role || "student");
+    localStorage.setItem("stellar_role", user.role || "student");
     
     // Sync preference on login
     const preference = getCurrentPreference();

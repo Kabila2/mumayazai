@@ -1,19 +1,19 @@
 // Multi-Device Sync System
-const SYNC_KEY = 'mumayaz_sync_data';
-const LAST_SYNC_KEY = 'mumayaz_last_sync';
+const SYNC_KEY = 'stellar_sync_data';
+const LAST_SYNC_KEY = 'stellar_last_sync';
 
 export const syncData = async (userEmail) => {
   try {
     const dataToSync = {
       progress: localStorage.getItem('arabic_learning_progress'),
-      points: localStorage.getItem(`mumayaz_points_${userEmail}`),
-      achievements: localStorage.getItem(`mumayaz_achievements_${userEmail}`),
-      quizHistory: localStorage.getItem(`mumayaz_quiz_history_${userEmail}`),
-      streak: localStorage.getItem(`mumayaz_streak_${userEmail}`),
-      notifications: localStorage.getItem(`mumayaz_notifications_${userEmail}`),
-      schedule: localStorage.getItem(`mumayaz_schedule_${userEmail}`),
-      certificates: localStorage.getItem(`mumayaz_certificates_${userEmail}`),
-      completions: localStorage.getItem(`mumayaz_completions_${userEmail}`),
+      points: localStorage.getItem(`stellar_points_${userEmail}`),
+      achievements: localStorage.getItem(`stellar_achievements_${userEmail}`),
+      quizHistory: localStorage.getItem(`stellar_quiz_history_${userEmail}`),
+      streak: localStorage.getItem(`stellar_streak_${userEmail}`),
+      notifications: localStorage.getItem(`stellar_notifications_${userEmail}`),
+      schedule: localStorage.getItem(`stellar_schedule_${userEmail}`),
+      certificates: localStorage.getItem(`stellar_certificates_${userEmail}`),
+      completions: localStorage.getItem(`stellar_completions_${userEmail}`),
       timestamp: new Date().toISOString()
     };
 
@@ -41,14 +41,14 @@ export const restoreData = async (userEmail) => {
 
     // Restore each piece of data
     if (data.progress) localStorage.setItem('arabic_learning_progress', data.progress);
-    if (data.points) localStorage.setItem(`mumayaz_points_${userEmail}`, data.points);
-    if (data.achievements) localStorage.setItem(`mumayaz_achievements_${userEmail}`, data.achievements);
-    if (data.quizHistory) localStorage.setItem(`mumayaz_quiz_history_${userEmail}`, data.quizHistory);
-    if (data.streak) localStorage.setItem(`mumayaz_streak_${userEmail}`, data.streak);
-    if (data.notifications) localStorage.setItem(`mumayaz_notifications_${userEmail}`, data.notifications);
-    if (data.schedule) localStorage.setItem(`mumayaz_schedule_${userEmail}`, data.schedule);
-    if (data.certificates) localStorage.setItem(`mumayaz_certificates_${userEmail}`, data.certificates);
-    if (data.completions) localStorage.setItem(`mumayaz_completions_${userEmail}`, data.completions);
+    if (data.points) localStorage.setItem(`stellar_points_${userEmail}`, data.points);
+    if (data.achievements) localStorage.setItem(`stellar_achievements_${userEmail}`, data.achievements);
+    if (data.quizHistory) localStorage.setItem(`stellar_quiz_history_${userEmail}`, data.quizHistory);
+    if (data.streak) localStorage.setItem(`stellar_streak_${userEmail}`, data.streak);
+    if (data.notifications) localStorage.setItem(`stellar_notifications_${userEmail}`, data.notifications);
+    if (data.schedule) localStorage.setItem(`stellar_schedule_${userEmail}`, data.schedule);
+    if (data.certificates) localStorage.setItem(`stellar_certificates_${userEmail}`, data.certificates);
+    if (data.completions) localStorage.setItem(`stellar_completions_${userEmail}`, data.completions);
 
     console.log('Data restored successfully');
     return { success: true, timestamp: data.timestamp };
@@ -75,7 +75,7 @@ export const exportDataToFile = (userEmail) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `mumayaz-backup-${userEmail}-${Date.now()}.json`;
+    a.download = `stellar-backup-${userEmail}-${Date.now()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -113,15 +113,15 @@ export const enableAutoSync = (userEmail, intervalMinutes = 30) => {
   }, intervalMs);
 
   // Store interval ID so it can be cleared later
-  localStorage.setItem('mumayaz_sync_interval', syncInterval);
+  localStorage.setItem('stellar_sync_interval', syncInterval);
 
   return syncInterval;
 };
 
 export const disableAutoSync = () => {
-  const intervalId = localStorage.getItem('mumayaz_sync_interval');
+  const intervalId = localStorage.getItem('stellar_sync_interval');
   if (intervalId) {
     clearInterval(Number(intervalId));
-    localStorage.removeItem('mumayaz_sync_interval');
+    localStorage.removeItem('stellar_sync_interval');
   }
 };

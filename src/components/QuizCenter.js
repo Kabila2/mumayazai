@@ -347,7 +347,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
       // Save quiz result to history
       try {
-        const quizKey = `mumayaz_quiz_history_${userEmail}`;
+        const quizKey = `stellar_quiz_history_${userEmail}`;
         const existing = JSON.parse(localStorage.getItem(quizKey) || '[]');
         const result = {
           quizName: selectedQuizType?.nameEn

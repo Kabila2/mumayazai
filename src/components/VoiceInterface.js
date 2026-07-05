@@ -13,13 +13,13 @@ import "./ChatInterface.css";
 import { isElevenLabsConfigured, speakWithElevenLabs, stopElevenLabsSpeech } from "../utils/elevenLabsTTS";
 
 /** ---------- Advanced Voice System ---------- */
-const VOICE_STORAGE_KEY = "mumayaz_voice_data";
+const VOICE_STORAGE_KEY = "stellar_voice_data";
 const MAX_CONVERSATION_LENGTH = 150;
 const CONTEXT_WINDOW = 25;
 const AUTO_SAVE_DELAY = 800;
 
 /** ---------- Enhanced Memory System (from ChatInterface) ---------- */
-const VOICE_MEMORY_STORAGE_KEY = "mumayaz_voice_memory";
+const VOICE_MEMORY_STORAGE_KEY = "stellar_voice_memory";
 const MAX_MEMORY_MESSAGES = 100;
 const ENHANCED_CONTEXT_WINDOW = 20;
 
@@ -637,12 +637,12 @@ export default function VoiceInterface({
   // Initialize user email from session
   useEffect(() => {
     try {
-      const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+      const session = JSON.parse(localStorage.getItem("stellar_session") || "{}");
       if (session.email) {
         setUserEmail(session.email);
 
         // Initialize user stats if they don't exist
-        const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+        const users = JSON.parse(localStorage.getItem("stellar_users") || "{}");
         const user = users[session.email.toLowerCase()];
         if (user) {
           initializeUserStats(session.email, user.name);

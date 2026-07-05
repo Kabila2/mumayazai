@@ -1,9 +1,9 @@
 // src/utils/parentTrackingUtils.js - Parent Mode Tracking and Management Utilities
 
-const PARENT_DATA_KEY = "mumayaz_parent_data";
-const getParentKey = (email) => `mumayaz_parent_data_${email.toLowerCase()}`;
-const CHILD_ACTIVITY_KEY = "mumayaz_child_activity";
-const PARENT_CHILD_LINKS_KEY = "mumayaz_parent_child_links";
+const PARENT_DATA_KEY = "stellar_parent_data";
+const getParentKey = (email) => `stellar_parent_data_${email.toLowerCase()}`;
+const CHILD_ACTIVITY_KEY = "stellar_child_activity";
+const PARENT_CHILD_LINKS_KEY = "stellar_parent_child_links";
 
 /**
  * Generate a unique ID for tracking
@@ -69,7 +69,7 @@ export const getParentData = (parentEmail) => {
  */
 const getUserFromSystem = (email) => {
   try {
-    const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+    const users = JSON.parse(localStorage.getItem("stellar_users") || "{}");
     return users[email.toLowerCase()] || null;
   } catch (error) {
     console.error("Error getting user from system:", error);
@@ -166,10 +166,10 @@ export const linkChildToParent = (childEmail, childName, parentEmail) => {
 
     // Update child's user record to set parent email if not already set
     if (!childUser.parentEmail || childUser.parentEmail.trim() === "") {
-      const users = JSON.parse(localStorage.getItem("mumayaz_users") || "{}");
+      const users = JSON.parse(localStorage.getItem("stellar_users") || "{}");
       if (users[childEmail.toLowerCase()]) {
         users[childEmail.toLowerCase()].parentEmail = parentEmail.toLowerCase();
-        localStorage.setItem("mumayaz_users", JSON.stringify(users));
+        localStorage.setItem("stellar_users", JSON.stringify(users));
       }
     }
 
@@ -504,7 +504,7 @@ export const getChildStatistics = (childEmail, days = 7) => {
  */
 const getSessionEmail = () => {
   try {
-    const session = JSON.parse(localStorage.getItem("mumayaz_session") || "{}");
+    const session = JSON.parse(localStorage.getItem("stellar_session") || "{}");
     return session.email || null;
   } catch (error) {
     return null;

@@ -58,7 +58,7 @@ const NewConversationModal = ({ isOpen, onClose, currentUserEmail, currentUserRo
 
   const loadAvailableUsers = () => {
     try {
-      const usersStored = localStorage.getItem('mumayaz_users') || '{}';
+      const usersStored = localStorage.getItem('stellar_users') || '{}';
       const allUsers = JSON.parse(usersStored);
 
       // Filter users based on current user role

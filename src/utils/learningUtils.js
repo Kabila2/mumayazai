@@ -2,9 +2,9 @@
 
 import { recordLearningPoints, recordDailyTaskPoints } from './leaderboardUtils';
 
-const LEARNING_PROGRESS_KEY = "mumayaz_learning_progress";
-const DAILY_TASKS_KEY = "mumayaz_daily_tasks";
-const USER_POINTS_KEY = "mumayaz_user_points";
+const LEARNING_PROGRESS_KEY = "stellar_learning_progress";
+const DAILY_TASKS_KEY = "stellar_daily_tasks";
+const USER_POINTS_KEY = "stellar_user_points";
 
 /**
  * Learning categories and content

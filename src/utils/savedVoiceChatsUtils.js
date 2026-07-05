@@ -1,6 +1,6 @@
 // src/utils/savedVoiceChatsUtils.js - Saved Voice Chats Management Utilities
 
-const SAVED_VOICE_CHATS_KEY = "mumayaz_saved_voice_chats";
+const SAVED_VOICE_CHATS_KEY = "stellar_saved_voice_chats";
 const MAX_SAVED_VOICE_CHATS = 50; // Limit to prevent storage overflow
 
 /**
@@ -254,7 +254,7 @@ export const exportSavedVoiceChats = () => {
 
     const link = document.createElement('a');
     link.href = URL.createObjectURL(dataBlob);
-    link.download = `mumayaz_saved_voice_chats_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `stellar_saved_voice_chats_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

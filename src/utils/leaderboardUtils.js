@@ -1,7 +1,7 @@
 // src/utils/leaderboardUtils.js - Leaderboard tracking utilities
 
-const LEADERBOARD_KEY = "mumayaz_leaderboard";
-const USER_STATS_KEY = "mumayaz_user_stats";
+const LEADERBOARD_KEY = "stellar_leaderboard";
+const USER_STATS_KEY = "stellar_user_stats";
 
 /**
  * Get current user statistics
@@ -31,7 +31,7 @@ export const getUserStats = (userEmail) => {
  */
 const getUserName = (userEmail) => {
   try {
-    const users = JSON.parse(localStorage.getItem("mumayaz_users")) || {};
+    const users = JSON.parse(localStorage.getItem("stellar_users")) || {};
     const user = users[userEmail.toLowerCase()];
     return user?.name || userEmail.split('@')[0];
   } catch (error) {
@@ -384,7 +384,7 @@ export const initializeUserStats = (userEmail, userName) => {
  */
 export const getClassLeaderboard = (className) => {
   try {
-    const teacherData = JSON.parse(localStorage.getItem('mumayaz_teachers') || '{}');
+    const teacherData = JSON.parse(localStorage.getItem('stellar_teachers') || '{}');
     const allStats = JSON.parse(localStorage.getItem(USER_STATS_KEY) || '{}');
 
     // Find students in this class
