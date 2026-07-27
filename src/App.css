@@ -889,11 +889,6 @@ textarea:disabled {
   cursor: wait;
 }
 
-/* Hidden content for screen readers */
-[aria-hidden="true"] {
-  display: none;
-}
-
 /* Visible focus indicator for dark mode */
 .dark-mode *:focus-visible {
   outline-color: #c4b5fd;
