@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { recordModuleItemLearned, getLearnedItems } from '../utils/progressUtils';
+import { awardPoints } from '../utils/pointsUtils';
 import CelebrationPopup from './CelebrationPopup';
 import './ArabicWordsLearning.css';
 
@@ -34,12 +35,22 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
   const markWordAsLearned = (categoryId, wordIndex) => {
     const wordKey = `${categoryId}_${wordIndex}`;
     if (!learnedWords.includes(wordKey)) {
-      setLearnedWords([...learnedWords, wordKey]);
+      const newLearned = [...learnedWords, wordKey];
+      setLearnedWords(newLearned);
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 2000);
       // Track for the Progress Dashboard
       const totalWords = wordCategories.reduce((sum, cat) => sum + cat.words.length, 0);
       recordModuleItemLearned(userEmail, 'words', wordKey, totalWords);
+
+      // Award points, same as the alphabet module, so the progress dashboard
+      // and the Explore leaderboard both move when a word is learned.
+      if (userEmail) {
+        awardPoints(userEmail, 'WORD_LEARNED');
+        if (newLearned.length === totalWords) {
+          awardPoints(userEmail, 'MODULE_COMPLETED');
+        }
+      }
     }
   };
 

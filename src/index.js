@@ -10,6 +10,8 @@ import { BrowserRouter } from 'react-router-dom';
 // Unified design system — imported LAST so its tokens win over the older,
 // conflicting :root blocks in the component stylesheets.
 import './theme.css';
+// High contrast redefines those same tokens, so it has to come after them.
+import './high-contrast.css';
 
 // One-time migration: the app was rebranded from "mumayaz" to "stellar" and
 // its localStorage key prefix changed to match. Carry forward any data saved

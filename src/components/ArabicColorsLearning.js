@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import './ArabicColorsLearning.css';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { recordModuleItemLearned, getLearnedItems } from '../utils/progressUtils';
+import { awardPoints } from '../utils/pointsUtils';
 import CelebrationPopup from './CelebrationPopup';
 
 const arabicColors = [
@@ -187,10 +188,20 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
 
     // Show celebration if color is viewed for the first time
     if (!viewedColors.includes(color.english)) {
-      setViewedColors([...viewedColors, color.english]);
+      const newViewed = [...viewedColors, color.english];
+      setViewedColors(newViewed);
       setShowCelebration(true);
       // Track for the Progress Dashboard
       recordModuleItemLearned(userEmail, 'colors', color.english, arabicColors.length);
+
+      // Award points, same as the alphabet module, so the progress dashboard
+      // and the Explore leaderboard both move when a color is learned.
+      if (userEmail) {
+        awardPoints(userEmail, 'COLOR_LEARNED');
+        if (newViewed.length === arabicColors.length) {
+          awardPoints(userEmail, 'MODULE_COMPLETED');
+        }
+      }
     }
 
     // Voice over announcement

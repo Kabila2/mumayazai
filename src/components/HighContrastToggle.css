@@ -1,0 +1,62 @@
+/* Sits next to the dark-mode toggle in the platform nav, so it matches its
+   shape and padding. See DarkModeToggle.css. */
+.high-contrast-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  width: max-content;
+}
+
+.high-contrast-toggle:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: #8b5cf6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.high-contrast-toggle .toggle-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* On state, in the normal theme — the high-contrast theme restyles every
+   button, this toggle included, in high-contrast.css. */
+.high-contrast-toggle.is-on {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+.dark-mode .high-contrast-toggle {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: var(--text-primary);
+}
+
+.dark-mode .high-contrast-toggle:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: #8b5cf6;
+}
+
+@media (max-width: 768px) {
+  .high-contrast-toggle {
+    padding: 10px;
+    min-width: 44px;
+  }
+}

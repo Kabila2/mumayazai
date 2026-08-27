@@ -1,0 +1,602 @@
+/* ============================================================================
+   STELLAR — HIGH CONTRAST MODE
+   ----------------------------------------------------------------------------
+   Toggled by src/utils/highContrast.js, which puts `.high-contrast` on <html>
+   (the same place dark mode puts its class). Imported LAST in index.js so it
+   wins over theme.css and every component stylesheet.
+
+   WHY THIS FILE EXISTS
+   High contrast used to be half-implemented in two incompatible directions:
+   App.css painted the shell dark-on-light, while ten component stylesheets
+   (alphabet, colors, words, sentences, quiz, memory, drawing, learn hub,
+   platform, point notifications) painted themselves light-on-dark. Whatever
+   neither covered — the whole text-chat and voice-chat experience included —
+   stayed on the normal theme. Turning the mode on produced a patchwork.
+
+   This file settles on ONE direction: light-on-dark, the direction the
+   component stylesheets already use (#000 ground, #1a1a1a raised, #fff ink and
+   borders, #ffff00 / #00ff00 accents), so it extends that work instead of
+   fighting it. App.css's contradicting block is gone.
+
+   HOW IT REACHES EVERYWHERE
+   Enumerating components can never be complete, so coverage comes from three
+   layers that need no per-component knowledge:
+     1. TOKENS — theme.css routes every legacy variable (--primary,
+        --text-primary, --glass-bg, --card-bg, --tp-*, --gray-*, …) through the
+        canonical --mz-* tokens, so redefining the tokens re-themes everything
+        token-driven at once.
+     2. STRIP — every background is removed, flattening hardcoded gradients,
+        glass tints and gradient text no matter which stylesheet set them.
+        Elements whose background is data (inline style, e.g. the colour
+        swatches) and real media are excluded.
+     3. INK — all text is forced white, catching components that hardcode
+        their colours.
+   Structure then comes back as borders, and the handful of surfaces that must
+   stay filled (cards, inputs, chat bubbles, primary actions) are re-added
+   below with higher specificity than the strip.
+
+   CASCADE NOTE: the strip is specificity (0,2,0) — `:not(:where(…))` adds
+   nothing. Every re-add below is at least (0,2,1), so it beats the strip. The
+   ground rule ties at (0,2,0) and therefore has to come AFTER it.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1. TOKENS
+   The compound selector covers dark mode being on at the same time: both
+   classes sit on <html>, and high contrast has to win.
+   ---------------------------------------------------------------------------- */
+:root.high-contrast,
+:root.dark-mode.high-contrast {
+  /* Surfaces */
+  --mz-bg:            #000000;
+  --mz-bg-grad:       #000000;
+  --mz-surface:       #1a1a1a;
+  --mz-surface-2:     #1a1a1a;
+  --mz-surface-3:     #2a2a2a;
+  --mz-border:        #ffffff;
+  --mz-border-strong: #ffffff;
+
+  /* Text — no muted tiers; every level stays at full contrast */
+  --mz-text:          #ffffff;
+  --mz-text-2:        #ffffff;
+  --mz-text-3:        #e6e6e6;
+
+  /* Accent: yellow fill with black text, the classic high-contrast pairing */
+  --mz-accent:         #ffff00;
+  --mz-accent-2:       #ffff00;
+  --mz-accent-hover:   #ffffff;
+  --mz-accent-press:   #ffffff;
+  --mz-accent-text:    #ffff00;
+  --mz-accent-contrast:#000000;
+  --mz-accent-soft:    #1a1a1a;
+  --mz-accent-grad:    linear-gradient(0deg, #ffff00 0%, #ffff00 100%);
+  --mz-ring:           #ffff00;
+
+  /* Semantic — the saturated set the component stylesheets already use */
+  --mz-success: #00ff00; --mz-success-soft: #1a1a1a;
+  --mz-warning: #ffff00; --mz-warning-soft: #1a1a1a;
+  --mz-danger:  #ff6b6b; --mz-danger-soft:  #1a1a1a;
+  --mz-info:    #66d9ff; --mz-info-soft:    #1a1a1a;
+
+  /* Elevation — borders carry separation instead of shadows */
+  --mz-shadow-sm: none;
+  --mz-shadow-md: none;
+  --mz-shadow-lg: none;
+  --mz-shadow-accent: none;
+
+  --mz-scrim: rgba(0, 0, 0, 0.9);
+
+  /* Gray scale, inverted the way dark mode inverts it */
+  --gray-50:#000000;  --gray-100:#000000; --gray-200:#1a1a1a; --gray-300:#2a2a2a;
+  --gray-400:#8a8a8a; --gray-500:#c4c4c4; --gray-600:#e6e6e6; --gray-700:#ffffff;
+  --gray-800:#ffffff; --gray-900:#ffffff;
+
+  /* Pastel card tints carry no meaning at this contrast level */
+  --pastel-purple:#1a1a1a; --pastel-pink:#1a1a1a; --pastel-blue:#1a1a1a;
+  --pastel-green:#1a1a1a;  --pastel-yellow:#1a1a1a; --pastel-orange:#1a1a1a;
+
+  /* Legacy names theme.css defines with literals rather than token aliases */
+  --text-light:   #ffffff;
+  --bg-color:     #000000;
+  --text-color:   #ffffff;
+  --link-color:   #66d9ff;
+
+  /* Glass tokens, for rules that read them outside the chat/voice screens */
+  --glass-bg:     #1a1a1a;
+  --glass-border: #ffffff;
+  --glass-hover:  #2a2a2a;
+  --glass-strong: #1a1a1a;
+  --glass-hover-bg:     #2a2a2a;
+  --glass-hover-border: #ffffff;
+  --glass-active-bg:    #2a2a2a;
+
+  color-scheme: dark;
+}
+
+/* ----------------------------------------------------------------------------
+   2. STRIP — remove every background, so no hardcoded gradient, glass tint or
+   image survives anywhere in the app.
+
+   Excluded, via :where() so the exclusions cost no specificity:
+     [style*="background"] — the background IS the content (colour swatches,
+                             category colour coding, avatar tints)
+     img/video/canvas/svg  — real media
+   ---------------------------------------------------------------------------- */
+:root.high-contrast *:not(:where([style*="background"], img, video, canvas, svg, svg *)) {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Blur and shadow both wash contrast out. */
+:root.high-contrast *,
+:root.high-contrast *::before,
+:root.high-contrast *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* ----------------------------------------------------------------------------
+   3. GROUND — one black page behind everything. Must come after the strip.
+   ---------------------------------------------------------------------------- */
+:root.high-contrast,
+:root.high-contrast body,
+:root.high-contrast #root,
+:root.high-contrast .app-container,
+:root.high-contrast .arabic-learning-platform,
+:root.high-contrast .entry-login-page,
+:root.high-contrast .teacher-parent-chat,
+:root.high-contrast .chat-container,
+:root.high-contrast .voice-area {
+  background: #000000 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+/* ----------------------------------------------------------------------------
+   4. INK — everything white, catching components that hardcode their colours.
+   ---------------------------------------------------------------------------- */
+:root.high-contrast h1, :root.high-contrast h2, :root.high-contrast h3,
+:root.high-contrast h4, :root.high-contrast h5, :root.high-contrast h6,
+:root.high-contrast p,  :root.high-contrast span, :root.high-contrast label,
+:root.high-contrast li, :root.high-contrast td,   :root.high-contrast th,
+:root.high-contrast dt, :root.high-contrast dd,   :root.high-contrast small,
+:root.high-contrast strong, :root.high-contrast em, :root.high-contrast b,
+:root.high-contrast div, :root.high-contrast section, :root.high-contrast article,
+:root.high-contrast header, :root.high-contrast footer, :root.high-contrast aside,
+:root.high-contrast nav, :root.high-contrast main, :root.high-contrast figcaption,
+:root.high-contrast summary, :root.high-contrast blockquote, :root.high-contrast code {
+  color: #ffffff !important;
+}
+
+/* Gradient headlines set -webkit-text-fill-color: transparent, so once the
+   gradient is stripped the text is invisible until the fill is restored.
+   Every gradient headline in the app is a *-title class (plus the per-letter
+   spans inside the platform title). */
+:root.high-contrast [class*="title"],
+:root.high-contrast [class*="gradient-text"],
+:root.high-contrast .platform-title .animated-letter,
+:root.high-contrast [style*="background-clip: text"],
+:root.high-contrast [style*="-webkit-background-clip: text"] {
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Emoji are colour glyphs, not text — let them keep their own rendering. */
+:root.high-contrast [class*="emoji"],
+:root.high-contrast [class*="avatar"],
+:root.high-contrast [class*="icon"] {
+  -webkit-text-fill-color: initial !important;
+}
+
+/* ----------------------------------------------------------------------------
+   5. STRUCTURE — raised surfaces come back as #1a1a1a inside a white border.
+   ---------------------------------------------------------------------------- */
+:root.high-contrast [class*="card"],
+:root.high-contrast [class*="modal"],
+:root.high-contrast [class*="panel"],
+:root.high-contrast [class*="widget"],
+:root.high-contrast [class*="sidebar"],
+:root.high-contrast [class*="dropdown"],
+:root.high-contrast [class*="popup"],
+:root.high-contrast [class*="tooltip"],
+:root.high-contrast [class*="overlay"] > div {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+/* Section dividers read through borders rather than fills. */
+:root.high-contrast [class*="-header"],
+:root.high-contrast [class*="-footer"],
+:root.high-contrast [class*="nav"],
+:root.high-contrast [class*="toolbar"] {
+  border-color: #ffffff !important;
+}
+
+/* Modal scrims stay opaque so the dialog is clearly separate from the page. */
+:root.high-contrast [class*="overlay"],
+:root.high-contrast [class*="backdrop"],
+:root.high-contrast .modal-overlay,
+:root.high-contrast .modal-backdrop {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* ----------------------------------------------------------------------------
+   6. CONTROLS
+   ---------------------------------------------------------------------------- */
+:root.high-contrast input,
+:root.high-contrast textarea,
+:root.high-contrast select {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+:root.high-contrast input::placeholder,
+:root.high-contrast textarea::placeholder {
+  color: #d0d0d0 !important;
+  opacity: 1 !important;
+}
+
+/* Buttons: black inside a white border, inverting on hover. Deliberately not
+   [class*="button"] — that also matches wrappers like .action-buttons and
+   would box in the whole group. */
+:root.high-contrast button,
+:root.high-contrast [role="button"],
+:root.high-contrast [class*="btn"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+:root.high-contrast button:hover,
+:root.high-contrast [role="button"]:hover,
+:root.high-contrast [class*="btn"]:hover,
+:root.high-contrast button:hover *,
+:root.high-contrast [role="button"]:hover *,
+:root.high-contrast [class*="btn"]:hover * {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+:root.high-contrast button:disabled,
+:root.high-contrast [class*="btn"]:disabled {
+  opacity: 1 !important;
+  background: #000000 !important;
+  color: #8a8a8a !important;
+  border-color: #8a8a8a !important;
+}
+
+/* Destructive actions keep a warning colour. */
+:root.high-contrast [class*="delete"]:not(:hover),
+:root.high-contrast [class*="remove"]:not(:hover),
+:root.high-contrast [class*="danger"]:not(:hover),
+:root.high-contrast [class*="clear-btn"]:not(:hover),
+:root.high-contrast [class*="sign-out"]:not(:hover) {
+  color: #ff6b6b !important;
+  border-color: #ff6b6b !important;
+}
+
+:root.high-contrast a,
+:root.high-contrast a:visited {
+  color: #66d9ff !important;
+  text-decoration: underline !important;
+}
+:root.high-contrast a:hover {
+  color: #ffffff !important;
+}
+
+/* Focus ring — yellow, thick, never clipped. */
+:root.high-contrast *:focus-visible {
+  outline: 4px solid #ffff00 !important;
+  outline-offset: 3px !important;
+}
+
+/* ----------------------------------------------------------------------------
+   7. ACCENTS — the few things that must read as filled. The descendant `*`
+   makes these beat the ink sweep on nested spans and icons.
+   ---------------------------------------------------------------------------- */
+/* Selected state, wherever it appears — nav links, tabs, filters, view
+   switches, difficulty pickers. `[class]` lifts the specificity above the
+   generic button rule; the :where() exclusion (free, specificity-wise) leaves
+   swatch-style controls whose background IS their value, e.g. the drawing
+   board colour picker. */
+:root.high-contrast [class].active:not(:where([style*="background"])),
+:root.high-contrast [class].active:not(:where([style*="background"])) *,
+:root.high-contrast [class].selected:not(:where([style*="background"])),
+:root.high-contrast [class].selected:not(:where([style*="background"])) *,
+:root.high-contrast [aria-selected="true"],
+:root.high-contrast [aria-selected="true"] *,
+:root.high-contrast .high-contrast-toggle.is-on,
+:root.high-contrast .high-contrast-toggle.is-on *,
+:root.high-contrast [class*="badge"],
+:root.high-contrast [class*="badge"] *,
+:root.high-contrast [class*="chip"],
+:root.high-contrast [class*="chip"] * {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #ffff00 !important;
+}
+
+/* Progress: bright fill on a bordered, empty track. */
+:root.high-contrast [class*="progress-fill"],
+:root.high-contrast [class*="bar-fill"],
+:root.high-contrast [class*="progress-bar"] > * {
+  background: #00ff00 !important;
+}
+:root.high-contrast [class*="progress-bar"],
+:root.high-contrast [class*="progress-track"],
+:root.high-contrast [class*="progress-bg"],
+:root.high-contrast [class*="bar-container"] {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* Point notifications keep the colour coding their own stylesheet gives them
+   (yellow award / green milestone / cyan threshold), which the strip removes. */
+:root.high-contrast .point-notification,
+:root.high-contrast .point-notification * {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #000000 !important;
+}
+:root.high-contrast .milestone-notification,
+:root.high-contrast .milestone-notification * {
+  background: #00ff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #000000 !important;
+}
+:root.high-contrast .threshold-notification,
+:root.high-contrast .threshold-notification * {
+  background: #00ffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Arabic script stays highlighted, as the learning stylesheets intend. */
+:root.high-contrast .arabic-letter,
+:root.high-contrast .arabic-display,
+:root.high-contrast .arabic-display-large,
+:root.high-contrast .arabic-word-main,
+:root.high-contrast .modern-color-arabic,
+:root.high-contrast .detail-arabic-name {
+  color: #ffff00 !important;
+  -webkit-text-fill-color: #ffff00 !important;
+}
+
+/* ----------------------------------------------------------------------------
+   8. CONVERSATION SCREENS — text chat + voice chat
+   theme.css section 7 re-scopes these two roots to translucent-white-on-dark
+   glass, and their own stylesheets hardcode a deep-indigo immersive surface.
+   Both are undone here. This is the part the old implementation never covered,
+   which is why those two screens ignored the mode entirely.
+   ---------------------------------------------------------------------------- */
+:root.high-contrast .chat-container,
+:root.high-contrast .voice-area {
+  --text-primary:   #ffffff;
+  --text-secondary: #ffffff;
+  --text-tertiary:  #e6e6e6;
+  --text-light:     #ffffff;
+  --glass-bg:       #1a1a1a;
+  --bg-glass:       #1a1a1a;
+  --glass-border:   #ffffff;
+  --glass-hover:    #2a2a2a;
+  --glass-strong:   #1a1a1a;
+  --glass-hover-bg:     #2a2a2a;
+  --glass-hover-border: #ffffff;
+  --glass-active-bg:    #2a2a2a;
+  --card-bg:        #1a1a1a;
+  --bg-card:        #1a1a1a;
+  --bg-main:        #000000;
+  --bg-primary:     #000000;
+  --bg-secondary:   #1a1a1a;
+  --bg-tertiary:    #2a2a2a;
+  --bg-overlay:     #000000;
+  --border-color:   #ffffff;
+  --primary:        #ffff00;
+  --primary-solid:  #ffff00;
+  --secondary:      #ffff00;
+  --accent:         #ffff00;
+}
+
+/* Header / input row / log panel: black, separated by a white rule. */
+:root.high-contrast .chat-header,
+:root.high-contrast .chat-input-area,
+:root.high-contrast .chat-messages,
+:root.high-contrast .voice-header,
+:root.high-contrast .voice-content,
+:root.high-contrast .voice-log,
+:root.high-contrast .log-header,
+:root.high-contrast .quick-settings,
+:root.high-contrast .setting-group,
+:root.high-contrast .empty-state,
+:root.high-contrast .status-indicator,
+:root.high-contrast .loading-indicator {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+:root.high-contrast .chat-header,
+:root.high-contrast .voice-header {
+  border-bottom: 2px solid #ffffff !important;
+}
+:root.high-contrast .chat-input-area {
+  border-top: 2px solid #ffffff !important;
+}
+
+/* Bubbles: the assistant reads as a bordered card, the user's own messages are
+   filled, so the two are still distinguishable at a glance. */
+:root.high-contrast .chat-bubble,
+:root.high-contrast .chat-bubble *,
+:root.high-contrast .log-message,
+:root.high-contrast .log-message *,
+:root.high-contrast .message-content,
+:root.high-contrast .message-content * {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+:root.high-contrast .chat-bubble,
+:root.high-contrast .log-message {
+  border: 2px solid #ffffff !important;
+}
+
+:root.high-contrast .chat-bubble ul li {
+  background: #000000 !important;
+  border-left: 4px solid #ffff00 !important;
+}
+:root.high-contrast .chat-bubble ul li::before {
+  color: #ffff00 !important;
+}
+
+:root.high-contrast .message-container.user .chat-bubble,
+:root.high-contrast .message-container.user .chat-bubble * {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+:root.high-contrast .message-avatar,
+:root.high-contrast .sender-icon {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+:root.high-contrast .chat-input,
+:root.high-contrast .message-input {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+:root.high-contrast .chat-input::placeholder,
+:root.high-contrast .message-input::placeholder {
+  color: #d0d0d0 !important;
+  opacity: 1 !important;
+}
+
+/* Primary actions are the one filled control, in the accent yellow. */
+:root.high-contrast .send-button,
+:root.high-contrast .send-button *,
+:root.high-contrast .primary-btn,
+:root.high-contrast .primary-btn *,
+:root.high-contrast .voice-main-button,
+:root.high-contrast .voice-main-button * {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+:root.high-contrast .send-button:hover,
+:root.high-contrast .send-button:hover *,
+:root.high-contrast .primary-btn:hover,
+:root.high-contrast .primary-btn:hover *,
+:root.high-contrast .voice-main-button:hover,
+:root.high-contrast .voice-main-button:hover * {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+/* Secondary chat/voice controls follow the normal button treatment. */
+:root.high-contrast .header-button,
+:root.high-contrast .header-button *,
+:root.high-contrast .action-button,
+:root.high-contrast .action-button *,
+:root.high-contrast .secondary-btn,
+:root.high-contrast .secondary-btn *,
+:root.high-contrast .test-btn,
+:root.high-contrast .summary-btn,
+:root.high-contrast .clear-btn,
+:root.high-contrast .replay-btn,
+:root.high-contrast .scroll-to-bottom {
+  background: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+:root.high-contrast .header-button:hover,
+:root.high-contrast .header-button:hover *,
+:root.high-contrast .action-button:hover,
+:root.high-contrast .action-button:hover *,
+:root.high-contrast .secondary-btn:hover,
+:root.high-contrast .secondary-btn:hover *,
+:root.high-contrast .replay-btn:hover,
+:root.high-contrast .scroll-to-bottom:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Voice settings sliders. */
+:root.high-contrast .setting-group input[type="range"] {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+:root.high-contrast .setting-group input[type="range"]::-webkit-slider-thumb {
+  background: #ffff00 !important;
+  border: 2px solid #ffffff !important;
+}
+:root.high-contrast .setting-group input[type="range"]::-moz-range-thumb {
+  background: #ffff00 !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* Typing dots need a visible fill. */
+:root.high-contrast .loading-dots span {
+  background: #ffff00 !important;
+}
+
+/* Meta labels were dimmed white-on-indigo; keep them at full contrast. */
+:root.high-contrast .confidence,
+:root.high-contrast .sender-name,
+:root.high-contrast .message-header,
+:root.high-contrast .assistant-title,
+:root.high-contrast .assistant-title * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* ----------------------------------------------------------------------------
+   9. DECORATION — ambient layers carry no information and only hurt contrast.
+   ---------------------------------------------------------------------------- */
+:root.high-contrast .app-container::before,
+:root.high-contrast .arabic-learning-platform::before,
+:root.high-contrast .chat-container::before,
+:root.high-contrast .chat-header::before,
+:root.high-contrast .chat-bubble::before,
+:root.high-contrast .message-avatar::before,
+:root.high-contrast .header-button::before,
+:root.high-contrast .send-button::before,
+:root.high-contrast .action-button::before,
+:root.high-contrast .primary-btn::before,
+:root.high-contrast .secondary-btn::before,
+:root.high-contrast .voice-area::before,
+:root.high-contrast .voice-area::after,
+:root.high-contrast .voice-header::before,
+:root.high-contrast .voice-header::after,
+:root.high-contrast .chat-shimmer,
+:root.high-contrast .floating-particles,
+:root.high-contrast .particle,
+:root.high-contrast .voice-waves,
+:root.high-contrast .wave {
+  display: none !important;
+  animation: none !important;
+}

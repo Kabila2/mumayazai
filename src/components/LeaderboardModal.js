@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getLeaderboardData, formatDuration, formatRelativeTime, getUserRank } from "../utils/leaderboardUtils";
+import {
+  getLeaderboardData,
+  formatDuration,
+  formatRelativeTime,
+  getUserRank,
+  POINTS_CHANGED_EVENT
+} from "../utils/leaderboardUtils";
 import "./LeaderboardModal.css";
 
 export default function LeaderboardModal({ isOpen, onClose, currentUserEmail, t, language }) {
@@ -9,20 +15,26 @@ export default function LeaderboardModal({ isOpen, onClose, currentUserEmail, t,
   const [userRanks, setUserRanks] = useState({});
 
   useEffect(() => {
-    if (isOpen) {
-      const data = getLeaderboardData();
-      setLeaderboardData(data);
+    if (!isOpen) return;
+
+    const load = () => {
+      setLeaderboardData(getLeaderboardData());
 
       // Get current user's ranks
       if (currentUserEmail) {
-        const ranks = {
+        setUserRanks({
           time: getUserRank(currentUserEmail, "totalTimeSpent"),
           chats: getUserRank(currentUserEmail, "totalChats"),
           messages: getUserRank(currentUserEmail, "totalMessages")
-        };
-        setUserRanks(ranks);
+        });
       }
-    }
+    };
+
+    load();
+
+    // Stay in step with the progress dashboard if points land while it's open.
+    window.addEventListener(POINTS_CHANGED_EVENT, load);
+    return () => window.removeEventListener(POINTS_CHANGED_EVENT, load);
   }, [isOpen, currentUserEmail]);
 
   if (!isOpen || !leaderboardData) return null;
@@ -54,9 +66,9 @@ export default function LeaderboardModal({ isOpen, onClose, currentUserEmail, t,
 
   const getStatValue = (user, tab) => {
     switch (tab) {
-      case "points":
-        const totalPoints = (user.totalPoints || 0) + (user.learningPoints || 0) + (user.dailyTaskPoints || 0);
-        return totalPoints.toLocaleString();
+      // getLeaderboardData has already resolved this through getTotalPoints —
+      // the same helper the progress dashboard uses, so the two always agree.
+      case "points": return (user.totalPoints || 0).toLocaleString();
       case "learning": return (user.learningPoints || 0).toLocaleString();
       case "tasks": return (user.dailyTaskPoints || 0).toLocaleString();
       case "streaks": return `${user.taskStreak || 0} days`;

@@ -17,6 +17,7 @@ import LetterWordBuilder from "./LetterWordBuilder";
 import QuizCenter from "./QuizCenter";
 import TeacherParentChat from "./TeacherParentChat";
 import DarkModeToggle from "./DarkModeToggle";
+import HighContrastToggle from "./HighContrastToggle";
 import ProfileSettings from "./ProfileSettings";
 import Leaderboard from "./Leaderboard";
 import StreakCounter from "./StreakCounter";
@@ -1078,6 +1079,7 @@ const ArabicLearningPlatform = ({
             ⚙️ {!isCompactNav && (language === 'ar' ? 'الإعدادات' : 'Settings')}
           </button>
           <DarkModeToggle language={language} />
+          <HighContrastToggle language={language} />
           <button
             className="sign-out-btn"
             onClick={onSignOut}

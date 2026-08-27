@@ -1,6 +1,10 @@
 // src/utils/pointsUtils.js - Enhanced Points System
 
-import { updateUserStats, getUserStats, recordLearningPoints } from './leaderboardUtils';
+import {
+  getUserStats,
+  getTotalPoints,
+  recordLearningPoints
+} from './leaderboardUtils';
 
 const POINTS_STORAGE_KEY = "stellar_points";
 const NOTIFICATION_THRESHOLD = 25; // Show notification every 25 points
@@ -78,7 +82,9 @@ export const POINT_VALUES = {
  */
 export const awardPoints = (userEmail, pointType, multiplier = 1, customAmount = null) => {
   try {
-    const points = customAmount || (POINT_VALUES[pointType] * multiplier);
+    // `??` rather than `||` so an explicit customAmount of 0 is honoured, and
+    // rounded because fractional multipliers (e.g. 0.2 for "viewed") are used.
+    const points = customAmount ?? Math.round(POINT_VALUES[pointType] * multiplier);
     const currentStats = getUserStats(userEmail);
 
     if (!currentStats) {
@@ -86,22 +92,28 @@ export const awardPoints = (userEmail, pointType, multiplier = 1, customAmount =
       return { success: false, points: 0 };
     }
 
+    // Snapshot the total BEFORE recording — recordLearningPoints writes to
+    // storage, so anything read afterwards is already the new total.
+    const previousTotal = getTotalPoints(userEmail);
+
     // Update user stats with new points
     const result = recordLearningPoints(userEmail, points, pointType);
 
     if (result.success) {
+      const newTotal = previousTotal + points;
+
       // Store point notification data
       storePointNotification(userEmail, {
         points,
         pointType,
         timestamp: Date.now(),
-        totalPoints: (currentStats.totalPoints || 0) + points
+        totalPoints: newTotal
       });
 
       // Check for milestone notifications
-      checkMilestoneNotification(userEmail, (currentStats.totalPoints || 0) + points);
+      checkMilestoneNotification(userEmail, previousTotal, newTotal);
 
-      return { success: true, points, totalPoints: (currentStats.totalPoints || 0) + points };
+      return { success: true, points, totalPoints: newTotal };
     }
 
     return { success: false, points: 0 };
@@ -163,10 +175,9 @@ export const clearNotifications = (userEmail) => {
 /**
  * Check for milestone notifications
  */
-const checkMilestoneNotification = (userEmail, newTotalPoints) => {
+const checkMilestoneNotification = (userEmail, previousTotal, newTotalPoints) => {
   try {
     const milestones = [50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 5000];
-    const previousTotal = (getUserStats(userEmail).totalPoints || 0);
 
     // Check if crossed a milestone
     const crossedMilestone = milestones.find(m => previousTotal < m && newTotalPoints >= m);
@@ -388,9 +399,7 @@ export const getClassLeaderboard = (className) => {
           if (userStats[email]) {
             classStudents.push({
               ...userStats[email],
-              totalPoints: (userStats[email].totalPoints || 0) +
-                          (userStats[email].learningPoints || 0) +
-                          (userStats[email].dailyTaskPoints || 0)
+              totalPoints: getTotalPoints(userStats[email])
             });
           }
         });

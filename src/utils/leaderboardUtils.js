@@ -3,6 +3,27 @@
 const LEADERBOARD_KEY = "stellar_leaderboard";
 const USER_STATS_KEY = "stellar_user_stats";
 
+// Achievement bonuses are the one kind of point kept outside user stats:
+// achievementsSystem writes them to its own per-user key.
+const ACHIEVEMENT_POINTS_PREFIX = "stellar_points_";
+
+/**
+ * Fired whenever a user's point total changes, so any screen showing points
+ * (progress dashboard, leaderboard, …) can refresh instead of waiting for its
+ * next poll or re-open.
+ */
+export const POINTS_CHANGED_EVENT = "stellar:points-changed";
+
+export const emitPointsChanged = (userEmail) => {
+  try {
+    window.dispatchEvent(
+      new CustomEvent(POINTS_CHANGED_EVENT, { detail: { userEmail } })
+    );
+  } catch (error) {
+    // No window (tests / SSR) — nothing to notify.
+  }
+};
+
 /**
  * Get current user statistics
  */
@@ -18,13 +39,77 @@ export const getUserStats = (userEmail) => {
       lastActive: null,
       joinedAt: new Date().toISOString(),
       achievements: [],
-      streak: 0
+      streak: 0,
+      // Point fields, so every reader gets numbers rather than undefined
+      totalPoints: 0,
+      learningPoints: 0,
+      dailyTaskPoints: 0,
+      taskStreak: 0
     };
   } catch (error) {
     console.error("Error getting user stats:", error);
     return null;
   }
 };
+
+/**
+ * Achievement bonus points for a user (`stellar_points_<email>.total`).
+ *
+ * The key is written with whatever casing the caller had, while user stats are
+ * keyed lowercase, so the lookup is case-insensitive on the whole key.
+ */
+export const getAchievementPoints = (userEmail) => {
+  if (!userEmail) return 0;
+
+  try {
+    const wanted = `${ACHIEVEMENT_POINTS_PREFIX}${userEmail}`.toLowerCase();
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || key.toLowerCase() !== wanted) continue;
+      return JSON.parse(localStorage.getItem(key) || "{}").total || 0;
+    }
+
+    return 0;
+  } catch (error) {
+    console.error("Error reading achievement points:", error);
+    return 0;
+  }
+};
+
+/**
+ * The single point total every screen must display.
+ *
+ * `stats.totalPoints` is a running sum that ALREADY includes learningPoints and
+ * dailyTaskPoints — both recorders add to it as well as to their own bucket. So
+ * `totalPoints + learningPoints + dailyTaskPoints` (what the leaderboard used
+ * to show) counted every learning point twice, which is why the leaderboard and
+ * the progress dashboard disagreed. Achievement bonuses are the only points
+ * stored elsewhere, so they are the only thing added on top here.
+ *
+ * Accepts either an email or an already-loaded stats object.
+ */
+export const getTotalPoints = (userOrEmail) => {
+  if (!userOrEmail) return 0;
+
+  const stats =
+    typeof userOrEmail === "string" ? getUserStats(userOrEmail) : userOrEmail;
+  if (!stats) return 0;
+
+  const email =
+    stats.email || (typeof userOrEmail === "string" ? userOrEmail : null);
+
+  return (stats.totalPoints || 0) + getAchievementPoints(email);
+};
+
+/**
+ * Resolve a stats object for sorting/display: `totalPoints` becomes the
+ * canonical total.
+ *
+ * The result is final — do NOT run it back through getTotalPoints(), which
+ * would add the achievement bonus a second time.
+ */
+const withTotalPoints = (user) => ({ ...user, totalPoints: getTotalPoints(user) });
 
 /**
  * Get user name from users storage
@@ -57,6 +142,8 @@ export const updateUserStats = (userEmail, updates) => {
 
     allStats[userEmail.toLowerCase()] = updatedStats;
     localStorage.setItem(USER_STATS_KEY, JSON.stringify(allStats));
+
+    emitPointsChanged(userEmail);
 
     return { success: true, stats: updatedStats };
   } catch (error) {
@@ -111,15 +198,10 @@ export const recordMessage = (userEmail) => {
 export const getLeaderboardData = () => {
   try {
     const allStats = JSON.parse(localStorage.getItem(USER_STATS_KEY)) || {};
-    const users = Object.values(allStats);
 
-    // Calculate total points for each user
-    const usersWithTotalPoints = users.map(user => ({
-      ...user,
-      totalPoints: (user.totalPoints || 0) +
-                  (user.learningPoints || 0) +
-                  (user.dailyTaskPoints || 0)
-    }));
+    // Resolve the canonical total once, so EVERY list carries a display-ready
+    // `totalPoints`. Callers read that field directly rather than re-deriving.
+    const users = Object.values(allStats).map(withTotalPoints);
 
     // Sort by different criteria
     const mostActiveUsers = [...users]
@@ -140,7 +222,7 @@ export const getLeaderboardData = () => {
       .slice(0, 10);
 
     // New leaderboards for points
-    const topPointsTotal = [...usersWithTotalPoints]
+    const topPointsTotal = [...users]
       .sort((a, b) => b.totalPoints - a.totalPoints)
       .slice(0, 10);
 
@@ -246,6 +328,9 @@ export const recordLearningPoints = (userEmail, points, activityType = "general"
     const currentStats = getUserStats(userEmail);
     if (!currentStats) return { success: false };
 
+    // `totalPoints` is the running total across every bucket; `learningPoints`
+    // is the per-bucket breakdown. Read them with getTotalPoints(), never by
+    // summing the buckets back onto the total.
     const updates = {
       learningPoints: (currentStats.learningPoints || 0) + points,
       totalPoints: ((currentStats.totalPoints || 0) + points),
@@ -315,12 +400,7 @@ export const getComprehensiveUserRank = (userEmail) => {
     const users = Object.values(allStats);
 
     // Calculate total points for each user
-    const usersWithTotalPoints = users.map(user => ({
-      ...user,
-      totalPoints: (user.totalPoints || 0) +
-                  (user.learningPoints || 0) +
-                  (user.dailyTaskPoints || 0)
-    }));
+    const usersWithTotalPoints = users.map(withTotalPoints);
 
     const sortedUsers = usersWithTotalPoints.sort((a, b) => b.totalPoints - a.totalPoints);
     const userIndex = sortedUsers.findIndex(user => user.email === userEmail.toLowerCase());
@@ -396,12 +476,7 @@ export const getClassLeaderboard = (className) => {
         studentEmails.forEach(email => {
           const emailLower = email.toLowerCase();
           if (allStats[emailLower]) {
-            classStudents.push({
-              ...allStats[emailLower],
-              totalPoints: (allStats[emailLower].totalPoints || 0) +
-                          (allStats[emailLower].learningPoints || 0) +
-                          (allStats[emailLower].dailyTaskPoints || 0)
-            });
+            classStudents.push(withTotalPoints(allStats[emailLower]));
           }
         });
       }

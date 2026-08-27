@@ -4,6 +4,7 @@
  */
 
 import { playAchievementSound, playSuccessSound } from './soundEffects';
+import { emitPointsChanged } from './leaderboardUtils';
 
 // Achievement categories and definitions
 export const ACHIEVEMENTS = {
@@ -327,6 +328,9 @@ const awardPoints = (userEmail, points) => {
     });
 
     localStorage.setItem(pointsKey, JSON.stringify(pointsData));
+
+    // These points live outside user stats, so nothing else announces them.
+    emitPointsChanged(userEmail);
   } catch (error) {
     console.error('Error awarding points:', error);
   }

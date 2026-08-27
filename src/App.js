@@ -23,6 +23,11 @@ import {
 import {
   initializeTeacherAccount
 } from "./utils/teacherUtils";
+import {
+  initHighContrast,
+  applyHighContrast,
+  HIGH_CONTRAST_EVENT
+} from "./utils/highContrast";
 import "./App.css";
 import "./dark-mode-global.css";
 
@@ -109,11 +114,11 @@ export default function App() {
     setCurrentPreference(preference);
     setAssistantTitle(getAssistantTitle(t));
 
-    // Load accessibility preferences
-    const hc = localStorage.getItem("high-contrast");
+    // Load accessibility preferences. High contrast is applied to <html> so it
+    // also covers the page background and the full-screen chat/voice screens.
+    setHighContrast(initHighContrast());
     const fs = localStorage.getItem("font-size");
     const rm = localStorage.getItem("reduced-motion");
-    if (hc === "true") setHighContrast(true);
     if (fs) setFontSize(parseFloat(fs));
     if (rm === "true") setReducedMotion(true);
 
@@ -136,6 +141,19 @@ export default function App() {
   useEffect(() => {
     setAssistantTitle(getAssistantTitle(t));
   }, [currentPreference, t]);
+
+  // Keep React state in step with the toggle, wherever it is rendered.
+  useEffect(() => {
+    const sync = (event) => setHighContrast(!!event.detail?.enabled);
+    window.addEventListener(HIGH_CONTRAST_EVENT, sync);
+    return () => window.removeEventListener(HIGH_CONTRAST_EVENT, sync);
+  }, []);
+
+  // The class on <html> is what styles the app; mirroring it here keeps the
+  // two from drifting if state is ever set some other way.
+  useEffect(() => {
+    applyHighContrast(highContrast);
+  }, [highContrast]);
 
   // Load voices
   useEffect(() => {
@@ -398,8 +416,11 @@ export default function App() {
 
   return (
     <ErrorBoundary language={appLanguage}>
+      {/* High contrast is not in this className: its class goes on <html> (see
+          utils/highContrast.js) so it also covers the page background and the
+          full-screen chat/voice screens. */}
       <div
-        className={`app-container ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""} ${currentPreference === "dyslexia" ? "dyslexia-friendly" : ""}`}
+        className={`app-container ${reducedMotion ? "reduced-motion" : ""} ${currentPreference === "dyslexia" ? "dyslexia-friendly" : ""}`}
         style={{ fontSize: `${fontSize}rem` }}
       >
         {content}

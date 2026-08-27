@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound } from '../utils/soundEffects';
 import { getModuleProgress } from '../utils/progressUtils';
+import { getTotalPoints, POINTS_CHANGED_EVENT } from '../utils/leaderboardUtils';
 import AnalyticsCharts from './AnalyticsCharts';
 import './ProgressDashboard.css';
 
@@ -76,9 +77,14 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
 
   useEffect(() => {
     loadStatistics();
-    // Poll every 5 seconds so charts update when points are gained
+    // Refresh the moment points land, and poll as a backstop for the stats
+    // that no event announces (quiz history, streaks, module progress).
+    window.addEventListener(POINTS_CHANGED_EVENT, loadStatistics);
     const interval = setInterval(loadStatistics, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener(POINTS_CHANGED_EVENT, loadStatistics);
+      clearInterval(interval);
+    };
   }, [userEmail, timeRange]);
 
   const loadStatistics = () => {
@@ -132,16 +138,9 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         lastActive: null
       };
 
-      // Points from learning + quiz activities (via pointsUtils → leaderboardUtils)
-      const learningAndQuizPoints = userStats.totalPoints || 0;
-
-      // Points from achievement bonuses (stored separately by achievementsSystem)
-      const achievementPointsRaw = localStorage.getItem(`stellar_points_${userEmail}`);
-      const achievementPoints = achievementPointsRaw
-        ? (JSON.parse(achievementPointsRaw).total || 0)
-        : 0;
-
-      const pointsData = { total: learningAndQuizPoints + achievementPoints };
+      // One canonical total — the same helper the Explore leaderboard uses, so
+      // the two screens can never drift apart.
+      const pointsData = { total: getTotalPoints(userEmail) };
       console.log('📊 [ProgressDashboard] User stats:', userStats);
       console.log('📊 [ProgressDashboard] Quiz history:', quizHistory.length, 'quizzes');
       console.log('📊 [ProgressDashboard] Points:', pointsData.total);
