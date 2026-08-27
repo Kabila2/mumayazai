@@ -30,6 +30,8 @@
 /* Navigation Styles */
 .platform-nav {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 10px;
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
@@ -54,7 +56,20 @@
 
 .nav-links {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
+  min-width: 0;
+}
+
+/* Settings, dark mode, high contrast and sign out. The teacher and parent navs
+   carry an extra Dashboard link, so this row is the first thing a crowded nav
+   pushes past the edge — and .arabic-learning-platform clips overflow-x, so
+   anything pushed out is simply gone rather than scrollable. Keeping it
+   unshrinkable means the accessibility toggles stay reachable on every role. */
+.nav-user-tools {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .nav-link {

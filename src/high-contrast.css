@@ -575,7 +575,170 @@
 }
 
 /* ----------------------------------------------------------------------------
-   9. DECORATION — ambient layers carry no information and only hurt contrast.
+   9. MATERIAL-UI — the teacher, parent and class-management screens
+   TeacherDashboard, ParentDashboard and ClassManagement are not built from the
+   app's own stylesheets at all; they are MUI, and MUI names every class in
+   PascalCase (.MuiCard-root, .MuiChip-root, .MuiBackdrop-root). Class matching
+   is case-sensitive, so the lowercase substring selectors above
+   ([class*="card"], [class*="chip"], [class*="backdrop"], …) never matched one
+   of them: the strip flattened these screens to black and the ink turned their
+   text white, but no surface, border or filled control ever came back. High
+   contrast therefore looked like it did nothing on the teacher and parent
+   accounts — the two roles that live on those screens. This section gives MUI
+   the same treatment sections 5-7 give the rest of the app, so all three
+   account types get the same mode.
+   ---------------------------------------------------------------------------- */
+
+/* Surfaces — raised panels return as #1a1a1a inside a white border, matching
+   section 5. Card, Dialog, Menu, Popover, Alert and TableContainer are all
+   Paper underneath, so Paper carries most of this on its own. */
+:root.high-contrast .MuiPaper-root,
+:root.high-contrast .MuiCard-root,
+:root.high-contrast .MuiDialog-paper,
+:root.high-contrast .MuiMenu-paper,
+:root.high-contrast .MuiPopover-paper,
+:root.high-contrast .MuiAccordion-root,
+:root.high-contrast .MuiAlert-root,
+:root.high-contrast .MuiSnackbarContent-root,
+:root.high-contrast .MuiTooltip-tooltip {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* Dialog scrims stay opaque, as .modal-overlay does in section 5. */
+:root.high-contrast .MuiBackdrop-root {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Rules and table grids: MUI draws them from palette.divider (#e5e7eb), which
+   is invisible at this contrast level. */
+:root.high-contrast .MuiDivider-root {
+  border-color: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+:root.high-contrast .MuiTableCell-root {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+:root.high-contrast .MuiTableHead-root .MuiTableCell-root {
+  background: #1a1a1a !important;
+  font-weight: 700 !important;
+}
+
+/* Meta text MUI renders through its own colour props rather than through a tag
+   the ink sweep covers. */
+:root.high-contrast .MuiTypography-root,
+:root.high-contrast .MuiListItemText-primary,
+:root.high-contrast .MuiListItemText-secondary,
+:root.high-contrast .MuiInputLabel-root,
+:root.high-contrast .MuiFormHelperText-root,
+:root.high-contrast .MuiInputAdornment-root {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Primary actions are the one filled control, in the accent yellow — the same
+   treatment .primary-btn and .send-button get in section 8. */
+:root.high-contrast .MuiButton-contained,
+:root.high-contrast .MuiButton-contained * {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+:root.high-contrast .MuiButton-contained:hover,
+:root.high-contrast .MuiButton-contained:hover * {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+/* Destructive actions keep the warning colour section 6 gives them; the
+   [class*="delete"] selectors there cannot see MUI's colour variants. */
+:root.high-contrast .MuiButton-containedError:not(:hover),
+:root.high-contrast .MuiButton-containedError:not(:hover) *,
+:root.high-contrast .MuiButton-outlinedError:not(:hover),
+:root.high-contrast .MuiButton-outlinedError:not(:hover) *,
+:root.high-contrast .MuiButton-textError:not(:hover),
+:root.high-contrast .MuiButton-textError:not(:hover) *,
+:root.high-contrast .MuiIconButton-colorError:not(:hover),
+:root.high-contrast .MuiIconButton-colorError:not(:hover) * {
+  background: #000000 !important;
+  color: #ff6b6b !important;
+  -webkit-text-fill-color: #ff6b6b !important;
+  border-color: #ff6b6b !important;
+}
+
+/* Tabs: the underline indicator is a background, so the strip removed it and
+   the selected tab lost its only marker. */
+:root.high-contrast .MuiTabs-indicator {
+  background-color: #ffff00 !important;
+  height: 4px !important;
+}
+
+:root.high-contrast .MuiTab-root.Mui-selected,
+:root.high-contrast .MuiTab-root.Mui-selected *,
+:root.high-contrast .MuiListItemButton-root.Mui-selected,
+:root.high-contrast .MuiListItemButton-root.Mui-selected * {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Chips carry the status and points labels across both dashboards. */
+:root.high-contrast .MuiChip-root,
+:root.high-contrast .MuiChip-root * {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: #ffff00 !important;
+}
+
+:root.high-contrast .MuiAvatar-root {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Text fields: the outline is a nested <fieldset>, and the inner <input>
+   already has its own border from section 6 — one border, not two. */
+:root.high-contrast .MuiOutlinedInput-root {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+:root.high-contrast .MuiOutlinedInput-notchedOutline {
+  border-color: #ffffff !important;
+  border-width: 2px !important;
+}
+
+:root.high-contrast .MuiInputBase-input {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Progress reads as a bright fill on an empty bordered track, as in section 7. */
+:root.high-contrast .MuiLinearProgress-root {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+:root.high-contrast .MuiLinearProgress-bar,
+:root.high-contrast .MuiCircularProgress-circle {
+  background: #00ff00 !important;
+  color: #00ff00 !important;
+  stroke: #00ff00 !important;
+}
+
+/* ----------------------------------------------------------------------------
+   10. DECORATION — ambient layers carry no information and only hurt contrast.
    ---------------------------------------------------------------------------- */
 :root.high-contrast .app-container::before,
 :root.high-contrast .arabic-learning-platform::before,

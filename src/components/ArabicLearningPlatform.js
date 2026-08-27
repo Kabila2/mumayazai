@@ -1048,7 +1048,7 @@ const ArabicLearningPlatform = ({
               }}
               title={language === 'ar' ? 'لوحة المعلم' : 'Teacher Dashboard'}
             >
-              🖥️ {language === 'ar' ? 'لوحتي' : 'Dashboard'}
+              🖥️ {!isCompactNav && (language === 'ar' ? 'لوحتي' : 'Dashboard')}
             </button>
           )}
           {/* Only show Parent Dashboard for parents */}
@@ -1061,12 +1061,12 @@ const ArabicLearningPlatform = ({
               }}
               title={language === 'ar' ? 'لوحة الأهل' : 'Parent Dashboard'}
             >
-              👪 {language === 'ar' ? 'لوحتي' : 'Dashboard'}
+              👪 {!isCompactNav && (language === 'ar' ? 'لوحتي' : 'Dashboard')}
             </button>
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: isCompactNav ? '6px' : '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
+        <div className="nav-user-tools" style={{ gap: isCompactNav ? '6px' : '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
           <button
             className="profile-settings-btn-with-text"
             onClick={() => {
