@@ -63,7 +63,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8137/_mock_video.html)",
       "PowerShell(Out-Null *)",
       "PowerShell(Get-NetTCPConnection *)",
-      "Bash(npx react-scripts *)"
+      "Bash(npx react-scripts *)",
+      "Bash(git stash *)"
     ],
     "deny": [],
     "ask": []

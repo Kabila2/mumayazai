@@ -82,17 +82,26 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       accountInfo: 'Account Information',
       close: 'Close',
       exportTitle: 'Export Your Data',
-      exportDesc: 'Download all your learning progress, points, and achievements',
+      exportDesc: 'Download everything — progress, points, streaks, achievements, quizzes, certificates, chats and settings',
       exportButton: 'Download Data',
       importTitle: 'Import Data',
-      importDesc: 'Restore your data from a previously exported file',
+      importDesc: 'Restore everything from a previously exported file (replaces your current data)',
       importButton: 'Choose File',
       clearTitle: 'Clear All Data',
-      clearDesc: 'Permanently delete all your data (cannot be undone)',
+      clearDesc: 'Permanently delete all your data on this device. Your account and password are kept so you can sign back in and re-import. Cannot be undone.',
       clearButton: 'Delete All Data',
       importSuccess: 'Data imported successfully!',
       importError: 'Failed to import data',
       exportSuccess: 'Data exported successfully!',
+      exportError: 'Failed to export data',
+      clearSuccess: 'All data deleted',
+      clearCancelled: 'Data deletion cancelled',
+      clearError: 'Failed to delete data',
+      entries: 'entries',
+      confirmDeletePrompt:
+        'This will permanently delete ALL your data on this device.\nType DELETE to confirm:',
+      foreignFilePrompt: (fileEmail) =>
+        `This file belongs to ${fileEmail}. Import it into your account anyway?`,
       appearance: 'Appearance',
       fontLabel: 'Global Font',
       textSizeLabel: 'Text Size',
@@ -128,17 +137,26 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
       accountInfo: 'معلومات الحساب',
       close: 'إغلاق',
       exportTitle: 'تصدير البيانات',
-      exportDesc: 'تحميل جميع تقدمك ونقاطك وإنجازاتك',
+      exportDesc: 'تحميل كل شيء — التقدم والنقاط والسلاسل والإنجازات والاختبارات والشهادات والمحادثات والإعدادات',
       exportButton: 'تحميل البيانات',
       importTitle: 'استيراد البيانات',
-      importDesc: 'استعادة بياناتك من ملف محفوظ سابقاً',
+      importDesc: 'استعادة كل شيء من ملف محفوظ سابقاً (يستبدل بياناتك الحالية)',
       importButton: 'اختر ملف',
       clearTitle: 'مسح جميع البيانات',
-      clearDesc: 'حذف جميع بياناتك بشكل نهائي (لا يمكن التراجع)',
+      clearDesc: 'حذف جميع بياناتك على هذا الجهاز نهائياً. يتم الاحتفاظ بحسابك وكلمة المرور حتى تتمكن من تسجيل الدخول وإعادة الاستيراد. لا يمكن التراجع.',
       clearButton: 'حذف جميع البيانات',
       importSuccess: 'تم استيراد البيانات بنجاح!',
       importError: 'فشل استيراد البيانات',
       exportSuccess: 'تم تصدير البيانات بنجاح!',
+      exportError: 'فشل تصدير البيانات',
+      clearSuccess: 'تم حذف جميع البيانات',
+      clearCancelled: 'تم إلغاء حذف البيانات',
+      clearError: 'فشل حذف البيانات',
+      entries: 'عنصر',
+      confirmDeletePrompt:
+        'سيؤدي هذا إلى حذف جميع بياناتك على هذا الجهاز نهائياً.\nاكتب DELETE للتأكيد:',
+      foreignFilePrompt: (fileEmail) =>
+        `هذا الملف يخص ${fileEmail}. هل تريد استيراده إلى حسابك على أي حال؟`,
       appearance: 'المظهر',
       fontLabel: 'الخط العام',
       textSizeLabel: 'حجم النص',
@@ -356,10 +374,14 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
   // Data Management handlers
   const handleExport = () => {
     playClickSound();
-    const success = exportUserData(userEmail);
-    if (success) {
+    const result = exportUserData(userEmail);
+
+    if (result.success) {
       playSuccessSound();
-      toast.success(t.exportSuccess);
+      toast.success(`${t.exportSuccess} (${result.entryCount} ${t.entries})`);
+    } else {
+      playErrorSound();
+      toast.error(result.error || t.exportError);
     }
   };
 
@@ -376,11 +398,13 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     playClickSound();
 
     try {
-      await importUserData(file, userEmail);
+      const result = await importUserData(file, userEmail, {
+        onForeignData: (fileEmail) => window.confirm(t.foreignFilePrompt(fileEmail))
+      });
       playSuccessSound();
-      toast.success(t.importSuccess);
+      toast.success(`${t.importSuccess} (${result.restoredCount} ${t.entries})`);
 
-      // Reload page to reflect imported data
+      // Reload so every screen picks up the restored data
       setTimeout(() => {
         window.location.reload();
       }, 1000);
@@ -399,12 +423,28 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
   const handleClearData = () => {
     playClickSound();
-    const success = clearAllUserData(userEmail);
-    if (success) {
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+    const result = clearAllUserData(userEmail, {
+      confirm: () =>
+        (window.prompt(t.confirmDeletePrompt) || '').trim().toUpperCase() === 'DELETE'
+    });
+
+    if (result.cancelled) {
+      toast.info(t.clearCancelled);
+      return;
     }
+
+    if (!result.success) {
+      playErrorSound();
+      toast.error(result.error || t.clearError);
+      return;
+    }
+
+    toast.success(`${t.clearSuccess} (${result.removedCount} ${t.entries})`);
+
+    // Reload so every screen drops the data it had in memory
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   };
 
   const applyAppearance = (font, size) => {
