@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import './ArabicColorsLearning.css';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { recordModuleItemLearned, getLearnedItems } from '../utils/progressUtils';
-import { awardPoints } from '../utils/pointsUtils';
+import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
 import CelebrationPopup from './CelebrationPopup';
 
 const arabicColors = [
@@ -121,20 +121,20 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
   const [selectedColor, setSelectedColor] = useState(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [viewedColors, setViewedColors] = useState([]);
+  const [completedColors, setCompletedColors] = useState([]);
   const [userEmail, setUserEmail] = useState(null);
   const containerRef = useRef(null);
 
   // Voice Over hook for accessibility
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
-  // Load user and restore previously viewed colors so progress persists
+  // Load user and restore previously completed colors so progress persists
   useEffect(() => {
     try {
       const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
       if (session.email) {
         setUserEmail(session.email);
-        setViewedColors(getLearnedItems(session.email, 'colors'));
+        setCompletedColors(getLearnedItems(session.email, 'colors'));
       }
     } catch (error) {
       console.error('Error loading user:', error);
@@ -179,6 +179,9 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
     }
   };
 
+  // Opening a color only shows it. Nothing is scored and nothing is celebrated
+  // until the learner presses Complete — merely tapping a swatch is not
+  // learning it, and a popup firing on open gave them no chance to look.
   const handleColorSelect = (color) => {
     setSelectedColor(color);
     // Scroll to top when a color is selected
@@ -186,29 +189,39 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
       containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Show celebration if color is viewed for the first time
-    if (!viewedColors.includes(color.english)) {
-      const newViewed = [...viewedColors, color.english];
-      setViewedColors(newViewed);
-      setShowCelebration(true);
-      // Track for the Progress Dashboard
-      recordModuleItemLearned(userEmail, 'colors', color.english, arabicColors.length);
-
-      // Award points, same as the alphabet module, so the progress dashboard
-      // and the Explore leaderboard both move when a color is learned.
-      if (userEmail) {
-        awardPoints(userEmail, 'COLOR_LEARNED');
-        if (newViewed.length === arabicColors.length) {
-          awardPoints(userEmail, 'MODULE_COMPLETED');
-        }
-      }
-    }
-
     // Voice over announcement
     voiceOver.speak(
       language === 'ar'
         ? `لون ${color.arabic}, ${color.pronunciation}`
         : `Color ${color.english}, ${color.pronunciation}`,
+      true
+    );
+  };
+
+  // Complete the color the learner is looking at: record it, score it, cheer.
+  const handleCompleteColor = (color) => {
+    if (!color || completedColors.includes(color.english)) return;
+
+    const newCompleted = [...completedColors, color.english];
+    setCompletedColors(newCompleted);
+    setShowCelebration(true);
+
+    // Track for the Progress Dashboard
+    recordModuleItemLearned(userEmail, 'colors', color.english, arabicColors.length);
+
+    // Award points, same as the alphabet module, so the progress dashboard
+    // and the Explore leaderboard both move when a color is learned.
+    if (userEmail) {
+      awardPoints(userEmail, 'COLOR_LEARNED');
+      if (newCompleted.length === arabicColors.length) {
+        awardPoints(userEmail, 'MODULE_COMPLETED');
+      }
+    }
+
+    voiceOver.speak(
+      language === 'ar'
+        ? `أكملت لون ${color.arabic}. حصلت على ${POINT_VALUES.COLOR_LEARNED} نقطة`
+        : `Color ${color.english} completed. You earned ${POINT_VALUES.COLOR_LEARNED} points`,
       true
     );
   };
@@ -274,6 +287,32 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
               <div className="fullscreen-arabic-name">{selectedColor.arabic}</div>
               <div className="fullscreen-english-name">{selectedColor.english}</div>
               <div className="fullscreen-pronunciation">{selectedColor.pronunciation}</div>
+
+              {/* Completing is the learner's call — this is what scores the
+                  color and triggers the celebration. */}
+              {!completedColors.includes(selectedColor.english) ? (
+                <motion.button
+                  className="complete-color-btn"
+                  onClick={() => handleCompleteColor(selectedColor)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  ✓ {language === 'ar' ? 'إكمال' : 'Complete'}
+                  <span className="complete-points-badge">+{POINT_VALUES.COLOR_LEARNED}</span>
+                </motion.button>
+              ) : (
+                <motion.div
+                  className="completed-color-badge"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  ✓ {language === 'ar' ? 'مكتمل' : 'Completed'}
+                </motion.div>
+              )}
             </motion.div>
           </motion.div>
         )}

@@ -499,3 +499,63 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== Complete button (inside the fullscreen color view) =====
+   The panel behind it is painted with the color itself, so this cannot rely on
+   theme tokens: a solid dark ground + white ink and border is the same trick
+   .close-fullscreen-btn uses, and it stays readable over white and black alike. */
+.arabic-colors-learning .complete-color-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 30px;
+  padding: 16px 36px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 4px solid #fff;
+  border-radius: var(--mz-radius-pill);
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.3);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.arabic-colors-learning .complete-color-btn:hover {
+  background: rgba(22, 163, 74, 0.95);
+  box-shadow: 0 12px 40px rgba(22, 163, 74, 0.6), 0 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.arabic-colors-learning .complete-points-badge {
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: var(--mz-radius-sm);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.arabic-colors-learning .completed-color-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 16px 36px;
+  background: rgba(22, 163, 74, 0.9);
+  border: 4px solid #fff;
+  border-radius: var(--mz-radius-pill);
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 800;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 640px) {
+  .arabic-colors-learning .complete-color-btn,
+  .arabic-colors-learning .completed-color-badge {
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 1.1rem;
+  }
+}

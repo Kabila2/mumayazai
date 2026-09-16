@@ -21,6 +21,7 @@ import HighContrastToggle from "./HighContrastToggle";
 import ProfileSettings from "./ProfileSettings";
 import Leaderboard from "./Leaderboard";
 import StreakCounter from "./StreakCounter";
+import TotalPointsBar from "./TotalPointsBar";
 import ProgressDashboard from "./ProgressDashboard";
 import ArabicHandwritingPractice from "./ArabicHandwritingPractice";
 import InteractiveStoryReader from "./InteractiveStoryReader";
@@ -34,6 +35,22 @@ import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import stellarMuiTheme from "../muiTheme";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import './ArabicLearningPlatform.css';
+
+/**
+ * Sections that keep the total-points bar on screen: everything reachable from
+ * the Learn hub, plus the quiz centre and the activities it launches. Deliberately
+ * NOT home, progress, chat, voice, comms or the dashboards — the bar is there to
+ * show points moving while the learner earns them, and those screens either show
+ * the total already or have nothing to do with earning it.
+ */
+const POINTS_BAR_SECTIONS = [
+  // Learning
+  'learn', 'alphabet', 'colors', 'words', 'sentences',
+  'handwriting', 'story', 'homework', 'drawing',
+  'wordbuilder', 'sentencebuilder', 'letterwordbuilder',
+  // Quiz & the games it launches
+  'quiz', 'difficulty-selection', 'memory-game', 'color-matching', 'number-learning'
+];
 
 /**
  * PLATFORM ACCESS LEVELS:
@@ -1638,6 +1655,12 @@ const ArabicLearningPlatform = ({
           )}
         </AnimatePresence>
       </main>
+
+      {/* Total points — pinned for the whole time the learner is in a learning
+          or quiz section, so points landing are visible wherever they scroll. */}
+      {POINTS_BAR_SECTIONS.includes(currentSection) && (
+        <TotalPointsBar userEmail={getCurrentUserEmail()} language={language} />
+      )}
 
       {/* Profile Settings Modal - All-in-One (Picture, Name, Password, Data, etc.) */}
       <AnimatePresence>

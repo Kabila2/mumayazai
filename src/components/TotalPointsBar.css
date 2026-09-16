@@ -1,0 +1,165 @@
+/* ============================================================================
+   TOTAL POINTS BAR
+   ----------------------------------------------------------------------------
+   Pinned readout shown on the learning and quiz screens only.
+
+   Pinned bottom-LEFT in both directions on purpose: the point-notification
+   stack owns the top-right corner and the modules' scroll indicators own the
+   bottom-right, so a physical (not logical) left keeps it clear of both in
+   Arabic as well as English.
+
+   Colours come from --mz-* tokens only, so dark mode and high contrast pick it
+   up through the token layer without per-mode rules here. Every selector is
+   scoped under .total-points-bar — the learning and game stylesheets share
+   plenty of generic class names.
+
+   NOTE: the bar must never carry role="status" or aria-live. App.css hides
+   every live region app-wide (absolute, 1x1, clipped), which collapses whatever
+   it lands on. The component announces through a separate .tpb-announcement
+   span, which wants exactly that treatment and so needs no rule of its own.
+   ========================================================================== */
+
+.total-points-bar {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 900;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px 10px 14px;
+
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-pill);
+  box-shadow: var(--mz-shadow-md);
+  backdrop-filter: blur(20px);
+
+  /* Read-only: never swallow a click meant for the content underneath. */
+  pointer-events: none;
+  user-select: none;
+}
+
+.total-points-bar .tpb-coin {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.total-points-bar .tpb-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.total-points-bar .tpb-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mz-text-3);
+  white-space: nowrap;
+}
+
+.total-points-bar .tpb-value {
+  position: relative;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--mz-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The "+N" flash rides above the total rather than beside it, so the bar's
+   width does not jump every time points land. */
+.total-points-bar .tpb-delta {
+  position: absolute;
+  bottom: 100%;
+  inset-inline-start: 100%;
+  margin-inline-start: 6px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--mz-success);
+  white-space: nowrap;
+}
+
+.total-points-bar .tpb-rank {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-inline-start: 16px;
+  border-inline-start: 1px solid var(--mz-border);
+}
+
+.total-points-bar .tpb-rank-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.total-points-bar .tpb-rank-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.total-points-bar .tpb-rank-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--mz-text-2);
+  white-space: nowrap;
+}
+
+/* Named *-progress-track / *-progress-fill on purpose: high-contrast.css strips
+   every background, and those are the substrings its progress re-add matches,
+   so the meter survives the strip without a rule of its own over there. */
+.total-points-bar .tpb-progress-track {
+  width: 120px;
+  height: 6px;
+  border-radius: var(--mz-radius-pill);
+  background: var(--mz-surface-3);
+  overflow: hidden;
+}
+
+.total-points-bar .tpb-progress-fill {
+  height: 100%;
+  border-radius: var(--mz-radius-pill);
+  background: var(--mz-accent-grad);
+  transition: width 0.5s ease;
+}
+
+.total-points-bar .tpb-next {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--mz-text-3);
+  white-space: nowrap;
+}
+
+/* Narrow screens: the rank column is the expendable half — keep the total. */
+@media (max-width: 640px) {
+  .total-points-bar {
+    left: 12px;
+    bottom: 12px;
+    gap: 10px;
+    padding: 8px 16px 8px 12px;
+  }
+
+  .total-points-bar .tpb-coin {
+    font-size: 1.5rem;
+  }
+
+  .total-points-bar .tpb-value {
+    font-size: 1.25rem;
+  }
+
+  .total-points-bar .tpb-rank {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .total-points-bar .tpb-progress-fill {
+    transition: none;
+  }
+}
