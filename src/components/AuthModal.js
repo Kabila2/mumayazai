@@ -14,7 +14,8 @@ export default function AuthModal({ lang, mode, setMode, onClose, onSubmit }) {
 
   const validate = () => {
     const newErrors = {};
-    if (mode === "signup" && /\d/.test(name)) newErrors.name = "Name cannot contain numbers.";
+    if (mode === "signup" && !name.trim()) newErrors.name = "Name is required.";
+    else if (mode === "signup" && /\d/.test(name)) newErrors.name = "Name cannot contain numbers.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "Invalid email address.";
     if (password.length < 6) newErrors.password = "Password must be at least 6 characters.";
 
