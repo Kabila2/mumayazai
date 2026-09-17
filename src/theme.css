@@ -9,7 +9,7 @@
    1. Canonical tokens are the `--mz-*` variables (light in :root, dark in
       :root.dark-mode).
    2. Every LEGACY variable name used anywhere in the app (--primary,
-      --text-primary, --card-bg, --tp-*, --bg-gradient, --gray-*, …) is aliased
+      --text-primary, --card-bg, --bg-gradient, --gray-*, …) is aliased
       to a canonical token. Because the aliases reference --mz-* (not literals),
       they automatically flip when dark mode is on — defined once, works in both.
    3. A small set of global element styles + a contrast safety-net guarantee
@@ -182,19 +182,6 @@
   --hover-bg:       var(--mz-surface-2);
   --gradient-start: var(--mz-accent);
   --gradient-end:   var(--mz-accent-2);
-
-  /* TeacherParentChat.css (comms) — this is also what fixes the back button:
-     muted text now resolves to a proper, readable secondary color. */
-  --tp-bg:              var(--mz-bg);
-  --tp-surface:         var(--mz-surface);
-  --tp-border:          var(--mz-border);
-  --tp-text:            var(--mz-text);
-  --tp-text-muted:      var(--mz-text-2);
-  --tp-accent:          var(--mz-accent);
-  --tp-accent-soft:     var(--mz-accent-soft);
-  --tp-bubble-received: var(--mz-surface-2);
-  --tp-bubble-sent:     var(--mz-accent);
-  --tp-danger:          var(--mz-danger);
 }
 
 /* ----------------------------------------------------------------------------
@@ -298,4 +285,50 @@ textarea::placeholder { color: var(--mz-text-3); }
 .modal-overlay,
 .modal-backdrop {
   background: var(--mz-scrim) !important;
+}
+
+/* Emoji inside a gradient (background-clip: text) heading would otherwise be
+   painted with the gradient too and render as a flat silhouette. */
+.title-emoji {
+  -webkit-text-fill-color: initial;
+  background: none;
+}
+
+/* Immersive chat / voice header buttons: translucent glass with white text,
+   matching the deep-indigo surface (they were 60% white with dark text, which
+   read as washed-out grey tiles). */
+.chat-container .header-button,
+.voice-area .header-button {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+}
+
+.chat-container .header-button:hover:not(:disabled),
+.voice-area .header-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.20);
+  border-color: rgba(255, 255, 255, 0.36);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 640px) {
+  .chat-container .chat-header {
+    height: auto;
+    min-height: 64px;
+    padding: 8px 10px;
+  }
+
+  .chat-container .header-button,
+  .voice-area .header-button {
+    padding: 0 12px;
+    min-width: 44px;
+  }
+
+  .chat-container .header-button .button-text,
+  .voice-area .header-button .button-text {
+    display: none;
+  }
 }

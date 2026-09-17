@@ -47,7 +47,7 @@
   margin-bottom: 1rem;
 }
 
-.progress-label {
+.sentence-builder .progress-label {
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--mz-text-2);
@@ -59,7 +59,7 @@
   color: var(--mz-accent-text);
 }
 
-.progress-bar-container {
+.sentence-builder .progress-bar-container {
   height: 10px;
   background: var(--mz-surface-3);
   border-radius: 999px;
@@ -67,7 +67,7 @@
   margin-bottom: 1rem;
 }
 
-.progress-bar-fill {
+.sentence-builder .progress-bar-fill {
   height: 100%;
   transition: width 0.3s ease;
   border-radius: 999px;
@@ -210,7 +210,7 @@
   margin-bottom: 2rem;
 }
 
-.action-btn {
+.sentence-builder .action-btn {
   padding: 0.95rem 2.25rem;
   border: none;
   border-radius: var(--mz-radius-md);
@@ -222,7 +222,7 @@
   box-shadow: var(--mz-shadow-sm);
 }
 
-.reset-btn {
+.sentence-builder .reset-btn {
   background: var(--mz-warning);
 }
 
@@ -230,13 +230,13 @@
   background: var(--mz-success);
 }
 
-.action-btn:disabled {
+.sentence-builder .action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
 }
 
-.action-btn:hover:not(:disabled) {
+.sentence-builder .action-btn:hover:not(:disabled) {
   transform: translateY(-3px);
   box-shadow: var(--mz-shadow-md);
 }
@@ -295,7 +295,7 @@
   max-width: 500px;
 }
 
-.celebration-emoji {
+.sentence-builder .celebration-emoji {
   font-size: 4.5rem;
   margin-bottom: 18px;
   display: flex;
@@ -323,16 +323,16 @@
   .target-english { font-size: 1.5rem; }
   .word-chip { padding: 0.75rem 1.5rem; font-size: 1.5rem; }
   .builder-actions { flex-direction: column; }
-  .action-btn { width: 100%; }
+  .sentence-builder .action-btn { width: 100%; }
   .celebration-content { padding: 40px 30px; max-width: 90%; }
-  .celebration-emoji { font-size: 3.5rem; }
+  .sentence-builder .celebration-emoji { font-size: 3.5rem; }
   .celebration-text { font-size: 2rem; }
   .celebration-subtext { font-size: 1.1rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .word-chip,
-  .action-btn,
+  .sentence-builder .action-btn,
   .nav-btn-builder { transition: none; }
   .selected-words-container.correct { animation: none; }
 }

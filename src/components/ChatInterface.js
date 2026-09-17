@@ -927,21 +927,6 @@ const ChatInterface = ({
               <span className="button-text">{tr.explore}</span>
             </motion.button>
 
-            {onBack && (
-              <motion.button
-                className="header-button white exit-fullscreen-button"
-                onClick={onBack}
-                title={language === 'ar' ? 'الخروج من وضع ملء الشاشة' : 'Exit fullscreen'}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ x: 100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: reducedMotion ? 0 : 0.38 }}
-              >
-                <span>✕</span>
-                <span className="button-text">{language === 'ar' ? 'إغلاق' : 'Exit'}</span>
-              </motion.button>
-            )}
           </div>
         </div>
       </motion.header>
@@ -1093,7 +1078,7 @@ const ChatInterface = ({
             whileFocus={!reducedMotion ? {
               scale: 1.01,
               transition: { duration: 0.2 }
-            } : {}}for 
+            } : {}}
           />
         </div>
 

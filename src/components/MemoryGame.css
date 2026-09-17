@@ -59,7 +59,7 @@
   text-align: center;
 }
 
-.title-icon {
+.memory-game-container .title-icon {
   font-size: 2rem;
 }
 
@@ -80,13 +80,13 @@
   box-shadow: var(--mz-shadow-sm);
 }
 
-.stat-label {
+.memory-game-container .stat-label {
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--gray-600);
 }
 
-.stat-value {
+.memory-game-container .stat-value {
   font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--primary);
@@ -148,7 +148,7 @@
   transform: translateY(0);
 }
 
-.reset-btn {
+.memory-game-container .reset-btn {
   padding: var(--space-3) var(--space-6);
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   border: none;
@@ -163,13 +163,13 @@
   min-height: var(--mobile-button-height);
 }
 
-.reset-btn:hover {
+.memory-game-container .reset-btn:hover {
   background: linear-gradient(135deg, var(--primary-hover), var(--primary));
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
 
-.reset-btn:active {
+.memory-game-container .reset-btn:active {
   transform: translateY(0);
 }
 
@@ -178,7 +178,7 @@
   width: 100%;
   max-width: 1200px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(var(--memory-cols, 6), minmax(0, 1fr));
   gap: var(--space-4);
   padding: var(--space-4);
   background: var(--mz-surface);
@@ -343,7 +343,7 @@
   font-weight: 600;
 }
 
-.play-again-btn {
+.memory-game-container .play-again-btn {
   padding: var(--space-4) var(--space-8);
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   border: none;
@@ -358,13 +358,13 @@
   min-height: var(--mobile-button-height);
 }
 
-.play-again-btn:hover {
+.memory-game-container .play-again-btn:hover {
   background: linear-gradient(135deg, var(--primary-hover), var(--primary));
   transform: translateY(-2px) scale(1.05);
   box-shadow: var(--shadow-xl);
 }
 
-.play-again-btn:active {
+.memory-game-container .play-again-btn:active {
   transform: translateY(0) scale(1);
 }
 
@@ -496,8 +496,8 @@
   }
 
   .difficulty-btn:hover,
-  .reset-btn:hover,
-  .play-again-btn:hover {
+  .memory-game-container .reset-btn:hover,
+  .memory-game-container .play-again-btn:hover {
     transform: none;
   }
 }
@@ -505,8 +505,8 @@
 /* Focus Styles for Accessibility */
 .memory-card:focus-visible,
 .difficulty-btn:focus-visible,
-.reset-btn:focus-visible,
-.play-again-btn:focus-visible {
+.memory-game-container .reset-btn:focus-visible,
+.memory-game-container .play-again-btn:focus-visible {
   outline: 3px solid var(--primary);
   outline-offset: 2px;
 }

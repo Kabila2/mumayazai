@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { playClickSound } from '../utils/soundEffects';
@@ -10,6 +10,7 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
   const [options, setOptions] = useState([]);
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
+  const [roundEmoji, setRoundEmoji] = useState('🍎');
   const [feedback, setFeedback] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
@@ -82,39 +83,48 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
 
   const emojis = ['🍎', '⭐', '🌸', '🎈', '🦋', '🍇', '🌼', '🎁', '🐶', '🚗'];
 
+  // True while a round is being resolved, so double clicks and the timer can't
+  // both advance it (and skip a round).
+  const advancingRef = useRef(false);
+
   useEffect(() => {
-    startNewRound();
+    startNewRound(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Timer effect for hard mode
+  // Timer effect for hard mode. One tick per render; a round that is already
+  // resolving (answered or timed out) stops the clock so it can't advance twice.
   useEffect(() => {
-    if (timeLeft === null || timeLeft === 0 || gameComplete) return;
+    if (timeLeft === null || gameComplete) return undefined;
 
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          // Time's up - move to next round with no points
-          setFeedback('wrong');
-          voiceOver.speak(
-            language === 'ar' ? 'انتهى الوقت!' : 'Time is up!',
-            true
-          );
-          setTimeout(() => {
-            setRound(round + 1);
-            startNewRound();
-            setFeedback('');
-          }, 1500);
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (timeLeft === 0) {
+      if (advancingRef.current) return undefined;
+      advancingRef.current = true;
+      setFeedback('wrong');
+      voiceOver.speak(
+        language === 'ar' ? 'انتهى الوقت!' : 'Time is up!',
+        true
+      );
+      const timeout = setTimeout(() => advanceRound(round), 1500);
+      return () => clearTimeout(timeout);
+    }
+
+    const tick = setTimeout(() => {
+      if (!advancingRef.current) setTimeLeft(prev => Math.max(0, prev - 1));
     }, 1000);
-
-    return () => clearInterval(timer);
+    return () => clearTimeout(tick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, gameComplete]);
 
-  const startNewRound = () => {
-    if (round >= totalRounds) {
+  const advanceRound = (fromRound) => {
+    const nextRound = fromRound + 1;
+    setRound(nextRound);
+    startNewRound(nextRound);
+  };
+
+  const startNewRound = (roundIndex) => {
+    advancingRef.current = false;
+    if (roundIndex >= totalRounds) {
       setGameComplete(true);
       voiceOver.speak(
         language === 'ar' ? 'انتهت اللعبة! أحسنت' : 'Game complete! Well done!',
@@ -127,6 +137,7 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
     const maxNum = Math.min(currentSettings.maxNumber, numbers.length - 1);
     const targetNumber = numbers[Math.floor(Math.random() * maxNum) + 1];
     setCurrentNumber(targetNumber);
+    setRoundEmoji(emojis[Math.floor(Math.random() * emojis.length)]);
 
     // Create wrong options based on difficulty
     const numWrongOptions = currentSettings.numOptions - 1;
@@ -156,6 +167,7 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
   };
 
   const handleOptionClick = (selectedNumber) => {
+    if (advancingRef.current) return;
     playClickSound();
 
     if (selectedNumber.value === currentNumber.value) {
@@ -169,11 +181,8 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
         true
       );
 
-      setTimeout(() => {
-        setRound(round + 1);
-        startNewRound();
-        setFeedback('');
-      }, 1500);
+      advancingRef.current = true;
+      setTimeout(() => advanceRound(round), 1500);
     } else {
       setFeedback('wrong');
       voiceOver.speak(
@@ -193,14 +202,13 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
     setRound(0);
     setGameComplete(false);
     setFeedback('');
-    startNewRound();
+    startNewRound(0);
   };
 
   // Render emojis for the current number
   const renderEmojis = () => {
-    if (!currentNumber) return null;
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-    return Array(currentNumber.value).fill(randomEmoji);
+    if (!currentNumber) return [];
+    return Array(currentNumber.value).fill(roundEmoji);
   };
 
   if (gameComplete) {

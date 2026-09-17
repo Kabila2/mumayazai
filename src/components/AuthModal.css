@@ -144,3 +144,143 @@
   position: relative;
   z-index: 2;
 }
+
+/* ---------------------------------------------------------------------------
+   Form details: password toggle, role picker, mode switch
+   --------------------------------------------------------------------------- */
+.auth-modal {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+.auth-modal .modal-input {
+  box-sizing: border-box;
+}
+
+.auth-modal .modal-input[aria-invalid="true"] {
+  border-color: var(--mz-danger);
+}
+
+.auth-password {
+  position: relative;
+}
+
+.auth-password .modal-input {
+  padding-inline-end: 46px;
+}
+
+.auth-modal .auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 6px;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--mz-text-3);
+}
+
+.auth-modal .auth-password-toggle:hover {
+  color: var(--mz-accent-text);
+  background: var(--mz-accent-soft);
+}
+
+.auth-roles {
+  margin: 12px 0 4px;
+  padding: 0;
+  border: none;
+}
+
+.auth-roles legend {
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--mz-text-2);
+}
+
+.auth-roles-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.modal .auth-role {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface-2);
+  color: var(--mz-text-2);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.modal .auth-role:hover {
+  border-color: var(--mz-border-strong);
+}
+
+.modal .auth-role.is-selected {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+  color: var(--mz-accent-text);
+}
+
+/* The native radio stays in the tab order and screen-reader tree, just unseen */
+.auth-role input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.auth-role:has(input:focus-visible) {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 2px;
+}
+
+.auth-role-icon {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.auth-role-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.auth-modal .modal-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.auth-switch {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--mz-text-2);
+}
+
+.auth-modal .auth-switch-btn {
+  display: inline;
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--mz-accent-text);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

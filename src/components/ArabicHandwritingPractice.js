@@ -153,14 +153,16 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
         setTimeLeft(currentSettings.timePerLetter);
       }
     }
-  }, [selectedLetter, brushColor, brushSize, level]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLetter, brushColor, brushSize, level, mode]);
 
   // Timer effect for advanced level in timed mode
   useEffect(() => {
     if (mode !== 'timed' || !level || timeLeft === null) return;
 
     if (timeLeft === 0) {
-      handleNextLetter();
+      // Time ran out: move on, but don't count the letter as completed or score it
+      goToNext();
       return;
     }
 
@@ -169,6 +171,7 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
     }, 1000);
 
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, mode, level]);
 
   const drawGuideLetter = (context) => {
@@ -258,69 +261,56 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
 
   // Level Selection Screen
   if (!level) {
+    const levels = [
+      { id: 'beginner', label: t.beginner, desc: t.beginnerDesc, emoji: '📝', color: '#10b981' },
+      { id: 'intermediate', label: t.intermediate, desc: t.intermediateDesc, emoji: '✍️', color: '#f59e0b' },
+      { id: 'advanced', label: t.advanced, desc: t.advancedDesc, emoji: '🏆', color: '#ef4444' }
+    ];
+
     return (
       <motion.div
-        className="handwriting-practice-container"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        className="hw-level-screen"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.3 }}
-        style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh' }}
       >
-        <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', textAlign: 'center' }}>
-          ✍️ {t.selectLevel}
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', maxWidth: '1000px', width: '100%', marginTop: '2rem' }}>
-          {[
-            { id: 'beginner', label: t.beginner, desc: t.beginnerDesc, emoji: '📝', color: '#10b981' },
-            { id: 'intermediate', label: t.intermediate, desc: t.intermediateDesc, emoji: '✍️', color: '#f59e0b' },
-            { id: 'advanced', label: t.advanced, desc: t.advancedDesc, emoji: '🏆', color: '#ef4444' }
-          ].map((lvl, index) => (
+        <div className="hw-level-header">
+          <span className="hw-level-header-icon" aria-hidden="true">✍️</span>
+          <h2 className="hw-level-title">{t.selectLevel}</h2>
+        </div>
+
+        <div className="hw-level-grid">
+          {levels.map((lvl, index) => (
             <motion.button
               key={lvl.id}
+              type="button"
+              className="hw-level-card"
+              style={{ '--hw-level-color': lvl.color }}
               onClick={() => {
                 playClickSound();
                 setLevel(lvl.id);
                 if (lvl.id === 'advanced') setMode('timed');
                 if (lvl.id === 'beginner') setMode('trace');
               }}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                padding: '2rem',
-                borderRadius: '20px',
-                border: `3px solid ${lvl.color}`,
-                background: `linear-gradient(135deg, ${lvl.color}20, ${lvl.color}40)`,
-                cursor: 'pointer',
-                textAlign: 'center'
-              }}
+              transition={{ delay: index * 0.08 }}
+              whileHover={{ y: -4 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{lvl.emoji}</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '0.5rem' }}>{lvl.label}</div>
-              <div style={{ fontSize: '1.1rem', opacity: 0.8 }}>{lvl.desc}</div>
+              <span className="hw-level-card-inner">
+                <span className="hw-level-emoji" aria-hidden="true">{lvl.emoji}</span>
+                <span className="hw-level-label">{lvl.label}</span>
+                <span className="hw-level-desc">{lvl.desc}</span>
+              </span>
             </motion.button>
           ))}
         </div>
-        <motion.button
-          onClick={onClose}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          style={{
-            marginTop: '3rem',
-            padding: '1rem 2rem',
-            borderRadius: '12px',
-            border: '2px solid rgba(255,255,255,0.2)',
-            background: 'rgba(255,255,255,0.1)',
-            cursor: 'pointer',
-            fontSize: '1.1rem'
-          }}
-        >
-          ← {t.back}
-        </motion.button>
+
+        <button type="button" className="hw-level-back" onClick={onClose}>
+          {language === 'ar' ? '→' : '←'} {t.back}
+        </button>
       </motion.div>
     );
   }

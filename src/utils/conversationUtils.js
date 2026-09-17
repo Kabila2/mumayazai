@@ -20,15 +20,23 @@ export const createConversation = (teacherEmail, parentEmail, childName = '') =>
 
     // Check if conversation already exists
     const existingConv = Object.values(conversations).find(conv =>
+      Array.isArray(conv?.participants) &&
       conv.participants.includes(teacherEmail) &&
       conv.participants.includes(parentEmail)
     );
 
     if (existingConv) {
-      console.log('Conversation already exists:', existingConv);
-      return { success: true, conversationId: Object.keys(conversations).find(
+      const existingId = Object.keys(conversations).find(
         key => conversations[key] === existingConv
-      ), existing: true };
+      );
+
+      // Re-opening an archived conversation brings it back into the inbox
+      if (existingConv.archived) {
+        existingConv.archived = false;
+        localStorage.setItem('stellar_conversations', JSON.stringify(conversations));
+      }
+
+      return { success: true, conversationId: existingId, existing: true };
     }
 
     // Create new conversation
@@ -46,7 +54,6 @@ export const createConversation = (teacherEmail, parentEmail, childName = '') =>
     conversations[conversationId] = newConversation;
     localStorage.setItem('stellar_conversations', JSON.stringify(conversations));
 
-    console.log('Created new conversation:', conversationId);
     return { success: true, conversationId, existing: false };
   } catch (error) {
     console.error('Error creating conversation:', error);
@@ -65,7 +72,7 @@ export const getUserConversations = (userEmail) => {
     const allConversations = JSON.parse(stored);
 
     const userConversations = Object.entries(allConversations)
-      .filter(([_, conv]) => conv.participants.includes(userEmail))
+      .filter(([_, conv]) => Array.isArray(conv?.participants) && conv.participants.includes(userEmail))
       .map(([id, conv]) => ({
         id,
         ...conv,
@@ -85,16 +92,19 @@ export const getUserConversations = (userEmail) => {
  * @param {string} conversationId - ID of the conversation
  * @param {string} senderEmail - Email of the sender
  * @param {string} messageText - Text of the message
+ * @param {Array} attachments - Optional `{ name, type, size, data }` files (data is a data URL)
  * @returns {Object} - Result of the operation
  */
-export const sendMessage = (conversationId, senderEmail, messageText) => {
+export const sendMessage = (conversationId, senderEmail, messageText, attachments = []) => {
   try {
+    const now = Date.now();
     const message = {
-      id: Date.now(),
+      id: now,
       sender: senderEmail,
-      text: messageText.trim(),
-      timestamp: Date.now(),
-      read: false
+      text: (messageText || '').trim(),
+      timestamp: now,
+      read: false,
+      attachments: attachments.length > 0 ? attachments : undefined
     };
 
     // Add message to conversation messages
@@ -109,8 +119,10 @@ export const sendMessage = (conversationId, senderEmail, messageText) => {
     const conversations = JSON.parse(conversationsStored);
 
     if (conversations[conversationId]) {
-      conversations[conversationId].lastMessage = messageText.trim();
-      conversations[conversationId].lastMessageTime = Date.now();
+      // Attachment-only messages keep an empty preview; the UI labels them
+      conversations[conversationId].lastMessage = message.text;
+      conversations[conversationId].lastAttachmentCount = attachments.length;
+      conversations[conversationId].lastMessageTime = now;
       conversations[conversationId].lastSender = senderEmail;
 
       // Increment unread count for other participant
@@ -154,6 +166,11 @@ export const markConversationAsRead = (conversationId, userEmail) => {
     const messagesKey = `stellar_messages_${conversationId}`;
     const stored = localStorage.getItem(messagesKey) || '[]';
     const messages = JSON.parse(stored);
+
+    // Nothing to mark — skip the writes (this runs on every chat refresh)
+    if (!messages.some(msg => !msg.read && msg.sender !== userEmail)) {
+      return { success: true };
+    }
 
     const updatedMessages = messages.map(msg => ({
       ...msg,
@@ -282,4 +299,17 @@ export const initializeDemoConversation = () => {
     console.error('Error initializing demo conversation:', error);
     return { success: false, error: error.message };
   }
+};
+
+/**
+ * Up to two initials for an avatar ("Sara Ahmed" -> "SA")
+ * @param {string} name - Display name (or email as a fallback)
+ * @returns {string} - Initials, or "?" when there is no name
+ */
+export const getInitials = (name) => {
+  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  const first = parts[0][0];
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  return `${first}${last}`.toUpperCase();
 };

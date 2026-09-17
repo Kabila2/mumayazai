@@ -62,7 +62,7 @@
   flex-direction: column;
 }
 
-.section-title {
+.collaborative-drawing-board .section-title {
   font-size: 1rem;
   font-weight: 600;
   color: #333;
@@ -159,7 +159,7 @@
   width: 100%;
 }
 
-.action-btn {
+.collaborative-drawing-board .action-btn {
   padding: 1rem 2rem;
   border: none;
   border-radius: 12px;
@@ -175,12 +175,12 @@
   white-space: nowrap;
 }
 
-.clear-btn {
+.collaborative-drawing-board .clear-btn {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
 }
 
-.clear-btn:hover {
+.collaborative-drawing-board .clear-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
 }
@@ -225,7 +225,7 @@
   user-select: none;
 }
 
-.drawing-canvas {
+.collaborative-drawing-board .drawing-canvas {
   display: block;
   width: 100%;
   height: 100%;

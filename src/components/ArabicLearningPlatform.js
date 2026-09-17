@@ -33,7 +33,10 @@ import TeacherDashboard from "./TeacherDashboard";
 import ParentDashboard from "./ParentDashboard";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import stellarMuiTheme from "../muiTheme";
+import { LogOut } from 'lucide-react';
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
+import { getTotalUnreadCount, getInitials } from '../utils/conversationUtils';
+import { getModuleProgress } from '../utils/progressUtils';
 import './ArabicLearningPlatform.css';
 
 /**
@@ -51,6 +54,46 @@ const POINTS_BAR_SECTIONS = [
   // Quiz & the games it launches
   'quiz', 'difficulty-selection', 'memory-game', 'color-matching', 'number-learning'
 ];
+
+/** Sections that light up the "Learn" and "Test Yourself" nav links. */
+const LEARN_SECTIONS = ['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'];
+const PRACTICE_SECTIONS = ['quiz', 'wordbuilder', 'letterwordbuilder', 'sentencebuilder', 'difficulty-selection',
+  'memory-game', 'color-matching', 'number-learning'];
+
+/** Immersive screens that bring their own header (and their own way back home). */
+const NAV_HIDDEN_SECTIONS = ['chat', 'voice', 'teacherchat'];
+
+/**
+ * A home-page tile. Rendered as a real keyboard target (Enter / Space) rather than
+ * a bare clickable div; the per-card accent drives its icon tile, hover border and
+ * progress bar through --card-accent.
+ */
+const SectionCard = ({ card, index, onSelect, children }) => (
+  <motion.div
+    className={`section-card home-card--${card.id}`}
+    style={{ '--card-accent': card.accent }}
+    role="button"
+    tabIndex={0}
+    onClick={() => onSelect(card.id)}
+    onKeyDown={(event) => {
+      if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        onSelect(card.id);
+      }
+    }}
+    whileHover={{ y: -3 }}
+    whileTap={{ scale: 0.98 }}
+    initial={{ opacity: 0, y: 14 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: Math.min(0.1 + index * 0.03, 0.6), duration: 0.3 }}
+  >
+    {card.badge > 0 && <span className="card-unread-badge">{card.badge}</span>}
+    <div className="card-icon" aria-hidden="true">{card.icon}</div>
+    <h3 className="card-title">{card.title}</h3>
+    <p className="card-description">{card.description}</p>
+    {children}
+  </motion.div>
+);
 
 /**
  * PLATFORM ACCESS LEVELS:
@@ -91,7 +134,6 @@ const ArabicLearningPlatform = ({
   speak
 }) => {
   const [currentSection, setCurrentSection] = useState('home'); // 'home', 'learn', 'alphabet', 'colors', 'words', 'sentences', 'wordbuilder', 'chat', 'voice', 'memory-game', 'color-matching', 'number-learning', 'drawing', 'sentencebuilder', 'letterwordbuilder', 'quiz', 'teacherchat', 'progress', 'handwriting', 'story', 'homework', 'classmanagement', 'progressreport', 'teacherdashboard', 'parentdashboard'
-  const [chatMode, setChatMode] = useState('text'); // 'text' | 'voice'
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
@@ -130,9 +172,15 @@ const ArabicLearningPlatform = ({
 
   // Monitor unread messages count
   useEffect(() => {
+    // Counted from the signed-in user's own conversations, so the badge is
+    // right before the chat screen is ever opened and never shows another account's count
     const updateUnreadCount = () => {
-      const count = parseInt(localStorage.getItem('stellar_unread_messages') || '0', 10);
-      setUnreadMessagesCount(count);
+      try {
+        const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
+        setUnreadMessagesCount(session.email ? getTotalUnreadCount(session.email) : 0);
+      } catch (error) {
+        setUnreadMessagesCount(0);
+      }
     };
 
     // Initial load
@@ -239,7 +287,6 @@ const ArabicLearningPlatform = ({
   };
 
   const handleChatModeSwitch = (mode) => {
-    setChatMode(mode);
     setCurrentSection(mode === 'text' ? 'chat' : 'voice');
   };
 
@@ -270,848 +317,427 @@ const ArabicLearningPlatform = ({
     }
   };
 
-  // Helper function to animate text letter by letter
-  const animateText = (text) => {
-    return text.split('').map((char, index) => (
-      <span
-        key={index}
-        className="animated-letter"
-        style={{
-          animationDelay: `${index * 0.05}s`,
-          display: 'inline-block'
-        }}
-      >
-        {char === ' ' ? '\u00A0' : char}
-      </span>
-    ));
+  const readCurrentUser = () => {
+    try {
+      const email = getCurrentUserEmail();
+      if (!email) return null;
+      const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
+      return users[email.toLowerCase()] || null;
+    } catch (error) {
+      return null;
+    }
   };
+
+  const tr = (en, ar) => (language === 'ar' ? ar : en);
 
   const renderHomeSection = () => {
     const userRole = getCurrentUserRole();
     const isTeacherOrParent = userRole === 'teacher' || userRole === 'parent';
+    const firstName = (readCurrentUser()?.name || '').trim().split(/\s+/)[0];
+    // Per-user module progress — the same numbers the Progress Dashboard shows
+    // (the legacy arabic_learning_progress key never stored topic progress)
+    const moduleProgress = getModuleProgress(getCurrentUserEmail());
+
+    const learnCards = [
+      {
+        id: 'alphabet', icon: '🔤', accent: '#8b5cf6',
+        title: tr('Arabic Alphabet', 'الحروف العربية'),
+        description: tr('Discover all 28 letters with pronunciation and examples', 'اكتشف الحروف العربية الـ 28 مع النطق والأمثلة'),
+        progress: moduleProgress.alphabetProgress
+      },
+      {
+        id: 'colors', icon: '🎨', accent: '#ec4899',
+        title: tr('Colors', 'الألوان'),
+        description: tr('Learn color names in Arabic with real-world pictures', 'تعرف على أسماء الألوان بالعربية مع صور من الحياة'),
+        progress: moduleProgress.colorsProgress
+      },
+      {
+        id: 'words', icon: '📝', accent: '#10b981',
+        title: tr('Words', 'الكلمات'),
+        description: tr('Build your vocabulary with pictures and pronunciation', 'ابنِ مفرداتك مع الصور والنطق'),
+        progress: moduleProgress.wordsProgress
+      },
+      {
+        id: 'sentences', icon: '💬', accent: '#0ea5e9',
+        title: tr('Sentences', 'الجمل'),
+        description: tr('Put words together into everyday sentences', 'كوّن جملاً يومية من الكلمات'),
+        progress: moduleProgress.sentencesProgress
+      },
+      {
+        id: 'handwriting', icon: '✍️', accent: '#f59e0b',
+        title: tr('Handwriting', 'الكتابة اليدوية'),
+        description: tr('Trace and write Arabic letters step by step', 'تتبّع الحروف العربية واكتبها خطوة بخطوة')
+      },
+      {
+        id: 'story', icon: '📖', accent: '#14b8a6',
+        title: tr('Interactive Stories', 'قصص تفاعلية'),
+        description: tr('Read short illustrated stories in Arabic', 'اقرأ قصصاً قصيرة مصورة بالعربية')
+      },
+      {
+        id: 'drawing', icon: '🖌️', accent: '#f472b6',
+        title: tr('Drawing Board', 'لوحة الرسم'),
+        description: tr('Draw and write together with your class', 'ارسم واكتب مع صفك')
+      },
+      {
+        id: 'homework', icon: '📚', accent: '#6366f1',
+        title: tr('Homework', 'الواجبات'),
+        description: userRole === 'teacher'
+          ? tr('Create and review assignments for your classes', 'أنشئ الواجبات وراجعها لصفوفك')
+          : tr('See and complete your assignments', 'شاهد واجباتك وأكملها')
+      }
+    ];
+
+    const practiceCards = [
+      {
+        id: 'quiz', icon: '🎯', accent: '#6366f1',
+        title: tr('Quiz Center', 'مركز الاختبارات'),
+        description: tr('Multiple choice, matching, fill in the blanks and more', 'اختيار من متعدد، مطابقة، املأ الفراغ والمزيد')
+      },
+      {
+        id: 'wordbuilder', icon: '🧩', accent: '#3b82f6',
+        title: tr('Word Builder', 'بناء الكلمات'),
+        description: tr('Look at the picture and arrange letters to form the word', 'شاهد الصورة ورتب الحروف لتكوين الكلمة')
+      },
+      {
+        id: 'letterwordbuilder', icon: '🔡', accent: '#8b5cf6',
+        title: tr('Letter Builder', 'ترتيب الحروف'),
+        description: tr('Arrange letters to spell correct words', 'رتب الحروف لتكوين كلمات صحيحة')
+      },
+      {
+        id: 'sentencebuilder', icon: '🧱', accent: '#0ea5e9',
+        title: tr('Sentence Builder', 'بناء الجمل'),
+        description: tr('Arrange words to form correct sentences', 'رتب الكلمات لتكوين جمل صحيحة')
+      },
+      {
+        id: 'memory-game', icon: '🧠', accent: '#f59e0b',
+        title: tr('Memory Match', 'لعبة الذاكرة'),
+        description: tr('Match pictures with their Arabic words', 'طابق الصور مع كلماتها العربية')
+      },
+      {
+        id: 'color-matching', icon: '🌈', accent: '#ec4899',
+        title: tr('Color Matching', 'مطابقة الألوان'),
+        description: tr('Pick the right color and learn its Arabic name', 'اختر اللون الصحيح وتعلم اسمه بالعربية')
+      },
+      {
+        id: 'number-learning', icon: '🔢', accent: '#10b981',
+        title: tr('Numbers', 'الأرقام'),
+        description: tr('Count objects and learn Arabic numbers', 'عُدّ الأشياء وتعلم الأرقام العربية')
+      },
+      {
+        id: 'chat', icon: '🤖', accent: '#3b82f6',
+        title: tr('AI Learning Assistant', 'المساعد الذكي'),
+        description: tr('Ask anything about Arabic — by text or voice', 'اسأل أي شيء عن العربية — بالكتابة أو بالصوت'),
+        chatModes: true
+      }
+    ];
+
+    const toolCards = [
+      {
+        id: 'teacherdashboard', icon: '🖥️', accent: '#3b82f6', roles: ['teacher'],
+        title: tr('Teacher Dashboard', 'لوحة تحكم المعلم'),
+        description: tr('Manage classes, students, points and analytics', 'إدارة الصفوف والطلاب والنقاط والتحليلات')
+      },
+      {
+        id: 'parentdashboard', icon: '👪', accent: '#10b981', roles: ['parent'],
+        title: tr('Parent Dashboard', 'لوحة تحكم ولي الأمر'),
+        description: tr("Follow your children's learning and activity", 'تابع تعلم أطفالك ونشاطهم')
+      },
+      {
+        id: 'teacherchat', icon: '✉️', accent: '#ec4899', roles: ['teacher', 'parent'],
+        title: tr('Messages', 'الرسائل'),
+        description: userRole === 'parent'
+          ? tr("Talk with your child's teachers", 'تواصل مع معلمي طفلك')
+          : tr('Keep families in the loop', 'أبقِ الأهل على اطلاع دائم'),
+        badge: unreadMessagesCount
+      },
+      {
+        id: 'progressreport', icon: '📄', accent: '#8b5cf6', roles: ['teacher', 'parent'],
+        title: tr('Progress Report', 'تقرير التقدم'),
+        description: tr('Detailed, printable learning reports', 'تقارير تعلم مفصلة وقابلة للطباعة')
+      },
+      {
+        id: 'progress', icon: '📊', accent: '#8b5cf6', roles: ['student', 'teacher', 'parent'],
+        title: tr('Progress Dashboard', 'لوحة التقدم'),
+        description: tr('Track your progress and achievements', 'تابع تقدمك وإنجازاتك')
+      },
+      {
+        id: 'classmanagement', icon: '🏫', accent: '#0ea5e9', roles: ['student'],
+        title: tr('My Classes', 'صفوفي'),
+        description: tr("Join a class with your teacher's code", 'انضم إلى صف باستخدام رمز المعلم')
+      }
+    ].filter(card => card.roles.includes(userRole || 'student'));
+
+    const renderCards = (cards, offset = 0) => (
+      <div className="learning-sections">
+        {cards.map((card, index) => (
+          <SectionCard
+            key={card.id}
+            card={card}
+            index={offset + index}
+            onSelect={handleSectionChange}
+          >
+            {typeof card.progress === 'number' && (
+              <div className="card-progress" aria-label={tr(`${card.progress}% complete`, `${card.progress}% مكتمل`)}>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${card.progress}%` }}></div>
+                </div>
+                <span className="progress-text">{card.progress}%</span>
+              </div>
+            )}
+            {card.chatModes && (
+              <div className="chat-modes">
+                <button
+                  className="mode-btn text-mode"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChatModeSwitch('text');
+                  }}
+                >
+                  💬 {tr('Text', 'نص')}
+                </button>
+                <button
+                  className="mode-btn voice-mode"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChatModeSwitch('voice');
+                  }}
+                >
+                  🎤 {tr('Voice', 'صوت')}
+                </button>
+              </div>
+            )}
+          </SectionCard>
+        ))}
+      </div>
+    );
+
+    const renderGroup = (key, icon, title, subtitle, cards, offset) => (
+      <section className="home-group" key={key} aria-labelledby={`home-group-${key}`}>
+        <div className="section-category-header">
+          <h2 className="category-title" id={`home-group-${key}`}>
+            <span className="category-title-icon" aria-hidden="true">{icon}</span>
+            {title}
+          </h2>
+          {subtitle && <p className="category-subtitle">{subtitle}</p>}
+        </div>
+        {renderCards(cards, offset)}
+      </section>
+    );
+
+    const toolsGroup = renderGroup(
+      'tools',
+      isTeacherOrParent ? '🧰' : '📊',
+      isTeacherOrParent
+        ? (userRole === 'teacher' ? tr('Teaching tools', 'أدوات المعلم') : tr('Family tools', 'أدوات الأهل'))
+        : tr('Your progress', 'تقدمك'),
+      isTeacherOrParent
+        ? tr('Everything you need to support your learners', 'كل ما تحتاجه لدعم المتعلمين')
+        : null,
+      toolCards,
+      isTeacherOrParent ? 0 : learnCards.length + practiceCards.length
+    );
 
     return (
       <div className="home-section">
         <motion.div
           className="welcome-header"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
         >
           <h1
             className="platform-title"
             dir={language === 'ar' ? 'rtl' : 'ltr'}
             lang={language === 'ar' ? 'ar' : 'en'}
           >
-            {language === 'ar' ? 'منصة ممتاز لتعلم اللغة العربية' : 'Welcome to Arabic Learning Platform'}
+            {firstName
+              ? tr(`Welcome back, ${firstName}!`, `مرحباً بعودتك يا ${firstName}!`)
+              : tr('Welcome to Stellar', 'مرحباً بك في مميّز')}
           </h1>
           <p
             className="platform-subtitle"
             dir={language === 'ar' ? 'rtl' : 'ltr'}
             lang={language === 'ar' ? 'ar' : 'en'}
           >
-            {isTeacherOrParent ? (
-              language === 'ar'
-                ? 'تعلم واستكشف المحتوى التعليمي، وتواصل مع أولياء الأمور والمعلمين'
-                : 'Learn and explore educational content, plus communicate with parents and teachers'
-            ) : (
-              language === 'ar'
-                ? 'تعلم الحروف والألوان العربية بطريقة ممتعة وتفاعلية'
-                : 'Learn Arabic letters and colors in a fun and interactive way'
-            )}
+            {isTeacherOrParent
+              ? tr('Explore the lessons your learners use, and stay connected with families and teachers.',
+                   'استكشف الدروس التي يستخدمها المتعلمون، وابقَ على تواصل مع الأهل والمعلمين.')
+              : tr('Pick up where you left off — letters, words, stories and games, all in one place.',
+                   'تابع من حيث توقفت — حروف وكلمات وقصص وألعاب في مكان واحد.')}
           </p>
           {isTeacherOrParent && (
             <motion.p
               className="platform-role-badge"
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.2 }}
             >
               {userRole === 'teacher'
-                ? (language === 'ar' ? '👨‍🏫 حساب معلم' : '👨‍🏫 Teacher Account')
-                : (language === 'ar' ? '👨‍👩‍👧‍👦 حساب ولي أمر' : '👨‍👩‍👧‍👦 Parent Account')
-              }
+                ? tr('👨‍🏫 Teacher account', '👨‍🏫 حساب معلم')
+                : tr('👨‍👩‍👧 Parent account', '👨‍👩‍👧 حساب ولي أمر')}
             </motion.p>
           )}
         </motion.div>
 
-      {/* Enhanced Streak Counter */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        style={{ marginTop: '30px' }}
-      >
-        <StreakCounter language={language} />
-      </motion.div>
-
-      {/* Learn Section */}
-      <motion.div
-        className="section-category-header"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <h2 className="category-title">
-          📚 {language === 'ar' ? 'تعلّم' : 'Learn'}
-        </h2>
-        <p className="category-subtitle">
-          {language === 'ar'
-            ? 'ابدأ رحلة التعلم مع الدروس التفاعلية'
-            : 'Start your learning journey with interactive lessons'
-          }
-        </p>
-      </motion.div>
-
-      <div className="learning-sections">
         <motion.div
-          className="section-card alphabet-card"
-          onClick={() => handleSectionChange('alphabet')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.35 }}
+        >
+          <StreakCounter language={language} />
+        </motion.div>
+
+        {isTeacherOrParent && toolsGroup}
+
+        {renderGroup(
+          'learn', '📚', tr('Learn', 'تعلّم'),
+          tr('Start your learning journey with interactive lessons', 'ابدأ رحلة التعلم مع الدروس التفاعلية'),
+          learnCards, isTeacherOrParent ? toolCards.length : 0
+        )}
+
+        {renderGroup(
+          'practice', '🎯', tr('Practice & play', 'تدرّب والعب'),
+          tr('Quizzes, games and your AI tutor to practise what you learned', 'اختبارات وألعاب ومساعدك الذكي لتتدرب على ما تعلمته'),
+          practiceCards, (isTeacherOrParent ? toolCards.length : 0) + learnCards.length
+        )}
+
+        {!isTeacherOrParent && toolsGroup}
+
+        <motion.div
+          className="fun-facts"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="card-icon">🔤</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'تعلم الحروف العربية' : 'Learn Arabic Alphabet'}
+          <h3 className="facts-title">
+            <span aria-hidden="true">💡</span> {tr('Did you know?', 'هل تعلم؟')}
           </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'اكتشف الحروف العربية الـ 28 مع النطق والأمثلة'
-              : 'Discover all 28 Arabic letters with pronunciation and examples'
-            }
-          </p>
-          <div className="card-progress">
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{ width: `${userProgress.alphabetProgress}%` }}
-              ></div>
-            </div>
-            <span className="progress-text">{userProgress.alphabetProgress}%</span>
+          <div className="facts-grid">
+            {[
+              ['📖', tr('Arabic has 28 letters', 'اللغة العربية بها 28 حرفاً')],
+              ['🌍', tr('Over 400 million people speak Arabic', 'يتحدث بالعربية أكثر من 400 مليون شخص')],
+              ['✍️', tr('Arabic is written from right to left', 'نكتب العربية من اليمين إلى اليسار')]
+            ].map(([icon, text]) => (
+              <div className="fact-item" key={icon}>
+                <span className="fact-icon" aria-hidden="true">{icon}</span>
+                <span className="fact-text">{text}</span>
+              </div>
+            ))}
           </div>
-        </motion.div>
-
-        <motion.div
-          className="section-card colors-card"
-          onClick={() => handleSectionChange('colors')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <div className="card-icon">🎨</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'تعلم الألوان العربية' : 'Learn Arabic Colors'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تعرف على الألوان المختلفة وأسمائها باللغة العربية'
-              : 'Explore different colors and their names in Arabic'
-            }
-          </p>
-          <div className="card-progress">
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{ width: `${userProgress.colorsProgress}%` }}
-              ></div>
-            </div>
-            <span className="progress-text">{userProgress.colorsProgress}%</span>
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="section-card words-card"
-          onClick={() => handleSectionChange('words')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          <div className="card-icon">📝</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'تعلم الكلمات العربية' : 'Learn Arabic Words'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تعلم الكلمات الأساسية مع الصور والنطق'
-              : 'Learn essential words with pictures and pronunciation'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card sentences-card"
-          onClick={() => handleSectionChange('sentences')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <div className="card-icon">💬</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'تعلم الجمل العربية' : 'Learn Arabic Sentences'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تعلم كيفية تكوين الجمل من الكلمات'
-              : 'Learn how to form sentences from words'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card handwriting-card"
-          onClick={() => handleSectionChange('handwriting')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.9 }}
-        >
-          <div className="card-icon">✍️</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'تمرين الكتابة اليدوية' : 'Handwriting Practice'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تدرب على كتابة الحروف العربية'
-              : 'Practice writing Arabic letters'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card story-card"
-          onClick={() => handleSectionChange('story')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.0 }}
-        >
-          <div className="card-icon">📖</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'قصص تفاعلية' : 'Interactive Stories'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'اقرأ قصصاً ممتعة وتفاعلية'
-              : 'Read fun and interactive stories'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card drawing-board-card"
-          onClick={() => handleSectionChange('drawing')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.1 }}
-        >
-          <div className="card-icon">🎨</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'لوحة الرسم التعاونية' : 'Collaborative Drawing Board'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'ارسم واكتب مع المعلمين والطلاب'
-              : 'Draw and write with teachers and students'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card chat-card"
-          onClick={() => handleSectionChange('chat')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.2 }}
-        >
-          <div className="card-icon">💬</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'مساعد التعلم الذكي' : 'Smart Learning Assistant'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'اسأل مساعد التعلم الذكي عن أي شيء متعلق باللغة العربية'
-              : 'Ask the smart learning assistant anything about Arabic language'
-            }
-          </p>
-          <div className="chat-modes">
-            <button
-              className="mode-btn text-mode"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleChatModeSwitch('text');
-              }}
-            >
-              💬 {language === 'ar' ? 'نص' : 'Text'}
-            </button>
-            <button
-              className="mode-btn voice-mode"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleChatModeSwitch('voice');
-              }}
-            >
-              🎤 {language === 'ar' ? 'صوت' : 'Voice'}
-            </button>
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="section-card homework-card"
-          onClick={() => handleSectionChange('homework')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.3 }}
-        >
-          <div className="card-icon">📚</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'مركز الواجبات' : 'Homework Center'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'شاهد واجباتك وأكملها'
-              : 'View and complete your homework'
-            }
-          </p>
         </motion.div>
       </div>
-
-      {/* Test Yourself Section */}
-      <motion.div
-        className="section-category-header"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.4 }}
-        style={{ marginTop: '40px' }}
-      >
-        <h2 className="category-title">
-          🎯 {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
-        </h2>
-        <p className="category-subtitle">
-          {language === 'ar'
-            ? 'اختبر معرفتك وحسّن مهاراتك'
-            : 'Test your knowledge and improve your skills'
-          }
-        </p>
-      </motion.div>
-
-      <div className="learning-sections">
-        <motion.div
-          className="section-card quiz-card"
-          onClick={() => handleSectionChange('quiz')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.5 }}
-        >
-          <div className="card-icon">🎯</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'مركز الاختبارات' : 'Quiz Center'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'اختبر معرفتك في جميع المواضيع'
-              : 'Test your knowledge on all topics'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card wordbuilder-card"
-          onClick={() => handleSectionChange('wordbuilder')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.6 }}
-        >
-          <div className="card-icon">🔤</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'بناء الكلمات' : 'Word Builder'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'شاهد الصورة ورتب الحروف لتكوين الكلمة'
-              : 'Look at the picture and arrange letters to form the word'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card letterwordbuilder-card"
-          onClick={() => handleSectionChange('letterwordbuilder')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.7 }}
-        >
-          <div className="card-icon">🔡</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'بناء الكلمات' : 'Letter Builder'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'رتب الحروف لتكوين كلمات صحيحة'
-              : 'Arrange letters to form correct words'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card sentencebuilder-card"
-          onClick={() => handleSectionChange('sentencebuilder')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.8 }}
-        >
-          <div className="card-icon">📝</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'بناء الجمل' : 'Sentence Builder'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'رتب الكلمات لتكوين جمل صحيحة'
-              : 'Arrange words to form correct sentences'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card memory-card"
-          onClick={() => handleSectionChange('memory-game')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.9 }}
-        >
-          <div className="card-icon">🧠</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'لعبة الذاكرة' : 'Memory Match Game'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'طابق الصور مع الكلمات وحسّن ذاكرتك'
-              : 'Match pictures with words and improve your memory'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card color-matching-card"
-          onClick={() => handleSectionChange('color-matching')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 2.0 }}
-        >
-          <div className="card-icon">🎨</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'مطابقة الألوان' : 'Color Matching Game'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'طابق الألوان وتعلم أسماءها بالعربية'
-              : 'Match colors and learn their Arabic names'
-            }
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="section-card number-learning-card"
-          onClick={() => handleSectionChange('number-learning')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 2.1 }}
-        >
-          <div className="card-icon">🔢</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'تعلم الأرقام' : 'Number Learning Game'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تعلم الأرقام العربية بطريقة ممتعة'
-              : 'Learn Arabic numbers in a fun and interactive way'
-            }
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Progress Section */}
-      <motion.div
-        className="section-category-header"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 2.0 }}
-        style={{ marginTop: '40px' }}
-      >
-        <h2 className="category-title">
-          📊 {language === 'ar' ? 'تقدمك' : 'Your Progress'}
-        </h2>
-      </motion.div>
-
-      <div className="learning-sections">
-        <motion.div
-          className="section-card progress-card"
-          onClick={() => handleSectionChange('progress')}
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2.1 }}
-        >
-          <div className="card-icon">📊</div>
-          <h3 className="card-title">
-            {language === 'ar' ? 'لوحة التقدم' : 'Progress Dashboard'}
-          </h3>
-          <p className="card-description">
-            {language === 'ar'
-              ? 'تابع تقدمك وشاهد إنجازاتك'
-              : 'Track your progress and view achievements'
-            }
-          </p>
-        </motion.div>
-
-        {/* Class joining for students (teachers use Teacher Dashboard instead) */}
-        {getCurrentUserRole() === 'student' && (
-          <motion.div
-            className="section-card class-card"
-            onClick={() => handleSectionChange('classmanagement')}
-            whileHover={{ y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.9 }}
-          >
-            <div className="card-icon">🏫</div>
-            <h3 className="card-title">
-              {language === 'ar' ? 'صفوفي' : 'My Classes'}
-            </h3>
-            <p className="card-description">
-              {language === 'ar'
-                ? 'انضم إلى صف بإستخدام رمز المعلم'
-                : 'Join a class using your teacher\'s code'
-              }
-            </p>
-          </motion.div>
-        )}
-
-        {/* Only show Teacher-Parent Communication for teachers and parents */}
-        {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
-          <motion.div
-            className="section-card teacherchat-card"
-            onClick={() => handleSectionChange('teacherchat')}
-            whileHover={{ y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5 }}
-            style={{ position: 'relative' }}
-          >
-            {unreadMessagesCount > 0 && (
-              <div className="card-unread-badge">{unreadMessagesCount}</div>
-            )}
-            <div className="card-icon">👨‍🏫👨‍👩‍👧‍👦</div>
-            <h3 className="card-title">
-              {language === 'ar' ? 'التواصل بين المعلمين والأهل' : 'Teacher-Parent Communication'}
-            </h3>
-            <p className="card-description">
-              {language === 'ar'
-                ? 'تواصل مع المعلمين والأهل بسهولة'
-                : 'Connect with teachers and parents easily'
-              }
-            </p>
-          </motion.div>
-        )}
-
-        {/* Only show Student Progress Report for teachers and parents */}
-        {(getCurrentUserRole() === 'teacher' || getCurrentUserRole() === 'parent') && (
-          <motion.div
-            className="section-card progressreport-card"
-            onClick={() => handleSectionChange('progressreport')}
-            whileHover={{ y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.0 }}
-          >
-            <div className="card-icon">📄</div>
-            <h3 className="card-title">
-              {language === 'ar' ? 'تقرير تقدم الطالب' : 'Student Progress Report'}
-            </h3>
-            <p className="card-description">
-              {language === 'ar'
-                ? 'عرض تقارير مفصلة عن تقدم الطلاب'
-                : 'View detailed student progress reports'
-              }
-            </p>
-          </motion.div>
-        )}
-
-        {/* Teacher Dashboard shortcut card */}
-        {getCurrentUserRole() === 'teacher' && (
-          <motion.div
-            className="section-card teacherdashboard-card"
-            onClick={() => handleSectionChange('teacherdashboard')}
-            whileHover={{ y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.2 }}
-          >
-            <div className="card-icon">🖥️</div>
-            <h3 className="card-title">
-              {language === 'ar' ? 'لوحة تحكم المعلم' : 'Teacher Dashboard'}
-            </h3>
-            <p className="card-description">
-              {language === 'ar'
-                ? 'إدارة الصفوف والطلاب والنقاط والتحليلات'
-                : 'Manage classes, students, points & analytics'
-              }
-            </p>
-          </motion.div>
-        )}
-
-        {/* Parent Dashboard shortcut card */}
-        {getCurrentUserRole() === 'parent' && (
-          <motion.div
-            className="section-card parentdashboard-card"
-            onClick={() => handleSectionChange('parentdashboard')}
-            whileHover={{ y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.2 }}
-          >
-            <div className="card-icon">👨‍👩‍👧‍👦</div>
-            <h3 className="card-title">
-              {language === 'ar' ? 'لوحة تحكم ولي الأمر' : 'Parent Dashboard'}
-            </h3>
-            <p className="card-description">
-              {language === 'ar'
-                ? 'تابع تقدم أطفالك وإدارة وقت الشاشة'
-                : 'Monitor your children\'s progress and screen time'
-              }
-            </p>
-          </motion.div>
-        )}
-      </div>
-
-      <motion.div
-        className="fun-facts"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-      >
-        <h3 className="facts-title">
-          {language === 'ar' ? 'هل تعلم؟' : 'Did you know?'}
-        </h3>
-        <div className="facts-grid">
-          <div className="fact-item">
-            <span className="fact-icon">📖</span>
-            <span className="fact-text">
-              {language === 'ar'
-                ? 'اللغة العربية بها 28 حرفاً'
-                : 'Arabic has 28 letters'
-              }
-            </span>
-          </div>
-          <div className="fact-item">
-            <span className="fact-icon">🌍</span>
-            <span className="fact-text">
-              {language === 'ar'
-                ? 'يتحدث بالعربية أكثر من 400 مليون شخص'
-                : 'Over 400 million people speak Arabic'
-              }
-            </span>
-          </div>
-          <div className="fact-item">
-            <span className="fact-icon">✍️</span>
-            <span className="fact-text">
-              {language === 'ar'
-                ? 'نكتب العربية من اليمين إلى اليسار'
-                : 'Arabic is written from right to left'
-              }
-            </span>
-          </div>
-        </div>
-      </motion.div>
-    </div>
     );
   };
 
-  const _userRole = getCurrentUserRole();
-  const isCompactNav = _userRole === 'teacher' || _userRole === 'parent';
+  const userRole = getCurrentUserRole();
+  const isCompactNav = userRole === 'teacher' || userRole === 'parent';
+  const currentUser = readCurrentUser();
+  const hideNav = NAV_HIDDEN_SECTIONS.includes(currentSection);
+
+  const navItems = [
+    { id: 'home', icon: '🏠', label: tr('Home', 'الرئيسية'), sections: ['home'] },
+    { id: 'learn', icon: '📚', label: tr('Learn', 'تعلّم'), sections: LEARN_SECTIONS },
+    { id: 'quiz', icon: '🎯', label: tr('Test Yourself', 'اختبر نفسك'), sections: PRACTICE_SECTIONS },
+    { id: 'progress', icon: '📊', label: tr('Progress', 'تقدمي'), sections: ['progress'] },
+    { id: 'chat', icon: '💬', label: tr('Chat', 'محادثة'), sections: ['chat'] },
+    { id: 'voice', icon: '🎤', label: tr('Voice', 'صوت'), sections: ['voice'] },
+    ...(isCompactNav
+      ? [{ id: 'teacherchat', icon: '✉️', label: tr('Messages', 'الرسائل'), sections: ['teacherchat'], badge: unreadMessagesCount }]
+      : []),
+    ...(userRole === 'teacher'
+      ? [{ id: 'teacherdashboard', icon: '🖥️', label: tr('Dashboard', 'لوحتي'), sections: ['teacherdashboard', 'classmanagement', 'progressreport'] }]
+      : []),
+    ...(userRole === 'parent'
+      ? [{ id: 'parentdashboard', icon: '👪', label: tr('Dashboard', 'لوحتي'), sections: ['parentdashboard', 'progressreport'] }]
+      : [])
+  ];
+
+  const handleNavClick = (id) => {
+    if (id === 'chat' || id === 'voice') {
+      handleChatModeSwitch(id === 'chat' ? 'text' : 'voice');
+    } else {
+      setCurrentSection(id);
+    }
+  };
 
   return (
     <div className="arabic-learning-platform" ref={platformRef}>
-      {currentSection !== 'learn' && currentSection !== 'chat' && currentSection !== 'voice' && currentSection !== 'teacherchat' && (
+      {!hideNav && (
         <nav
-          className="platform-nav"
-          role="navigation"
-          aria-label={language === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'}
+          className={`platform-nav ${isCompactNav ? 'platform-nav--compact' : ''}`}
+          aria-label={tr('Main navigation', 'التنقل الرئيسي')}
         >
-        <div className="nav-brand">
-          <h2 className="brand-title" id="platform-title">
-            {language === 'ar' ? 'تعلم العربية' : 'Learn Arabic'}
-          </h2>
-        </div>
-
-        <div className="nav-links" role="menu" aria-labelledby="platform-title">
           <button
-            className={`nav-link ${currentSection === 'home' ? 'active' : ''}`}
+            type="button"
+            className="nav-brand"
             onClick={() => setCurrentSection('home')}
-            role="menuitem"
-            aria-label={language === 'ar' ? 'العودة إلى الصفحة الرئيسية' : 'Go to home page'}
-            aria-current={currentSection === 'home' ? 'page' : undefined}
-            title={isCompactNav ? (language === 'ar' ? 'الرئيسية' : 'Home') : undefined}
+            aria-label={tr('Stellar — go to home page', 'مميّز — العودة إلى الصفحة الرئيسية')}
           >
-            🏠 {!isCompactNav && (language === 'ar' ? 'الرئيسية' : 'Home')}
+            <span className="nav-brand-mark" aria-hidden="true">{tr('S', 'م')}</span>
+            <span className="brand-title">{tr('Stellar', 'مميّز')}</span>
           </button>
-          <button
-            className={`nav-link ${['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'active' : ''}`}
-            onClick={() => setCurrentSection('learn')}
-            role="menuitem"
-            aria-label={language === 'ar' ? 'الانتقال إلى مركز التعلم' : 'Go to learning hub'}
-            aria-current={['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'page' : undefined}
-            style={{ background: ['learn', 'alphabet', 'colors', 'words', 'sentences', 'handwriting', 'story', 'homework', 'drawing'].includes(currentSection) ? 'linear-gradient(135deg, #667eea, #764ba2)' : '' }}
-            title={isCompactNav ? (language === 'ar' ? 'تعلم' : 'Learn') : undefined}
-          >
-            📚 {!isCompactNav && (language === 'ar' ? 'تعلم' : 'Learn')}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'quiz' ? 'active' : ''}`}
-            onClick={() => setCurrentSection('quiz')}
-            style={{ background: currentSection === 'quiz' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '' }}
-            title={isCompactNav ? (language === 'ar' ? 'اختبر نفسك' : 'Test Yourself') : undefined}
-          >
-            🎯 {!isCompactNav && (language === 'ar' ? 'اختبر نفسك' : 'Test Yourself')}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'progress' ? 'active' : ''}`}
-            onClick={() => setCurrentSection('progress')}
-            style={{ background: currentSection === 'progress' ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : '' }}
-            title={isCompactNav ? (language === 'ar' ? 'تقدمي' : 'Progress') : undefined}
-          >
-            📊 {!isCompactNav && (language === 'ar' ? 'تقدمي' : 'Progress')}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'chat' ? 'active' : ''}`}
-            onClick={() => {
-              handleChatModeSwitch('text');
-              setCurrentSection('chat');
-            }}
-            title={isCompactNav ? (language === 'ar' ? 'محادثة نصية' : 'Chat') : undefined}
-          >
-            💬 {!isCompactNav && (language === 'ar' ? 'محادثة نصية' : 'Chat')}
-          </button>
-          <button
-            className={`nav-link ${currentSection === 'voice' ? 'active' : ''}`}
-            onClick={() => {
-              handleChatModeSwitch('voice');
-              setCurrentSection('voice');
-            }}
-            title={isCompactNav ? (language === 'ar' ? 'مساعد صوتي' : 'Voice') : undefined}
-          >
-            🎤 {!isCompactNav && (language === 'ar' ? 'مساعد صوتي' : 'Voice')}
-          </button>
-          {/* Only show Communication link for teachers and parents */}
-          {(_userRole === 'teacher' || _userRole === 'parent') && (
-            <button
-              className={`nav-link ${currentSection === 'teacherchat' ? 'active' : ''}`}
-              onClick={() => setCurrentSection('teacherchat')}
-              style={{
-                background: currentSection === 'teacherchat' ? 'linear-gradient(135deg, #ec4899, #f472b6)' : '',
-                position: 'relative'
-              }}
-              title={language === 'ar' ? 'التواصل' : 'Communication'}
-            >
-              👨‍🏫 {language === 'ar' ? 'التواصل' : 'Comms'}
-              {unreadMessagesCount > 0 && (
-                <span className="nav-unread-badge">{unreadMessagesCount}</span>
-              )}
-            </button>
-          )}
-          {/* Only show Teacher Dashboard for teachers */}
-          {_userRole === 'teacher' && (
-            <button
-              className={`nav-link ${currentSection === 'teacherdashboard' ? 'active' : ''}`}
-              onClick={() => setCurrentSection('teacherdashboard')}
-              style={{
-                background: currentSection === 'teacherdashboard' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : ''
-              }}
-              title={language === 'ar' ? 'لوحة المعلم' : 'Teacher Dashboard'}
-            >
-              🖥️ {!isCompactNav && (language === 'ar' ? 'لوحتي' : 'Dashboard')}
-            </button>
-          )}
-          {/* Only show Parent Dashboard for parents */}
-          {_userRole === 'parent' && (
-            <button
-              className={`nav-link ${currentSection === 'parentdashboard' ? 'active' : ''}`}
-              onClick={() => setCurrentSection('parentdashboard')}
-              style={{
-                background: currentSection === 'parentdashboard' ? 'linear-gradient(135deg, #10b981, #059669)' : ''
-              }}
-              title={language === 'ar' ? 'لوحة الأهل' : 'Parent Dashboard'}
-            >
-              👪 {!isCompactNav && (language === 'ar' ? 'لوحتي' : 'Dashboard')}
-            </button>
-          )}
-        </div>
 
-        <div className="nav-user-tools" style={{ gap: isCompactNav ? '6px' : '12px' }} role="toolbar" aria-label={language === 'ar' ? 'أدوات المستخدم' : 'User tools'}>
-          <button
-            className="profile-settings-btn-with-text"
-            onClick={() => {
-              playClickSound();
-              setShowProfileSettings(true);
-            }}
-            aria-label={language === 'ar' ? 'فتح الإعدادات' : 'Open settings'}
-            title={language === 'ar' ? 'الإعدادات' : 'Settings'}
-          >
-            ⚙️ {!isCompactNav && (language === 'ar' ? 'الإعدادات' : 'Settings')}
-          </button>
-          <DarkModeToggle language={language} />
-          <HighContrastToggle language={language} />
-          <button
-            className="sign-out-btn"
-            onClick={onSignOut}
-            aria-label={language === 'ar' ? 'تسجيل الخروج من الحساب' : 'Sign out of account'}
-            title={isCompactNav ? (language === 'ar' ? 'تسجيل الخروج' : 'Sign Out') : undefined}
-          >
-            <span aria-hidden="true">🚪</span> {!isCompactNav && (language === 'ar' ? 'تسجيل الخروج' : 'Sign Out')}
-          </button>
-        </div>
-      </nav>
+          <div className="nav-links">
+            {navItems.map(item => {
+              const isActive = item.sections.includes(currentSection);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`nav-link ${isActive ? 'active' : ''}`}
+                  onClick={() => handleNavClick(item.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  title={item.label}
+                >
+                  <span className="nav-link-icon" aria-hidden="true">{item.icon}</span>
+                  <span className="nav-link-label">{item.label}</span>
+                  {item.badge > 0 && (
+                    <span className="nav-unread-badge" aria-label={tr(`${item.badge} unread`, `${item.badge} غير مقروءة`)}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="nav-user-tools" role="toolbar" aria-label={tr('User tools', 'أدوات المستخدم')}>
+            <button
+              type="button"
+              className="nav-profile-btn"
+              onClick={() => {
+                playClickSound();
+                setShowProfileSettings(true);
+              }}
+              aria-label={tr('Open profile and settings', 'فتح الملف الشخصي والإعدادات')}
+              title={tr('Profile & settings', 'الملف الشخصي والإعدادات')}
+            >
+              <span className="nav-avatar" aria-hidden="true">
+                {currentProfilePicture
+                  ? <img src={currentProfilePicture} alt="" />
+                  : getInitials(currentUser?.name || getCurrentUserEmail() || '')}
+              </span>
+              <span className="nav-avatar-gear" aria-hidden="true">⚙️</span>
+            </button>
+            <DarkModeToggle language={language} />
+            <HighContrastToggle language={language} />
+            <button
+              type="button"
+              className="sign-out-btn"
+              onClick={onSignOut}
+              aria-label={tr('Sign out of account', 'تسجيل الخروج من الحساب')}
+              title={tr('Sign out', 'تسجيل الخروج')}
+            >
+              <LogOut size={18} aria-hidden="true" />
+              <span className="sign-out-label">{tr('Sign out', 'خروج')}</span>
+            </button>
+          </div>
+        </nav>
       )}
 
       <main
         id="main-content"
-        className={`platform-content ${(currentSection === 'learn' || currentSection === 'chat' || currentSection === 'voice' || currentSection === 'teacherchat') ? 'fullscreen' : ''}`}
+        className={`platform-content ${hideNav ? 'fullscreen' : ''} ${POINTS_BAR_SECTIONS.includes(currentSection) ? 'has-points-bar' : ''}`}
         role="main"
         aria-label={language === 'ar' ? 'المحتوى الرئيسي' : 'Main content'}
         tabIndex="-1"
@@ -1672,9 +1298,7 @@ const ArabicLearningPlatform = ({
               // Reload user data
               const users = JSON.parse(localStorage.getItem('stellar_users') || '{}');
               const user = users[getCurrentUserEmail().toLowerCase()];
-              if (user?.profilePicture) {
-                setCurrentProfilePicture(user.profilePicture);
-              }
+              setCurrentProfilePicture(user?.profilePicture || null);
             }}
             onClose={() => setShowProfileSettings(false)}
           />

@@ -28,9 +28,9 @@
   padding: 16px 28px;
   background: var(--mz-surface);
   border-bottom: 1px solid var(--mz-border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  /* Not sticky: the platform nav above is already pinned, and two sticky bars
+     at top: 0 slid over each other while scrolling. */
+  position: relative;
   box-shadow: var(--mz-shadow-sm);
 }
 

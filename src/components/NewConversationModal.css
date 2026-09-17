@@ -1,282 +1,211 @@
-/* Clean light "New Conversation" modal */
+/* ============================================================================
+   NEW CONVERSATION MODAL
+   Opened from TeacherParentChat and rendered inside it: the overlay, avatar,
+   search field, role chips and buttons come from TeacherParentChat.css. Only
+   the modal's own layout lives here, under `ncm-` class names.
+   ============================================================================ */
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 24, 39, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-}
-
-.new-conversation-modal {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+.ncm-modal {
   width: 100%;
-  max-width: 520px;
-  max-height: 80vh;
+  max-width: 500px;
+  max-height: min(640px, calc(100dvh - 40px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  color: #111827;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: 20px;
+  box-shadow: var(--mz-shadow-lg);
+  color: var(--mz-text);
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.modal-close-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-  color: #6b7280;
-  font-size: 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-close-btn:hover {
-  background: #f9fafb;
-  color: #111827;
-}
-
-.modal-body {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  padding: 16px 20px;
-}
-
-.search-container {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 9px 36px 9px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s ease;
-  background: #f9fafb;
-  color: #111827;
-  box-sizing: border-box;
-}
-
-.search-input:focus {
-  border-color: #4f46e5;
-  background: #ffffff;
-}
-
-.search-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.95rem;
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-[dir="rtl"] .search-input {
-  padding: 9px 12px 9px 36px;
-}
-
-[dir="rtl"] .search-icon {
-  right: auto;
-  left: 12px;
-}
-
-.users-list {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.users-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.users-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.users-list::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-
-.users-list::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-.no-users {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
-  padding: 40px 20px;
-}
-
-.empty-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-  opacity: 0.5;
-}
-
-.no-users p {
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-.user-item {
+.ncm-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  background: #ffffff;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  padding: 18px 0 14px;
+  padding-inline: 20px 18px;
 }
 
-.user-item:hover {
-  background: #f9fafb;
-}
-
-.user-item.selected {
-  background: #eef2ff;
-  border-color: #4f46e5;
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  display: flex;
+.ncm-header-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  background: #f3f4f6;
-  border-radius: 50%;
-  flex-shrink: 0;
+  border-radius: 13px;
+  background: var(--mz-accent-grad);
+  color: #fff;
+  box-shadow: var(--mz-shadow-accent);
 }
 
-.user-info {
+.ncm-header-text {
   flex: 1;
   min-width: 0;
 }
 
-.user-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 2px;
+.teacher-parent-chat .ncm-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--mz-text);
 }
 
-.user-role-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  color: #ffffff !important;
-  font-size: 0.65rem;
-  font-weight: 600;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.teacher-parent-chat .ncm-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--mz-text-2);
 }
 
-.selected-indicator {
-  width: 22px;
-  height: 22px;
-  background: #4f46e5;
-  color: #ffffff;
-  border-radius: 50%;
+.teacher-parent-chat .ncm-close {
+  border: none;
+  align-self: flex-start;
+}
+
+.ncm-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 20px 12px;
+}
+
+.ncm-list {
+  flex: 1;
+  min-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-inline: -6px;
+  padding: 2px 6px;
+}
+
+.teacher-parent-chat .ncm-user {
+  width: 100%;
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.teacher-parent-chat .ncm-user:hover {
+  background: var(--mz-surface-2);
+}
+
+.teacher-parent-chat .ncm-user.is-selected {
+  background: var(--mz-accent-soft);
+  border-color: var(--mz-accent);
+}
+
+.ncm-user-inner {
+  width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  flex-shrink: 0;
+  gap: 12px;
+  line-height: 1.35;
 }
 
-.modal-footer {
+.ncm-user-info {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  gap: 8px;
-  padding: 12px 20px;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-  justify-content: flex-end;
+  flex-direction: column;
 }
 
-.modal-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
+.ncm-user-name,
+.ncm-user-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ncm-user-name {
   font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: inherit;
+  font-weight: 700;
+  color: var(--mz-text);
 }
 
-.cancel-btn {
-  background: #ffffff;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
+.ncm-user-email {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: var(--mz-text-3);
 }
 
-.cancel-btn:hover {
-  background: #f9fafb;
-  color: #111827;
+.ncm-check {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--mz-border-strong);
+  color: #fff;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.create-btn {
-  background: #4f46e5;
-  color: #ffffff;
+.ncm-user.is-selected .ncm-check {
+  background: var(--mz-accent);
+  border-color: var(--mz-accent);
 }
 
-.create-btn:hover:not(:disabled) {
-  background: #4338ca;
+.ncm-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px 16px;
+  text-align: center;
+  color: var(--mz-text-2);
+  font-size: 0.86rem;
 }
 
-.create-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.teacher-parent-chat .ncm-empty p {
+  margin: 0;
 }
 
-@media (max-width: 480px) {
-  .modal-footer {
-    flex-direction: column-reverse;
-  }
-  .modal-btn {
-    width: 100%;
+.ncm-empty-icon {
+  width: 52px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--mz-surface-2);
+  color: var(--mz-text-3);
+}
+
+.teacher-parent-chat .ncm-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-danger-soft);
+  color: var(--mz-danger);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ncm-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--mz-border);
+  background: var(--mz-surface);
+}
+
+@media (max-width: 520px) {
+  .ncm-modal {
+    max-height: calc(100dvh - 24px);
   }
 }

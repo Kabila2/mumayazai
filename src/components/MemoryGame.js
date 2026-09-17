@@ -248,7 +248,8 @@ const MemoryGame = ({ language = 'en' }) => {
       </div>
 
       {/* Game Board */}
-      <div className="game-board">
+      {/* Column count keeps rows even: 8 → 4, 12 → 6, 16 and 24 → 8 */}
+      <div className="game-board" style={{ '--memory-cols': cards.length <= 12 ? Math.max(4, cards.length / 2) : 8 }}>
         {cards.map((card) => (
           <div
             key={card.uniqueId}

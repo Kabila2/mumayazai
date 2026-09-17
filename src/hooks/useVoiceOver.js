@@ -212,7 +212,12 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     };
 
     utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event.error);
+      // "interrupted"/"canceled" happen whenever newer speech replaces older speech,
+      // and "not-allowed" when the browser blocks audio before the first tap —
+      // all expected, so they aren't reported as errors.
+      if (!['interrupted', 'canceled', 'not-allowed'].includes(event.error)) {
+        console.error('Speech synthesis error:', event.error);
+      }
       setIsSpeaking(false);
       isProcessingRef.current = false;
       onError?.(event.error);

@@ -548,7 +548,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           animate={{ opacity: 1, y: 0 }}
         >
           <h2 className="quiz-title">
-            {language === 'ar' ? '🎯 اختبر نفسك' : '🎯 Test Yourself'}
+            <span className="title-emoji" aria-hidden="true">🎯</span>{' '}
+            {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
           </h2>
           <p className="quiz-subtitle">
             {language === 'ar'

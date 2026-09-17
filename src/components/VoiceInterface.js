@@ -1275,15 +1275,7 @@ export default function VoiceInterface({
       onClick: () => setShowExploreModal(true),
       variant: 'white',
       className: 'explore-button'
-    },
-    ...(onBack ? [{
-      id: 'exit',
-      icon: '✕',
-      label: language === 'ar' ? 'إغلاق' : 'Exit',
-      onClick: onBack,
-      variant: 'white',
-      className: 'exit-fullscreen-button'
-    }] : [])
+    }
   ];
 
   return (
@@ -1409,13 +1401,12 @@ export default function VoiceInterface({
             whileTap={!button.disabled ? { scale: 0.95 } : {}}
             style={{
               opacity: button.disabled ? 0.5 : 1,
-              minWidth: '100px',
               justifyContent: 'center',
               whiteSpace: 'nowrap'
             }}
           >
             <span>{button.icon}</span>
-            <span>{button.label}</span>
+            <span className="button-text">{button.label}</span>
           </motion.button>
         ))}
       </motion.div>
@@ -1450,13 +1441,12 @@ export default function VoiceInterface({
             whileTap={!button.disabled ? { scale: 0.95 } : {}}
             style={{
               opacity: button.disabled ? 0.5 : 1,
-              minWidth: '100px',
               justifyContent: 'center',
               whiteSpace: 'nowrap'
             }}
           >
             <span>{button.icon}</span>
-            <span>{button.label}</span>
+            <span className="button-text">{button.label}</span>
           </motion.button>
         ))}
       </motion.div>

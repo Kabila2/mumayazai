@@ -43,17 +43,25 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
     };
   };
 
+  const prepareCanvas = (canvas, logicalWidth, logicalHeight) => {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    if (canvas.width !== logicalWidth * dpr) {
+      canvas.width = logicalWidth * dpr;
+      canvas.height = logicalHeight * dpr;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+    return ctx;
+  };
+
   // Draw Line Chart
   useEffect(() => {
     if (!lineChartRef.current || !data?.progressTrend?.length) return;
 
-    const canvas = lineChartRef.current;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
+    const width = 600;
+    const height = 300;
+    const ctx = prepareCanvas(lineChartRef.current, width, height);
 
     const palette = getPalette();
     const points = data.progressTrend;
@@ -131,12 +139,9 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
   useEffect(() => {
     if (!barChartRef.current || !data?.topicScores?.length) return;
 
-    const canvas = barChartRef.current;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-
-    ctx.clearRect(0, 0, width, height);
+    const width = 600;
+    const height = 300;
+    const ctx = prepareCanvas(barChartRef.current, width, height);
 
     const palette = getPalette();
     const topics = data.topicScores;
@@ -176,13 +181,9 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
 
       // Topic label
       ctx.fillStyle = palette.label;
-      ctx.font = '12px Arial';
-      ctx.save();
-      ctx.translate(x + barWidth / 2, height - padding + 15);
-      ctx.rotate(-Math.PI / 6);
-      ctx.textAlign = 'right';
-      ctx.fillText(topic.name, 0, 0);
-      ctx.restore();
+      ctx.font = '13px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(topic.name, x + barWidth / 2, height - padding + 22, barWidth + 8);
     });
   }, [data]);
 
@@ -190,18 +191,15 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
   useEffect(() => {
     if (!radarChartRef.current || !data?.skills?.length) return;
 
-    const canvas = radarChartRef.current;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-
-    ctx.clearRect(0, 0, width, height);
+    const width = 400;
+    const height = 400;
+    const ctx = prepareCanvas(radarChartRef.current, width, height);
 
     const palette = getPalette();
     const skills = data.skills;
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = Math.min(width, height) / 2 - 50;
+    const radius = Math.min(width, height) / 2 - 92;
     const angleStep = (Math.PI * 2) / skills.length;
 
     // Draw concentric circles
@@ -226,11 +224,12 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
       ctx.stroke();
 
       // Labels
-      const labelX = centerX + Math.cos(angle) * (radius + 30);
-      const labelY = centerY + Math.sin(angle) * (radius + 30);
+      const labelX = centerX + Math.cos(angle) * (radius + 14);
+      const labelY = centerY + Math.sin(angle) * (radius + 18);
+      const cos = Math.cos(angle);
       ctx.fillStyle = palette.value;
-      ctx.font = 'bold 12px Arial';
-      ctx.textAlign = 'center';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = Math.abs(cos) < 0.2 ? 'center' : cos > 0 ? 'left' : 'right';
       ctx.textBaseline = 'middle';
       ctx.fillText(skill.name, labelX, labelY);
     });
@@ -282,7 +281,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
         transition={{ delay: 0.1 }}
       >
         <h3 className="chart-title">📈 {t.progressTrend}</h3>
-        <canvas ref={lineChartRef} width="600" height="300" className="chart-canvas" />
+        <canvas ref={lineChartRef} width="600" height="300" className="chart-canvas" role="img" aria-label={t.progressTrend} />
       </motion.div>
 
       {/* Bar Chart - Topic Performance */}
@@ -293,7 +292,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
         transition={{ delay: 0.2 }}
       >
         <h3 className="chart-title">📊 {t.topicPerformance}</h3>
-        <canvas ref={barChartRef} width="600" height="300" className="chart-canvas" />
+        <canvas ref={barChartRef} width="600" height="300" className="chart-canvas" role="img" aria-label={t.topicPerformance} />
       </motion.div>
 
       {/* Radar Chart - Skills */}
@@ -304,7 +303,7 @@ const AnalyticsCharts = ({ data, language = 'en' }) => {
         transition={{ delay: 0.3 }}
       >
         <h3 className="chart-title">🎯 {t.skillsRadar}</h3>
-        <canvas ref={radarChartRef} width="400" height="400" className="chart-canvas radar" />
+        <canvas ref={radarChartRef} width="400" height="400" className="chart-canvas radar" role="img" aria-label={t.skillsRadar} />
       </motion.div>
     </div>
   );

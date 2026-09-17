@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playStreakSound, playAchievementSound } from '../utils/soundEffects';
+import { getTotalPoints, POINTS_CHANGED_EVENT } from '../utils/leaderboardUtils';
 import './StreakCounter.css';
 
 const StreakCounter = ({ language = 'en' }) => {
@@ -13,6 +14,7 @@ const StreakCounter = ({ language = 'en' }) => {
   });
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationType, setCelebrationType] = useState('');
+  const [totalPoints, setTotalPoints] = useState(0);
 
   const translations = {
     en: {
@@ -21,9 +23,13 @@ const StreakCounter = ({ language = 'en' }) => {
       days: 'days',
       day: 'day',
       keepItUp: 'Keep it up!',
+      greatStart: 'Great start! Come back tomorrow.',
+      daysActive: 'Days Active',
+      totalPoints: 'Total Points',
+      freezeHelp: 'A streak freeze protects your streak if you miss one day.',
       comeBackTomorrow: 'Come back tomorrow!',
-      freezeAvailable: 'Freeze Available',
-      useFreeze: 'Use Freeze',
+      freezeAvailable: 'Streak protected',
+      useFreeze: 'Protect my streak',
       milestone7: '7 Day Warrior!',
       milestone30: '30 Day Champion!',
       milestone100: '100 Day Legend!',
@@ -36,9 +42,13 @@ const StreakCounter = ({ language = 'en' }) => {
       days: 'أيام',
       day: 'يوم',
       keepItUp: 'واصل التقدم!',
+      greatStart: 'بداية رائعة! عد غداً.',
+      daysActive: 'أيام النشاط',
+      totalPoints: 'مجموع النقاط',
+      freezeHelp: 'تجميد السلسلة يحميها إذا فاتك يوم واحد.',
       comeBackTomorrow: 'عد غداً!',
-      freezeAvailable: 'التجميد متاح',
-      useFreeze: 'استخدم التجميد',
+      freezeAvailable: 'السلسلة محمية',
+      useFreeze: 'احمِ سلسلتي',
       milestone7: 'محارب 7 أيام!',
       milestone30: 'بطل 30 يوم!',
       milestone100: 'أسطورة 100 يوم!',
@@ -52,6 +62,18 @@ const StreakCounter = ({ language = 'en' }) => {
   // Load streak data from localStorage
   useEffect(() => {
     loadStreakData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Points total for the summary strip (same source as the points bar)
+  useEffect(() => {
+    const email = getCurrentUserEmail();
+    if (!email) return undefined;
+    const read = () => setTotalPoints(getTotalPoints(email));
+    read();
+    window.addEventListener(POINTS_CHANGED_EVENT, read);
+    return () => window.removeEventListener(POINTS_CHANGED_EVENT, read);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadStreakData = () => {
@@ -204,127 +226,98 @@ const StreakCounter = ({ language = 'en' }) => {
     saveStreakData(updatedData);
   };
 
-  const getStreakColor = () => {
-    if (streakData.currentStreak >= 100) return '#ff6b6b';
-    if (streakData.currentStreak >= 30) return '#f59e0b';
-    if (streakData.currentStreak >= 7) return '#10b981';
-    return '#6b7280';
-  };
-
   const getFlameEmoji = () => {
-    if (streakData.currentStreak >= 100) return '🔥🔥🔥';
-    if (streakData.currentStreak >= 30) return '🔥🔥';
+    if (streakData.currentStreak >= 100) return '👑';
+    if (streakData.currentStreak >= 30) return '🏆';
     if (streakData.currentStreak >= 7) return '🔥';
     return '✨';
   };
 
+  const streakWord = (count) => (count === 1 ? t.day : t.days);
+  const hint = streakData.currentStreak <= 1 ? t.greatStart : `${t.keepItUp} ${t.comeBackTomorrow}`;
+
+  const stats = [
+    { key: 'best', icon: '🏆', value: streakData.longestStreak, label: t.longestStreak },
+    { key: 'active', icon: '📅', value: streakData.totalDaysActive, label: t.daysActive },
+    { key: 'points', icon: '🪙', value: totalPoints, label: t.totalPoints }
+  ];
+
   return (
     <div className="streak-counter-container">
-      <motion.div
-        className="streak-display"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="streak-flame-icon">
+      <div className="sc-card">
+        <div className="sc-hero">
           <motion.span
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 5, -5, 0]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
-            style={{ fontSize: '3rem' }}
+            className="sc-flame"
+            aria-hidden="true"
+            animate={{ scale: [1, 1.12, 1], rotate: [0, 6, -6, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
           >
             {getFlameEmoji()}
           </motion.span>
-        </div>
-
-        <div className="streak-info">
-          <h3 className="streak-label">{t.currentStreak}</h3>
-          <motion.div
-            className="streak-number"
-            style={{ color: getStreakColor() }}
-            key={streakData.currentStreak}
-            initial={{ scale: 1.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-          >
-            {streakData.currentStreak}
-          </motion.div>
-          <p className="streak-days-label">
-            {streakData.currentStreak === 1 ? t.day : t.days}
-          </p>
-        </div>
-
-        <div className="streak-stats">
-          <div className="stat-box">
-            <div className="stat-icon">🏆</div>
-            <div className="stat-value">{streakData.longestStreak}</div>
-            <div className="stat-label">{t.longestStreak}</div>
+          <div className="sc-hero-text">
+            <span className="sc-hero-label">{t.currentStreak}</span>
+            <span className="sc-hero-value">
+              <motion.strong
+                key={streakData.currentStreak}
+                initial={{ scale: 1.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 220 }}
+              >
+                {streakData.currentStreak}
+              </motion.strong>
+              {' '}{streakWord(streakData.currentStreak)}
+            </span>
+            <span className="sc-hero-hint">{hint}</span>
           </div>
         </div>
 
-        {streakData.currentStreak > 0 && (
-          <motion.p
-            className="streak-encouragement"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {t.keepItUp} {t.comeBackTomorrow}
-          </motion.p>
-        )}
+        <div className="sc-stats">
+          {stats.map(stat => (
+            <div className="sc-stat" key={stat.key}>
+              <span className="sc-stat-icon" aria-hidden="true">{stat.icon}</span>
+              <span className="sc-stat-value">{stat.value}</span>
+              <span className="sc-stat-label">{stat.label}</span>
+            </div>
+          ))}
+        </div>
 
         {streakData.currentStreak >= 3 && !streakData.streakFreeze && (
-          <motion.button
-            className="freeze-button"
-            onClick={handleUseFreeze}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            ❄️ {t.useFreeze}
-          </motion.button>
+          <button className="sc-freeze-btn" onClick={handleUseFreeze} title={t.freezeHelp}>
+            <span aria-hidden="true">❄️</span> {t.useFreeze}
+          </button>
         )}
 
         {streakData.streakFreeze && (
-          <div className="freeze-active">
-            ❄️ {t.freezeAvailable}
+          <div className="sc-freeze-active" title={t.freezeHelp}>
+            <span aria-hidden="true">❄️</span> {t.freezeAvailable}
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Milestone Celebration */}
       <AnimatePresence>
         {showCelebration && (
           <motion.div
-            className="milestone-celebration"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 200 }}
+            className="sc-celebration"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowCelebration(false)}
           >
             <motion.div
-              className="celebration-content"
-              animate={{
-                rotate: [0, 5, -5, 5, -5, 0],
-                scale: [1, 1.1, 1, 1.1, 1]
-              }}
-              transition={{ duration: 0.8, repeat: 3 }}
+              className="sc-celebration-content"
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 200 }}
             >
-              <div className="celebration-emoji">
+              <div className="sc-celebration-emoji" aria-hidden="true">
                 {celebrationType === 'milestone7' && '🎉'}
                 {celebrationType === 'milestone30' && '🏆'}
                 {celebrationType === 'milestone100' && '👑'}
               </div>
-              <h2 className="celebration-title">{t[celebrationType]}</h2>
-              <p className="celebration-message">
+              <h2 className="sc-celebration-title">{t[celebrationType]}</h2>
+              <p className="sc-celebration-message">
                 {streakData.currentStreak} {t.days} {t.currentStreak}!
               </p>
             </motion.div>

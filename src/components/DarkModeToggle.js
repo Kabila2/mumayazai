@@ -8,11 +8,15 @@ const DarkModeToggle = ({ language = 'en' }) => {
   const translations = {
     en: {
       dark: 'Dark',
-      light: 'Light'
+      light: 'Light',
+      switchToDark: 'Switch to dark mode',
+      switchToLight: 'Switch to light mode'
     },
     ar: {
       dark: 'داكن',
-      light: 'فاتح'
+      light: 'فاتح',
+      switchToDark: 'التبديل إلى الوضع الداكن',
+      switchToLight: 'التبديل إلى الوضع الفاتح'
     }
   };
 
@@ -53,6 +57,8 @@ const DarkModeToggle = ({ language = 'en' }) => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       title={isDarkMode ? t.light : t.dark}
+      aria-label={isDarkMode ? t.switchToLight : t.switchToDark}
+      aria-pressed={isDarkMode}
     >
       <motion.div
         className="toggle-icon"

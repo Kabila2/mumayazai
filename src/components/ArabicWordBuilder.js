@@ -155,7 +155,7 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
         {
           arabic: 'عسل',
           english: 'Honey',
-          image: 'https://images.unsplash.com/photo-1587049352846-4a222e784e38?w=400&h=300&fit=crop'
+          image: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop'
         },
         {
           arabic: 'جبن',

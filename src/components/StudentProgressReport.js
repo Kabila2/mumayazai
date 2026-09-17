@@ -2,18 +2,65 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound } from '../utils/soundEffects';
 import { toast } from '../hooks/useToast';
+import { getModuleProgress } from '../utils/progressUtils';
+import { getTotalPoints } from '../utils/leaderboardUtils';
+import { getParentData } from '../utils/parentTrackingUtils';
+import { getTeacherClasses } from '../utils/teacherUtils';
 import './StudentProgressReport.css';
+
+const readJSON = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (error) {
+    return fallback;
+  }
+};
+
+/**
+ * Who this viewer can report on: a student sees themselves, a parent their
+ * linked children, a teacher every student enrolled in their classes.
+ */
+const getReportSubjects = (viewerEmail) => {
+  if (!viewerEmail) return [];
+  const users = readJSON('stellar_users', {});
+  const viewer = users[viewerEmail.toLowerCase()];
+  const nameOf = (email, fallback) => users[email.toLowerCase()]?.name || fallback || email;
+
+  if (viewer?.role === 'parent') {
+    return (getParentData(viewerEmail)?.children || [])
+      .map(child => ({ email: child.email, name: nameOf(child.email, child.name) }));
+  }
+
+  if (viewer?.role === 'teacher') {
+    const seen = new Map();
+    getTeacherClasses(viewerEmail).forEach(cls => {
+      (cls.students || []).forEach(student => {
+        const email = (student.email || '').toLowerCase();
+        if (email && !seen.has(email)) seen.set(email, { email, name: nameOf(email, student.name) });
+      });
+    });
+    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  return [{ email: viewerEmail, name: nameOf(viewerEmail) }];
+};
 
 const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
   const [reportData, setReportData] = useState(null);
   const [timeRange, setTimeRange] = useState('month'); // 'week', 'month', 'all'
   const [isGenerating, setIsGenerating] = useState(false);
+  const [subjects] = useState(() => getReportSubjects(userEmail));
+  const [subjectEmail, setSubjectEmail] = useState(() => subjects[0]?.email || null);
 
   const translations = {
     en: {
       title: 'Student Progress Report',
       generate: 'Generate Report',
-      download: 'Download PDF',
+      download: 'Download report',
+      student: 'Student',
+      noStudents: 'No students to report on yet',
+      noStudentsHint: 'Link a child from the Parent Dashboard, or enroll students in a class from the Teacher Dashboard.',
       close: 'Close',
       timeRange: 'Time Range',
       week: 'This Week',
@@ -46,7 +93,10 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
     ar: {
       title: 'تقرير تقدم الطالب',
       generate: 'إنشاء التقرير',
-      download: 'تحميل PDF',
+      download: 'تحميل التقرير',
+      student: 'الطالب',
+      noStudents: 'لا يوجد طلاب لعرض تقاريرهم بعد',
+      noStudentsHint: 'اربط طفلاً من لوحة ولي الأمر، أو سجّل طلاباً في صف من لوحة المعلم.',
       close: 'إغلاق',
       timeRange: 'الفترة الزمنية',
       week: 'هذا الأسبوع',
@@ -82,17 +132,27 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
 
   useEffect(() => {
     loadReportData();
-  }, [timeRange, userEmail]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange, subjectEmail]);
 
   const loadReportData = () => {
+    if (!subjectEmail) return;
     try {
-      // Gather data from various localStorage keys
-      const pointsData = JSON.parse(localStorage.getItem(`stellar_points_${userEmail}`) || '{"total": 0, "history": []}');
-      const achievements = JSON.parse(localStorage.getItem(`stellar_achievements_${userEmail}`) || '[]');
-      const quizHistory = JSON.parse(localStorage.getItem(`stellar_quiz_history_${userEmail}`) || '[]');
-      const streak = parseInt(localStorage.getItem(`stellar_streak_${userEmail}`) || '0');
-      const learningTime = parseFloat(localStorage.getItem(`stellar_learning_time_${userEmail}`) || '0');
-      const topicsProgress = JSON.parse(localStorage.getItem(`stellar_topics_progress_${userEmail}`) || '{}');
+      // Same sources the Progress Dashboard reads, so the two always agree
+      const email = subjectEmail.toLowerCase();
+      const achievements = readJSON(`stellar_achievements_${subjectEmail}`, []);
+      const quizHistory = readJSON(`stellar_quiz_history_${subjectEmail}`, []);
+      const streakData = readJSON(`stellar_streak_${subjectEmail}`, {});
+      const streak = Number(streakData.currentStreak) || 0;
+      const userStats = readJSON('stellar_user_stats', {})[email] || {};
+      const learningMinutes = Number(userStats.totalTimeSpent) || 0;
+      const moduleProgress = getModuleProgress(subjectEmail);
+      const topicsProgress = {
+        alphabet: moduleProgress.alphabetProgress || 0,
+        colors: moduleProgress.colorsProgress || 0,
+        words: moduleProgress.wordsProgress || 0,
+        sentences: moduleProgress.sentencesProgress || 0
+      };
 
       // Filter quiz history by selected time range
       const now = new Date();
@@ -147,13 +207,13 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
 
       setReportData({
         overview: {
-          totalTime: (learningTime / 60).toFixed(1), // Convert to hours
-          lessonsCompleted: topicsProgress.lessonsCompleted || 0,
+          totalTime: (learningMinutes / 60).toFixed(1), // Convert to hours
+          lessonsCompleted: Object.values(topicsProgress).filter(value => value >= 100).length,
           quizzesTaken: totalQuizzes,
           avgScore,
           streak,
           achievements: achievements.length,
-          points: pointsData.total
+          points: getTotalPoints(subjectEmail)
         },
         topics,
         strengths,
@@ -173,7 +233,7 @@ const StudentProgressReport = ({ userEmail, language = 'en', onClose }) => {
 
     try {
       // Create a simple text-based report
-      const userName = getUserName(userEmail);
+      const userName = getUserName(subjectEmail);
       const reportDate = new Date().toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
         year: 'numeric',
         month: 'long',
@@ -231,7 +291,7 @@ ${t.recommendations}
 ${reportData.recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 
 ========================================
-Generated by Stellar Platform
+Generated by Stellar
 ${new Date().toLocaleString()}
 ========================================
       `;
@@ -266,6 +326,36 @@ ${new Date().toLocaleString()}
     }
   };
 
+  if (!subjectEmail) {
+    return (
+      <motion.div
+        className="student-progress-report-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        dir={language === 'ar' ? 'rtl' : 'ltr'}
+      >
+        <motion.div
+          className="student-progress-report-modal report-empty-modal"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="report-header">
+            <h2>{t.title}</h2>
+            <button className="close-btn" onClick={onClose} aria-label={t.close}>✕</button>
+          </div>
+          <div className="report-empty">
+            <div className="report-empty-icon" aria-hidden="true">🧑‍🎓</div>
+            <h3>{t.noStudents}</h3>
+            <p>{t.noStudentsHint}</p>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
   if (!reportData) {
     return (
       <div className="student-progress-report-loading">
@@ -297,6 +387,27 @@ ${new Date().toLocaleString()}
         </div>
 
         <div className="report-controls">
+          {subjects.length > 1 && (
+            <label className="report-student-picker">
+              <span>{t.student}:</span>
+              <select
+                value={subjectEmail}
+                onChange={(event) => {
+                  playClickSound();
+                  setSubjectEmail(event.target.value);
+                }}
+              >
+                {subjects.map(subject => (
+                  <option key={subject.email} value={subject.email}>{subject.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          {subjects.length === 1 && subjects[0].email !== userEmail && (
+            <div className="report-student-picker">
+              <span>{t.student}:</span> <strong>{subjects[0].name}</strong>
+            </div>
+          )}
           <div className="time-range-selector">
             <label>{t.timeRange}:</label>
             <div className="range-buttons">
@@ -351,7 +462,7 @@ ${new Date().toLocaleString()}
               <div className="stat-card">
                 <div className="stat-icon">🔥</div>
                 <div className="stat-value">{reportData.overview.streak}</div>
-                <div className="stat-label">{t.days}</div>
+                <div className="stat-label">{t.streak}</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon">🏆</div>

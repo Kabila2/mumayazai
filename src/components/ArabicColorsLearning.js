@@ -41,7 +41,7 @@ const arabicColors = [
     hex: '#FFD700',
     objects: ['شمس', 'ليمون', 'موز'],
     objectsEnglish: ['sun', 'lemon', 'banana'],
-    image: 'https://images.unsplash.com/photo-1587486937103-eea6b4bd51b0?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop'
   },
   {
     arabic: 'بنفسجي',
@@ -239,7 +239,8 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
         animate={{ opacity: 1, y: 0 }}
       >
         <h1 className="colors-main-title">
-          {language === 'ar' ? '🎨 تعلم الألوان العربية' : '🎨 Learn Arabic Colors'}
+          <span className="title-emoji" aria-hidden="true">🎨</span>{' '}
+          {language === 'ar' ? 'تعلم الألوان العربية' : 'Learn Arabic Colors'}
         </h1>
         <p className="colors-subtitle">
           {language === 'ar'
@@ -337,6 +338,9 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
                 src={color.image}
                 alt={color.english}
                 className="color-object-image"
+                loading="lazy"
+                // A dead image link leaves the plain colour swatch rather than alt text
+                onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }}
               />
             </div>
 

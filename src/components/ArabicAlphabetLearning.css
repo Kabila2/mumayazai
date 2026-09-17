@@ -124,7 +124,7 @@
   box-shadow: var(--mz-shadow-sm);
 }
 
-.view-btn {
+.arabic-alphabet-learning .view-btn {
   width: 42px;
   height: 42px;
   border: none;
@@ -139,13 +139,13 @@
   justify-content: center;
 }
 
-.view-btn:hover {
+.arabic-alphabet-learning .view-btn:hover {
   background: var(--mz-accent-soft);
   color: var(--mz-accent-text);
   transform: scale(1.05);
 }
 
-.view-btn.active {
+.arabic-alphabet-learning .view-btn.active {
   background: var(--mz-accent-grad);
   color: #fff;
   box-shadow: var(--mz-shadow-accent);
@@ -323,14 +323,14 @@
   border-color: var(--mz-warning);
 }
 
-.letter-display {
+.arabic-alphabet-learning .letter-display {
   cursor: pointer;
   transition: transform 0.3s ease;
   margin-bottom: 25px;
   position: relative;
 }
 
-.letter-display:hover {
+.arabic-alphabet-learning .letter-display:hover {
   transform: translateY(-2px);
 }
 
@@ -343,7 +343,7 @@
   transition: opacity 0.3s ease;
 }
 
-.letter-display:hover .pronunciation-hint {
+.arabic-alphabet-learning .letter-display:hover .pronunciation-hint {
   opacity: 1;
 }
 
@@ -357,7 +357,7 @@
   cursor: pointer;
 }
 
-.letter-name {
+.arabic-alphabet-learning .letter-name {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--mz-text);
@@ -486,7 +486,7 @@
   box-shadow: var(--mz-shadow-md);
 }
 
-.points-badge {
+.arabic-alphabet-learning .points-badge {
   background: rgba(255, 255, 255, 0.25);
   padding: 4px 10px;
   border-radius: var(--mz-radius-sm);
@@ -603,7 +603,7 @@
   transform: translateY(-1px);
 }
 
-.progress-section {
+.arabic-alphabet-learning .progress-section {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -611,7 +611,7 @@
   min-width: 140px;
 }
 
-.progress-indicator {
+.arabic-alphabet-learning .progress-indicator {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--mz-accent-text);
@@ -864,7 +864,7 @@
 .high-contrast .visual-emoji { filter: drop-shadow(0 0 10px #fff); }
 .high-contrast .arabic-word-main { color: #ffff00; text-shadow: 0 0 10px #ffff00; }
 .high-contrast .word-meaning-main { color: #fff; }
-.high-contrast .view-btn.active { background: #fff; color: #000; border: 2px solid #fff; }
+.high-contrast .arabic-alphabet-learning .view-btn.active { background: #fff; color: #000; border: 2px solid #fff; }
 .high-contrast .alphabet-item.active { background: #fff; color: #000; }
 
 /* ===== Reduced Motion ===== */
@@ -885,7 +885,7 @@
   font-family: 'Amiri', 'Traditional Arabic', serif;
 }
 
-.dyslexia-friendly .letter-name,
+.arabic-alphabet-learning .dyslexia-friendly .letter-name,
 .dyslexia-friendly .word-meaning {
   font-weight: 700;
 }

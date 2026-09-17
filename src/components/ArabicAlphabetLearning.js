@@ -84,11 +84,7 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
           speech.setVoice(arabicVoice.name);
           console.log('✅ Arabic voice set:', arabicVoice.name);
         } else {
-          console.warn('⚠️ No Arabic voice found on your system');
-          console.warn('📢 To hear proper Arabic pronunciation:');
-          console.warn('   1. Go to Windows Settings');
-          console.warn('   2. Time & Language → Speech');
-          console.warn('   3. Add voices → Download Arabic voice');
+          console.warn('No Arabic speech voice installed — pronunciation falls back to the default voice (Windows: Settings → Time & Language → Speech → Add voices).');
         }
       } catch (error) {
         console.error('❌ Speech init failed:', error);
@@ -127,6 +123,9 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e) => {
+      // Leave arrow keys alone while the learner is typing (e.g. in the settings modal)
+      const target = e.target;
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
       switch(e.key) {
         case 'ArrowRight':
           e.preventDefault();

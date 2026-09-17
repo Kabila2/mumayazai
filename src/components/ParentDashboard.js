@@ -252,7 +252,7 @@ const ParentDashboard = ({
 
         <Grid container spacing={3}>
           {/* Sidebar */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Card sx={cardSx}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
@@ -333,7 +333,7 @@ const ParentDashboard = ({
           </Grid>
 
           {/* Main */}
-          <Grid item xs={12} md={9}>
+          <Grid size={{ xs: 12, md: 9 }}>
             <Card sx={cardSx}>
               <CardContent>
                 {!selectedChild ? (
@@ -440,20 +440,20 @@ const OverviewTab = ({ child, stats }) => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={Clock} label="Learning time" value={formatTime(stats?.totalTimeSpent || 0)} />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={MessageSquare} label="Sessions" value={stats?.totalSessions || 0} />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={FileText} label="Messages" value={stats?.totalMessages || 0} />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={Brain} label="Topics" value={stats?.topicsExplored?.length || 0} />
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={cardSx}>
           <CardContent>
             <Typography variant="caption" sx={{ color: TEXT_MUTED }}>Average session</Typography>
@@ -467,7 +467,7 @@ const OverviewTab = ({ child, stats }) => {
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={cardSx}>
           <CardContent>
             <Typography variant="caption" sx={{ color: TEXT_MUTED }}>Last activity</Typography>
@@ -562,7 +562,7 @@ const ProgressTab = ({ stats }) => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={cardSx}>
           <CardContent>
             <Typography variant="subtitle2" sx={{ color: TEXT, fontWeight: 600, mb: 1 }}>
@@ -582,7 +582,7 @@ const ProgressTab = ({ stats }) => {
           </CardContent>
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={cardSx}>
           <CardContent>
             <Typography variant="subtitle2" sx={{ color: TEXT, fontWeight: 600, mb: 1 }}>
@@ -604,7 +604,7 @@ const ProgressTab = ({ stats }) => {
       </Grid>
 
       {insights.length > 0 && (
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={cardSx}>
             <CardContent>
               <Typography variant="subtitle2" sx={{ color: TEXT, fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -661,7 +661,7 @@ const ImprovementsTab = ({ child, stats }) => {
       </Card>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle2" sx={{ color: TEXT, fontWeight: 600, mb: 1 }}>
             Focus areas
           </Typography>
@@ -692,7 +692,7 @@ const ImprovementsTab = ({ child, stats }) => {
           )}
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle2" sx={{ color: TEXT, fontWeight: 600, mb: 1 }}>
             Recommendations
           </Typography>
@@ -737,7 +737,7 @@ const AchievementsTab = ({ child }) => {
   return (
     <Grid container spacing={2}>
       {achievements.map((ach) => (
-        <Grid item xs={12} sm={6} md={4} key={ach.id}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={ach.id}>
           <Card sx={cardSx}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

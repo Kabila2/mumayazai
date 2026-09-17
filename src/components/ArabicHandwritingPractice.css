@@ -27,13 +27,13 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.header-left {
+.handwriting-practice-container .header-left {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.back-button {
+.handwriting-practice-container .back-button {
   padding: 10px 20px;
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.5);
@@ -48,7 +48,7 @@
   gap: 8px;
 }
 
-.back-button:hover {
+.handwriting-practice-container .back-button:hover {
   background: rgba(255, 255, 255, 0.3);
   border-color: white;
   transform: translateX(-4px);
@@ -80,7 +80,7 @@
 }
 
 /* Letter Display */
-.letter-display {
+.handwriting-practice-container .letter-display {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -104,13 +104,13 @@
   text-shadow: 2px 2px 8px rgba(139, 92, 246, 0.3);
 }
 
-.letter-name {
+.handwriting-practice-container .letter-name {
   font-size: 2rem;
   font-weight: 600;
   color: #6b21a8;
 }
 
-.progress-indicator {
+.handwriting-practice-container .progress-indicator {
   font-size: 1.3rem;
   font-weight: 600;
   color: #7c3aed;
@@ -140,7 +140,7 @@
   position: relative;
 }
 
-.drawing-canvas {
+.handwriting-practice-container .drawing-canvas {
   width: 100%;
   max-width: 800px;
   height: auto;
@@ -161,7 +161,7 @@
   max-width: 800px;
 }
 
-.control-btn {
+.handwriting-practice-container .control-btn {
   flex: 1;
   padding: 18px 30px;
   border: none;
@@ -173,17 +173,17 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-.nav-btn {
+.handwriting-practice-container .nav-btn {
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
   color: white;
 }
 
-.nav-btn:hover:not(:disabled) {
+.handwriting-practice-container .nav-btn:hover:not(:disabled) {
   transform: translateY(-3px);
   box-shadow: 0 6px 24px rgba(139, 92, 246, 0.4);
 }
 
-.nav-btn:disabled {
+.handwriting-practice-container .nav-btn:disabled {
   background: #d1d5db;
   cursor: not-allowed;
   opacity: 0.5;
@@ -210,17 +210,17 @@
   background: linear-gradient(135deg, #5b21b6 0%, #6b21a8 100%);
 }
 
-.dark-mode .letter-display {
+.dark-mode .handwriting-practice-container .letter-display {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(243, 232, 255, 0.1));
 }
 
 .dark-mode .letter-large,
-.dark-mode .letter-name,
-.dark-mode .progress-indicator {
+.dark-mode .handwriting-practice-container .letter-name,
+.dark-mode .handwriting-practice-container .progress-indicator {
   color: #c4b5fd;
 }
 
-.dark-mode .progress-indicator {
+.dark-mode .handwriting-practice-container .progress-indicator {
   background: var(--bg-tertiary);
 }
 
@@ -230,7 +230,7 @@
   border-left-color: #a78bfa;
 }
 
-.dark-mode .drawing-canvas {
+.dark-mode .handwriting-practice-container .drawing-canvas {
   background: var(--bg-primary);
   border-color: #a78bfa;
 }
@@ -241,7 +241,7 @@
     padding: 20px;
   }
 
-  .back-button {
+  .handwriting-practice-container .back-button {
     padding: 8px 16px;
     font-size: 0.9rem;
   }
@@ -254,7 +254,7 @@
     padding: 40px 20px;
   }
 
-  .letter-display {
+  .handwriting-practice-container .letter-display {
     flex-direction: column;
     gap: 20px;
     padding: 25px 20px;
@@ -264,11 +264,11 @@
     font-size: 4rem;
   }
 
-  .letter-name {
+  .handwriting-practice-container .letter-name {
     font-size: 1.5rem;
   }
 
-  .progress-indicator {
+  .handwriting-practice-container .progress-indicator {
     font-size: 1.1rem;
     padding: 10px 20px;
   }
@@ -282,7 +282,7 @@
     flex-direction: column;
   }
 
-  .control-btn {
+  .handwriting-practice-container .control-btn {
     padding: 15px 25px;
     font-size: 1.1rem;
   }
@@ -309,11 +309,11 @@
     font-size: 3rem;
   }
 
-  .letter-name {
+  .handwriting-practice-container .letter-name {
     font-size: 1.2rem;
   }
 
-  .progress-indicator {
+  .handwriting-practice-container .progress-indicator {
     font-size: 1rem;
   }
 
@@ -322,12 +322,126 @@
     padding: 10px 15px;
   }
 
-  .control-btn {
+  .handwriting-practice-container .control-btn {
     padding: 12px 20px;
     font-size: 1rem;
   }
 
-  .drawing-canvas {
+  .handwriting-practice-container .drawing-canvas {
     border-width: 3px;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Level picker — themed cards (the old inline-styled buttons were laid out as
+   a centered row by the global button baseline, squashing each description)
+   --------------------------------------------------------------------------- */
+.hw-level-screen {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 48px 24px;
+}
+
+.hw-level-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.hw-level-header-icon {
+  width: 72px;
+  height: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  background: var(--mz-accent-soft);
+  font-size: 2.4rem;
+}
+
+.hw-level-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: var(--mz-text);
+}
+
+.hw-level-grid {
+  width: 100%;
+  max-width: 980px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.hw-level-screen .hw-level-card {
+  --hw-level-color: var(--mz-accent);
+  display: block;
+  padding: 0;
+  border: 1px solid var(--mz-border);
+  border-top: 5px solid var(--hw-level-color);
+  background: var(--mz-surface);
+  color: var(--mz-text);
+  border-radius: 20px;
+  box-shadow: var(--mz-shadow-sm);
+  text-align: center;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hw-level-screen .hw-level-card:hover {
+  box-shadow: var(--mz-shadow-lg);
+  border-color: var(--hw-level-color);
+}
+
+.hw-level-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 24px 28px;
+}
+
+.hw-level-emoji {
+  width: 76px;
+  height: 76px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hw-level-color) 16%, var(--mz-surface));
+  font-size: 2.4rem;
+  margin-bottom: 6px;
+}
+
+.hw-level-label {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--mz-text);
+}
+
+.hw-level-desc {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--mz-text-2);
+}
+
+.hw-level-screen .hw-level-back {
+  padding: 10px 22px;
+  border: 1px solid var(--mz-border-strong);
+  background: var(--mz-surface);
+  color: var(--mz-text);
+  font-size: 0.95rem;
+}
+
+.hw-level-screen .hw-level-back:hover {
+  background: var(--mz-accent-soft);
+  border-color: var(--mz-accent);
+  color: var(--mz-accent-text);
 }

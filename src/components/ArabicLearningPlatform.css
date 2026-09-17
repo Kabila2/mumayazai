@@ -27,16 +27,19 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
-/* Navigation Styles */
+/* Navigation ----------------------------------------------------------------
+   One row on desktop: brand | links | user tools. Link labels collapse to icons
+   when space runs out (tooltips + aria keep them named), and on phones the bar
+   becomes two short rows — brand + tools, then a horizontally scrolling strip
+   of links — instead of stacking every link and eating half the screen. */
 .platform-nav {
   display: flex;
-  flex-wrap: wrap;
-  row-gap: 10px;
-  justify-content: space-between;
   align-items: center;
-  padding: 15px 30px;
-  background: var(--mz-surface);
-  backdrop-filter: blur(20px);
+  gap: 16px;
+  padding: 10px 24px;
+  background: color-mix(in srgb, var(--mz-surface) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--mz-border);
   box-shadow: var(--mz-shadow-sm);
   position: sticky;
@@ -44,227 +47,306 @@
   z-index: 100;
 }
 
+.platform-nav .nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 4px 8px 4px 4px;
+  border: none;
+  background: transparent;
+  color: var(--mz-text);
+  border-radius: 12px;
+}
+
+.platform-nav .nav-brand-mark {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--mz-accent-grad);
+  color: #fff;
+  font-family: 'Cairo', 'Noto Kufi Arabic', sans-serif !important;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: var(--mz-shadow-accent);
+}
+
 .nav-brand .brand-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: var(--mz-accent-grad);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+  white-space: nowrap;
 }
 
 .nav-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  flex: 1;
   min-width: 0;
-}
-
-/* Settings, dark mode, high contrast and sign out. The teacher and parent navs
-   carry an extra Dashboard link, so this row is the first thing a crowded nav
-   pushes past the edge — and .arabic-learning-platform clips overflow-x, so
-   anything pushed out is simply gone rather than scrollable. Keeping it
-   unshrinkable means the accessibility toggles stay reachable on every role. */
-.nav-user-tools {
   display: flex;
+  justify-content: center;
   align-items: center;
-  flex-shrink: 0;
+  gap: 4px;
 }
 
-.nav-link {
-  padding: 10px 20px;
+.platform-nav .nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 14px;
   border: none;
   background: transparent;
   color: var(--mz-text-2);
   font-weight: 600;
-  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
   border-radius: 12px;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.nav-link:hover {
+.platform-nav .nav-link-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.platform-nav .nav-link:hover {
   background: var(--mz-accent-soft);
   color: var(--mz-accent-text);
 }
 
-.nav-link.active {
+.platform-nav .nav-link.active {
   background: var(--mz-accent-grad);
   color: #fff;
   box-shadow: var(--mz-shadow-accent);
 }
 
-.nav-unread-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  background: #ef4444;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 10px;
+/* Settings, dark mode, high contrast and sign out. Never shrinks: the
+   accessibility toggles must stay reachable for every role. */
+.nav-user-tools {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-  animation: badgePulse 2s ease-in-out infinite;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-@keyframes badgePulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-  }
-  50% {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
-  }
-}
-
-[dir="rtl"] .nav-unread-badge {
-  right: auto;
-  left: -6px;
-}
-
-/* Profile Settings Button with Text */
-.profile-settings-btn-with-text {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  background: var(--mz-surface);
-  border: 2px solid rgba(139, 92, 246, 0.3);
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--mz-text-2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.profile-settings-btn-with-text:hover {
-  background: rgba(139, 92, 246, 0.1);
-  border-color: #8b5cf6;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-}
-
-@keyframes rotateGear {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(180deg);
-  }
-}
-
-.sign-out-btn {
-  padding: 10px 20px;
-  border: 2px solid #ef4444;
-  background: transparent;
-  color: #ef4444;
-  font-weight: 600;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.sign-out-btn:hover {
-  background: #ef4444;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-}
-
-
-/* Profile Picture Button */
-.profile-picture-btn {
-  width: 44px;
-  height: 44px;
+.nav-user-tools .nav-profile-btn,
+.nav-user-tools .dark-mode-toggle,
+.nav-user-tools .high-contrast-toggle,
+.nav-user-tools .sign-out-btn {
+  height: 42px;
+  min-width: 42px;
   padding: 0;
-  border: 3px solid #10b981;
+  border: 1px solid var(--mz-border);
   background: var(--mz-surface);
+  color: var(--mz-text-2);
+  border-radius: 12px;
+  box-shadow: none;
+  font-size: 0.9rem;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.nav-user-tools .nav-profile-btn:hover,
+.nav-user-tools .dark-mode-toggle:hover,
+.nav-user-tools .high-contrast-toggle:hover {
+  background: var(--mz-accent-soft);
+  border-color: var(--mz-accent);
+  color: var(--mz-accent-text);
+  transform: none;
+  box-shadow: none;
+}
+
+.nav-user-tools .high-contrast-toggle.is-on {
+  background: var(--mz-text);
+  border-color: var(--mz-text);
+  color: var(--mz-surface);
+}
+
+.nav-user-tools .nav-profile-btn {
+  position: relative;
+  width: 42px;
   border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
+  border-width: 2px;
+  border-color: var(--mz-border-strong);
+}
+
+.nav-user-tools .nav-avatar {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+  border-radius: 50%;
+  background: var(--mz-accent-grad);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
-.profile-picture-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  border-color: #059669;
-}
-
-.profile-pic-small {
+.nav-user-tools .nav-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.profile-emoji {
-  font-size: 1.5rem;
+.nav-user-tools .nav-avatar-gear {
+  position: absolute;
+  bottom: -4px;
+  inset-inline-end: -4px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  font-size: 0.65rem;
   line-height: 1;
 }
 
-/* Change Name Button */
-.change-name-btn {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 3px solid #3b82f6;
-  background: var(--mz-surface);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.nav-user-tools .sign-out-btn {
+  padding: 0 12px;
+  gap: 6px;
+  color: var(--mz-danger);
+  border-color: color-mix(in srgb, var(--mz-danger) 35%, var(--mz-border));
+}
+
+.nav-user-tools .sign-out-btn:hover {
+  background: var(--mz-danger);
+  border-color: var(--mz-danger);
+  color: #fff;
+}
+
+.nav-unread-badge {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px var(--mz-surface);
 }
 
-.change-name-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-  border-color: #2563eb;
+/* Teachers and parents carry two extra links, so they go icon-only sooner. */
+@media (max-width: 1560px) {
+  .platform-nav--compact .nav-link-label,
+  .platform-nav--compact .sign-out-label {
+    display: none;
+  }
+
+  .platform-nav--compact .nav-link,
+  .platform-nav--compact .sign-out-btn {
+    padding: 0 12px;
+  }
 }
 
-/* Profile Settings Button */
-.profile-settings-btn {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 3px solid #6366f1;
-  background: var(--mz-surface);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
-  position: relative;
+@media (max-width: 1320px) {
+  .nav-user-tools .sign-out-label {
+    display: none;
+  }
 }
 
-.profile-settings-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  border-color: #4f46e5;
+@media (max-width: 1180px) {
+  .platform-nav .nav-link-label {
+    display: none;
+  }
+
+  .platform-nav .nav-link {
+    padding: 0 12px;
+  }
 }
 
-.profile-settings-btn:hover span[aria-hidden="true"] {
-  animation: rotateGear 0.6s ease-in-out;
+@media (max-width: 768px) {
+  .platform-nav {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 8px 12px;
+  }
+
+  .platform-nav .nav-brand {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .platform-nav .nav-brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 1.2rem;
+  }
+
+  .nav-brand .brand-title {
+    font-size: 1.1rem;
+  }
+
+  .nav-user-tools {
+    gap: 6px;
+  }
+
+  .nav-user-tools .nav-profile-btn,
+  .nav-user-tools .dark-mode-toggle,
+  .nav-user-tools .high-contrast-toggle,
+  .nav-user-tools .sign-out-btn {
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .nav-user-tools .nav-profile-btn {
+    width: 38px;
+  }
+
+  .nav-user-tools .sign-out-btn {
+    padding: 0;
+  }
+
+  .nav-links {
+    order: 3;
+    flex: 0 0 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -12px;
+    padding: 2px 12px;
+    scroll-padding-inline: 12px;
+  }
+
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .platform-nav .nav-link,
+  .platform-nav--compact .nav-link {
+    flex-shrink: 0;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.82rem;
+  }
+
+  .platform-nav .nav-link-label,
+  .platform-nav--compact .nav-link-label {
+    display: inline;
+  }
 }
 
 
@@ -282,6 +364,23 @@
 
 .platform-content > * {
   pointer-events: auto;
+}
+
+/* Section headers pinned at top: 0 slid underneath the (also pinned) platform
+   nav. Inside the platform they scroll with the page instead. */
+.platform-content .handwriting-practice-header,
+.platform-content .class-management-header,
+.platform-content .homework-header,
+.platform-content .homework-system-header,
+.platform-content .story-reader-header {
+  position: relative;
+  top: auto;
+}
+
+/* The total-points bar is pinned bottom-left over these sections; keep the
+   last row of content clear of it. */
+.platform-content.has-points-bar {
+  padding-bottom: 104px;
 }
 
 .platform-content.fullscreen {
@@ -399,6 +498,23 @@
   color: var(--mz-text-2);
   margin: 0;
   font-weight: 500;
+}
+
+.home-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.category-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--mz-accent-soft);
+  font-size: 1.1rem;
 }
 
 /* Professional hero band — calm, no float/glow/shimmer */
@@ -918,18 +1034,6 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .platform-nav {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
-  }
-
-  .nav-links {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-  }
-
   .platform-content {
     padding: 0;
   }
@@ -1034,47 +1138,21 @@
     grid-template-columns: 1fr;
   }
 
-  .stat-number {
-    font-size: 3rem;
-  }
-
-  .stat-label {
-    font-size: 1.3rem;
+  .fact-item {
+    padding: 14px 16px;
   }
 
   .fact-icon {
-    font-size: 3rem;
+    font-size: 1.6rem;
   }
 
   .fact-text {
-    font-size: 1.3rem;
+    font-size: 0.92rem;
   }
 }
 
-/* RTL Support */
-[dir="rtl"] .platform-nav {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .nav-links {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .section-header {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .card-progress {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .fact-item {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .chat-modes {
-  flex-direction: row-reverse;
-}
+/* RTL Support: flex rows already follow the document direction, so no
+   row-reverse overrides here — they flipped Arabic layouts back to LTR order. */
 
 /* High Contrast Mode */
 .high-contrast .arabic-learning-platform {
@@ -1130,13 +1208,10 @@ html {
 }
 
 /* Focus Styles for Accessibility */
-.nav-link:focus,
-.section-card:focus,
-.back-btn:focus,
-.switch-mode-btn:focus,
-.sign-out-btn:focus {
+.section-card:focus-visible {
   outline: 3px solid var(--mz-ring);
-  outline-offset: 2px;
+  outline-offset: 3px;
+  border-color: var(--card-accent);
 }
 
 /* Scroll Down Indicator */
@@ -1228,16 +1303,6 @@ html {
   border-color: #6366f1;
 }
 
-.dark-mode .profile-settings-btn-with-text {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(139, 92, 246, 0.5);
-  color: var(--text-primary);
-}
-
-.dark-mode .profile-settings-btn-with-text:hover {
-  background: rgba(51, 65, 85, 0.95);
-  border-color: #8b5cf6;
-}
 
 /* ============================================================
    Home page ambient animations

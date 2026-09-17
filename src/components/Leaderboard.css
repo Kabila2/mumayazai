@@ -87,7 +87,7 @@
   border-bottom: 2px solid #e5e7eb;
 }
 
-.filter-btn {
+.leaderboard-overlay .filter-btn {
   flex: 1;
   padding: 12px 20px;
   background: white;
@@ -104,13 +104,13 @@
   gap: 8px;
 }
 
-.filter-btn:hover {
+.leaderboard-overlay .filter-btn:hover {
   border-color: #f59e0b;
   color: #f59e0b;
   transform: translateY(-2px);
 }
 
-.filter-btn.active {
+.leaderboard-overlay .filter-btn.active {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   border-color: transparent;
@@ -362,7 +362,7 @@
     gap: 8px;
   }
 
-  .filter-btn {
+  .leaderboard-overlay .filter-btn {
     padding: 10px 16px;
     font-size: 0.9rem;
   }
@@ -445,7 +445,7 @@
     gap: 8px;
   }
 
-  .filter-btn {
+  .leaderboard-overlay .filter-btn {
     padding: 10px 16px;
   }
 
@@ -491,13 +491,13 @@
   border-bottom-color: var(--border-color);
 }
 
-.dark-mode .filter-btn {
+.dark-mode .leaderboard-overlay .filter-btn {
   background: var(--bg-tertiary);
   border-color: var(--border-color);
   color: var(--text-secondary);
 }
 
-.dark-mode .filter-btn:hover {
+.dark-mode .leaderboard-overlay .filter-btn:hover {
   color: #f59e0b;
 }
 

@@ -76,19 +76,19 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
           title: 'Track Your Progress',
           description: 'View your achievements, points, and learning streak in the Progress Dashboard.',
           icon: '📊',
-          highlight: '.progress-card'
+          highlight: '.home-card--progress'
         },
         {
           title: 'Smart Assistant',
           description: 'Need help? Ask our AI assistant anything about Arabic language learning!',
           icon: '🤖',
-          highlight: '.chat-card'
+          highlight: '.home-card--chat'
         },
         {
           title: 'Settings & Profile',
           description: 'Customize your experience, manage your profile, and export your data from the settings.',
           icon: '⚙️',
-          highlight: '.profile-settings-btn-with-text'
+          highlight: '.nav-profile-btn'
         }
       ]
     },
@@ -99,7 +99,7 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
       finish: 'ابدأ الآن!',
       steps: [
         {
-          title: 'مرحباً بك في ممتاز!',
+          title: 'مرحباً بك في مميّز!',
           description: 'اختر الخط المفضل لديك — سيُطبَّق في كامل التطبيق.',
           icon: '👋',
           highlight: null
@@ -132,19 +132,19 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
           title: 'تتبع تقدمك',
           description: 'شاهد إنجازاتك ونقاطك وسلسلة التعلم في لوحة التقدم.',
           icon: '📊',
-          highlight: '.progress-card'
+          highlight: '.home-card--progress'
         },
         {
           title: 'المساعد الذكي',
           description: 'بحاجة إلى مساعدة؟ اسأل مساعدنا الذكي أي شيء عن تعلم اللغة العربية!',
           icon: '🤖',
-          highlight: '.chat-card'
+          highlight: '.home-card--chat'
         },
         {
           title: 'الإعدادات والملف الشخصي',
           description: 'خصص تجربتك، أدر ملفك الشخصي، وصدر بياناتك من الإعدادات.',
           icon: '⚙️',
-          highlight: '.profile-settings-btn-with-text'
+          highlight: '.nav-profile-btn'
         }
       ]
     }

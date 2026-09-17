@@ -199,7 +199,7 @@ const ClassManagement = ({ userEmail, userRole, language = 'en', onClose }) => {
                   );
                   const myPoints = me && typeof me === 'object' ? (me.totalPoints || 0) : 0;
                   return (
-                    <Grid item xs={12} sm={6} key={cls.id}>
+                    <Grid size={{ xs: 12, sm: 6 }} key={cls.id}>
                       <Card sx={cardSx}>
                         <CardContent>
                           <Typography variant="subtitle1" sx={{ color: TEXT, fontWeight: 600 }}>

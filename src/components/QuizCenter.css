@@ -208,7 +208,7 @@
 }
 
 /* Back button */
-.back-button {
+.quiz-center .back-button {
   background: var(--mz-surface-2);
   border: 1px solid var(--mz-border);
   padding: 0.6rem 1.2rem;
@@ -221,7 +221,7 @@
   white-space: nowrap;
 }
 
-.back-button:hover {
+.quiz-center .back-button:hover {
   background: var(--mz-surface-3);
   color: var(--mz-text);
 }

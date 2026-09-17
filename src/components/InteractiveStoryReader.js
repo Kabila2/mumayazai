@@ -52,7 +52,7 @@ const stories = [
       {
         ar: 'أعطتهم الظل والفاكهة اللذيذة',
         en: 'She gave them shade and delicious fruit',
-        image: 'https://images.unsplash.com/photo-1587049352846-4a222e784422?w=800&q=80'
+        image: 'https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?w=800&q=80'
       },
       {
         ar: 'وأصبحت أسعد شجرة في العالم',

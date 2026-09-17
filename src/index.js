@@ -34,6 +34,19 @@ import './high-contrast.css';
   }
 })();
 
+// Apply the saved dark-mode preference before the first paint. The toggle that
+// owns this setting lives in the platform nav, so without this the login screen
+// and a fresh reload would flash light until the nav mounted.
+;(function applySavedTheme() {
+  try {
+    if (localStorage.getItem('stellar_dark_mode') === 'true') {
+      document.documentElement.classList.add('dark-mode');
+    }
+  } catch {
+    // localStorage unavailable — keep the default light theme.
+  }
+})();
+
 // Dynamically load Puter.js so `puter` is available globally
 ;(function loadPuter() {
   const script = document.createElement('script');

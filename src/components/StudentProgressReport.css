@@ -54,7 +54,7 @@
 }
 
 /* Report Header */
-.report-header {
+.student-progress-report-overlay .report-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -64,7 +64,7 @@
   border-radius: 24px 24px 0 0;
 }
 
-.report-header h2 {
+.student-progress-report-overlay .report-header h2 {
   margin: 0;
   font-size: 1.75rem;
   font-weight: 800;
@@ -74,7 +74,7 @@
   gap: 12px;
 }
 
-.close-btn {
+.student-progress-report-overlay .close-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
@@ -90,13 +90,13 @@
   font-weight: 300;
 }
 
-.close-btn:hover {
+.student-progress-report-overlay .close-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
 
 /* Report Controls */
-.report-controls {
+.student-progress-report-overlay .report-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -107,19 +107,19 @@
   gap: 16px;
 }
 
-.time-range-selector {
+.student-progress-report-overlay .time-range-selector {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.time-range-selector label {
+.student-progress-report-overlay .time-range-selector label {
   font-weight: 600;
   color: #374151;
   font-size: 0.95rem;
 }
 
-.range-buttons {
+.student-progress-report-overlay .range-buttons {
   display: flex;
   gap: 8px;
   background: white;
@@ -128,7 +128,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.range-btn {
+.student-progress-report-overlay .range-btn {
   padding: 8px 20px;
   border: none;
   background: transparent;
@@ -141,18 +141,18 @@
   white-space: nowrap;
 }
 
-.range-btn:hover {
+.student-progress-report-overlay .range-btn:hover {
   color: #374151;
   background: #f3f4f6;
 }
 
-.range-btn.active {
+.student-progress-report-overlay .range-btn.active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-.download-btn {
+.student-progress-report-overlay .download-btn {
   padding: 10px 24px;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
@@ -168,26 +168,26 @@
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.download-btn:hover:not(:disabled) {
+.student-progress-report-overlay .download-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
-.download-btn:disabled {
+.student-progress-report-overlay .download-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* Report Content */
-.report-content {
+.student-progress-report-overlay .report-content {
   padding: 40px;
 }
 
-.report-section {
+.student-progress-report-overlay .report-section {
   margin-bottom: 32px;
 }
 
-.report-section h3 {
+.student-progress-report-overlay .report-section h3 {
   font-size: 1.3rem;
   font-weight: 700;
   color: #1f2937;
@@ -198,13 +198,13 @@
 }
 
 /* Overview Section */
-.overview-section .stats-grid {
+.student-progress-report-overlay .overview-section .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
 }
 
-.stat-card {
+.student-progress-report-overlay .stat-card {
   background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
   border: 2px solid #e5e7eb;
   border-radius: 16px;
@@ -213,38 +213,38 @@
   transition: all 0.3s ease;
 }
 
-.stat-card:hover {
+.student-progress-report-overlay .stat-card:hover {
   border-color: #6366f1;
   box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
   transform: translateY(-4px);
 }
 
-.stat-icon {
+.student-progress-report-overlay .stat-icon {
   font-size: 2rem;
   margin-bottom: 8px;
 }
 
-.stat-value {
+.student-progress-report-overlay .stat-value {
   font-size: 1.75rem;
   font-weight: 800;
   color: #1f2937;
   margin-bottom: 4px;
 }
 
-.stat-label {
+.student-progress-report-overlay .stat-label {
   font-size: 0.85rem;
   color: #6b7280;
   font-weight: 600;
 }
 
 /* Topics Progress */
-.topics-list {
+.student-progress-report-overlay .topics-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.topic-item {
+.student-progress-report-overlay .topic-item {
   background: #f9fafb;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
@@ -252,36 +252,36 @@
   transition: all 0.3s ease;
 }
 
-.topic-item:hover {
+.student-progress-report-overlay .topic-item:hover {
   border-color: #6366f1;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
 }
 
-.topic-header {
+.student-progress-report-overlay .topic-header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
 }
 
-.topic-icon {
+.student-progress-report-overlay .topic-icon {
   font-size: 1.5rem;
 }
 
-.topic-name {
+.student-progress-report-overlay .topic-name {
   flex: 1;
   font-weight: 600;
   color: #374151;
   font-size: 1rem;
 }
 
-.topic-percentage {
+.student-progress-report-overlay .topic-percentage {
   font-weight: 700;
   color: #6366f1;
   font-size: 1rem;
 }
 
-.topic-progress-bar {
+.student-progress-report-overlay .topic-progress-bar {
   width: 100%;
   height: 12px;
   background: #e5e7eb;
@@ -290,7 +290,7 @@
   position: relative;
 }
 
-.topic-progress-fill {
+.student-progress-report-overlay .topic-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
   border-radius: 6px;
@@ -298,7 +298,7 @@
   position: relative;
 }
 
-.topic-progress-fill::after {
+.student-progress-report-overlay .topic-progress-fill::after {
   content: '';
   position: absolute;
   top: 0;
@@ -315,24 +315,24 @@
 }
 
 /* Insights Row */
-.insights-row {
+.student-progress-report-overlay .insights-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
   margin-bottom: 32px;
 }
 
-.half-section {
+.student-progress-report-overlay .half-section {
   margin-bottom: 0;
 }
 
-.insights-list {
+.student-progress-report-overlay .insights-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.insight-item {
+.student-progress-report-overlay .insight-item {
   padding: 16px;
   border-radius: 12px;
   font-size: 1rem;
@@ -343,29 +343,29 @@
   transition: all 0.3s ease;
 }
 
-.insight-item.strength {
+.student-progress-report-overlay .insight-item.strength {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
   border: 2px solid #6ee7b7;
   color: #065f46;
 }
 
-.insight-item.strength:hover {
+.student-progress-report-overlay .insight-item.strength:hover {
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
   transform: translateX(4px);
 }
 
-.insight-item.weakness {
+.student-progress-report-overlay .insight-item.weakness {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: 2px solid #fbbf24;
   color: #92400e;
 }
 
-.insight-item.weakness:hover {
+.student-progress-report-overlay .insight-item.weakness:hover {
   box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
   transform: translateX(4px);
 }
 
-.no-data-message {
+.student-progress-report-overlay .no-data-message {
   padding: 24px;
   text-align: center;
   color: #9ca3af;
@@ -376,25 +376,25 @@
 }
 
 /* Recommendations */
-.recommendations-section {
+.student-progress-report-overlay .recommendations-section {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%);
   border-radius: 16px;
   padding: 28px;
   border: 2px solid #fbbf24;
 }
 
-.recommendations-section h3 {
+.student-progress-report-overlay .recommendations-section h3 {
   color: #92400e;
   margin-bottom: 20px;
 }
 
-.recommendations-list {
+.student-progress-report-overlay .recommendations-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.recommendation-item {
+.student-progress-report-overlay .recommendation-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -404,13 +404,13 @@
   transition: all 0.3s ease;
 }
 
-.recommendation-item:hover {
+.student-progress-report-overlay .recommendation-item:hover {
   background: white;
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
-.rec-number {
+.student-progress-report-overlay .rec-number {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -424,7 +424,7 @@
   flex-shrink: 0;
 }
 
-.rec-text {
+.student-progress-report-overlay .rec-text {
   flex: 1;
   color: #374151;
   font-weight: 500;
@@ -436,81 +436,81 @@
   background: var(--bg-secondary);
 }
 
-.dark-mode .report-header {
+.dark-mode .student-progress-report-overlay .report-header {
   border-bottom-color: var(--border-color);
 }
 
-.dark-mode .report-controls {
+.dark-mode .student-progress-report-overlay .report-controls {
   background: var(--bg-tertiary);
   border-bottom-color: var(--border-color);
 }
 
-.dark-mode .time-range-selector label {
+.dark-mode .student-progress-report-overlay .time-range-selector label {
   color: var(--text-primary);
 }
 
-.dark-mode .range-buttons {
+.dark-mode .student-progress-report-overlay .range-buttons {
   background: var(--bg-secondary);
 }
 
-.dark-mode .range-btn {
+.dark-mode .student-progress-report-overlay .range-btn {
   color: var(--text-secondary);
 }
 
-.dark-mode .range-btn:hover {
+.dark-mode .student-progress-report-overlay .range-btn:hover {
   color: var(--text-primary);
   background: var(--bg-tertiary);
 }
 
-.dark-mode .report-section h3 {
+.dark-mode .student-progress-report-overlay .report-section h3 {
   color: var(--text-primary);
 }
 
-.dark-mode .stat-card {
+.dark-mode .student-progress-report-overlay .stat-card {
   background: var(--bg-tertiary);
   border-color: var(--border-color);
 }
 
-.dark-mode .stat-card:hover {
+.dark-mode .student-progress-report-overlay .stat-card:hover {
   border-color: #6366f1;
 }
 
-.dark-mode .stat-value {
+.dark-mode .student-progress-report-overlay .stat-value {
   color: var(--text-primary);
 }
 
-.dark-mode .stat-label {
+.dark-mode .student-progress-report-overlay .stat-label {
   color: var(--text-secondary);
 }
 
-.dark-mode .topic-item {
+.dark-mode .student-progress-report-overlay .topic-item {
   background: var(--bg-tertiary);
   border-color: var(--border-color);
 }
 
-.dark-mode .topic-name {
+.dark-mode .student-progress-report-overlay .topic-name {
   color: var(--text-primary);
 }
 
-.dark-mode .topic-progress-bar {
+.dark-mode .student-progress-report-overlay .topic-progress-bar {
   background: var(--bg-primary);
 }
 
-.dark-mode .no-data-message {
+.dark-mode .student-progress-report-overlay .no-data-message {
   background: var(--bg-tertiary);
   border-color: var(--border-color);
   color: var(--text-tertiary);
 }
 
-.dark-mode .recommendation-item {
+.dark-mode .student-progress-report-overlay .recommendation-item {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.dark-mode .recommendation-item:hover {
+.dark-mode .student-progress-report-overlay .recommendation-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.dark-mode .rec-text {
+.dark-mode .student-progress-report-overlay .rec-text {
   color: var(--text-primary);
 }
 
@@ -524,25 +524,25 @@
 }
 
 /* RTL Support */
-[dir="rtl"] .report-header {
+[dir="rtl"] .student-progress-report-overlay .report-header {
   direction: rtl;
 }
 
-[dir="rtl"] .close-btn {
+[dir="rtl"] .student-progress-report-overlay .close-btn {
   margin-right: auto;
   margin-left: 0;
 }
 
-[dir="rtl"] .report-controls {
+[dir="rtl"] .student-progress-report-overlay .report-controls {
   direction: rtl;
 }
 
-[dir="rtl"] .insight-item.strength:hover,
-[dir="rtl"] .insight-item.weakness:hover {
+[dir="rtl"] .student-progress-report-overlay .insight-item.strength:hover,
+[dir="rtl"] .student-progress-report-overlay .insight-item.weakness:hover {
   transform: translateX(-4px);
 }
 
-[dir="rtl"] .recommendation-item:hover {
+[dir="rtl"] .student-progress-report-overlay .recommendation-item:hover {
   transform: translateX(-4px);
 }
 
@@ -553,128 +553,128 @@
     border-radius: 16px;
   }
 
-  .report-header {
+  .student-progress-report-overlay .report-header {
     padding: 24px 20px;
   }
 
-  .report-header h2 {
+  .student-progress-report-overlay .report-header h2 {
     font-size: 1.35rem;
   }
 
-  .close-btn {
+  .student-progress-report-overlay .close-btn {
     width: 36px;
     height: 36px;
     font-size: 1.25rem;
   }
 
-  .report-controls {
+  .student-progress-report-overlay .report-controls {
     padding: 16px 20px;
     flex-direction: column;
     align-items: stretch;
   }
 
-  .time-range-selector {
+  .student-progress-report-overlay .time-range-selector {
     flex-direction: column;
     gap: 12px;
     width: 100%;
   }
 
-  .range-buttons {
+  .student-progress-report-overlay .range-buttons {
     width: 100%;
     justify-content: space-between;
   }
 
-  .range-btn {
+  .student-progress-report-overlay .range-btn {
     flex: 1;
     padding: 10px 12px;
     font-size: 0.85rem;
   }
 
-  .download-btn {
+  .student-progress-report-overlay .download-btn {
     width: 100%;
     justify-content: center;
   }
 
-  .report-content {
+  .student-progress-report-overlay .report-content {
     padding: 24px 20px;
   }
 
-  .report-section h3 {
+  .student-progress-report-overlay .report-section h3 {
     font-size: 1.15rem;
   }
 
-  .overview-section .stats-grid {
+  .student-progress-report-overlay .overview-section .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
-  .stat-card {
+  .student-progress-report-overlay .stat-card {
     padding: 20px 12px;
   }
 
-  .stat-icon {
+  .student-progress-report-overlay .stat-icon {
     font-size: 1.5rem;
   }
 
-  .stat-value {
+  .student-progress-report-overlay .stat-value {
     font-size: 1.5rem;
   }
 
-  .stat-label {
+  .student-progress-report-overlay .stat-label {
     font-size: 0.75rem;
   }
 
-  .insights-row {
+  .student-progress-report-overlay .insights-row {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .topic-header {
+  .student-progress-report-overlay .topic-header {
     gap: 8px;
   }
 
-  .topic-icon {
+  .student-progress-report-overlay .topic-icon {
     font-size: 1.25rem;
   }
 
-  .topic-name {
+  .student-progress-report-overlay .topic-name {
     font-size: 0.9rem;
   }
 
-  .topic-percentage {
+  .student-progress-report-overlay .topic-percentage {
     font-size: 0.9rem;
   }
 
-  .insight-item {
+  .student-progress-report-overlay .insight-item {
     padding: 14px;
     font-size: 0.9rem;
   }
 
-  .recommendations-section {
+  .student-progress-report-overlay .recommendations-section {
     padding: 20px;
   }
 
-  .recommendation-item {
+  .student-progress-report-overlay .recommendation-item {
     padding: 14px;
   }
 
-  .rec-number {
+  .student-progress-report-overlay .rec-number {
     width: 24px;
     height: 24px;
     font-size: 0.8rem;
   }
 
-  .rec-text {
+  .student-progress-report-overlay .rec-text {
     font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
-  .overview-section .stats-grid {
+  .student-progress-report-overlay .overview-section .stats-grid {
     grid-template-columns: 1fr;
   }
 
-  .range-btn {
+  .student-progress-report-overlay .range-btn {
     font-size: 0.8rem;
     padding: 8px 10px;
   }
@@ -687,20 +687,88 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stat-card,
-  .topic-item,
-  .insight-item,
-  .recommendation-item,
-  .topic-progress-fill,
-  .download-btn {
+  .student-progress-report-overlay .stat-card,
+  .student-progress-report-overlay .topic-item,
+  .student-progress-report-overlay .insight-item,
+  .student-progress-report-overlay .recommendation-item,
+  .student-progress-report-overlay .topic-progress-fill,
+  .student-progress-report-overlay .download-btn {
     transition: none;
   }
 
-  .topic-progress-fill::after {
+  .student-progress-report-overlay .topic-progress-fill::after {
     animation: none;
   }
 
   @keyframes shimmer {
     0%, 100% { transform: translateX(0); }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Student picker, even overview grid and the "no students yet" state
+   --------------------------------------------------------------------------- */
+.student-progress-report-overlay .overview-section .stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.student-progress-report-overlay .stat-label {
+  overflow-wrap: anywhere;
+}
+
+.report-student-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--mz-text-2);
+  font-size: 0.95rem;
+}
+
+.report-student-picker select {
+  min-width: 200px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--mz-border-strong);
+  border-radius: 10px;
+  background: var(--mz-surface);
+  color: var(--mz-text);
+  font: inherit;
+}
+
+.report-empty-modal {
+  max-width: 520px;
+}
+
+.report-empty {
+  padding: 48px 32px 56px;
+  text-align: center;
+  color: var(--mz-text-2);
+}
+
+.report-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.report-empty h3 {
+  margin: 0 0 8px;
+  color: var(--mz-text);
+  font-size: 1.2rem;
+}
+
+.report-empty p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .student-progress-report-overlay .overview-section .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-student-picker,
+  .report-student-picker select {
+    width: 100%;
   }
 }

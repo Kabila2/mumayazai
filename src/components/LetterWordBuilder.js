@@ -121,7 +121,7 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
         animate={{ opacity: 1, y: 0 }}
       >
         <h1 className="builder-title">
-          {language === 'ar' ? 'بناء الكلمات' : 'Word Builder'}
+          {language === 'ar' ? 'ترتيب الحروف' : 'Letter Builder'}
         </h1>
         <p className="builder-subtitle">
           {language === 'ar'

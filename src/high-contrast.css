@@ -22,7 +22,7 @@
    Enumerating components can never be complete, so coverage comes from three
    layers that need no per-component knowledge:
      1. TOKENS — theme.css routes every legacy variable (--primary,
-        --text-primary, --glass-bg, --card-bg, --tp-*, --gray-*, …) through the
+        --text-primary, --glass-bg, --card-bg, --gray-*, …) through the
         canonical --mz-* tokens, so redefining the tokens re-themes everything
         token-driven at once.
      2. STRIP — every background is removed, flattening hardcoded gradients,

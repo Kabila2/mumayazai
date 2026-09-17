@@ -266,7 +266,7 @@ const TeacherDashboard = ({
 
         <Grid container spacing={3}>
           {/* Sidebar */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Card sx={cardSx}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
@@ -328,7 +328,7 @@ const TeacherDashboard = ({
           </Grid>
 
           {/* Main */}
-          <Grid item xs={12} md={9}>
+          <Grid size={{ xs: 12, md: 9 }}>
             <Card sx={cardSx}>
               <CardContent>
                 {!selectedClass ? (
@@ -503,7 +503,7 @@ const StudentsTab = ({ selectedClass, onAwardPoints, onRemoveStudent }) => {
       />
       <Grid container spacing={1.5}>
         {students.map(student => (
-          <Grid item xs={12} sm={6} md={4} key={student.email}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={student.email}>
             <Card sx={{ ...cardSx, '&:hover': { borderColor: ACCENT } }}>
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
@@ -629,20 +629,20 @@ const AnalyticsTab = ({ selectedClass }) => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={Users} label="Students" value={stats.totalStudents} />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={ThumbsUp} label="Points awarded" value={stats.totalPointsAwarded} />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={ThumbsDown} label="Points deducted" value={stats.totalPointsDeducted} />
       </Grid>
-      <Grid item xs={6} md={3}>
+      <Grid size={{ xs: 6, md: 3 }}>
         <Stat icon={Target} label="Average points" value={stats.averagePoints} />
       </Grid>
       {stats.topStudent && (
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={cardSx}>
             <CardContent>
               <Typography variant="caption" sx={{ color: TEXT_MUTED, display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
@@ -771,7 +771,7 @@ const AwardPointsModal = ({ open, onClose, onAward, student, defaultPoints }) =>
             {presets.map(p => {
               const positive = p.value > 0;
               return (
-                <Grid item xs={6} sm={3} key={p.label}>
+                <Grid size={{ xs: 6, sm: 3 }} key={p.label}>
                   <Button
                     fullWidth
                     onClick={() => { setPoints(p.value); setReason(p.label); setCategory(p.category); }}

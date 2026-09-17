@@ -201,7 +201,7 @@ export default function App() {
     const key = email.trim().toLowerCase();
     if (users[key]) return { ok: false, message: "This email is already registered." };
 
-    users[key] = { name, email: key, password, role, parentEmail };
+    users[key] = { name, email: key, password, role, parentEmail, createdAt: new Date().toISOString() };
     saveUsers(users);
 
     // If this is a parent account, initialize parent data

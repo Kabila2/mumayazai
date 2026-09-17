@@ -112,7 +112,7 @@
   overflow-x: auto;
 }
 
-.tab-button {
+.leaderboard-overlay .tab-button {
   flex: 1;
   min-width: 120px;
   padding: 15px 10px;
@@ -128,12 +128,12 @@
   border-bottom: 3px solid transparent;
 }
 
-.tab-button:hover {
+.leaderboard-overlay .tab-button:hover {
   background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
 }
 
-.tab-button.active {
+.leaderboard-overlay .tab-button.active {
   background: rgba(0, 255, 255, 0.1);
   color: #00ffff;
   border-bottom-color: #00ffff;
@@ -203,7 +203,7 @@
   padding-right: 15px;
 }
 
-.rank-display {
+.leaderboard-overlay .rank-display {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -219,7 +219,7 @@
   font-size: 0.9rem;
 }
 
-.user-info {
+.leaderboard-overlay .user-info {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -242,14 +242,14 @@
   letter-spacing: 0.5px;
 }
 
-.stat-value {
+.leaderboard-overlay .stat-value {
   color: #00ffff;
   font-weight: 600;
   font-size: 1rem;
   text-align: right;
 }
 
-.empty-state {
+.leaderboard-overlay .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -259,7 +259,7 @@
   text-align: center;
 }
 
-.empty-icon {
+.leaderboard-overlay .empty-icon {
   font-size: 3rem;
   margin-bottom: 15px;
   opacity: 0.5;
@@ -289,15 +289,15 @@
   text-align: right;
 }
 
-[dir="rtl"] .rank-display {
+[dir="rtl"] .leaderboard-overlay .rank-display {
   flex-direction: row-reverse;
 }
 
-[dir="rtl"] .user-info {
+[dir="rtl"] .leaderboard-overlay .user-info {
   flex-direction: row-reverse;
 }
 
-[dir="rtl"] .stat-value {
+[dir="rtl"] .leaderboard-overlay .stat-value {
   text-align: left;
 }
 

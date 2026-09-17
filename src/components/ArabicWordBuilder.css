@@ -187,7 +187,7 @@
 }
 
 /* badge background set inline (difficulty identity) */
-.difficulty-badge {
+.arabic-word-builder .difficulty-badge {
   display: inline-block;
   padding: 14px 28px;
   border-radius: var(--mz-radius-pill);
@@ -223,7 +223,7 @@
   transform: translateY(-5px);
 }
 
-.category-icon {
+.arabic-word-builder .category-icon {
   width: 92px;
   height: 92px;
   border-radius: 50%;
@@ -234,7 +234,7 @@
   margin: 0 auto 18px;
 }
 
-.category-name {
+.arabic-word-builder .category-name {
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--mz-text);
@@ -331,8 +331,8 @@
   color: var(--mz-text);
 }
 
-.stat-icon { font-size: 1.4rem; }
-.stat-value { font-size: 1.25rem; }
+.arabic-word-builder .stat-icon { font-size: 1.4rem; }
+.arabic-word-builder .stat-value { font-size: 1.25rem; }
 .arabic-word-builder .stat-label { font-size: 0.95rem; }
 
 .game-progress {
@@ -343,15 +343,15 @@
 }
 
 /* progress-dot background set inline (state color) */
-.progress-dot {
+.arabic-word-builder .progress-dot {
   width: 18px;
   height: 18px;
   border-radius: 50%;
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.progress-dot.active { transform: scale(1.5); }
-.progress-dot.completed { opacity: 0.5; }
+.arabic-word-builder .progress-dot.active { transform: scale(1.5); }
+.arabic-word-builder .progress-dot.completed { opacity: 0.5; }
 
 /* Word Card */
 .arabic-word-builder .word-card {
@@ -417,7 +417,7 @@
 
 /* Letter Areas */
 .selected-letters-area,
-.available-letters-area {
+.arabic-word-builder .available-letters-area {
   margin-bottom: 28px;
 }
 
@@ -498,7 +498,7 @@
   margin-top: 28px;
 }
 
-.control-btn {
+.arabic-word-builder .control-btn {
   padding: 14px 38px;
   border: 2px solid;
   border-radius: var(--mz-radius-md);
@@ -668,7 +668,7 @@
 @media (max-width: 768px) {
   .categories-title { font-size: 1.8rem; }
   .category-card { padding: 28px; }
-  .category-icon { width: 78px; height: 78px; font-size: 2.4rem; }
+  .arabic-word-builder .category-icon { width: 78px; height: 78px; font-size: 2.4rem; }
   .arabic-word-builder .word-card { padding: 24px; }
   .word-image { height: 200px; }
   .letter-tile { width: 58px; height: 58px; font-size: 2rem; }
@@ -692,8 +692,8 @@
   .category-card,
   .letter-tile,
   .hint-btn,
-  .control-btn,
-  .progress-dot,
+  .arabic-word-builder .control-btn,
+  .arabic-word-builder .progress-dot,
   .arabic-word-builder .back-button { transition: none; }
   .coins-icon,
   .milestone { animation: none; }

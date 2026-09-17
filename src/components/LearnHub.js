@@ -157,7 +157,15 @@ const LearnHub = ({ language, onSectionSelect }) => {
                   <motion.div
                     key={section.id}
                     className="learn-card"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleSectionClick(section)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        handleSectionClick(section);
+                      }
+                    }}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{
@@ -170,7 +178,7 @@ const LearnHub = ({ language, onSectionSelect }) => {
                   >
                     <div className="learn-card-gradient" style={{ background: section.color }}></div>
                     <div className="learn-card-content">
-                      <div className="learn-card-icon">{section.icon}</div>
+                      <div className="learn-card-icon" aria-hidden="true">{section.icon}</div>
                       <h3 className="learn-card-title">
                         {language === 'ar' ? section.titleAr : section.titleEn}
                       </h3>

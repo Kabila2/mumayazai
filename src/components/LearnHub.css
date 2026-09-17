@@ -38,10 +38,28 @@
 }
 
 /* Content Area */
+/* Core lessons span the full width; the two smaller categories sit side by
+   side underneath so their two cards each don't leave half-empty rows. */
 .learn-hub-content {
   max-width: 1180px;
   margin: 0 auto;
   padding: 0 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+}
+
+.learn-hub-content > .learn-category:first-child {
+  grid-column: 1 / -1;
+}
+
+.learn-hub-content > .learn-category:not(:first-child) .learn-sections-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.learn-card:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
 }
 
 /* Category Section */
@@ -170,6 +188,9 @@
 }
 
 @media (max-width: 768px) {
+  .learn-hub-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .learn-hub-container {
     padding: 36px 16px 48px;
   }
