@@ -33,7 +33,7 @@ import TeacherDashboard from "./TeacherDashboard";
 import ParentDashboard from "./ParentDashboard";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import stellarMuiTheme from "../muiTheme";
-import { LogOut } from 'lucide-react';
+import { LogOut, Home } from 'lucide-react';
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import { getTotalUnreadCount, getInitials } from '../utils/conversationUtils';
 import { getModuleProgress } from '../utils/progressUtils';
@@ -673,7 +673,7 @@ const ArabicLearningPlatform = ({
             onClick={() => setCurrentSection('home')}
             aria-label={tr('Stellar — go to home page', 'مميّز — العودة إلى الصفحة الرئيسية')}
           >
-            <span className="nav-brand-mark" aria-hidden="true">{tr('S', 'م')}</span>
+            <span className="nav-brand-mark" aria-hidden="true"><Home size={20} strokeWidth={2.5} /></span>
             <span className="brand-title">{tr('Stellar', 'مميّز')}</span>
           </button>
 

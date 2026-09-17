@@ -68,11 +68,14 @@
   border-radius: 12px;
   background: var(--mz-accent-grad);
   color: #fff;
-  font-family: 'Cairo', 'Noto Kufi Arabic', sans-serif !important;
-  font-size: 1.35rem;
-  font-weight: 800;
   line-height: 1;
   box-shadow: var(--mz-shadow-accent);
+}
+
+.platform-nav .nav-brand-mark svg {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .nav-brand .brand-title {
@@ -291,7 +294,11 @@
   .platform-nav .nav-brand-mark {
     width: 34px;
     height: 34px;
-    font-size: 1.2rem;
+  }
+
+  .platform-nav .nav-brand-mark svg {
+    width: 18px;
+    height: 18px;
   }
 
   .nav-brand .brand-title {
