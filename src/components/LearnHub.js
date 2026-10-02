@@ -1,9 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
+import { getCurriculumState, lockReason } from '../utils/moduleUnlockUtils';
 import './LearnHub.css';
 
-const LearnHub = ({ language, onSectionSelect }) => {
+/**
+ * The Learn hub. Shows the same lock state as the home page — the two used to
+ * disagree, so a lesson that was hidden on the home page was still openable
+ * from here.
+ */
+const LearnHub = ({ language, onSectionSelect, userEmail = null, userRole = 'student' }) => {
   // Voice Over hook for accessibility
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
   const t = {
@@ -114,7 +120,17 @@ const LearnHub = ({ language, onSectionSelect }) => {
     { id: 'interactive', label: currentLang.interactive }
   ];
 
+  const curriculum = getCurriculumState(userEmail, userRole || 'student');
+  const isLocked = (sectionId) => curriculum[sectionId]?.unlocked === false;
+
   const handleSectionClick = (section) => {
+    if (isLocked(section.id)) {
+      // Say why rather than doing nothing — a tile that silently ignores a tap
+      // reads as broken.
+      voiceOver.speak(lockReason(userEmail, section.id, language, userRole), true);
+      return;
+    }
+
     // Voice over announcement
     voiceOver.speak(
       language === 'ar'
@@ -153,41 +169,54 @@ const LearnHub = ({ language, onSectionSelect }) => {
               </motion.h2>
 
               <div className="learn-sections-grid">
-                {categorySections.map((section, index) => (
-                  <motion.div
-                    key={section.id}
-                    className="learn-card"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleSectionClick(section)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        handleSectionClick(section);
-                      }
-                    }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      delay: catIndex * 0.1 + index * 0.1,
-                      duration: 0.4,
-                      ease: [0.4, 0, 0.2, 1]
-                    }}
-                    whileHover={{ scale: 1.03, y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="learn-card-gradient" style={{ background: section.color }}></div>
-                    <div className="learn-card-content">
-                      <div className="learn-card-icon" aria-hidden="true">{section.icon}</div>
-                      <h3 className="learn-card-title">
-                        {language === 'ar' ? section.titleAr : section.titleEn}
-                      </h3>
-                      <p className="learn-card-description">
-                        {language === 'ar' ? section.descriptionAr : section.descriptionEn}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
+                {categorySections.map((section, index) => {
+                  const locked = isLocked(section.id);
+                  const reason = locked
+                    ? lockReason(userEmail, section.id, language, userRole)
+                    : '';
+
+                  return (
+                    <motion.div
+                      key={section.id}
+                      className={`learn-card ${locked ? 'learn-card--locked' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-disabled={locked}
+                      title={reason || undefined}
+                      onClick={() => handleSectionClick(section)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          handleSectionClick(section);
+                        }
+                      }}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        delay: catIndex * 0.1 + index * 0.1,
+                        duration: 0.4,
+                        ease: [0.4, 0, 0.2, 1]
+                      }}
+                      whileHover={locked ? undefined : { scale: 1.03, y: -5 }}
+                      whileTap={locked ? undefined : { scale: 0.98 }}
+                    >
+                      <div className="learn-card-gradient" style={{ background: section.color }}></div>
+                      <div className="learn-card-content">
+                        <div className="learn-card-icon" aria-hidden="true">
+                          {locked ? '🔒' : section.icon}
+                        </div>
+                        <h3 className="learn-card-title">
+                          {language === 'ar' ? section.titleAr : section.titleEn}
+                        </h3>
+                        <p className="learn-card-description">
+                          {locked
+                            ? reason
+                            : (language === 'ar' ? section.descriptionAr : section.descriptionEn)}
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           );

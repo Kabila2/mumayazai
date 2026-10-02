@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
+import { transliterate } from '../utils/phonetics';
 import './MemoryGame.css';
 
 const MemoryGame = ({ language = 'en' }) => {
@@ -266,7 +267,15 @@ const MemoryGame = ({ language = 'en' }) => {
                 {card.type === 'picture' ? (
                   <span className="card-emoji">{card.value}</span>
                 ) : (
-                  <span className="card-word">{card.value}</span>
+                  <>
+                    <span className="card-word">{card.value}</span>
+                    {/* A phonetic line under an Arabic word card. Matching a
+                        picture to a script you cannot read is shape-matching,
+                        not learning — this is what makes it the latter. */}
+                    {transliterate(card.value) && (
+                      <span className="card-phonetic">{transliterate(card.value)}</span>
+                    )}
+                  </>
                 )}
               </div>
             </div>

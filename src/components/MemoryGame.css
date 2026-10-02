@@ -510,3 +510,33 @@
   outline: 3px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* ----------------------------------------------------------------------------
+   PHONETIC SPELLING ON WORD CARDS (added in this pass)
+   Matching a picture to a script you cannot read is shape-matching; the
+   phonetic line is what makes it reading. The card face is a fixed-size flip
+   target, so the two lines are stacked and centred rather than left to wrap.
+   ---------------------------------------------------------------------------- */
+.memory-game-container .card-back {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.memory-game-container .card-phonetic {
+  font-size: 0.72rem;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.2;
+  opacity: 0.85;
+  /* Never let a long transliteration push the Arabic word off the card. */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root.high-contrast .memory-game-container .card-phonetic {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}

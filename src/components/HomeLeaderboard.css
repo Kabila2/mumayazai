@@ -1,0 +1,153 @@
+/* ============================================================================
+   HOME LEADERBOARD — the compact top-five panel on the home page.
+   Scoped under .home-leaderboard throughout: the learning and game modules
+   share a lot of generic class names (.rank, .points, .avatar, .row), and this
+   panel sits on the same page as several of them.
+   ============================================================================ */
+
+.home-leaderboard {
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--mz-shadow-sm);
+}
+
+.home-leaderboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.home-leaderboard-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--mz-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-leaderboard-all {
+  border: none;
+  background: none;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--mz-accent-text);
+  cursor: pointer;
+  border-radius: var(--mz-radius-sm);
+}
+
+.home-leaderboard-all:hover { background: var(--mz-accent-soft); }
+.home-leaderboard-all:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 2px;
+}
+
+.home-leaderboard-empty,
+.home-leaderboard-mine {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--mz-text-2);
+  line-height: 1.5;
+}
+
+.home-leaderboard-mine {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--mz-border);
+  font-weight: 600;
+}
+
+.home-leaderboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-leaderboard-row {
+  display: grid;
+  /* rank | avatar | name (flexes) | points */
+  grid-template-columns: 28px 32px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--mz-radius-md);
+}
+
+.home-leaderboard-row.is-me {
+  background: var(--mz-accent-soft);
+  outline: 1px solid var(--mz-accent);
+}
+
+.home-leaderboard-rank {
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--mz-text-2);
+}
+
+.home-leaderboard-avatar {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--mz-surface-3);
+  color: var(--mz-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.home-leaderboard-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mz-text);
+  /* Long display names must not push the points column off the card. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-leaderboard-you {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--mz-radius-pill);
+  background: var(--mz-accent);
+  color: var(--mz-accent-contrast);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.home-leaderboard-points {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--mz-accent-text);
+  white-space: nowrap;
+}
+
+.home-leaderboard-points-unit {
+  margin-inline-start: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--mz-text-2);
+}
+
+@media (max-width: 480px) {
+  .home-leaderboard { padding: 16px; }
+  .home-leaderboard-row { grid-template-columns: 24px 28px 1fr auto; gap: 8px; }
+  .home-leaderboard-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+}

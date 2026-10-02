@@ -763,3 +763,368 @@
   display: none !important;
   animation: none !important;
 }
+
+/* ----------------------------------------------------------------------------
+   11. THE FEATURES THE MODE STILL MISSED
+   Sections 1-10 cover everything styled through the design tokens or through a
+   lowercase class name. Four kinds of thing are not, and each one disappeared
+   outright when the mode was switched on:
+
+     a) NATIVE FORM CONTROLS whose appearance IS their painted background.
+        Section 6 sets `background: #000 !important` on every `input`, which is
+        right for a text field and fatal for a checkbox, radio, range or colour
+        swatch: it erases the control the browser was going to draw, leaving a
+        black square with no tick, no thumb and no colour.
+     b) THE DRAWING CANVAS. `canvas` is excluded from the strip so its pixels
+        survive, but `.canvas-container` is not — its white ground was removed,
+        and the default black ink then drew black-on-black. The board looked
+        blank, which made the whole mode look broken.
+     c) SVG CHARTS. The parent dashboard charts are Recharts, which paints its
+        axes, grid and labels with hardcoded hex passed as SVG attributes
+        (`stroke="#6b7280"`). `svg *` is excluded from the strip, so those greys
+        stayed grey — invisible against the black ground.
+     d) MUI ICON BUTTONS. MUI's `sx` prop compiles to a generated class that
+        sets `color` directly, so the icon colour the dashboards pass (#6b7280)
+        beat the inherited white. Every icon-only control — back, close, delete,
+        menu — rendered dark grey on black.
+   ---------------------------------------------------------------------------- */
+
+/* (a) Controls the browser draws for itself. `appearance: auto` puts the native
+   widget back and the accent colours make it legible. These sit after section
+   6's blanket `input` rule, at the same specificity, so they win on order. */
+:root.high-contrast input[type="checkbox"],
+:root.high-contrast input[type="radio"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  background: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  accent-color: #ffff00 !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* A colour input exists to show the chosen colour, so it keeps its own fill. */
+:root.high-contrast input[type="color"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  background: none !important;
+  border: 3px solid #ffffff !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 2px !important;
+}
+
+/* Range inputs everywhere, not only the two inside `.setting-group`. The track
+   needs a visible rule and the thumb a bright fill, or the slider reads as an
+   empty box with nothing to grab. */
+:root.high-contrast input[type="range"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 999px !important;
+  height: 12px !important;
+  accent-color: #ffff00 !important;
+}
+
+:root.high-contrast input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: #ffff00 !important;
+  border: 2px solid #000000 !important;
+}
+
+:root.high-contrast input[type="range"]::-moz-range-thumb {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: #ffff00 !important;
+  border: 2px solid #000000 !important;
+}
+
+/* (b) The drawing board keeps a WHITE ground here rather than joining the black
+   everything else gets. The board's ink, the eraser's destination-out
+   compositing and every saved drawing all assume a light surface, so inverting
+   the surface alone would turn high contrast into a way of hiding your own
+   work. A thick white frame ties it back to the rest of the mode. */
+:root.high-contrast .canvas-container {
+  background: #ffffff !important;
+  border: 3px solid #ffffff !important;
+}
+
+:root.high-contrast .drawing-canvas {
+  background: #ffffff !important;
+}
+
+/* The toolbar colour swatches are their own value, so they keep their fill
+   (the strip already spares inline backgrounds) and gain a border so the
+   selected one stays identifiable. */
+:root.high-contrast .color-btn,
+:root.high-contrast .color-option {
+  border: 3px solid #ffffff !important;
+}
+
+:root.high-contrast .color-btn.active,
+:root.high-contrast .color-option.active,
+:root.high-contrast .color-btn.selected {
+  outline: 4px solid #ffff00 !important;
+  outline-offset: 2px !important;
+}
+
+/* (c) Recharts. Axes, grid lines and tick labels arrive as SVG attributes,
+   which only an `!important` CSS property can override. */
+:root.high-contrast .recharts-wrapper text,
+:root.high-contrast .recharts-cartesian-axis-tick-value,
+:root.high-contrast .recharts-label,
+:root.high-contrast .recharts-legend-item-text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+:root.high-contrast .recharts-cartesian-grid line,
+:root.high-contrast .recharts-cartesian-axis-line,
+:root.high-contrast .recharts-cartesian-axis-tick-line {
+  stroke: #ffffff !important;
+  stroke-opacity: 0.6 !important;
+}
+
+/* Plotted data gets a bright saturated fill. Gradient fills (`fill="url(#…)"`)
+   are flattened too, since their stops are mid-tones that vanish on black. */
+:root.high-contrast .recharts-area-area,
+:root.high-contrast .recharts-bar-rectangle path,
+:root.high-contrast .recharts-rectangle {
+  fill: #ffff00 !important;
+  fill-opacity: 0.85 !important;
+}
+
+:root.high-contrast .recharts-area-curve,
+:root.high-contrast .recharts-line-curve {
+  stroke: #00ff00 !important;
+  stroke-width: 3 !important;
+}
+
+:root.high-contrast .recharts-dot {
+  fill: #00ff00 !important;
+  stroke: #ffffff !important;
+}
+
+/* The chart tooltip is a Paper in some versions and a plain div in others. */
+:root.high-contrast .recharts-default-tooltip,
+:root.high-contrast .recharts-tooltip-wrapper > * {
+  background: #1a1a1a !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+:root.high-contrast .recharts-tooltip-item,
+:root.high-contrast .recharts-tooltip-label {
+  color: #ffffff !important;
+}
+
+/* (d) MUI icon controls. The `sx` colour is a generated class at (0,1,0);
+   these are (0,2,0) and `!important`, so they take it back. */
+:root.high-contrast .MuiIconButton-root {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+:root.high-contrast .MuiIconButton-root:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Every MUI icon, wherever it sits — inside a button, a chip, an input
+   adornment, or on its own. MuiSvgIcon paints with `fill: currentColor`, so
+   fixing the colour is enough. */
+:root.high-contrast .MuiSvgIcon-root {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+
+/* Toggles, checkboxes and radios in MUI are SVG, not native inputs, so (a)
+   above cannot reach them. */
+:root.high-contrast .MuiSwitch-track {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+:root.high-contrast .MuiSwitch-thumb {
+  background-color: #8a8a8a !important;
+  border: 2px solid #000000 !important;
+}
+
+:root.high-contrast .Mui-checked .MuiSwitch-thumb {
+  background-color: #ffff00 !important;
+}
+
+:root.high-contrast .MuiCheckbox-root,
+:root.high-contrast .MuiRadio-root {
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+:root.high-contrast .MuiCheckbox-root.Mui-checked,
+:root.high-contrast .MuiRadio-root.Mui-checked {
+  color: #ffff00 !important;
+}
+
+/* ----------------------------------------------------------------------------
+   13. THE SCREENS ADDED IN THIS PASS
+   Rewards, the home leaderboard and the collapsed "…" box. All three are
+   token-driven and mostly carried by sections 1-7; these cover the parts whose
+   colour is their meaning.
+   ---------------------------------------------------------------------------- */
+
+/* A reward swatch IS a colour, so it keeps its own fill (set inline, and
+   therefore already spared by the strip) and only gains a border. */
+:root.high-contrast .rewards-swatch,
+:root.high-contrast .rewards-frame {
+  border: 2px solid #ffffff !important;
+}
+
+/* A locked reward stays legible while still reading as unavailable. The dashed
+   border carries that, not reduced opacity. */
+:root.high-contrast .rewards-option.is-locked {
+  opacity: 1 !important;
+  border: 2px dashed #8a8a8a !important;
+  color: #c4c4c4 !important;
+}
+
+:root.high-contrast .rewards-option.is-active {
+  border: 3px solid #ffff00 !important;
+}
+
+/* Section 7 matches the "in use" pill through [class*="badge"], which is right.
+   The "N to go" pill is not matched, and should NOT be yellow — it marks
+   something the learner does not have yet. */
+:root.high-contrast .rewards-option-cost {
+  background: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid #8a8a8a !important;
+}
+
+/* The learner's own leaderboard row is marked with a tint, which the strip
+   removes; a yellow rule carries it instead. */
+:root.high-contrast .home-leaderboard-row.is-me {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: -3px !important;
+}
+
+/* The "…" box and the locked tiles inside it. The panel floats over the page,
+   so it needs a solid ground of its own or the page shows through. */
+:root.high-contrast .collapsed-box-panel {
+  background: #000000 !important;
+  border: 3px solid #ffffff !important;
+}
+
+:root.high-contrast .collapsed-box-trigger {
+  background: #000000 !important;
+  border: 2px dashed #ffffff !important;
+  color: #ffffff !important;
+}
+
+:root.high-contrast .collapsed-box-trigger:hover,
+:root.high-contrast .collapsed-box.is-open .collapsed-box-trigger {
+  background: #ffff00 !important;
+  color: #000000 !important;
+}
+
+:root.high-contrast .collapsed-box-trigger:hover *,
+:root.high-contrast .collapsed-box.is-open .collapsed-box-trigger * {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+:root.high-contrast .section-card--locked {
+  opacity: 1 !important;
+  border: 2px dashed #8a8a8a !important;
+}
+
+:root.high-contrast .section-card--locked .card-title,
+:root.high-contrast .section-card--locked .card-description {
+  color: #c4c4c4 !important;
+  -webkit-text-fill-color: #c4c4c4 !important;
+}
+
+/* "Start here" marks the one lesson to do next, so it is the one thing on the
+   home page that should read as filled. */
+:root.high-contrast .card-next-badge {
+  background: #00ff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* The locked tile in the Learn hub. Its gradient strip is inline so the strip
+   spares it; dimming it would be the wrong signal, so the padlock and the
+   dashed border do the work instead. */
+:root.high-contrast .learn-card--locked {
+  opacity: 1 !important;
+  border: 2px dashed #8a8a8a !important;
+}
+
+:root.high-contrast .learn-card--locked .learn-card-gradient {
+  background: #8a8a8a !important;
+}
+
+/* The words module listen buttons: one filled primary, one bordered secondary,
+   matching how section 8 treats .send-button vs .secondary-btn. */
+:root.high-contrast .word-listen-btn {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+:root.high-contrast .word-listen-btn--secondary {
+  background: #000000 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* The unit test is built from what the learner has finished, so its tile is the
+   one quiz option that is sometimes unavailable; it says why. */
+:root.high-contrast .quiz-type-card.is-locked {
+  opacity: 1 !important;
+  border: 2px dashed #8a8a8a !important;
+  color: #c4c4c4 !important;
+}
+
+:root.high-contrast .topic-card.is-locked {
+  opacity: 1 !important;
+  border: 2px dashed #8a8a8a !important;
+}
+
+/* ----------------------------------------------------------------------------
+   14. TWO MORE THINGS THE STRIP CANNOT REACH
+   ---------------------------------------------------------------------------- */
+
+/* (a) The home page's ambient blobs. The strip in section 2 targets elements,
+   not pseudo-elements, so these two blurred circles behind the welcome header
+   survived it and left a purple/pink wash across the top of an otherwise black
+   page. Section 10 removes the other ambient layers for the same reason; these
+   were added after it. */
+:root.high-contrast .home-section .welcome-header::before,
+:root.high-contrast .home-section .welcome-header::after {
+  display: none !important;
+  animation: none !important;
+}
+
+/* (b) The "…" box dots are drawn as three real elements (the OpenDyslexic face
+   has no U+2022 glyph, so the character rendered as tofu). The strip removes
+   every background, which is what makes them visible — so they have to be
+   re-added, like the progress fills in section 7. */
+:root.high-contrast .collapsed-box-dots i {
+  background: #ffff00 !important;
+}
+
+:root.high-contrast .collapsed-box-trigger:hover .collapsed-box-dots i,
+:root.high-contrast .collapsed-box.is-open .collapsed-box-trigger .collapsed-box-dots i {
+  background: #000000 !important;
+}

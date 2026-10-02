@@ -1,173 +1,161 @@
-/* Celebration Popup Overlay */
+/* ============================================================================
+   CELEBRATION POPUP
+   ----------------------------------------------------------------------------
+   The component portals itself to <body> (see CelebrationPopup.js for why), so
+   these selectors are deliberately NOT nested under a module root — there is
+   no module root above them any more. The flip side is that the generic names
+   `.celebration-emoji`, `.celebration-content` and `.celebration-overlay` are
+   also used by four module stylesheets for their own inline banners; those are
+   scoped under their module root, so they no longer collide with this file.
+
+   Everything here is token-driven (--mz-*), so a points reward that recolours
+   the accent recolours the popup with it.
+   ============================================================================ */
+
 .celebration-popup-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(5px);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px 16px;
+  background: rgba(15, 12, 32, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 10000;
   overflow: hidden;
 }
 
-/* Balloons */
-.celebration-balloon {
-  position: absolute;
-  width: 50px;
-  height: 65px;
-  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  animation: balloon-sway 2s ease-in-out infinite;
-}
+/* The louder styles earn a slightly deeper scrim, so their extra particles
+   still read against the page behind them. */
+.celebration-popup-overlay--fireworks { background: rgba(15, 12, 32, 0.55); }
 
-.celebration-balloon::before {
-  content: '';
-  position: absolute;
-  top: 80%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 10px solid currentColor;
-}
-
-.balloon-string {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  width: 2px;
-  height: 80px;
-  transform: translateX(-50%);
-  opacity: 0.8;
-}
-
-@keyframes balloon-sway {
-  0%, 100% {
-    transform: translateX(0) rotate(0deg);
-  }
-  25% {
-    transform: translateX(10px) rotate(5deg);
-  }
-  75% {
-    transform: translateX(-10px) rotate(-5deg);
-  }
-}
-
-/* Confetti */
-.celebration-confetti {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-}
-
-/* Stars */
+/* ----------------------------------------------------------------------------
+   Particles. All three are inert decoration: aria-hidden on the overlay's
+   children is unnecessary because they carry no text, but they must never
+   intercept the click that closes the popup.
+   ---------------------------------------------------------------------------- */
+.celebration-confetti,
+.celebration-balloon,
 .celebration-star {
   position: absolute;
-  font-size: 2rem;
   pointer-events: none;
 }
 
-/* Message Box */
+.celebration-confetti {
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0.9;
+}
+
+.celebration-balloon {
+  width: 34px;
+  height: 44px;
+  border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
+  opacity: 0.85;
+}
+
+.celebration-star {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* ----------------------------------------------------------------------------
+   Message box
+   ---------------------------------------------------------------------------- */
 .celebration-message-box {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 30px;
-  padding: 50px 60px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  text-align: center;
-  max-width: 500px;
   position: relative;
   z-index: 10;
-  border: 5px solid rgba(255, 255, 255, 0.3);
+  max-width: 420px;
+  width: 100%;
+  padding: 36px 40px 32px;
+  text-align: center;
+  background: var(--mz-surface, #ffffff);
+  border: 1px solid var(--mz-border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--mz-radius-xl, 24px);
+  box-shadow: var(--mz-shadow-lg, 0 18px 50px rgba(15, 12, 32, 0.22));
+}
+
+/* A single accent hairline along the top: enough to feel celebratory without
+   the full-bleed gradient the old box used, which fought every theme. */
+.celebration-message-box::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  border-radius: var(--mz-radius-xl, 24px) var(--mz-radius-xl, 24px) 0 0;
+  background: var(--mz-accent-grad, linear-gradient(135deg, #8b5cf6, #ec4899));
 }
 
 .celebration-icon {
-  font-size: 6rem;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 12px;
 }
 
 .celebration-message {
-  font-size: 3.5rem;
+  margin: 0 0 24px;
+  font-size: 2rem;
   font-weight: 800;
-  color: white;
-  margin: 20px 0;
-  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  letter-spacing: 2px;
-}
-
-.celebration-emoji-row {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin: 30px 0;
-}
-
-.celebration-emoji {
-  font-size: 2.5rem;
-  display: inline-block;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--mz-text, #1f2937);
 }
 
 .celebration-close-btn {
-  background: white;
-  color: #667eea;
+  min-width: 160px;
+  padding: 14px 32px;
   border: none;
-  padding: 15px 40px;
-  border-radius: 50px;
-  font-size: 1.3rem;
+  border-radius: var(--mz-radius-pill, 999px);
+  background: var(--mz-accent, #8b5cf6);
+  color: var(--mz-accent-contrast, #ffffff);
+  font-size: 1.05rem;
   font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-  margin-top: 10px;
+  transition: background 0.2s ease;
 }
 
 .celebration-close-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+  background: var(--mz-accent-hover, #7c3aed);
 }
 
-.celebration-close-btn:active {
-  transform: translateY(0);
+.celebration-close-btn:focus-visible {
+  outline: 3px solid var(--mz-ring, #8b5cf6);
+  outline-offset: 3px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* ----------------------------------------------------------------------------
+   Responsive
+   ---------------------------------------------------------------------------- */
+@media (max-width: 600px) {
   .celebration-message-box {
-    padding: 40px 30px;
-    max-width: 90%;
+    padding: 28px 24px 24px;
+    max-width: 100%;
   }
 
-  .celebration-icon {
-    font-size: 4rem;
+  .celebration-icon { font-size: 2.75rem; }
+  .celebration-message { font-size: 1.6rem; }
+  .celebration-close-btn { width: 100%; }
+}
+
+/* ----------------------------------------------------------------------------
+   Reduced motion — the component already skips generating particles, so this
+   only needs to stop the transitions on what remains.
+   ---------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .celebration-popup-overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
-  .celebration-message {
-    font-size: 2.5rem;
-  }
-
-  .celebration-emoji {
-    font-size: 2rem;
-  }
-
-  .celebration-balloon {
-    width: 40px;
-    height: 52px;
-  }
-
-  .balloon-string {
-    height: 60px;
+  .celebration-confetti,
+  .celebration-balloon,
+  .celebration-star {
+    display: none;
   }
 }
 
-/* RTL Support */
-[dir="rtl"] .celebration-message-box {
-  direction: rtl;
-}
+/* RTL */
+[dir="rtl"] .celebration-message-box { direction: rtl; }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound } from '../utils/soundEffects';
 import { useVoiceOver } from '../hooks/useVoiceOver';
+import { transliterate } from '../utils/phonetics';
 import './InteractiveStoryReader.css';
 
 const stories = [
@@ -254,19 +255,30 @@ const InteractiveStoryReader = ({ onClose, language = 'en' }) => {
 
   const currentContent = selectedStory.content[currentPage];
 
-  // Render text with highlighted words
+  // Render text with highlighted words.
+  //
+  // Arabic words carry their phonetic spelling underneath (see
+  // src/utils/phonetics.js): a story in a script the reader cannot decode is
+  // a picture book with decoration on it. Each word is its own stacked unit so
+  // the spelling sits under the word it belongs to and the read-along
+  // highlight still lands on the right one.
   const renderHighlightedText = (text, isArabic) => {
     const words = getWords(text);
     return (
       <div className={`story-text ${isArabic ? 'ar' : 'en'}`}>
-        {words.map((word, index) => (
-          <span
-            key={index}
-            className={currentWordIndex === index ? 'highlighted-word' : ''}
-          >
-            {word}{' '}
-          </span>
-        ))}
+        {words.map((word, index) => {
+          const phonetic = isArabic ? transliterate(word) : '';
+          return (
+            <span
+              key={index}
+              className={`${isArabic ? 'story-word' : ''} ${currentWordIndex === index ? 'highlighted-word' : ''}`.trim()}
+            >
+              <span className="story-word-text">{word}</span>
+              {phonetic && <span className="story-word-phonetic">{phonetic}</span>}
+              {!isArabic && ' '}
+            </span>
+          );
+        })}
       </div>
     );
   };

@@ -744,3 +744,169 @@
     transition: none;
   }
 }
+
+/* ============================================================================
+   ADDED IN THIS PASS
+   ----------------------------------------------------------------------------
+   • PHONETIC SPELLING under every piece of Arabic script. The quiz showed bare
+     script, which is unreadable to a learner who has not learned to read it —
+     i.e. precisely the learner being tested. See src/utils/phonetics.js.
+   • THE UNIT TEST tile and its locked state, and locked topic tiles: a topic
+     locks and unlocks with its lesson (moduleUnlockUtils.js).
+   • A TAP-TO-HEAR affordance on the question's Arabic.
+   ============================================================================ */
+
+/* The phonetic line. Deliberately quieter than the script above it — it is a
+   way in, not the thing being learned — but still large enough to read at a
+   glance, since every learner here is a beginner. */
+.quiz-center .quiz-phonetic {
+  margin: -0.25rem 0 1rem;
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--mz-text-2);
+  text-align: center;
+}
+
+/* An option whose text is Arabic gets its own phonetic line, stacked under the
+   script, so choosing between four Arabic words is reading rather than
+   guessing at shapes. */
+.quiz-center .option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.quiz-center .option-phonetic {
+  font-size: 0.85rem;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--mz-text-2);
+}
+
+/* Same, for the matching game's Arabic cards. */
+.quiz-center .card-phonetic {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--mz-text-2);
+}
+
+/* Tap the question's Arabic to hear it. The hint icon is the affordance — a
+   silently clickable block is one nobody finds. */
+.quiz-center .quiz-speakable {
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--mz-radius-lg);
+  transition: background 0.18s ease;
+}
+
+.quiz-center .quiz-speakable:hover {
+  background: var(--mz-accent-soft);
+}
+
+.quiz-center .quiz-speakable:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 4px;
+}
+
+.quiz-center .quiz-speak-hint {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 10px;
+  font-size: 1.1rem;
+  opacity: 0.55;
+}
+
+.quiz-center .quiz-speakable:hover .quiz-speak-hint { opacity: 1; }
+
+/* ------------------------------------------------------------- Unit test tile */
+/* It is listed first and marked out, because it is the only quiz whose score
+   measures what the learner was actually taught. */
+.quiz-center .quiz-type-card.is-featured {
+  border-width: 2px;
+  border-color: var(--quiz-accent);
+}
+
+.quiz-center .quiz-type-tag {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 12px;
+  border-radius: var(--mz-radius-pill);
+  background: var(--quiz-accent);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ------------------------------------------------------- Locked tiles (both) */
+/* A locked tile stays legible and says why. A dashed border and the padlock
+   carry "not yet"; dimming it into illegibility would not. */
+.quiz-center .quiz-type-card.is-locked,
+.quiz-center .topic-card.is-locked {
+  cursor: not-allowed;
+  border-style: dashed;
+  border-color: var(--mz-border-strong);
+  background: var(--mz-surface-2);
+  box-shadow: none;
+}
+
+.quiz-center .quiz-type-card.is-locked:hover,
+.quiz-center .topic-card.is-locked:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--mz-border-strong);
+}
+
+.quiz-center .quiz-type-card.is-locked::before,
+.quiz-center .topic-card.is-locked::before {
+  background: var(--mz-text-3);
+}
+
+.quiz-center .quiz-type-card.is-locked .quiz-type-name,
+.quiz-center .quiz-type-card.is-locked .quiz-type-description,
+.quiz-center .topic-card.is-locked .topic-name {
+  color: var(--mz-text-2);
+}
+
+.quiz-center .topic-lock-reason {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--mz-text-2);
+}
+
+.quiz-center .quiz-type-card:focus-visible,
+.quiz-center .topic-card:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------- Results coverage */
+/* What the unit test covered. A bare percentage with no scope attached does
+   not tell a learner — or a parent reading over their shoulder — anything. */
+.quiz-center .results-coverage {
+  max-width: 46ch;
+  margin: 0 auto 1.25rem;
+  padding: 12px 16px;
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--mz-text-2);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-center .quiz-type-card:hover,
+  .quiz-center .topic-card:hover,
+  .quiz-center .option-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

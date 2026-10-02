@@ -585,3 +585,65 @@
     font-size: 0.95rem;
   }
 }
+
+/* ----------------------------------------------------------------------------
+   PHONETIC SPELLING UNDER ARABIC WORDS (added in this pass)
+   A story in a script the reader cannot decode is a picture book with
+   decoration on it. Each Arabic word is now its own stacked unit — word above,
+   phonetic below — so the spelling sits under the word it belongs to and the
+   read-along highlight still lands on exactly one word.
+
+   `.story-text` keeps `line-height: 1.8` for the English rendering, so the
+   Arabic path overrides it: two stacked lines inside a 1.8 line-height run
+   would overlap the row beneath.
+   ---------------------------------------------------------------------------- */
+.story-text.ar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 4px 12px;
+  line-height: 1.3;
+}
+
+.story-word {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  /* The highlight is applied to this element, so the padding has to live here
+     rather than on the inner text, or the highlight would clip the phonetic. */
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+
+.story-word-text {
+  display: block;
+}
+
+.story-word-phonetic {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.5em;          /* relative, so it tracks the story font size */
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* The highlight already sets its own background; the phonetic inside it needs
+   to stay legible against the amber rather than keeping its muted grey. */
+.highlighted-word .story-word-phonetic {
+  color: #1f2937;
+}
+
+:root.dark-mode .story-word-phonetic { color: #9ca3af; }
+
+:root.high-contrast .story-word-phonetic {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+:root.high-contrast .highlighted-word .story-word-phonetic {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}

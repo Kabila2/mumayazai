@@ -4,9 +4,16 @@ import './ArabicColorsLearning.css';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { recordModuleItemLearned, getLearnedItems } from '../utils/progressUtils';
 import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
+import { checkAchievements } from '../utils/achievementsSystem';
+import { PASS_PERCENT } from '../utils/moduleUnlockUtils';
+import { learnedPhrase, moduleCompletePhrase } from '../utils/speechPhrasing';
 import CelebrationPopup from './CelebrationPopup';
 
-const arabicColors = [
+/**
+ * The colours this module teaches. Exported for the same reason as
+ * arabicAlphabet: the ids progressUtils records are the `english` values here.
+ */
+export const arabicColors = [
   {
     arabic: 'أحمر',
     english: 'Red',
@@ -213,17 +220,42 @@ const ArabicColorsLearning = ({ t, language, fontSize, highContrast, reducedMoti
     // and the Explore leaderboard both move when a color is learned.
     if (userEmail) {
       awardPoints(userEmail, 'COLOR_LEARNED');
+
+      // Awards `colors_complete` once coverage passes the mark, which is what
+      // unlocks the Words module on the learning path (moduleUnlockUtils.js).
+      checkAchievements(userEmail, 'module_progress', {
+        moduleId: 'colors',
+        learnedCount: newCompleted.length,
+        totalCount: arabicColors.length,
+        passPercent: PASS_PERCENT
+      });
+
       if (newCompleted.length === arabicColors.length) {
         awardPoints(userEmail, 'MODULE_COMPLETED');
       }
     }
 
     voiceOver.speak(
-      language === 'ar'
-        ? `أكملت لون ${color.arabic}. حصلت على ${POINT_VALUES.COLOR_LEARNED} نقطة`
-        : `Color ${color.english} completed. You earned ${POINT_VALUES.COLOR_LEARNED} points`,
+      learnedPhrase({
+        language,
+        kind: 'color',
+        name: language === 'ar' ? color.arabic : color.english,
+        points: POINT_VALUES.COLOR_LEARNED
+      }),
       true
     );
+
+    if (newCompleted.length === arabicColors.length) {
+      setTimeout(() => {
+        voiceOver.speak(
+          moduleCompletePhrase({
+            language,
+            moduleName: language === 'ar' ? 'الألوان' : 'colours lesson'
+          }),
+          true
+        );
+      }, 1500);
+    }
   };
 
   const handleCloseDetail = () => {

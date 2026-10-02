@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { playClickSound } from '../utils/soundEffects';
 import CelebrationPopup from './CelebrationPopup';
+import { transliterate } from '../utils/phonetics';
 import './NumberLearningGame.css';
 
 const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
@@ -307,6 +308,11 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
               <div className="option-name">
                 {language === 'ar' ? option.nameAr : option.nameEn}
               </div>
+              {/* The Arabic number word and how to say it. In English the
+                  option read only "Three", so the game never actually taught
+                  the Arabic it exists to teach. */}
+              <div className="option-arabic" lang="ar" dir="rtl">{option.nameAr}</div>
+              <div className="option-phonetic">{transliterate(option.nameAr)}</div>
             </motion.div>
           ))}
         </div>

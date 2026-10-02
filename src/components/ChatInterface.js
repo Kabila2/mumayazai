@@ -1,4 +1,3 @@
-/* global puter */
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import './ChatInterface.css';
@@ -17,6 +16,7 @@ import {
   recordChatSession
 } from '../utils/leaderboardUtils';
 import { awardPoints } from '../utils/pointsUtils';
+import { askAI } from '../utils/aiClient';
 
 /** ---------- Enhanced Memory System ---------- */
 const MEMORY_STORAGE_KEY = "stellar_chat_memory";
@@ -255,70 +255,12 @@ const analyzeImage = async (imageUrl) => {
   }
 };
 
-/** ---------- AI Integration with Enhanced Memory ---------- */
-const hasPuter = () =>
-  typeof window !== "undefined" &&
-  window.puter &&
-  puter.ai &&
-  typeof puter.ai.chat === "function";
-
-const waitForPuter = (timeoutMs = 3000) =>
-  new Promise((resolve) => {
-    if (hasPuter()) return resolve(true);
-    const t0 = Date.now();
-    const id = setInterval(() => {
-      if (hasPuter() || Date.now() - t0 > timeoutMs) {
-        clearInterval(id);
-        resolve(hasPuter());
-      }
-    }, 100);
-  });
-
-const aiChat = async (prompt, ms = 30000) => {
-  if (!hasPuter()) throw new Error("Puter SDK not available");
-  
-  const timeout = new Promise((_, rej) =>
-    setTimeout(() => rej(new Error("AI request timed out")), ms)
-  );
-  
-  const req = (async () => {
-    const resp = await puter.ai.chat(prompt);
-    return typeof resp === "string" ? resp : resp?.message?.content ?? "";
-  })();
-  
-  return Promise.race([req, timeout]);
-};
-
-const mockAI = (prompt, hasContext = false, hasImages = false) => {
-  const userInput = prompt.split("Current Request:").pop() ||
-                   prompt.split("Human:").pop() ||
-                   prompt;
-  const cleanInput = userInput.trim().substring(0, 100);
-
-  const contextNote = hasContext ? "\n• I remember our previous conversation" : "";
-  const imageNote = hasImages ? "\n• I can see you've shared images with me" : "";
-
-  // Check for common reference patterns
-  const hasReference = /\b(that|it|the .+ (I|you) (mentioned|said|talked about)|what (I|you) (said|mentioned)|summarize|explain .+ (mentioned|said))\b/i.test(cleanInput);
-
-  if (hasContext && hasReference) {
-    return `• I can see you're referring to something from our conversation${contextNote}\n• In demo mode, I can detect references but need the real AI for full context analysis\n• Your request: "${cleanInput}"\n• The memory system is active and ready for the full AI response\n• Try this with the real AI for complete context awareness${imageNote}`;
-  }
-
-  const responses = [
-    `• Regarding "${cleanInput}"\n• I'm currently in demo mode with full memory system active\n• I can help you with questions and provide information\n• I maintain conversation history for context-aware responses${contextNote}${imageNote}`,
-
-    `• You mentioned: "${cleanInput}"\n• This is a demonstration of the Chat Assistant with memory\n• I can assist with a wide range of topics\n• I maintain our conversation history for continuity and reference handling${contextNote}${imageNote}`,
-
-    `• About "${cleanInput}"\n• I'm running in demo mode but with full memory capabilities\n• I remember our conversation and can build on previous discussions\n• Ready to assist with context-aware responses${contextNote}${imageNote}`
-  ];
-
-  return responses[Math.floor(Math.random() * responses.length)];
-};
-
+/** ---------- AI Integration with Enhanced Memory ----------
+ * The provider is chosen by src/utils/aiClient.js rather than here: this
+ * screen's job is to assemble the prompt (memory context + formatting rules)
+ * and hand it over. `askAI` never rejects — it falls through to the built-in
+ * offline tutor — so there is no error branch left to get wrong. */
 const getAIResponse = async (prompt, conversationContext = "", hasImages = false) => {
-  const ready = await waitForPuter(3000);
-
   // Enhanced memory and context instructions
   const memoryInstruction = conversationContext
     ? "\n\nIMPORTANT MEMORY CONTEXT: You have access to our full conversation history above. When the user refers to something they mentioned before (like 'the book I mentioned', 'what I said earlier', 'that thing from before'), look back through the conversation history to find what they're referring to and respond accordingly. Use this context to provide more relevant and connected responses."
@@ -327,23 +269,16 @@ const getAIResponse = async (prompt, conversationContext = "", hasImages = false
   // Add bullet point formatting instruction
   const bulletPointInstruction = "\n\nIMPORTANT: Please format your response using bullet points. Start each main point with • and use clear, concise bullet points throughout your response.";
 
+  const imageInstruction = hasImages
+    ? "\n\nThe learner has attached one or more images; describe what is relevant to their question."
+    : "";
+
   const enhancedPrompt = conversationContext
-    ? prompt + conversationContext + memoryInstruction + bulletPointInstruction
-    : prompt + bulletPointInstruction;
+    ? prompt + conversationContext + memoryInstruction + bulletPointInstruction + imageInstruction
+    : prompt + bulletPointInstruction + imageInstruction;
 
-  console.log("🧠 Sending enhanced prompt with full memory context and reference handling");
-
-  if (!ready) {
-    return mockAI(enhancedPrompt, !!conversationContext, hasImages);
-  }
-
-  try {
-    const rawResponse = await aiChat(enhancedPrompt, 30000);
-    return rawResponse;
-  } catch (err) {
-    console.warn("[ChatInterface] AI error:", err);
-    return "• I'm having trouble connecting right now\n• Please try again in a moment";
-  }
+  const { text } = await askAI(enhancedPrompt);
+  return text;
 };
 
 /** ---------- Mobile Detection Hook ---------- */

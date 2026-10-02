@@ -1,0 +1,130 @@
+/* ============================================================================
+   COLLAPSED "…" BOX — the locked modules, folded into one tile.
+   Scoped under .collapsed-box; `.panel`, `.grid`, `.trigger` and `.count` are
+   all names other stylesheets in this app use.
+   ============================================================================ */
+
+.collapsed-box {
+  position: relative;
+  /* The panel escapes the grid cell, so this must out-stack its siblings. */
+  z-index: 20;
+}
+
+/* ------------------------------------------------------------------ Trigger */
+.collapsed-box-trigger {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 28px 20px;
+  border: 2px dashed var(--mz-border-strong);
+  border-radius: var(--mz-radius-lg);
+  background: var(--mz-surface-2);
+  color: var(--mz-text-2);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.collapsed-box-trigger:hover,
+.collapsed-box.is-open .collapsed-box-trigger {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+  color: var(--mz-text);
+}
+
+.collapsed-box-trigger:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
+}
+
+/* Three real circles, not the "•" character — see CollapsedCardsBox.js. */
+.collapsed-box-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 10px;
+}
+
+.collapsed-box-dots i {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mz-accent-text);
+}
+
+.collapsed-box-count {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--mz-text);
+}
+
+.collapsed-box-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.collapsed-box-hint {
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+  max-width: 22ch;
+}
+
+/* -------------------------------------------------------------------- Panel */
+.collapsed-box-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  /* Anchored to the right edge so a tile in the last column cannot push the
+     panel off-screen; `max-width` keeps it inside the viewport either way. */
+  right: 0;
+  width: max(320px, 100%);
+  max-width: min(680px, calc(100vw - 32px));
+  padding: 16px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
+  box-shadow: var(--mz-shadow-lg);
+}
+
+/* A bridge over the 10px gap, so moving the pointer from the tile to the panel
+   does not cross un-hovered ground and close it. */
+.collapsed-box-panel::before {
+  content: '';
+  position: absolute;
+  inset: -12px 0 auto 0;
+  height: 12px;
+}
+
+.collapsed-box-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+[dir="rtl"] .collapsed-box-panel {
+  right: auto;
+  left: 0;
+}
+
+/* --------------------------------------------------------------- Responsive */
+@media (max-width: 560px) {
+  /* On a phone the floating panel has nowhere to float, so it becomes a plain
+     block that pushes the page down instead of overlapping it. */
+  .collapsed-box-panel {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 10px;
+    box-shadow: none;
+  }
+
+  .collapsed-box-grid { grid-template-columns: 1fr; }
+}

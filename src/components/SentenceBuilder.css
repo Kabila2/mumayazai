@@ -336,3 +336,22 @@
   .nav-btn-builder { transition: none; }
   .selected-words-container.correct { animation: none; }
 }
+
+/* ----------------------------------------------------------------------------
+   PHONETIC HINT (added in this pass)
+   Without it, assembling the letters or words is a shape puzzle: a learner can
+   place the pieces correctly without ever knowing what they just built says.
+   ---------------------------------------------------------------------------- */
+.sentence-builder .target-phonetic {
+  margin-top: 6px;
+  font-size: 1.1rem;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--mz-text-2);
+}
+
+:root.high-contrast .sentence-builder .target-phonetic {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

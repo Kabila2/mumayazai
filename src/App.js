@@ -28,6 +28,8 @@ import {
   applyHighContrast,
   HIGH_CONTRAST_EVENT
 } from "./utils/highContrast";
+import { applyRewards, REWARDS_CHANGED_EVENT } from "./utils/rewardsStore";
+import { POINTS_CHANGED_EVENT } from "./utils/leaderboardUtils";
 import "./App.css";
 import "./dark-mode-global.css";
 
@@ -154,6 +156,27 @@ export default function App() {
   useEffect(() => {
     applyHighContrast(highContrast);
   }, [highContrast]);
+
+  // Apply the signed-in learner's unlocked rewards (accent colour, background
+  // effect, avatar frame) to <html>. Done here rather than in the platform
+  // because the rewards are also meant to be visible on the full-screen chat
+  // and voice screens, which the platform does not wrap. Re-runs on sign-in and
+  // sign-out so one account's theme never leaks into the next session.
+  useEffect(() => {
+    applyRewards(getSession()?.email || null);
+  }, [isLoggedIn]);
+
+  // And again whenever a reward is switched on from the rewards screen, or
+  // points land that unlock one.
+  useEffect(() => {
+    const sync = () => applyRewards(getSession()?.email || null);
+    window.addEventListener(REWARDS_CHANGED_EVENT, sync);
+    window.addEventListener(POINTS_CHANGED_EVENT, sync);
+    return () => {
+      window.removeEventListener(REWARDS_CHANGED_EVENT, sync);
+      window.removeEventListener(POINTS_CHANGED_EVENT, sync);
+    };
+  }, []);
 
   // Load voices
   useEffect(() => {

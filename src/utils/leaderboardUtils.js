@@ -522,3 +522,37 @@ export const getUserClassRank = (userEmail, className) => {
     return { rank: null, totalStudents: 0, leaderboard: [] };
   }
 };
+/**
+ * Where one learner stands on the points board, across EVERY user rather than
+ * the top ten `getLeaderboardData()` returns.
+ *
+ * `getUserRank(email, "totalPoints")` cannot answer this correctly: it sorts on
+ * the raw stored `totalPoints` field, which omits achievement bonuses, so a
+ * learner carrying badges ranked below their real position. This sorts on the
+ * canonical total instead — the same number the points bar and the dashboard
+ * show — and returns the shape a UI actually needs.
+ *
+ * @returns {{rank: number|null, total: number, points: number}}
+ */
+export const getPointsStanding = (userEmail) => {
+  try {
+    if (!userEmail) return { rank: null, total: 0, points: 0 };
+
+    const allStats = JSON.parse(localStorage.getItem(USER_STATS_KEY)) || {};
+    const ranked = Object.values(allStats)
+      .map(withTotalPoints)
+      .sort((a, b) => b.totalPoints - a.totalPoints);
+
+    const email = userEmail.toLowerCase();
+    const index = ranked.findIndex((user) => user.email === email);
+
+    return {
+      rank: index >= 0 ? index + 1 : null,
+      total: ranked.length,
+      points: index >= 0 ? ranked[index].totalPoints : 0
+    };
+  } catch (error) {
+    console.error("Error getting points standing:", error);
+    return { rank: null, total: 0, points: 0 };
+  }
+};

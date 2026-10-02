@@ -257,3 +257,109 @@ canvas[data-orb]           { z-index: 0 !important; pointer-events: none; }
   position: relative;
   z-index: 2;
 }
+
+/* —————————————————————————————
+   About Stellar launcher (bottom right)
+   -----------------------------------------------------------------------------
+   Fixed, like .auth-container above, and for the same reason: the hero is an
+   overflow:hidden box with a WebGL Orb inside, so anything positioned relative
+   to it gets clipped. Lower z-index than the auth buttons, because those are
+   the primary action and must stay on top if the two ever overlap on a very
+   small screen.
+   ————————————————————————————— */
+.about-launcher {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-right: env(safe-area-inset-right);
+}
+
+[dir="rtl"] .about-launcher {
+  right: auto;
+  left: 1rem;
+  align-items: flex-start;
+  padding-left: env(safe-area-inset-left);
+  padding-right: 0;
+}
+
+.about-launcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.05rem;
+  min-height: 44px;
+  border: 1px solid rgba(233, 230, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(233, 230, 255, 0.08);
+  color: #e9e6ff;
+  font-family: 'OpenDyslexic', 'Cairo', 'Noto Kufi Arabic', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+  /* Matches the staggered entrance the auth buttons use, one beat later. */
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease-out 0.6s forwards;
+}
+
+.about-launcher-btn--ar {
+  animation-delay: 0.75s;
+}
+
+.about-launcher-btn:hover {
+  background: rgba(233, 230, 255, 0.18);
+  border-color: rgba(167, 139, 250, 0.6);
+  transform: translateY(-2px);
+}
+
+.about-launcher-btn:focus-visible {
+  outline: 3px solid #a78bfa;
+  outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .about-launcher {
+    /* Side by side at the bottom on a phone, where two stacked pills would
+       crowd the vertical space the Orb and title need. */
+    flex-direction: row;
+    left: 1rem;
+    right: 1rem;
+    justify-content: center;
+  }
+
+  .about-launcher-btn {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.82rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-launcher-btn {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .about-launcher-btn:hover { transform: none; }
+}
+
+:root.high-contrast .about-launcher-btn {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+:root.high-contrast .about-launcher-btn:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+}

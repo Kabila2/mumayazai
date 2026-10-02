@@ -1,14 +1,22 @@
 // src/components/QuizCenter.js - Centralized Quiz System with Multiple Quiz Types
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { awardPoints } from '../utils/pointsUtils';
 import { useVoiceOver } from '../hooks/useVoiceOver';
+import { isTopicUnlocked, lockReason, PASS_PERCENT } from '../utils/moduleUnlockUtils';
+import { buildUnitTest, getCompletedBreakdown, MIN_ITEMS } from '../utils/unitTestUtils';
+import { answerPhrase } from '../utils/speechPhrasing';
+import { transliterate } from '../utils/phonetics';
+import { checkAchievements } from '../utils/achievementsSystem';
 import CelebrationPopup from './CelebrationPopup';
 import './QuizCenter.css';
 
-const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak, userEmail, onSectionSelect }) => {
+const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak, userEmail, userRole = 'student', onSectionSelect }) => {
   const [selectedQuizType, setSelectedQuizType] = useState(null);
+  // The unit test is generated per attempt from the learner's completed items,
+  // so unlike the other quizzes it cannot come from a static bank.
+  const [unitTest, setUnitTest] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -27,8 +35,37 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   // Voice Over hook for accessibility
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
+  /**
+   * What the learner has finished, and so what a unit test could cover.
+   * Recomputed when the quiz type changes rather than on every render, which
+   * would re-read localStorage on each keystroke.
+   */
+  const completed = useMemo(
+    () => getCompletedBreakdown(userEmail),
+    [userEmail, selectedQuizType]  // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   // Quiz Types
   const quizTypes = [
+    {
+      /**
+       * The unit test: the only quiz drawn from the learner's own completed
+       * material rather than a fixed bank. Listed first because it is the one
+       * whose score actually means something — the others can ask about
+       * letters and words the learner has never been shown.
+       */
+      id: 'unit-test',
+      nameEn: 'Unit Test',
+      nameAr: 'اختبار الوحدة',
+      icon: '📋',
+      color: '#0ea5e9',
+      description: completed.total >= MIN_ITEMS
+        ? `Only what you have finished — ${completed.total} items so far`
+        : `Finish at least ${MIN_ITEMS} items in a lesson to open this`,
+      category: 'quiz',
+      noTopic: true,                    // it spans every module at once
+      locked: completed.total < MIN_ITEMS
+    },
     {
       id: 'multiple-choice',
       nameEn: 'Multiple Choice',
@@ -343,7 +380,26 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
       // Award points for each correct answer
       awardPoints(userEmail, 'QUIZ_QUESTION_CORRECT', score);
-      console.log(`Awarded points for ${score} correct answers`);
+
+      // Quiz badges. `checkAchievements` existed but was never called from
+      // anywhere, so `first_quiz`, `perfect_quiz` and `quiz_master` could not
+      // be earned at all — the gallery listed three achievements nobody could
+      // ever unlock.
+      try {
+        const quizKey = `stellar_quiz_history_${userEmail}`;
+        const history = JSON.parse(localStorage.getItem(quizKey) || '[]');
+        checkAchievements(userEmail, 'quiz_completed', {
+          score: percentage,
+          totalQuizzes: history.length + 1,
+          perfectQuizCount: history.filter((h) => h.score === 100).length
+            + (percentage === 100 ? 1 : 0),
+          // No per-quiz timer exists, so the speed badge is left unclaimed
+          // rather than awarded on a number that is not measured.
+          completionTime: Infinity
+        });
+      } catch (e) {
+        console.error('Error checking quiz achievements:', e);
+      }
 
       // Save quiz result to history
       try {
@@ -387,12 +443,47 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       return;
     }
 
+    if (type.locked) {
+      voiceOver.speak(
+        language === 'ar'
+          ? `أكمل ${MIN_ITEMS} عناصر على الأقل في أي درس لفتح هذا الاختبار`
+          : `Finish at least ${MIN_ITEMS} items in a lesson to open this test`,
+        true
+      );
+      return;
+    }
+
     setSelectedQuizType(type);
     setSelectedTopic(null);
     resetQuiz();
+
+    // The unit test has no topic step — it already spans every module — so it
+    // is generated the moment it is chosen.
+    if (type.id === 'unit-test') {
+      const generated = buildUnitTest(userEmail, language);
+      setUnitTest(generated);
+      // A synthetic topic keeps the rest of this screen (progress bar, score,
+      // back button, results) working unchanged.
+      setSelectedTopic({
+        id: 'unit-test',
+        nameEn: 'Your Unit Test',
+        nameAr: 'اختبار وحدتك',
+        icon: '📋',
+        color: '#0ea5e9'
+      });
+    } else {
+      setUnitTest(null);
+    }
   };
 
   const handleTopicSelect = (topic) => {
+    // A test topic is locked for exactly as long as its lesson is: a quiz you
+    // have not been taught the material for is only a way to fail.
+    if (!isTopicUnlocked(userEmail, topic.id, userRole)) {
+      voiceOver.speak(lockReason(userEmail, topic.id, language, userRole), true);
+      return;
+    }
+
     setSelectedTopic(topic);
     resetQuiz();
   };
@@ -458,7 +549,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
     // Get current question content
     let content;
-    if (selectedQuizType.id === 'multiple-choice') {
+    if (selectedQuizType.id === 'unit-test') {
+      content = unitTest?.questions;
+    } else if (selectedQuizType.id === 'multiple-choice') {
       content = quizContent[selectedTopic.id]?.multipleChoice;
     } else if (selectedQuizType.id === 'fill-blanks') {
       content = quizContent[selectedTopic.id]?.fillBlanks;
@@ -474,10 +567,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       if (correct) {
         setScore(score + 1);
         setShowCelebration(true); // Show celebration!
-        voiceOver.speak(language === 'ar' ? 'صحيح! رائع' : 'Correct! Great job', true);
-      } else {
-        voiceOver.speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again', true);
       }
+      // Varied wording, so twenty answers in a row do not sound like a
+      // recording — see speechPhrasing.js.
+      voiceOver.speak(answerPhrase({ language, correct }), true);
 
       setAnswers([...answers, { questionIndex: currentQuestionIndex, correct }]);
 
@@ -567,15 +660,24 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
             {quizOptions.map((type, index) => (
               <motion.div
                 key={type.id}
-                className="quiz-type-card"
+                className={`quiz-type-card ${type.locked ? 'is-locked' : ''} ${type.id === 'unit-test' ? 'is-featured' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-disabled={!!type.locked}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleQuizTypeSelect(type)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleQuizTypeSelect(type);
+                  }
+                }}
                 style={{ '--quiz-accent': type.color }}
               >
                 <div className="quiz-type-icon">
-                  {type.icon}
+                  {type.locked ? '🔒' : type.icon}
                 </div>
                 <h3 className="quiz-type-name">
                   {language === 'ar' ? type.nameAr : type.nameEn}
@@ -583,6 +685,11 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                 <p className="quiz-type-description">
                   {type.description}
                 </p>
+                {type.id === 'unit-test' && !type.locked && (
+                  <span className="quiz-type-tag">
+                    {language === 'ar' ? 'من تعلمك فقط' : 'From your learning only'}
+                  </span>
+                )}
               </motion.div>
             ))}
           </div>
@@ -642,24 +749,45 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
         </motion.div>
 
         <div className="topics-grid">
-          {topics.map((topic, index) => (
-            <motion.div
-              key={topic.id}
-              className="topic-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              onClick={() => handleTopicSelect(topic)}
-              style={{ '--quiz-accent': topic.color }}
-            >
-              <div className="topic-icon">
-                {topic.icon}
-              </div>
-              <h3 className="topic-name">
-                {language === 'ar' ? topic.nameAr : topic.nameEn}
-              </h3>
-            </motion.div>
-          ))}
+          {topics.map((topic, index) => {
+            // A topic locks and unlocks with its lesson — see
+            // moduleUnlockUtils.js. The reason replaces the name, so a locked
+            // tile explains itself instead of just refusing to open.
+            const locked = !isTopicUnlocked(userEmail, topic.id, userRole);
+            const reason = locked
+              ? lockReason(userEmail, topic.id, language, userRole)
+              : '';
+
+            return (
+              <motion.div
+                key={topic.id}
+                className={`topic-card ${locked ? 'is-locked' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-disabled={locked}
+                title={reason || undefined}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                onClick={() => handleTopicSelect(topic)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleTopicSelect(topic);
+                  }
+                }}
+                style={{ '--quiz-accent': topic.color }}
+              >
+                <div className="topic-icon">
+                  {locked ? '🔒' : topic.icon}
+                </div>
+                <h3 className="topic-name">
+                  {language === 'ar' ? topic.nameAr : topic.nameEn}
+                </h3>
+                {locked && <p className="topic-lock-reason">{reason}</p>}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     );
@@ -669,7 +797,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   if (showResults) {
     const totalQuestions = answers.length;
     const percentage = Math.round((score / totalQuestions) * 100);
-    const passed = percentage >= 70;
+    // The same threshold the curriculum uses to unlock the next module, read
+    // from one place so the two can never disagree about what "passed" means.
+    const passed = percentage >= PASS_PERCENT;
 
     return (
       <div className="quiz-center">
@@ -693,16 +823,49 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           <p className="results-message">
             {passed
               ? (language === 'ar' ? 'رائع! لقد نجحت!' : 'Great job! You passed!')
-              : (language === 'ar' ? 'حاول مرة أخرى!' : 'Keep practicing!')}
+              : (language === 'ar'
+                  ? `تحتاج ${PASS_PERCENT}% للنجاح — حاول مرة أخرى!`
+                  : `You need ${PASS_PERCENT}% to pass — give it another go!`)}
           </p>
+
+          {/* What the unit test actually covered. Without this the score is a
+              bare number with no scope attached. */}
+          {selectedQuizType.id === 'unit-test' && (
+            <p className="results-coverage">
+              {language === 'ar'
+                ? `بُني هذا الاختبار من ${completed.total} عنصراً أكملتها: ${completed.alphabet} حرفاً، ${completed.colors} لوناً، ${completed.words} كلمة، ${completed.sentences} جملة.`
+                : `Built from the ${completed.total} items you have finished: ${completed.alphabet} letters, ${completed.colors} colours, ${completed.words} words, ${completed.sentences} sentences.`}
+            </p>
+          )}
+
           <div className="results-buttons">
-            <button className="btn btn-primary" onClick={resetQuiz}>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                resetQuiz();
+                // A retake of the unit test is regenerated, not replayed: the
+                // learner may have finished more since, and a reshuffle stops
+                // it being the same paper twice.
+                if (selectedQuizType.id === 'unit-test') {
+                  setUnitTest(buildUnitTest(userEmail, language));
+                }
+              }}
+            >
               {language === 'ar' ? 'إعادة المحاولة' : 'Try Again'}
             </button>
-            <button className="btn btn-secondary" onClick={() => setSelectedTopic(null)}>
-              {language === 'ar' ? 'اختر موضوعًا آخر' : 'Choose Another Topic'}
-            </button>
-            <button className="btn btn-secondary" onClick={() => setSelectedQuizType(null)}>
+            {!selectedQuizType.noTopic && (
+              <button className="btn btn-secondary" onClick={() => setSelectedTopic(null)}>
+                {language === 'ar' ? 'اختر موضوعًا آخر' : 'Choose Another Topic'}
+              </button>
+            )}
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setSelectedQuizType(null);
+                setSelectedTopic(null);
+                setUnitTest(null);
+              }}
+            >
               {language === 'ar' ? 'العودة إلى الاختبارات' : 'Back to Tests'}
             </button>
           </div>
@@ -771,6 +934,11 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
               >
                 <div className="card-content">
                   {card.content}
+                  {/* Arabic cards carry their phonetic spelling, so matching is
+                      reading rather than shape-matching. */}
+                  {card.type === 'arabic' && transliterate(card.content) && (
+                    <span className="card-phonetic">{transliterate(card.content)}</span>
+                  )}
                 </div>
                 {isCardMatched(card) && (
                   <motion.div
@@ -810,7 +978,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   let content;
   let currentQuestion;
 
-  if (selectedQuizType.id === 'multiple-choice') {
+  if (selectedQuizType.id === 'unit-test') {
+    content = unitTest?.questions;
+    currentQuestion = content?.[currentQuestionIndex];
+  } else if (selectedQuizType.id === 'multiple-choice') {
     content = quizContent[selectedTopic.id]?.multipleChoice;
     currentQuestion = content?.[currentQuestionIndex];
   } else if (selectedQuizType.id === 'scrambled-letters') {
@@ -825,11 +996,28 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   }
 
   if (!content || !currentQuestion) {
+    // The unit test fails differently from the fixed quizzes: there is nothing
+    // wrong with it, the learner just has not finished enough yet. Saying "not
+    // available" would read as a bug, so it says what to do instead.
+    const isUnitTest = selectedQuizType.id === 'unit-test';
+
     return (
       <div className="quiz-center">
         <div className="quiz-error">
-          <p>{language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet'}</p>
-          <button className="btn btn-primary" onClick={() => setSelectedTopic(null)}>
+          <p>
+            {isUnitTest
+              ? (language === 'ar'
+                  ? `أكمل ${MIN_ITEMS} عناصر على الأقل في أي درس، ثم سيبنى اختبارك منها.`
+                  : `Finish at least ${MIN_ITEMS} items in any lesson, and your test will be built from them.`)
+              : (language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet')}
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setSelectedTopic(null);
+              setSelectedQuizType(null);
+            }}
+          >
             {language === 'ar' ? 'رجوع' : 'Go Back'}
           </button>
         </div>
@@ -873,12 +1061,78 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
           >
+            {/* Unit Test — generated from the learner's completed items. */}
+            {selectedQuizType.id === 'unit-test' && (
+              <div className="quiz-question">
+                {currentQuestion.promptArabic && (
+                  <>
+                    <div
+                      className="arabic-display-large quiz-speakable"
+                      role="button"
+                      tabIndex={0}
+                      title={language === 'ar' ? 'انقر لسماع النطق' : 'Click to hear it'}
+                      onClick={() => voiceOver.speak(currentQuestion.promptArabic, true)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          voiceOver.speak(currentQuestion.promptArabic, true);
+                        }
+                      }}
+                    >
+                      {currentQuestion.promptArabic}
+                      <span className="quiz-speak-hint" aria-hidden="true">🔊</span>
+                    </div>
+                    {/* Phonetic spelling under every piece of Arabic script —
+                        a learner who cannot read the script yet has no way in
+                        without it. */}
+                    <div className="quiz-phonetic">
+                      {currentQuestion.hint || transliterate(currentQuestion.promptArabic)}
+                    </div>
+                  </>
+                )}
+                <h3 className="question-text">{currentQuestion.prompt}</h3>
+                <div className="options-grid">
+                  {currentQuestion.options.map((option, index) => (
+                    <button
+                      key={index}
+                      className={`option-btn ${selectedAnswer === index ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
+                      onClick={() => handleAnswerSelect(index)}
+                      disabled={showFeedback}
+                    >
+                      {option}
+                      {/* Options that are Arabic script get their own
+                          phonetic line, so choosing is not guesswork. */}
+                      {transliterate(option) && (
+                        <span className="option-phonetic">{transliterate(option)}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {showFeedback && (
+                  <motion.div
+                    className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {isCorrect
+                      ? `✓ ${language === 'ar' ? 'صحيح!' : 'Correct!'}`
+                      : `✗ ${language === 'ar' ? 'الإجابة الصحيحة: ' : 'Correct answer: '}${currentQuestion.options[currentQuestion.correct]}`}
+                  </motion.div>
+                )}
+              </div>
+            )}
+
             {/* Multiple Choice Quiz */}
             {selectedQuizType.id === 'multiple-choice' && (
               <div className="quiz-question">
                 <div className="arabic-display">
                   {currentQuestion.arabic}
                 </div>
+                {/* Phonetic spelling, so the script is readable to a learner
+                    who has not learned to read it yet. */}
+                {transliterate(currentQuestion.arabic) && (
+                  <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
+                )}
                 <h3 className="question-text">{currentQuestion.question}</h3>
                 <div className="options-grid">
                   {currentQuestion.options.map((option, index) => (
@@ -889,6 +1143,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                       disabled={showFeedback}
                     >
                       {option}
+                      {transliterate(option) && (
+                        <span className="option-phonetic">{transliterate(option)}</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -901,6 +1158,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                 <div className="arabic-display">
                   {currentQuestion.arabic}
                 </div>
+                {transliterate(currentQuestion.arabic) && (
+                  <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
+                )}
                 <p className="hint-text">💡 {currentQuestion.hint}</p>
                 <h3 className="question-text">
                   {language === 'ar' ? 'رتب الحروف لتكوين الكلمة' : 'Arrange the letters to form the word'}
@@ -966,6 +1226,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                 <div className="arabic-display-large">
                   {currentQuestion.arabic}
                 </div>
+                {transliterate(currentQuestion.arabic) && (
+                  <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
+                )}
                 <p className="hint-text">💡 {currentQuestion.hint}</p>
                 <h3 className="question-text">
                   {language === 'ar' ? 'ما معنى هذه الكلمة؟' : 'What does this mean?'}
@@ -1004,6 +1267,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                 <div className="arabic-display">
                   {currentQuestion.arabic}
                 </div>
+                {transliterate(currentQuestion.arabic) && (
+                  <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
+                )}
                 <h3 className="question-text">{currentQuestion.sentence}</h3>
                 <div className="options-grid">
                   {currentQuestion.options.map((option, index) => (

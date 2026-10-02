@@ -250,8 +250,14 @@
   box-shadow: 0 0 0 2px var(--mz-surface);
 }
 
-/* Teachers and parents carry two extra links, so they go icon-only sooner. */
-@media (max-width: 1560px) {
+/* Teachers and parents used to carry the learner's six links PLUS their own
+   three, so the row went icon-only early to fit. Their nav is now built for
+   them — five links, all theirs (see navItems in ArabicLearningPlatform.js) —
+   so it has room for labels at the same widths everyone else keeps them. An
+   icon-only nav is worse for everyone; it only ever bought space this row no
+   longer needs. The breakpoint is kept, moved down to where the five links
+   genuinely stop fitting. */
+@media (max-width: 1100px) {
   .platform-nav--compact .nav-link-label,
   .platform-nav--compact .sign-out-label {
     display: none;
@@ -1455,4 +1461,110 @@ html {
   .home-section .progress-fill::after {
     animation: none !important;
   }
+}
+
+/* ============================================================================
+   HOME PAGE — ADDED IN THIS PASS
+   ----------------------------------------------------------------------------
+   • STATUS ROW: the streak and the leaderboard side by side at the top. The
+     leaderboard used to sit two clicks deep inside the Explore modal, which is
+     no place for the screen that answers "am I doing well?".
+   • "START HERE": the one lesson the learner should do next. With the rest of
+     the path locked behind it, naming it removes the last of the guesswork.
+   • LOCKED TILES: shown inside the collapsed "…" box rather than the grid, so
+     the page only ever offers what can actually be started.
+   ============================================================================ */
+
+.home-status-row {
+  display: grid;
+  /* The streak is a fixed-size widget; the leaderboard takes the rest. Below
+     720px they stack, because a five-row table in half a phone width is not
+     readable. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 720px) {
+  .home-status-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------- Start here */
+.section-card--next {
+  border-color: var(--card-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-accent) 32%, transparent);
+}
+
+.card-next-badge {
+  position: absolute;
+  top: 16px;
+  inset-inline-end: 16px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--card-accent);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  /* Above the card's own icon/title, and never a click target itself. */
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ Locked tiles */
+/* These only ever render inside the "…" panel, so they do not need the hover
+   lift or the pointer the open tiles have. They are informational: this is
+   what is next, and this is what opens it. */
+.section-card--locked {
+  display: flex;
+  flex-direction: column;
+  background: var(--mz-surface-2);
+  border: 2px dashed var(--mz-border-strong);
+  border-radius: 16px;
+  padding: 18px;
+  cursor: default;
+}
+
+.card-icon--locked {
+  font-size: 1.75rem;
+  opacity: 0.75;
+}
+
+.section-card--locked .card-title {
+  color: var(--mz-text-2);
+}
+
+.card-description--locked {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--mz-text-2);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- Learn hub lock */
+/* Mirrors the home page: the hub and the home page used to disagree about what
+   was open, so a lesson hidden on one was still reachable from the other. */
+.learn-card--locked {
+  cursor: not-allowed;
+  border: 2px dashed var(--mz-border-strong);
+  box-shadow: none;
+}
+
+.learn-card--locked .learn-card-gradient {
+  filter: saturate(0.15);
+}
+
+.learn-card--locked .learn-card-title,
+.learn-card--locked .learn-card-description {
+  color: var(--mz-text-2);
+}
+
+/* ---------------------------------------------------------------- Avatar ring */
+/* The avatar frame reward (rewards-effects.css) draws its ring behind the
+   button, which needs a stacking context to sit behind. */
+.nav-profile-btn {
+  isolation: isolate;
 }

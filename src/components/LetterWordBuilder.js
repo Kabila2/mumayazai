@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
+import { transliterate } from '../utils/phonetics';
 import './LetterWordBuilder.css';
 
 const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
@@ -179,6 +180,10 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
             {language === 'ar' ? 'الكلمة المطلوبة:' : 'Target Word:'}
           </h3>
           <div className="hint-english">{currentWord.english}</div>
+          {/* How the target word sounds. Without it, assembling the letters is
+              a shape puzzle: a learner can place خ next to ر without ever
+              knowing the word they just built says "kha-roof". */}
+          <div className="hint-phonetic">{transliterate(currentWord.arabic)}</div>
         </div>
       </motion.div>
 

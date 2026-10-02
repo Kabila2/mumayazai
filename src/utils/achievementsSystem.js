@@ -96,6 +96,39 @@ export const ACHIEVEMENTS = {
     rarity: 'rare'
   },
 
+  // Module Completion — one per step of the sequenced curriculum
+  // (see moduleUnlockUtils.js). The next module only opens once the previous
+  // one is both 70% covered AND credited with its badge, so these three had to
+  // exist: without them, colors/words/sentences had no badge to earn and the
+  // path would have advanced on coverage alone.
+  colors_complete: {
+    id: 'colors_complete',
+    name: { en: 'Colour Collector', ar: 'جامع الألوان' },
+    description: { en: 'Learn most of the Arabic colours', ar: 'تعلم معظم الألوان العربية' },
+    icon: '🌈',
+    points: 100,
+    category: 'learning',
+    rarity: 'common'
+  },
+  words_complete: {
+    id: 'words_complete',
+    name: { en: 'Word Builder', ar: 'باني الكلمات' },
+    description: { en: 'Learn most of the core vocabulary', ar: 'تعلم معظم المفردات الأساسية' },
+    icon: '📖',
+    points: 120,
+    category: 'learning',
+    rarity: 'common'
+  },
+  sentences_complete: {
+    id: 'sentences_complete',
+    name: { en: 'Sentence Speaker', ar: 'متحدث الجمل' },
+    description: { en: 'Learn most of the everyday sentences', ar: 'تعلم معظم الجمل اليومية' },
+    icon: '🗣️',
+    points: 150,
+    category: 'learning',
+    rarity: 'rare'
+  },
+
   // Points Achievements
   points_100: {
     id: 'points_100',
@@ -395,6 +428,14 @@ export const checkAchievements = (userEmail, action, data = {}) => {
       checkAlphabetAchievements(userEmail, data.lettersLearned, newAchievements);
       break;
 
+    // One entry point for the sequenced modules (see moduleUnlockUtils.js).
+    // Every learning module calls this with its own id and coverage, so the
+    // badge that gates the next module is awarded from the same place that
+    // records the progress, and cannot drift out of step with it.
+    case 'module_progress':
+      checkModuleAchievement(userEmail, data, newAchievements);
+      break;
+
     default:
       console.warn(`Unknown action: ${action}`);
   }
@@ -424,6 +465,36 @@ const checkPointsAchievements = (userEmail, totalPoints, achievements) => {
   }
   if (totalPoints >= 1000 && !isAchievementUnlocked(userEmail, 'points_1000')) {
     achievements.push(unlockAchievement(userEmail, 'points_1000'));
+  }
+};
+
+/**
+ * Award a sequenced module's completion badge once its coverage reaches the
+ * pass mark. The threshold is passed in rather than imported so this file
+ * stays free of a dependency on moduleUnlockUtils (which imports from here).
+ */
+const MODULE_ACHIEVEMENT_IDS = {
+  colors: 'colors_complete',
+  words: 'words_complete',
+  sentences: 'sentences_complete'
+};
+
+const checkModuleAchievement = (userEmail, data, achievements) => {
+  const { moduleId, learnedCount = 0, totalCount = 0, passPercent = 70 } = data || {};
+
+  // The alphabet already has a graded ladder (5 / 14 / 28 letters); it keeps
+  // it, so `alphabet_master` still means all 28 rather than the pass mark.
+  if (moduleId === 'alphabet') {
+    checkAlphabetAchievements(userEmail, learnedCount, achievements);
+    return;
+  }
+
+  const achievementId = MODULE_ACHIEVEMENT_IDS[moduleId];
+  if (!achievementId || !totalCount) return;
+
+  const percent = Math.round((learnedCount / totalCount) * 100);
+  if (percent >= passPercent && !isAchievementUnlocked(userEmail, achievementId)) {
+    achievements.push(unlockAchievement(userEmail, achievementId));
   }
 };
 

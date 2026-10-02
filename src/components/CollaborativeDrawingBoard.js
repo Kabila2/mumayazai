@@ -185,31 +185,129 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     }
   }, [texts]);
 
-  // Handle canvas resize on fullscreen change
-  useEffect(() => {
-    const handleResize = () => {
-      resizeCanvas();
-    };
+  /**
+   * Attach the size observer the moment the canvas node exists.
+   *
+   * This is a CALLBACK REF rather than a mount effect, because the board does
+   * not render the canvas until the learner has joined a session. A
+   * `useEffect(..., [])` runs while the join screen is still up, finds
+   * `canvasRef.current` null, and never runs again — so the backing store
+   * stayed at the element's default 300x150 while its CSS box was the full
+   * width of the board. That mismatch is exactly the "mouse is not in line with
+   * the drawing" symptom: every coordinate was scaled by ~0.2 horizontally and
+   * 0.5 vertically. A callback ref fires on the real mount, whenever that is.
+   */
+  const resizeObserverRef = useRef(null);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+  const attachCanvas = useCallback((node) => {
+    canvasRef.current = node;
+
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
+
+    if (!node) return;
+
+    // Size it immediately, before the first stroke can be drawn.
+    resizeCanvas();
+
+    // A window resize is not enough on its own: the canvas also changes size
+    // when the toolbar wraps, when the user list grows, and when entering or
+    // leaving fullscreen, none of which fire one. Observing the element covers
+    // all of them.
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => resizeCanvas());
+      observer.observe(node);
+      resizeObserverRef.current = observer;
+    }
   }, []);
 
-  // Resize canvas when entering/exiting fullscreen
+  // devicePixelRatio changes when the window moves to another monitor or the
+  // page is zoomed, and neither resizes the element.
   useEffect(() => {
-    setTimeout(() => {
-      resizeCanvas();
-    }, 100);
-  }, [isFullscreen]);
+    const onResize = () => resizeCanvas();
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      resizeObserverRef.current?.disconnect();
+    };
+  }, []);
 
+  /**
+   * Size the canvas so one CSS pixel maps to one drawing unit.
+   *
+   * THE BUG THIS FIXES
+   * The backing store used to be sized from `canvas.parentElement`'s border box
+   * while the canvas itself is laid out at `width: 100%; height: 100%` of the
+   * parent's CONTENT box. Any border or padding on `.canvas-container` made
+   * those two different numbers, so the browser scaled the canvas when it
+   * painted it — and because pointer coordinates were taken straight from
+   * `getBoundingClientRect()` in CSS pixels with no correction, the stroke
+   * landed a growing distance from the cursor the further you moved from the
+   * top-left corner. That is exactly the "mouse is not in line with the
+   * drawing" symptom.
+   *
+   * Measuring the CANVAS, not the parent, removes the mismatch at the source.
+   * The device-pixel-ratio scale on top of it is what stops strokes looking
+   * soft on a high-DPI screen: the backing store is sized in device pixels and
+   * the context is scaled once, so all the drawing code can keep working in
+   * CSS pixels and `getEventCoordinates` needs no conversion at all.
+   */
   const resizeCanvas = () => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const oldImageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      canvas.getContext('2d').putImageData(oldImageData, 0, 0);
+    if (!canvas) return;
+
+    // `clientWidth`/`clientHeight`, NOT `getBoundingClientRect()`.
+    //
+    // The rect is the TRANSFORMED box, and `.canvas-container` animates in
+    // from `scale: 0.9` (framer-motion). Measuring the rect therefore caught
+    // the canvas mid-animation and sized the backing store to 90% of the real
+    // layout box; the animation then settled at scale 1 and left a permanent
+    // 0.9 mismatch between drawing units and CSS pixels — the stroke drifting
+    // further from the cursor the further you moved. The layout box is
+    // transform-independent, so it is stable whenever this runs.
+    const cssWidth = canvas.clientWidth;
+    const cssHeight = canvas.clientHeight;
+    if (!cssWidth || !cssHeight) return;   // hidden (e.g. mid-transition)
+
+    const dpr = window.devicePixelRatio || 1;
+    const nextWidth = Math.round(cssWidth * dpr);
+    const nextHeight = Math.round(cssHeight * dpr);
+
+    // Resizing a canvas clears it, so skip when nothing actually changed —
+    // otherwise every resize event would wipe the drawing.
+    if (canvas.width === nextWidth && canvas.height === nextHeight) return;
+
+    // Preserve the drawing across the resize. A 2D snapshot is used rather
+    // than getImageData/putImageData because putImageData ignores transforms
+    // and would paste device pixels into a scaled context at the wrong size.
+    const previous = canvas.width && canvas.height
+      ? (() => {
+          const buffer = document.createElement('canvas');
+          buffer.width = canvas.width;
+          buffer.height = canvas.height;
+          buffer.getContext('2d').drawImage(canvas, 0, 0);
+          return { buffer, width: canvas.width, height: canvas.height };
+        })()
+      : null;
+
+    canvas.width = nextWidth;
+    canvas.height = nextHeight;
+
+    const ctx = canvas.getContext('2d');
+    // One scale, applied once per resize: from here on every coordinate in
+    // this component is a CSS pixel.
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (previous) {
+      // Draw the old content back at its old CSS size, so a resize stretches
+      // the drawing rather than cropping it.
+      ctx.drawImage(
+        previous.buffer,
+        0, 0, previous.width, previous.height,
+        0, 0, cssWidth, cssHeight
+      );
     }
   };
 
@@ -226,24 +324,29 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     }
   };
 
-  // Get coordinates from mouse or touch event
+  /**
+   * Pointer position in drawing units.
+   *
+   * The context is scaled by the device pixel ratio once per resize, so one
+   * drawing unit is one CSS pixel of the canvas's LAYOUT box. The pointer
+   * arrives in client pixels against the canvas's RENDERED box, and the two
+   * differ whenever a CSS transform is in play — which it is here, because
+   * `.canvas-container` animates in from `scale: 0.9` and `.fullscreen`
+   * re-lays the board out. Converting through `clientWidth / rect.width`
+   * cancels whatever transform is active, and is exactly 1 when there is none.
+   */
   const getEventCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
 
-    // Check if it's a touch event
-    if (e.touches && e.touches.length > 0) {
-      const touch = e.touches[0];
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
-    }
+    const scaleX = rect.width ? canvas.clientWidth / rect.width : 1;
+    const scaleY = rect.height ? canvas.clientHeight / rect.height : 1;
 
-    // Mouse event
+    const source = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: (source.clientX - rect.left) * scaleX,
+      y: (source.clientY - rect.top) * scaleY
     };
   };
 
@@ -318,41 +421,25 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
     lastDrawPoint.current = null;
   };
 
+  /** Tell the other users where this pointer is, in the same drawing units. */
+  const broadcastCursor = (e) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    if (!canvasRef.current) return;
+
+    wsRef.current.send(JSON.stringify({
+      type: 'cursorMove',
+      position: getEventCoordinates(e)
+    }));
+  };
+
   const handleMouseMove = (e) => {
     draw(e);
-
-    // Send cursor position to other users (throttled)
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-
-      wsRef.current.send(JSON.stringify({
-        type: 'cursorMove',
-        position: {
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top
-        }
-      }));
-    }
+    broadcastCursor(e);
   };
 
   const handleTouchMove = (e) => {
     draw(e);
-
-    // Send cursor position to other users (throttled)
-    if (e.touches && e.touches.length > 0 && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-
-      wsRef.current.send(JSON.stringify({
-        type: 'cursorMove',
-        position: {
-          x: touch.clientX - rect.left,
-          y: touch.clientY - rect.top
-        }
-      }));
-    }
+    if (e.touches && e.touches.length > 0) broadcastCursor(e);
   };
 
   const handleTextClick = (e) => {
@@ -361,21 +448,8 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
       e.preventDefault();
     }
 
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-
-    let x, y;
-    // Check if it's a touch event
-    if (e.touches && e.touches.length > 0) {
-      const touch = e.touches[0];
-      x = touch.clientX - rect.left;
-      y = touch.clientY - rect.top;
-    } else {
-      x = e.clientX - rect.left;
-      y = e.clientY - rect.top;
-    }
-
-    setTextPosition({ x, y });
+    // Same mapping as drawing, so typed text lands where it was tapped.
+    setTextPosition(getEventCoordinates(e));
     setShowTextInput(true);
   };
 
@@ -730,7 +804,7 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
         transition={{ duration: 0.5, delay: 0.4 }}
       >
         <canvas
-          ref={canvasRef}
+          ref={attachCanvas}
           className="drawing-canvas"
           onMouseDown={startDrawing}
           onMouseMove={handleMouseMove}

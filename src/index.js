@@ -10,7 +10,10 @@ import { BrowserRouter } from 'react-router-dom';
 // Unified design system — imported LAST so its tokens win over the older,
 // conflicting :root blocks in the component stylesheets.
 import './theme.css';
-// High contrast redefines those same tokens, so it has to come after them.
+// Reward effects read the design tokens, so they come after theme.css…
+import './rewards-effects.css';
+// …and high contrast redefines those tokens AND stands the effects down, so it
+// has to come after both.
 import './high-contrast.css';
 
 // One-time migration: the app was rebranded from "mumayaz" to "stellar" and
@@ -47,13 +50,9 @@ import './high-contrast.css';
   }
 })();
 
-// Dynamically load Puter.js so `puter` is available globally
-;(function loadPuter() {
-  const script = document.createElement('script');
-  script.src = 'https://js.puter.com/v2/';
-  script.async = true;
-  document.head.appendChild(script);
-})();
+// The AI assistant no longer needs a third-party script on the page: it goes
+// through src/utils/aiClient.js, which picks its provider on the first request
+// (your own backend, Anthropic directly, or the built-in offline tutor).
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

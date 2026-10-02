@@ -24,7 +24,9 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   font-family: 'OpenDyslexic', 'Cairo', sans-serif;
-  contain: layout style;
+  /* No `contain` here: `contain: layout` makes this element the containing
+     block for fixed-position descendants, which cropped any overlay raised
+     from inside the module to the module box (see CelebrationPopup.js). */
   box-sizing: border-box;
 }
 

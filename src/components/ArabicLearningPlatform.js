@@ -34,9 +34,19 @@ import ParentDashboard from "./ParentDashboard";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import stellarMuiTheme from "../muiTheme";
 import { LogOut, Home } from 'lucide-react';
+import HomeLeaderboard from "./HomeLeaderboard";
+import RewardsStore from "./RewardsStore";
+import CollapsedCardsBox from "./CollapsedCardsBox";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import { getTotalUnreadCount, getInitials } from '../utils/conversationUtils';
 import { getModuleProgress } from '../utils/progressUtils';
+import {
+  getCurriculumState,
+  isSectionUnlocked,
+  getNextModule,
+  lockReason,
+  PASS_PERCENT
+} from '../utils/moduleUnlockUtils';
 import './ArabicLearningPlatform.css';
 
 /**
@@ -64,13 +74,55 @@ const PRACTICE_SECTIONS = ['quiz', 'wordbuilder', 'letterwordbuilder', 'sentence
 const NAV_HIDDEN_SECTIONS = ['chat', 'voice', 'teacherchat'];
 
 /**
+ * Sections a teacher or parent account may open.
+ *
+ * Both roles used to get the learner's entire app — every lesson, every game,
+ * the AI tutor, the student progress dashboard — plus their own tools on top.
+ * That is the wrong shape for both of them: a parent opening the app to check
+ * on their child had to scroll past sixteen learning tiles first, and a teacher
+ * marking homework had a student leaderboard and a quiz centre in the way.
+ * These accounts now see their dashboards, their messages and their reports,
+ * and nothing else.
+ *
+ * This is enforced in `handleSectionChange` as well as in what gets rendered,
+ * so a stale link or a leftover state value cannot land them on a locked screen.
+ */
+const STAFF_SECTIONS = [
+  'home',
+  'teacherdashboard', 'parentdashboard',
+  'teacherchat', 'progressreport', 'classmanagement',
+  'homework'   // teachers set and mark it; parents see what was set
+];
+
+/** True for the two roles that are not learners. */
+const isStaffRole = (role) => role === 'teacher' || role === 'parent';
+
+/**
+ * A home-page tile whose module is still locked. Shown INSIDE the collapsed
+ * "more" box rather than in the main grid, so the page only ever offers what
+ * can actually be started — but still visible on demand, because a path you
+ * cannot see the end of is demotivating rather than focusing.
+ */
+const LockedCard = ({ card, reason }) => (
+  <div
+    className="section-card section-card--locked"
+    style={{ '--card-accent': card.accent }}
+    aria-disabled="true"
+  >
+    <div className="card-icon card-icon--locked" aria-hidden="true">🔒</div>
+    <h3 className="card-title">{card.title}</h3>
+    <p className="card-description card-description--locked">{reason}</p>
+  </div>
+);
+
+/**
  * A home-page tile. Rendered as a real keyboard target (Enter / Space) rather than
  * a bare clickable div; the per-card accent drives its icon tile, hover border and
  * progress bar through --card-accent.
  */
-const SectionCard = ({ card, index, onSelect, children }) => (
+const SectionCard = ({ card, index, onSelect, children, isNext = false, nextLabel }) => (
   <motion.div
-    className={`section-card home-card--${card.id}`}
+    className={`section-card home-card--${card.id} ${isNext ? 'section-card--next' : ''}`}
     style={{ '--card-accent': card.accent }}
     role="button"
     tabIndex={0}
@@ -88,6 +140,9 @@ const SectionCard = ({ card, index, onSelect, children }) => (
     transition={{ delay: Math.min(0.1 + index * 0.03, 0.6), duration: 0.3 }}
   >
     {card.badge > 0 && <span className="card-unread-badge">{card.badge}</span>}
+    {/* The one lesson the learner should do next. With the rest of the path
+        locked behind it, saying so removes the last bit of guesswork. */}
+    {isNext && nextLabel && <span className="card-next-badge">{nextLabel}</span>}
     <div className="card-icon" aria-hidden="true">{card.icon}</div>
     <h3 className="card-title">{card.title}</h3>
     <p className="card-description">{card.description}</p>
@@ -139,6 +194,7 @@ const ArabicLearningPlatform = ({
   const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showRewards, setShowRewards] = useState(false);
   const [gameDifficulty, setGameDifficulty] = useState(null);
   const [pendingGameSection, setPendingGameSection] = useState(null);
   const [userProgress, setUserProgress] = useState({
@@ -262,6 +318,31 @@ const ArabicLearningPlatform = ({
   const handleSectionChange = (section) => {
     playClickSound(); // Play click sound on section change
 
+    const role = getCurrentUserRole();
+
+    // Teachers and parents are held to their own screens. Enforced here as
+    // well as in what the home page offers, so a stale state value or a tile
+    // that slipped through cannot drop them into the learner's app.
+    if (isStaffRole(role) && !STAFF_SECTIONS.includes(section)) {
+      setCurrentSection('home');
+      return;
+    }
+
+    // Rewards is a modal, not a section — it has to stay reachable from any
+    // screen, and pushing it into the section switch would unmount whatever
+    // the learner was doing.
+    if (section === 'rewards') {
+      setShowRewards(true);
+      return;
+    }
+
+    // A locked lesson is never offered on the home page, but a learner can
+    // still reach one through the Learn hub or a stale link.
+    if (!isSectionUnlocked(getCurrentUserEmail(), section, role || 'student')) {
+      setCurrentSection('learn');
+      return;
+    }
+
     // Check if this is a game section that needs difficulty selection
     const gameSections = ['memory-game', 'color-matching', 'number-learning'];
     if (gameSections.includes(section) && !gameDifficulty) {
@@ -332,11 +413,15 @@ const ArabicLearningPlatform = ({
 
   const renderHomeSection = () => {
     const userRole = getCurrentUserRole();
-    const isTeacherOrParent = userRole === 'teacher' || userRole === 'parent';
+    const isTeacherOrParent = isStaffRole(userRole);
+    const userEmail = getCurrentUserEmail();
     const firstName = (readCurrentUser()?.name || '').trim().split(/\s+/)[0];
     // Per-user module progress — the same numbers the Progress Dashboard shows
     // (the legacy arabic_learning_progress key never stored topic progress)
-    const moduleProgress = getModuleProgress(getCurrentUserEmail());
+    const moduleProgress = getModuleProgress(userEmail);
+    // Lock state for the sequenced lessons, and the one the learner is on.
+    const curriculum = getCurriculumState(userEmail, userRole || 'student');
+    const nextModule = getNextModule(userEmail, userRole || 'student');
 
     const learnCards = [
       {
@@ -456,9 +541,24 @@ const ArabicLearningPlatform = ({
         description: tr('Detailed, printable learning reports', 'تقارير تعلم مفصلة وقابلة للطباعة')
       },
       {
-        id: 'progress', icon: '📊', accent: '#8b5cf6', roles: ['student', 'teacher', 'parent'],
+        id: 'homework', icon: '📚', accent: '#6366f1', roles: ['teacher', 'parent'],
+        title: tr('Homework', 'الواجبات'),
+        description: userRole === 'teacher'
+          ? tr('Create and review assignments for your classes', 'أنشئ الواجبات وراجعها لصفوفك')
+          : tr("See what your child has been set", 'شاهد ما أُسند إلى طفلك')
+      },
+      {
+        // The student progress dashboard, for students only. Teachers and
+        // parents get the richer Progress Report instead — this one shows
+        // *your own* learning, which neither of them is doing here.
+        id: 'progress', icon: '📊', accent: '#8b5cf6', roles: ['student'],
         title: tr('Progress Dashboard', 'لوحة التقدم'),
         description: tr('Track your progress and achievements', 'تابع تقدمك وإنجازاتك')
+      },
+      {
+        id: 'rewards', icon: '🎁', accent: '#f59e0b', roles: ['student'],
+        title: tr('Rewards', 'المكافآت'),
+        description: tr('Use your points to change how the app looks', 'استخدم نقاطك لتغيير شكل التطبيق')
       },
       {
         id: 'classmanagement', icon: '🏫', accent: '#0ea5e9', roles: ['student'],
@@ -467,51 +567,113 @@ const ArabicLearningPlatform = ({
       }
     ].filter(card => card.roles.includes(userRole || 'student'));
 
-    const renderCards = (cards, offset = 0) => (
-      <div className="learning-sections">
-        {cards.map((card, index) => (
-          <SectionCard
-            key={card.id}
-            card={card}
-            index={offset + index}
-            onSelect={handleSectionChange}
-          >
-            {typeof card.progress === 'number' && (
-              <div className="card-progress" aria-label={tr(`${card.progress}% complete`, `${card.progress}% مكتمل`)}>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${card.progress}%` }}></div>
-                </div>
-                <span className="progress-text">{card.progress}%</span>
-              </div>
-            )}
-            {card.chatModes && (
-              <div className="chat-modes">
-                <button
-                  className="mode-btn text-mode"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleChatModeSwitch('text');
-                  }}
-                >
-                  💬 {tr('Text', 'نص')}
-                </button>
-                <button
-                  className="mode-btn voice-mode"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleChatModeSwitch('voice');
-                  }}
-                >
-                  🎤 {tr('Voice', 'صوت')}
-                </button>
-              </div>
-            )}
-          </SectionCard>
-        ))}
-      </div>
+    /**
+     * Split a set of cards into the ones that can be started now and the ones
+     * that are still locked. Only sequenced lessons (alphabet → colors → words
+     * → sentences) are ever locked; the practice activities and tools stay open
+     * so a learner who stalls always has somewhere to go.
+     */
+    const partitionByLock = (cards) => {
+      const available = [];
+      const locked = [];
+      cards.forEach((card) => {
+        const state = curriculum[card.id];
+        if (state && !state.unlocked) {
+          locked.push(card);
+        } else {
+          available.push(card);
+        }
+      });
+      return { available, locked };
+    };
+
+    /** One tile. Pulled out so it can be rendered inside the "…" box too. */
+    const renderCard = (card, index) => (
+      <SectionCard
+        key={card.id}
+        card={card}
+        index={index}
+        onSelect={handleSectionChange}
+        isNext={card.id === nextModule?.id && !isTeacherOrParent}
+        nextLabel={tr('Start here', 'ابدأ هنا')}
+      >
+        {typeof card.progress === 'number' && (
+          <div className="card-progress" aria-label={tr(`${card.progress}% complete`, `${card.progress}% مكتمل`)}>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${card.progress}%` }}></div>
+            </div>
+            <span className="progress-text">{card.progress}%</span>
+          </div>
+        )}
+        {card.chatModes && (
+          <div className="chat-modes">
+            <button
+              className="mode-btn text-mode"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleChatModeSwitch('text');
+              }}
+            >
+              💬 {tr('Text', 'نص')}
+            </button>
+            <button
+              className="mode-btn voice-mode"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleChatModeSwitch('voice');
+              }}
+            >
+              🎤 {tr('Voice', 'صوت')}
+            </button>
+          </div>
+        )}
+      </SectionCard>
     );
 
-    const renderGroup = (key, icon, title, subtitle, cards, offset) => (
+    /**
+     * A grid of tiles, plus at most one "…" box holding everything that is not
+     * shown: the locked lessons, and anything past `maxVisible`.
+     *
+     * Capping the visible count is the other half of not overwhelming the page.
+     * Locking alone does not help the practice row, where nothing is sequenced
+     * and all eight activities are legitimately available — showing four and
+     * folding the rest keeps the page readable without taking anything away.
+     */
+    const renderCards = ({ cards, offset = 0, lockedCards = [], maxVisible = Infinity }) => {
+      const visible = cards.slice(0, maxVisible);
+      const overflow = cards.slice(maxVisible);
+      const hiddenCount = overflow.length + lockedCards.length;
+
+      return (
+        <div className="learning-sections">
+          {visible.map((card, index) => renderCard(card, offset + index))}
+
+          {/* Collapses into one tile that opens on hover, focus or tap — see
+              CollapsedCardsBox for why all three. */}
+          <CollapsedCardsBox
+            count={hiddenCount}
+            label={
+              lockedCards.length && !overflow.length
+                ? tr('more to unlock', 'المزيد للفتح')
+                : tr('more', 'المزيد')
+            }
+            hint={tr('Hover or tap to see them', 'مرر المؤشر أو اضغط لرؤيتها')}
+          >
+            {overflow.map((card, index) =>
+              renderCard(card, offset + visible.length + index))}
+            {lockedCards.map((card) => (
+              <LockedCard
+                key={card.id}
+                card={card}
+                reason={lockReason(userEmail, card.id, language, userRole || 'student')}
+              />
+            ))}
+          </CollapsedCardsBox>
+        </div>
+      );
+    };
+
+    const renderGroup = (key, icon, title, subtitle, options) => (
       <section className="home-group" key={key} aria-labelledby={`home-group-${key}`}>
         <div className="section-category-header">
           <h2 className="category-title" id={`home-group-${key}`}>
@@ -520,7 +682,7 @@ const ArabicLearningPlatform = ({
           </h2>
           {subtitle && <p className="category-subtitle">{subtitle}</p>}
         </div>
-        {renderCards(cards, offset)}
+        {renderCards(options)}
       </section>
     );
 
@@ -533,9 +695,62 @@ const ArabicLearningPlatform = ({
       isTeacherOrParent
         ? tr('Everything you need to support your learners', 'كل ما تحتاجه لدعم المتعلمين')
         : null,
-      toolCards,
-      isTeacherOrParent ? 0 : learnCards.length + practiceCards.length
+      { cards: toolCards, offset: 0 }
     );
+
+    const { available: openLearnCards, locked: lockedLearnCards } =
+      partitionByLock(learnCards);
+
+    /**
+     * Teachers and parents get their tools and nothing else. They are not
+     * learners here, and the learning grid was the bulk of what they had to
+     * scroll past to reach the dashboard they came for.
+     */
+    if (isTeacherOrParent) {
+      return (
+        <div className="home-section">
+          <motion.div
+            className="welcome-header"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h1
+              className="platform-title"
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
+              lang={language === 'ar' ? 'ar' : 'en'}
+            >
+              {firstName
+                ? tr(`Welcome back, ${firstName}!`, `مرحباً بعودتك يا ${firstName}!`)
+                : tr('Welcome to Stellar', 'مرحباً بك في مميّز')}
+            </h1>
+            <p
+              className="platform-subtitle"
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
+              lang={language === 'ar' ? 'ar' : 'en'}
+            >
+              {userRole === 'teacher'
+                ? tr('Your classes, your learners and their progress, all in one place.',
+                     'صفوفك ومتعلموك وتقدمهم، في مكان واحد.')
+                : tr("Follow your children's learning and stay in touch with their teachers.",
+                     'تابع تعلم أطفالك وابقَ على تواصل مع معلميهم.')}
+            </p>
+            <motion.p
+              className="platform-role-badge"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {userRole === 'teacher'
+                ? tr('👨‍🏫 Teacher account', '👨‍🏫 حساب معلم')
+                : tr('👨‍👩‍👧 Parent account', '👨‍👩‍👧 حساب ولي أمر')}
+            </motion.p>
+          </motion.div>
+
+          {toolsGroup}
+        </div>
+      );
+    }
 
     return (
       <div className="home-section">
@@ -559,104 +774,95 @@ const ArabicLearningPlatform = ({
             dir={language === 'ar' ? 'rtl' : 'ltr'}
             lang={language === 'ar' ? 'ar' : 'en'}
           >
-            {isTeacherOrParent
-              ? tr('Explore the lessons your learners use, and stay connected with families and teachers.',
-                   'استكشف الدروس التي يستخدمها المتعلمون، وابقَ على تواصل مع الأهل والمعلمين.')
-              : tr('Pick up where you left off — letters, words, stories and games, all in one place.',
-                   'تابع من حيث توقفت — حروف وكلمات وقصص وألعاب في مكان واحد.')}
+            {tr('Pick up where you left off — letters, words, stories and games, all in one place.',
+                'تابع من حيث توقفت — حروف وكلمات وقصص وألعاب في مكان واحد.')}
           </p>
-          {isTeacherOrParent && (
-            <motion.p
-              className="platform-role-badge"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {userRole === 'teacher'
-                ? tr('👨‍🏫 Teacher account', '👨‍🏫 حساب معلم')
-                : tr('👨‍👩‍👧 Parent account', '👨‍👩‍👧 حساب ولي أمر')}
-            </motion.p>
-          )}
         </motion.div>
 
+        {/* Streak and standing side by side: the two "how am I doing?" answers
+            together at the top, instead of the streak here and the leaderboard
+            two clicks deep inside a modal. */}
         <motion.div
+          className="home-status-row"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.35 }}
+          transition={{ delay: 0.12, duration: 0.35 }}
         >
           <StreakCounter language={language} />
+          <HomeLeaderboard
+            userEmail={userEmail}
+            language={language}
+            onSeeAll={() => setShowLeaderboard(true)}
+          />
         </motion.div>
-
-        {isTeacherOrParent && toolsGroup}
 
         {renderGroup(
           'learn', '📚', tr('Learn', 'تعلّم'),
-          tr('Start your learning journey with interactive lessons', 'ابدأ رحلة التعلم مع الدروس التفاعلية'),
-          learnCards, isTeacherOrParent ? toolCards.length : 0
+          nextModule && !nextModule.complete
+            ? tr(
+                `Your next step is ${nextModule.titleEn} — reach ${PASS_PERCENT}% to open the one after it.`,
+                `خطوتك التالية هي ${nextModule.titleAr} — اصل إلى ${PASS_PERCENT}% لفتح التالية.`
+              )
+            : tr('You have opened every lesson — keep practising to master them.',
+                 'لقد فتحت كل الدروس — واصل التدرب لإتقانها.'),
+          { cards: openLearnCards, offset: 0, lockedCards: lockedLearnCards }
         )}
 
+        {/* Practice sits below the lesson path and shows four of its eight
+            activities, with the rest in the "…" box — enough choice to be
+            useful, not enough to compete with the lesson in hand. */}
         {renderGroup(
           'practice', '🎯', tr('Practice & play', 'تدرّب والعب'),
           tr('Quizzes, games and your AI tutor to practise what you learned', 'اختبارات وألعاب ومساعدك الذكي لتتدرب على ما تعلمته'),
-          practiceCards, (isTeacherOrParent ? toolCards.length : 0) + learnCards.length
+          { cards: practiceCards, offset: openLearnCards.length, maxVisible: 4 }
         )}
 
-        {!isTeacherOrParent && toolsGroup}
-
-        <motion.div
-          className="fun-facts"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h3 className="facts-title">
-            <span aria-hidden="true">💡</span> {tr('Did you know?', 'هل تعلم؟')}
-          </h3>
-          <div className="facts-grid">
-            {[
-              ['📖', tr('Arabic has 28 letters', 'اللغة العربية بها 28 حرفاً')],
-              ['🌍', tr('Over 400 million people speak Arabic', 'يتحدث بالعربية أكثر من 400 مليون شخص')],
-              ['✍️', tr('Arabic is written from right to left', 'نكتب العربية من اليمين إلى اليسار')]
-            ].map(([icon, text]) => (
-              <div className="fact-item" key={icon}>
-                <span className="fact-icon" aria-hidden="true">{icon}</span>
-                <span className="fact-text">{text}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        {toolsGroup}
       </div>
     );
   };
 
   const userRole = getCurrentUserRole();
-  const isCompactNav = userRole === 'teacher' || userRole === 'parent';
+  const isStaff = isStaffRole(userRole);
+  const isCompactNav = isStaff;
   const currentUser = readCurrentUser();
   const hideNav = NAV_HIDDEN_SECTIONS.includes(currentSection);
 
-  const navItems = [
-    { id: 'home', icon: '🏠', label: tr('Home', 'الرئيسية'), sections: ['home'] },
-    { id: 'learn', icon: '📚', label: tr('Learn', 'تعلّم'), sections: LEARN_SECTIONS },
-    { id: 'quiz', icon: '🎯', label: tr('Test Yourself', 'اختبر نفسك'), sections: PRACTICE_SECTIONS },
-    { id: 'progress', icon: '📊', label: tr('Progress', 'تقدمي'), sections: ['progress'] },
-    { id: 'chat', icon: '💬', label: tr('Chat', 'محادثة'), sections: ['chat'] },
-    { id: 'voice', icon: '🎤', label: tr('Voice', 'صوت'), sections: ['voice'] },
-    ...(isCompactNav
-      ? [{ id: 'teacherchat', icon: '✉️', label: tr('Messages', 'الرسائل'), sections: ['teacherchat'], badge: unreadMessagesCount }]
-      : []),
-    ...(userRole === 'teacher'
-      ? [{ id: 'teacherdashboard', icon: '🖥️', label: tr('Dashboard', 'لوحتي'), sections: ['teacherdashboard', 'classmanagement', 'progressreport'] }]
-      : []),
-    ...(userRole === 'parent'
-      ? [{ id: 'parentdashboard', icon: '👪', label: tr('Dashboard', 'لوحتي'), sections: ['parentdashboard', 'progressreport'] }]
-      : [])
-  ];
+  /**
+   * Navigation is built per role rather than filtered after the fact.
+   *
+   * Teachers and parents previously carried the learner's whole nav — Learn,
+   * Test Yourself, Progress, Chat, Voice — plus their own dashboard at the far
+   * end. Those five links went to screens that are not for them, and on a
+   * teacher account the dashboard they actually use was the last item in the
+   * row. They now get four links, all theirs.
+   */
+  const navItems = isStaff
+    ? [
+      { id: 'home', icon: '🏠', label: tr('Home', 'الرئيسية'), sections: ['home'] },
+      ...(userRole === 'teacher'
+        ? [{ id: 'teacherdashboard', icon: '🖥️', label: tr('Dashboard', 'لوحتي'), sections: ['teacherdashboard', 'classmanagement'] }]
+        : [{ id: 'parentdashboard', icon: '👪', label: tr('Dashboard', 'لوحتي'), sections: ['parentdashboard'] }]),
+      { id: 'progressreport', icon: '📄', label: tr('Reports', 'التقارير'), sections: ['progressreport'] },
+      { id: 'homework', icon: '📚', label: tr('Homework', 'الواجبات'), sections: ['homework'] },
+      { id: 'teacherchat', icon: '✉️', label: tr('Messages', 'الرسائل'), sections: ['teacherchat'], badge: unreadMessagesCount }
+    ]
+    : [
+      { id: 'home', icon: '🏠', label: tr('Home', 'الرئيسية'), sections: ['home'] },
+      { id: 'learn', icon: '📚', label: tr('Learn', 'تعلّم'), sections: LEARN_SECTIONS },
+      { id: 'quiz', icon: '🎯', label: tr('Test Yourself', 'اختبر نفسك'), sections: PRACTICE_SECTIONS },
+      { id: 'progress', icon: '📊', label: tr('Progress', 'تقدمي'), sections: ['progress'] },
+      { id: 'chat', icon: '💬', label: tr('Chat', 'محادثة'), sections: ['chat'] },
+      { id: 'voice', icon: '🎤', label: tr('Voice', 'صوت'), sections: ['voice'] }
+    ];
 
   const handleNavClick = (id) => {
     if (id === 'chat' || id === 'voice') {
       handleChatModeSwitch(id === 'chat' ? 'text' : 'voice');
     } else {
-      setCurrentSection(id);
+      // Through handleSectionChange, not setCurrentSection directly, so nav
+      // clicks go through the same role and unlock guards the tiles do.
+      handleSectionChange(id);
     }
   };
 
@@ -765,7 +971,9 @@ const ArabicLearningPlatform = ({
             >
               <LearnHub
                 language={language}
-                onSectionSelect={(sectionId) => setCurrentSection(sectionId)}
+                userEmail={getCurrentUserEmail()}
+                userRole={getCurrentUserRole()}
+                onSectionSelect={handleSectionChange}
               />
             </motion.div>
           )}
@@ -1062,6 +1270,7 @@ const ArabicLearningPlatform = ({
                 reducedMotion={reducedMotion}
                 speak={speak}
                 userEmail={getCurrentUserEmail()}
+                userRole={getCurrentUserRole()}
                 onSectionSelect={handleSectionChange}
               />
             </motion.div>
@@ -1305,13 +1514,27 @@ const ArabicLearningPlatform = ({
         )}
       </AnimatePresence>
 
-      {/* Leaderboard Modal */}
+      {/* Full leaderboard — opened from "See all" on the home panel. The flag
+          that controls it was previously never set anywhere, so this modal was
+          unreachable dead code. */}
       <AnimatePresence>
         {showLeaderboard && (
           <Leaderboard
             userEmail={getCurrentUserEmail()}
             language={language}
             onClose={() => setShowLeaderboard(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Rewards — what the points are for. A modal rather than a section so
+          it stays reachable without unmounting the lesson in progress. */}
+      <AnimatePresence>
+        {showRewards && (
+          <RewardsStore
+            userEmail={getCurrentUserEmail()}
+            language={language}
+            onClose={() => setShowRewards(false)}
           />
         )}
       </AnimatePresence>

@@ -280,3 +280,35 @@
   .number-option.shake,
   .emoji-item { animation: none; }
 }
+
+/* ----------------------------------------------------------------------------
+   PHONETIC SPELLING (added in this pass)
+   An option read only "Three" in English, so the Arabic number word the game
+   teaches never appeared. Script and phonetic spelling are now on every option.
+   Scoped under .number-game-container to avoid the generic-name collisions
+   this module shares with the other learning and game stylesheets.
+   ---------------------------------------------------------------------------- */
+.number-game-container .option-arabic {
+  margin-top: 4px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--mz-accent-text);
+}
+
+.number-game-container .option-phonetic {
+  font-size: 0.88rem;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--mz-text-2);
+}
+
+:root.high-contrast .number-game-container .option-arabic {
+  color: #ffff00 !important;
+  -webkit-text-fill-color: #ffff00 !important;
+}
+
+:root.high-contrast .number-game-container .option-phonetic {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

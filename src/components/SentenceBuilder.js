@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
+import { transliterate } from '../utils/phonetics';
 import './SentenceBuilder.css';
 
 const SentenceBuilder = ({ language, fontSize, highContrast }) => {
@@ -251,6 +252,9 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
           {language === 'ar' ? 'الجملة المطلوبة:' : 'Target Sentence:'}
         </h3>
         <div className="target-english">{currentSentence.english}</div>
+        {/* How the finished sentence sounds. Arranging words you cannot
+            pronounce is a jigsaw, not a language exercise. */}
+        <div className="target-phonetic">{transliterate(currentSentence.arabic)}</div>
       </motion.div>
 
       {/* Building Area */}

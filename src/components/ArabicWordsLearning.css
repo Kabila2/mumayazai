@@ -25,7 +25,9 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   font-family: 'OpenDyslexic', 'Cairo', sans-serif;
-  contain: layout style;
+  /* No `contain` here: `contain: layout` makes this element the containing
+     block for fixed-position descendants, which cropped any overlay raised
+     from inside the module to the module box (see CelebrationPopup.js). */
   box-sizing: border-box;
 }
 
@@ -147,6 +149,48 @@
   color: var(--mz-text-2);
   margin: 0;
   font-weight: 600;
+}
+
+/* Per-word listen buttons on the category tiles. Each one is a real button
+   inside a clickable tile, so it stops propagation in JS and sits above the
+   tile's own hit area here. */
+.arabic-words-learning .category-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.arabic-words-learning .category-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  min-height: 44px;                   /* touch target, not just a label */
+  border: 2px solid var(--mz-border);
+  border-radius: var(--mz-radius-pill);
+  background: var(--mz-surface);
+  color: var(--mz-text);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.arabic-words-learning .category-preview-btn:hover {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+}
+
+.arabic-words-learning .category-preview-btn:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 2px;
+}
+
+.arabic-words-learning .category-preview-label {
+  font-size: 1.15rem;
 }
 
 /* Word Learning */
@@ -404,6 +448,60 @@
   padding: 20px;
   background: var(--mz-surface-2);
   border-radius: var(--mz-radius-lg);
+}
+
+/* Listen controls on the word card. The card itself has always been clickable
+   to hear the word, but nothing said so — these are the visible affordance. */
+.arabic-words-learning .word-listen-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 8px;
+}
+
+.arabic-words-learning .word-listen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 28px;
+  min-height: 60px;
+  border: none;
+  border-radius: var(--mz-radius-pill);
+  background: var(--mz-accent);
+  color: var(--mz-accent-contrast);
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.arabic-words-learning .word-listen-btn:hover {
+  background: var(--mz-accent-hover);
+  transform: translateY(-2px);
+}
+
+.arabic-words-learning .word-listen-btn:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
+}
+
+.arabic-words-learning .word-listen-btn--secondary {
+  background: var(--mz-surface);
+  color: var(--mz-text);
+  border: 2px solid var(--mz-border);
+}
+
+.arabic-words-learning .word-listen-btn--secondary:hover {
+  background: var(--mz-accent-soft);
+  border-color: var(--mz-accent);
+}
+
+.arabic-words-learning .word-listen-icon { font-size: 1.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .arabic-words-learning .word-listen-btn:hover { transform: none; }
 }
 
 .arabic-words-learning .word-progress-stars {

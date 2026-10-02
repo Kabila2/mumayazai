@@ -6,9 +6,17 @@ import PointNotification from './PointNotification';
 import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
 import { recordModuleItemLearned, syncModuleLearned } from '../utils/progressUtils';
 import { useVoiceOver } from '../hooks/useVoiceOver';
+import { checkAchievements } from '../utils/achievementsSystem';
+import { PASS_PERCENT } from '../utils/moduleUnlockUtils';
+import { learnedPhrase, moduleCompletePhrase } from '../utils/speechPhrasing';
 import CelebrationPopup from './CelebrationPopup';
 
-const arabicAlphabet = [
+/**
+ * The 28 letters this module teaches. Exported so the Quiz Centre can build
+ * its unit test from the letters a learner has actually completed (the ids
+ * progressUtils records are the `letter` values here).
+ */
+export const arabicAlphabet = [
   { letter: 'ا', name: 'ألف', pronunciation: 'alif', english: 'A', word: 'أسد', wordMeaning: 'lion', emoji: '🦁', category: 'vowel' },
   { letter: 'ب', name: 'باء', pronunciation: 'baa', english: 'B', word: 'بطة', wordMeaning: 'duck', emoji: '🦆', category: 'consonant' },
   { letter: 'ت', name: 'تاء', pronunciation: 'taa', english: 'T', word: 'تفاحة', wordMeaning: 'apple', emoji: '🍎', category: 'consonant' },
@@ -261,14 +269,29 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
     // Award points for learning a letter
     awardPoints(userEmail, 'LETTER_LEARNED');
 
+    // Award the alphabet badges. This is what opens the next module on the
+    // learning path — see moduleUnlockUtils.js — so it has to run from the
+    // same place that records the progress, not on a separate trigger.
+    checkAchievements(userEmail, 'module_progress', {
+      moduleId: 'alphabet',
+      learnedCount: newLearned.length,
+      totalCount: arabicAlphabet.length,
+      passPercent: PASS_PERCENT
+    });
+
     // Show celebration popup
     setShowCelebration(true);
 
-    // Voice over announcement
+    // Voice over announcement. Phrased by speechPhrasing.js rather than built
+    // here: "Letter baa marked as learned. You earned 5 points" reads like a
+    // database row out loud, and digits come out flat on most voices.
     voiceOver.speak(
-      language === 'ar'
-        ? `تم تعليم الحرف ${currentLetter.name}. حصلت على ${POINT_VALUES.LETTER_LEARNED} نقطة`
-        : `Letter ${currentLetter.name} marked as learned. You earned ${POINT_VALUES.LETTER_LEARNED} points`,
+      learnedPhrase({
+        language,
+        kind: 'letter',
+        name: language === 'ar' ? currentLetter.name : currentLetter.pronunciation,
+        points: POINT_VALUES.LETTER_LEARNED
+      }),
       true
     );
 
@@ -279,9 +302,10 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
       // Voice over for completion
       setTimeout(() => {
         voiceOver.speak(
-          language === 'ar'
-            ? `مبروك! أكملت جميع الحروف`
-            : `Congratulations! You completed all letters`,
+          moduleCompletePhrase({
+            language,
+            moduleName: language === 'ar' ? 'الحروف العربية' : 'Arabic alphabet'
+          }),
           true
         );
       }, 1500);

@@ -1,4 +1,4 @@
-/* global puter */
+// AI provider selection lives in src/utils/aiClient.js.
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import ExploreModal from './ExploreModal';
@@ -11,6 +11,7 @@ import {
 import "./VoiceInterface.css";
 import "./ChatInterface.css";
 import { isElevenLabsConfigured, speakWithElevenLabs, stopElevenLabsSpeech } from "../utils/elevenLabsTTS";
+import { askAI } from "../utils/aiClient";
 
 /** ---------- Advanced Voice System ---------- */
 const VOICE_STORAGE_KEY = "stellar_voice_data";
@@ -190,7 +191,6 @@ const getNaturalVoices = (language, availableVoices) => {
 
   // Second pass: Find by language if no exact matches
   if (filtered.length === 0) {
-    const langCode = language === 'ar' ? 'ar' : 'en';
     const langVoices = availableVoices.filter(v => {
       if (!v.lang) return false;
       const lowerLang = v.lang.toLowerCase();
@@ -341,43 +341,11 @@ class VoiceMemoryManager {
   }
 }
 
-/** ---------- Enhanced AI Integration (from ChatInterface) ---------- */
-const hasPuter = () =>
-  typeof window !== "undefined" &&
-  window.puter &&
-  window.puter.ai &&
-  typeof window.puter.ai.chat === "function";
-
-const waitForPuter = (timeoutMs = 3000) =>
-  new Promise((resolve) => {
-    if (hasPuter()) return resolve(true);
-    const t0 = Date.now();
-    const id = setInterval(() => {
-      if (hasPuter() || Date.now() - t0 > timeoutMs) {
-        clearInterval(id);
-        resolve(hasPuter());
-      }
-    }, 100);
-  });
-
-const aiChat = async (prompt, ms = 30000) => {
-  if (!hasPuter()) throw new Error("Puter SDK not available");
-
-  const timeout = new Promise((_, rej) =>
-    setTimeout(() => rej(new Error("AI request timed out")), ms)
-  );
-
-  const req = (async () => {
-    const resp = await window.puter.ai.chat(prompt);
-    return typeof resp === "string" ? resp : resp?.message?.content ?? "";
-  })();
-
-  return Promise.race([req, timeout]);
-};
-
+/** ---------- Enhanced AI Integration ----------
+ * Provider selection lives in src/utils/aiClient.js; this screen only builds
+ * the prompt. `askAI` always resolves (falling through to the offline tutor),
+ * so a dropped connection cannot leave the voice screen waiting. */
 const getVoiceAIResponse = async (prompt, conversationContext = "") => {
-  const ready = await waitForPuter(3000);
-
   // Enhanced memory and context instructions
   const memoryInstruction = conversationContext
     ? "\n\nIMPORTANT MEMORY CONTEXT: You have access to our full conversation history above. When the user refers to something they mentioned before (like 'the book I mentioned', 'what I said earlier', 'that thing from before'), look back through the conversation history to find what they're referring to and respond accordingly. Use this context to provide more relevant and connected responses."
@@ -390,46 +358,8 @@ const getVoiceAIResponse = async (prompt, conversationContext = "") => {
     ? prompt + conversationContext + memoryInstruction + bulletPointInstruction
     : prompt + bulletPointInstruction;
 
-  console.log("🧠 Sending enhanced voice prompt with full memory context and reference handling");
-
-  if (!ready) {
-    return mockVoiceAI(enhancedPrompt, !!conversationContext);
-  }
-
-  try {
-    const rawResponse = await aiChat(enhancedPrompt, 30000);
-    return rawResponse;
-  } catch (err) {
-    console.warn("[VoiceInterface] AI error:", err);
-    return "• I'm having trouble connecting right now\n• Please try again in a moment";
-  }
-};
-
-// Enhanced Mock AI for development (from ChatInterface)
-const mockVoiceAI = (prompt, hasContext = false) => {
-  const userInput = prompt.split("Current Request:").pop() ||
-                   prompt.split("Human:").pop() ||
-                   prompt;
-  const cleanInput = userInput.trim().substring(0, 100);
-
-  const contextNote = hasContext ? "\n• I remember our previous conversation" : "";
-
-  // Check for common reference patterns
-  const hasReference = /\b(that|it|the .+ (I|you) (mentioned|said|talked about)|what (I|you) (said|mentioned)|summarize|explain .+ (mentioned|said))\b/i.test(cleanInput);
-
-  if (hasContext && hasReference) {
-    return `• I can see you're referring to something from our conversation${contextNote}\n• In demo mode, I can detect references but need the real AI for full context analysis\n• Your request: "${cleanInput}"\n• The memory system is active and ready for the full AI response\n• Try this with the real AI for complete context awareness`;
-  }
-
-  const responses = [
-    `• Regarding "${cleanInput}"\n• I'm currently in demo mode with full memory system active\n• I can help you with questions and provide information\n• I maintain conversation history for context-aware responses${contextNote}`,
-
-    `• You mentioned: "${cleanInput}"\n• This is a demonstration of the Voice Assistant with memory\n• I can assist with a wide range of topics\n• I maintain our conversation history for continuity and reference handling${contextNote}`,
-
-    `• About "${cleanInput}"\n• I'm running in demo mode but with full memory capabilities\n• I remember our conversation and can build on previous discussions\n• Ready to assist with context-aware voice responses${contextNote}`
-  ];
-
-  return responses[Math.floor(Math.random() * responses.length)];
+  const { text } = await askAI(enhancedPrompt);
+  return text;
 };
 
 export default function VoiceInterface({

@@ -2,9 +2,244 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { recordModuleItemLearned, getLearnedItems } from '../utils/progressUtils';
-import { awardPoints } from '../utils/pointsUtils';
+import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
+import { checkAchievements } from '../utils/achievementsSystem';
+import { PASS_PERCENT } from '../utils/moduleUnlockUtils';
+import { learnedPhrase, moduleCompletePhrase } from '../utils/speechPhrasing';
 import CelebrationPopup from './CelebrationPopup';
 import './ArabicSentencesLearning.css';
+
+/**
+ * The sentences this module teaches. At module scope and exported for the same
+ * reason as WORD_CATEGORIES in ArabicWordsLearning: the Quiz Centre’s unit test
+ * resolves `<category>_<index>` ids against this array.
+ */
+export const sentenceCategories = [
+  {
+    id: 'greetings',
+    nameEn: 'Greetings',
+    nameAr: 'التحيات',
+    icon: '👋',
+    color: '#10b981',
+    sentences: [
+      {
+        arabic: 'السَّلامُ عَلَيْكُم',
+        english: 'Peace be upon you',
+        pronunciation: 'as-salamu alaykum',
+        image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
+        video: 'https://www.youtube.com/embed/VDKK2-V_-ro?rel=0',
+        videoDescription: {
+          en: 'Learn the traditional Islamic greeting and its proper usage in daily conversations',
+          ar: 'تعلم التحية الإسلامية التقليدية واستخدامها الصحيح في المحادثات اليومية'
+        },
+        words: [
+          { arabic: 'السَّلامُ', english: 'peace', pronunciation: 'as-salamu' },
+          { arabic: 'عَلَيْكُم', english: 'upon you', pronunciation: 'alaykum' }
+        ]
+      },
+      {
+        arabic: 'صَباحُ الخَيْر',
+        english: 'Good morning',
+        pronunciation: 'sabah al-khayr',
+        image: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=400&h=300&fit=crop',
+        video: 'https://www.youtube.com/embed/frUuoUIddf8?rel=0',
+        videoDescription: {
+          en: 'Master morning greetings in Arabic and learn when to use them in different contexts',
+          ar: 'أتقن تحيات الصباح باللغة العربية وتعلم متى تستخدمها في سياقات مختلفة'
+        },
+        words: [
+          { arabic: 'صَباحُ', english: 'morning', pronunciation: 'sabah' },
+          { arabic: 'الخَيْر', english: 'the good', pronunciation: 'al-khayr' }
+        ]
+      },
+      {
+        arabic: 'كَيْفَ حالُكَ؟',
+        english: 'How are you?',
+        pronunciation: 'kayfa haluk',
+        image: 'https://images.unsplash.com/photo-1556484687-30636164638b?w=400&h=300&fit=crop',
+        video: 'https://www.youtube.com/embed/KpcO9C4FVTo?rel=0',
+        videoDescription: {
+          en: 'Practice asking about someone\'s wellbeing and understand the cultural context',
+          ar: 'تدرب على السؤال عن حال شخص ما وفهم السياق الثقافي'
+        },
+        words: [
+          { arabic: 'كَيْفَ', english: 'how', pronunciation: 'kayfa' },
+          { arabic: 'حالُكَ', english: 'your condition', pronunciation: 'haluk' }
+        ]
+      },
+      {
+        arabic: 'أَنا بِخَيْر',
+        english: "I'm fine",
+        pronunciation: 'ana bi-khayr',
+        image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=300&fit=crop',
+        video: 'https://www.youtube.com/embed/KpcO9C4FVTo?rel=0',
+        videoDescription: {
+          en: 'Learn different ways to respond positively about your wellbeing in Arabic',
+          ar: 'تعلم طرق مختلفة للرد بشكل إيجابي عن حالك باللغة العربية'
+        },
+        words: [
+          { arabic: 'أَنا', english: 'I', pronunciation: 'ana' },
+          { arabic: 'بِخَيْر', english: 'fine/well', pronunciation: 'bi-khayr' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'daily',
+    nameEn: 'Daily Life',
+    nameAr: 'الحياة اليومية',
+    icon: '🏠',
+    color: '#f59e0b',
+    sentences: [
+      {
+        arabic: 'أُحِبُّ الطَّعام',
+        english: 'I love food',
+        pronunciation: 'uhibbu at-ta\'am',
+        image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
+        video: 'https://www.youtube.com/embed/238NKD8QTsI?rel=0',
+        videoDescription: {
+          en: 'Express your love for food and learn food-related vocabulary',
+          ar: 'عبّر عن حبك للطعام وتعلم المفردات المتعلقة بالطعام'
+        },
+        words: [
+          { arabic: 'أُحِبُّ', english: 'I love', pronunciation: 'uhibbu' },
+          { arabic: 'الطَّعام', english: 'food', pronunciation: 'at-ta\'am' }
+        ]
+      },
+      {
+        arabic: 'أُريدُ ماء',
+        english: 'I want water',
+        pronunciation: 'uridu maa',
+        image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'أُريدُ', english: 'I want', pronunciation: 'uridu' },
+          { arabic: 'ماء', english: 'water', pronunciation: 'maa' }
+        ]
+      },
+      {
+        arabic: 'البَيْتُ جَميل',
+        english: 'The house is beautiful',
+        pronunciation: 'al-baytu jameel',
+        image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'البَيْتُ', english: 'the house', pronunciation: 'al-baytu' },
+          { arabic: 'جَميل', english: 'beautiful', pronunciation: 'jameel' }
+        ]
+      },
+      {
+        arabic: 'عائِلَتي كَبيرة',
+        english: 'My family is big',
+        pronunciation: 'aa\'ilati kabeera',
+        image: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'عائِلَتي', english: 'my family', pronunciation: 'aa\'ilati' },
+          { arabic: 'كَبيرة', english: 'big', pronunciation: 'kabeera' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'feelings',
+    nameEn: 'Feelings',
+    nameAr: 'المشاعر',
+    icon: '😊',
+    color: '#ec4899',
+    sentences: [
+      {
+        arabic: 'أَنا سَعيد',
+        english: 'I am happy',
+        pronunciation: 'ana sa\'eed',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'أَنا', english: 'I', pronunciation: 'ana' },
+          { arabic: 'سَعيد', english: 'happy', pronunciation: 'sa\'eed' }
+        ]
+      },
+      {
+        arabic: 'أُحِبُّكَ كَثيراً',
+        english: 'I love you very much',
+        pronunciation: 'uhibbuka katheeran',
+        image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'أُحِبُّكَ', english: 'I love you', pronunciation: 'uhibbuka' },
+          { arabic: 'كَثيراً', english: 'very much', pronunciation: 'katheeran' }
+        ]
+      },
+      {
+        arabic: 'صَديقي لَطيف',
+        english: 'My friend is kind',
+        pronunciation: 'sadeeqi lateef',
+        image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'صَديقي', english: 'my friend', pronunciation: 'sadeeqi' },
+          { arabic: 'لَطيف', english: 'kind', pronunciation: 'lateef' }
+        ]
+      },
+      {
+        arabic: 'شُكْراً جَزيلاً',
+        english: 'Thank you very much',
+        pronunciation: 'shukran jazeelan',
+        image: 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'شُكْراً', english: 'thank you', pronunciation: 'shukran' },
+          { arabic: 'جَزيلاً', english: 'very much', pronunciation: 'jazeelan' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'actions',
+    nameEn: 'Actions',
+    nameAr: 'الأفعال',
+    icon: '🎯',
+    color: '#8b5cf6',
+    sentences: [
+      {
+        arabic: 'أَذْهَبُ إلى المَدْرَسة',
+        english: 'I go to school',
+        pronunciation: 'adh-habu ila al-madrasa',
+        image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'أَذْهَبُ', english: 'I go', pronunciation: 'adh-habu' },
+          { arabic: 'إلى', english: 'to', pronunciation: 'ila' },
+          { arabic: 'المَدْرَسة', english: 'the school', pronunciation: 'al-madrasa' }
+        ]
+      },
+      {
+        arabic: 'أَلْعَبُ مَعَ أَصْدِقائي',
+        english: 'I play with my friends',
+        pronunciation: 'al\'abu ma\'a asdiqaa\'i',
+        image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'أَلْعَبُ', english: 'I play', pronunciation: 'al\'abu' },
+          { arabic: 'مَعَ', english: 'with', pronunciation: 'ma\'a' },
+          { arabic: 'أَصْدِقائي', english: 'my friends', pronunciation: 'asdiqaa\'i' }
+        ]
+      },
+      {
+        arabic: 'أَقْرَأُ كِتاباً',
+        english: 'I read a book',
+        pronunciation: 'aqra\'u kitaban',
+        image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'أَقْرَأُ', english: 'I read', pronunciation: 'aqra\'u' },
+          { arabic: 'كِتاباً', english: 'a book', pronunciation: 'kitaban' }
+        ]
+      },
+      {
+        arabic: 'أَكْتُبُ الدَّرْس',
+        english: 'I write the lesson',
+        pronunciation: 'aktubu ad-dars',
+        image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=400&h=300&fit=crop',
+        words: [
+          { arabic: 'أَكْتُبُ', english: 'I write', pronunciation: 'aktubu' },
+          { arabic: 'الدَّرْس', english: 'the lesson', pronunciation: 'ad-dars' }
+        ]
+      }
+    ]
+  }
+];
+
 
 const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -37,7 +272,9 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
       const newLearned = [...learnedSentences, sentenceKey];
       setLearnedSentences(newLearned);
       setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 2500);
+      // The popup closes itself after its own hold (see CelebrationPopup); a
+      // second timer here raced it and cut the exit animation short.
+
       // Track for the Progress Dashboard
       const totalSentences = sentenceCategories.reduce((sum, cat) => sum + cat.sentences.length, 0);
       recordModuleItemLearned(userEmail, 'sentences', sentenceKey, totalSentences);
@@ -46,238 +283,47 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
       // and the Explore leaderboard both move when a sentence is learned.
       if (userEmail) {
         awardPoints(userEmail, 'SENTENCE_LEARNED');
+
+        // Awards `sentences_complete`, the last badge on the learning path
+        // (moduleUnlockUtils.js).
+        checkAchievements(userEmail, 'module_progress', {
+          moduleId: 'sentences',
+          learnedCount: newLearned.length,
+          totalCount: totalSentences,
+          passPercent: PASS_PERCENT
+        });
+
         if (newLearned.length === totalSentences) {
           awardPoints(userEmail, 'MODULE_COMPLETED');
         }
       }
+
+      const sentence = sentenceCategories
+        .find((c) => c.id === categoryId)?.sentences[sentenceIndex];
+      voiceOver.speak(
+        learnedPhrase({
+          language,
+          kind: 'sentence',
+          name: language === 'ar' ? sentence?.arabic : sentence?.english,
+          points: POINT_VALUES.SENTENCE_LEARNED
+        }),
+        true
+      );
+
+      if (newLearned.length === totalSentences) {
+        setTimeout(() => {
+          voiceOver.speak(
+            moduleCompletePhrase({
+              language,
+              moduleName: language === 'ar' ? 'الجمل' : 'sentences lesson'
+            }),
+            true
+          );
+        }, 1500);
+      }
     }
   };
 
-  const sentenceCategories = [
-    {
-      id: 'greetings',
-      nameEn: 'Greetings',
-      nameAr: 'التحيات',
-      icon: '👋',
-      color: '#10b981',
-      sentences: [
-        {
-          arabic: 'السَّلامُ عَلَيْكُم',
-          english: 'Peace be upon you',
-          pronunciation: 'as-salamu alaykum',
-          image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
-          video: 'https://www.youtube.com/embed/VDKK2-V_-ro?rel=0',
-          videoDescription: {
-            en: 'Learn the traditional Islamic greeting and its proper usage in daily conversations',
-            ar: 'تعلم التحية الإسلامية التقليدية واستخدامها الصحيح في المحادثات اليومية'
-          },
-          words: [
-            { arabic: 'السَّلامُ', english: 'peace', pronunciation: 'as-salamu' },
-            { arabic: 'عَلَيْكُم', english: 'upon you', pronunciation: 'alaykum' }
-          ]
-        },
-        {
-          arabic: 'صَباحُ الخَيْر',
-          english: 'Good morning',
-          pronunciation: 'sabah al-khayr',
-          image: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=400&h=300&fit=crop',
-          video: 'https://www.youtube.com/embed/frUuoUIddf8?rel=0',
-          videoDescription: {
-            en: 'Master morning greetings in Arabic and learn when to use them in different contexts',
-            ar: 'أتقن تحيات الصباح باللغة العربية وتعلم متى تستخدمها في سياقات مختلفة'
-          },
-          words: [
-            { arabic: 'صَباحُ', english: 'morning', pronunciation: 'sabah' },
-            { arabic: 'الخَيْر', english: 'the good', pronunciation: 'al-khayr' }
-          ]
-        },
-        {
-          arabic: 'كَيْفَ حالُكَ؟',
-          english: 'How are you?',
-          pronunciation: 'kayfa haluk',
-          image: 'https://images.unsplash.com/photo-1556484687-30636164638b?w=400&h=300&fit=crop',
-          video: 'https://www.youtube.com/embed/KpcO9C4FVTo?rel=0',
-          videoDescription: {
-            en: 'Practice asking about someone\'s wellbeing and understand the cultural context',
-            ar: 'تدرب على السؤال عن حال شخص ما وفهم السياق الثقافي'
-          },
-          words: [
-            { arabic: 'كَيْفَ', english: 'how', pronunciation: 'kayfa' },
-            { arabic: 'حالُكَ', english: 'your condition', pronunciation: 'haluk' }
-          ]
-        },
-        {
-          arabic: 'أَنا بِخَيْر',
-          english: "I'm fine",
-          pronunciation: 'ana bi-khayr',
-          image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=300&fit=crop',
-          video: 'https://www.youtube.com/embed/KpcO9C4FVTo?rel=0',
-          videoDescription: {
-            en: 'Learn different ways to respond positively about your wellbeing in Arabic',
-            ar: 'تعلم طرق مختلفة للرد بشكل إيجابي عن حالك باللغة العربية'
-          },
-          words: [
-            { arabic: 'أَنا', english: 'I', pronunciation: 'ana' },
-            { arabic: 'بِخَيْر', english: 'fine/well', pronunciation: 'bi-khayr' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'daily',
-      nameEn: 'Daily Life',
-      nameAr: 'الحياة اليومية',
-      icon: '🏠',
-      color: '#f59e0b',
-      sentences: [
-        {
-          arabic: 'أُحِبُّ الطَّعام',
-          english: 'I love food',
-          pronunciation: 'uhibbu at-ta\'am',
-          image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
-          video: 'https://www.youtube.com/embed/238NKD8QTsI?rel=0',
-          videoDescription: {
-            en: 'Express your love for food and learn food-related vocabulary',
-            ar: 'عبّر عن حبك للطعام وتعلم المفردات المتعلقة بالطعام'
-          },
-          words: [
-            { arabic: 'أُحِبُّ', english: 'I love', pronunciation: 'uhibbu' },
-            { arabic: 'الطَّعام', english: 'food', pronunciation: 'at-ta\'am' }
-          ]
-        },
-        {
-          arabic: 'أُريدُ ماء',
-          english: 'I want water',
-          pronunciation: 'uridu maa',
-          image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'أُريدُ', english: 'I want', pronunciation: 'uridu' },
-            { arabic: 'ماء', english: 'water', pronunciation: 'maa' }
-          ]
-        },
-        {
-          arabic: 'البَيْتُ جَميل',
-          english: 'The house is beautiful',
-          pronunciation: 'al-baytu jameel',
-          image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'البَيْتُ', english: 'the house', pronunciation: 'al-baytu' },
-            { arabic: 'جَميل', english: 'beautiful', pronunciation: 'jameel' }
-          ]
-        },
-        {
-          arabic: 'عائِلَتي كَبيرة',
-          english: 'My family is big',
-          pronunciation: 'aa\'ilati kabeera',
-          image: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'عائِلَتي', english: 'my family', pronunciation: 'aa\'ilati' },
-            { arabic: 'كَبيرة', english: 'big', pronunciation: 'kabeera' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'feelings',
-      nameEn: 'Feelings',
-      nameAr: 'المشاعر',
-      icon: '😊',
-      color: '#ec4899',
-      sentences: [
-        {
-          arabic: 'أَنا سَعيد',
-          english: 'I am happy',
-          pronunciation: 'ana sa\'eed',
-          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'أَنا', english: 'I', pronunciation: 'ana' },
-            { arabic: 'سَعيد', english: 'happy', pronunciation: 'sa\'eed' }
-          ]
-        },
-        {
-          arabic: 'أُحِبُّكَ كَثيراً',
-          english: 'I love you very much',
-          pronunciation: 'uhibbuka katheeran',
-          image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'أُحِبُّكَ', english: 'I love you', pronunciation: 'uhibbuka' },
-            { arabic: 'كَثيراً', english: 'very much', pronunciation: 'katheeran' }
-          ]
-        },
-        {
-          arabic: 'صَديقي لَطيف',
-          english: 'My friend is kind',
-          pronunciation: 'sadeeqi lateef',
-          image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'صَديقي', english: 'my friend', pronunciation: 'sadeeqi' },
-            { arabic: 'لَطيف', english: 'kind', pronunciation: 'lateef' }
-          ]
-        },
-        {
-          arabic: 'شُكْراً جَزيلاً',
-          english: 'Thank you very much',
-          pronunciation: 'shukran jazeelan',
-          image: 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'شُكْراً', english: 'thank you', pronunciation: 'shukran' },
-            { arabic: 'جَزيلاً', english: 'very much', pronunciation: 'jazeelan' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'actions',
-      nameEn: 'Actions',
-      nameAr: 'الأفعال',
-      icon: '🎯',
-      color: '#8b5cf6',
-      sentences: [
-        {
-          arabic: 'أَذْهَبُ إلى المَدْرَسة',
-          english: 'I go to school',
-          pronunciation: 'adh-habu ila al-madrasa',
-          image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'أَذْهَبُ', english: 'I go', pronunciation: 'adh-habu' },
-            { arabic: 'إلى', english: 'to', pronunciation: 'ila' },
-            { arabic: 'المَدْرَسة', english: 'the school', pronunciation: 'al-madrasa' }
-          ]
-        },
-        {
-          arabic: 'أَلْعَبُ مَعَ أَصْدِقائي',
-          english: 'I play with my friends',
-          pronunciation: 'al\'abu ma\'a asdiqaa\'i',
-          image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'أَلْعَبُ', english: 'I play', pronunciation: 'al\'abu' },
-            { arabic: 'مَعَ', english: 'with', pronunciation: 'ma\'a' },
-            { arabic: 'أَصْدِقائي', english: 'my friends', pronunciation: 'asdiqaa\'i' }
-          ]
-        },
-        {
-          arabic: 'أَقْرَأُ كِتاباً',
-          english: 'I read a book',
-          pronunciation: 'aqra\'u kitaban',
-          image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'أَقْرَأُ', english: 'I read', pronunciation: 'aqra\'u' },
-            { arabic: 'كِتاباً', english: 'a book', pronunciation: 'kitaban' }
-          ]
-        },
-        {
-          arabic: 'أَكْتُبُ الدَّرْس',
-          english: 'I write the lesson',
-          pronunciation: 'aktubu ad-dars',
-          image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=400&h=300&fit=crop',
-          words: [
-            { arabic: 'أَكْتُبُ', english: 'I write', pronunciation: 'aktubu' },
-            { arabic: 'الدَّرْس', english: 'the lesson', pronunciation: 'ad-dars' }
-          ]
-        }
-      ]
-    }
-  ];
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);

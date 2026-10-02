@@ -1,0 +1,175 @@
+/* ============================================================================
+   STELLAR — REWARD BACKGROUND EFFECTS
+   ----------------------------------------------------------------------------
+   Driven by `data-stellar-bg` on <html>, which rewardsStore.js sets from the
+   learner's unlocked choice. Same mechanism dark mode and high contrast use:
+   one attribute on the root, no per-component knowledge.
+
+   WHY THE EFFECT IS A ::BEFORE ON <body> AND NOT AN ELEMENT
+   A reward layer that is real DOM has to be mounted by some component, which
+   means it disappears on the screens that component does not render — the
+   login page, the full-screen chat and voice screens. A pseudo-element on
+   <body> is always there and always behind everything, with no React involved.
+
+   IT IS DECORATION, SO IT YIELDS
+   • `prefers-reduced-motion` stops the animation outright. The whole point of
+     these is movement, so a still version has no value — it is hidden.
+   • High contrast hides it too: an ambient layer is exactly what ruins a
+     contrast ratio, and high-contrast.css already strips ambient layers
+     everywhere else for the same reason.
+   • `pointer-events: none` throughout, so nothing here can ever eat a click.
+   ============================================================================ */
+
+:root[data-stellar-bg]:not([data-stellar-bg="none"]) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;              /* behind the app shell, above the page background */
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* The app shell has to sit above the effect layer for the effect to read as a
+   background rather than an overlay. */
+:root[data-stellar-bg]:not([data-stellar-bg="none"]) #root {
+  position: relative;
+  z-index: 1;
+}
+
+/* ----------------------------------------------------------------------------
+   SPARKLES — small points of light drifting upward.
+   Built from layered radial gradients rather than dozens of elements: one
+   composited layer, no DOM, and the browser can promote it cleanly.
+   ---------------------------------------------------------------------------- */
+:root[data-stellar-bg="sparkles"] body::before {
+  background-image:
+    radial-gradient(2px 2px at 12% 18%, rgba(255, 255, 255, 0.9) 0, transparent 100%),
+    radial-gradient(2px 2px at 78% 26%, rgba(255, 236, 170, 0.9) 0, transparent 100%),
+    radial-gradient(1.5px 1.5px at 34% 62%, rgba(255, 255, 255, 0.8) 0, transparent 100%),
+    radial-gradient(2.5px 2.5px at 62% 78%, rgba(199, 210, 254, 0.9) 0, transparent 100%),
+    radial-gradient(1.5px 1.5px at 88% 54%, rgba(255, 255, 255, 0.8) 0, transparent 100%),
+    radial-gradient(2px 2px at 22% 88%, rgba(252, 211, 77, 0.8) 0, transparent 100%);
+  background-size: 420px 420px;
+  background-repeat: repeat;
+  opacity: 0.55;
+  animation: stellarSparkleDrift 26s linear infinite;
+}
+
+@keyframes stellarSparkleDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 0 -420px; }
+}
+
+/* ----------------------------------------------------------------------------
+   NIGHT SKY — denser, slower, dimmer; reads as stars rather than glitter.
+   ---------------------------------------------------------------------------- */
+:root[data-stellar-bg="stars"] body::before {
+  background-image:
+    radial-gradient(1px 1px at 8% 12%, rgba(255, 255, 255, 0.95) 0, transparent 100%),
+    radial-gradient(1px 1px at 28% 44%, rgba(255, 255, 255, 0.75) 0, transparent 100%),
+    radial-gradient(1.5px 1.5px at 48% 22%, rgba(255, 255, 255, 0.9) 0, transparent 100%),
+    radial-gradient(1px 1px at 68% 66%, rgba(255, 255, 255, 0.7) 0, transparent 100%),
+    radial-gradient(1.5px 1.5px at 84% 34%, rgba(199, 210, 254, 0.9) 0, transparent 100%),
+    radial-gradient(1px 1px at 18% 76%, rgba(255, 255, 255, 0.8) 0, transparent 100%),
+    radial-gradient(1px 1px at 92% 84%, rgba(255, 255, 255, 0.7) 0, transparent 100%);
+  background-size: 300px 300px;
+  background-repeat: repeat;
+  opacity: 0.5;
+  animation: stellarStarTwinkle 7s ease-in-out infinite alternate;
+}
+
+@keyframes stellarStarTwinkle {
+  from { opacity: 0.28; }
+  to   { opacity: 0.6; }
+}
+
+/* ----------------------------------------------------------------------------
+   FLOATING BUBBLES — larger, softer circles rising slowly.
+   ---------------------------------------------------------------------------- */
+:root[data-stellar-bg="bubbles"] body::before {
+  background-image:
+    radial-gradient(circle at 16% 20%, rgba(14, 165, 233, 0.22) 0 14px, transparent 15px),
+    radial-gradient(circle at 72% 36%, rgba(236, 72, 153, 0.18) 0 20px, transparent 21px),
+    radial-gradient(circle at 42% 70%, rgba(16, 185, 129, 0.18) 0 11px, transparent 12px),
+    radial-gradient(circle at 88% 78%, rgba(139, 92, 246, 0.2) 0 17px, transparent 18px),
+    radial-gradient(circle at 28% 92%, rgba(245, 158, 11, 0.16) 0 13px, transparent 14px);
+  background-size: 520px 520px;
+  background-repeat: repeat;
+  opacity: 0.75;
+  animation: stellarBubbleRise 34s linear infinite;
+}
+
+@keyframes stellarBubbleRise {
+  from { background-position: 0 0; }
+  to   { background-position: 60px -520px; }
+}
+
+/* ----------------------------------------------------------------------------
+   PARTY CONFETTI — the loudest option, so it is also the most expensive to
+   unlock. Small rotated rectangles, drifting diagonally.
+   ---------------------------------------------------------------------------- */
+:root[data-stellar-bg="confetti"] body::before {
+  background-image:
+    linear-gradient(60deg, rgba(239, 68, 68, 0.5) 0 6px, transparent 6px 100%),
+    linear-gradient(-45deg, rgba(14, 165, 233, 0.5) 0 6px, transparent 6px 100%),
+    linear-gradient(20deg, rgba(16, 185, 129, 0.5) 0 6px, transparent 6px 100%),
+    linear-gradient(-70deg, rgba(245, 158, 11, 0.5) 0 6px, transparent 6px 100%);
+  background-size: 140px 140px, 180px 180px, 210px 210px, 160px 160px;
+  background-position: 0 0, 40px 60px, 90px 20px, 20px 110px;
+  background-repeat: repeat;
+  opacity: 0.4;
+  animation: stellarConfettiFall 22s linear infinite;
+}
+
+@keyframes stellarConfettiFall {
+  from { background-position: 0 0, 40px 60px, 90px 20px, 20px 110px; }
+  to   { background-position: 30px 140px, 70px 240px, 120px 230px, 50px 270px; }
+}
+
+/* ----------------------------------------------------------------------------
+   AVATAR FRAME — the ring reward. `--mz-avatar-ring` is set by
+   rewardsStore.js; without it the ring is absent, which is the default.
+   ---------------------------------------------------------------------------- */
+:root[data-stellar-frame]:not([data-stellar-frame="none"]) .nav-avatar {
+  box-shadow: 0 0 0 3px var(--mz-avatar-ring, transparent);
+}
+
+/* A gradient ring cannot be a box-shadow, so the rainbow frame draws a real
+   ring behind the avatar instead. */
+:root[data-stellar-frame="rainbow"] .nav-profile-btn {
+  position: relative;
+}
+
+:root[data-stellar-frame="rainbow"] .nav-profile-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--mz-avatar-ring);
+  z-index: -1;
+  animation: stellarRingSpin 6s linear infinite;
+}
+
+@keyframes stellarRingSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ----------------------------------------------------------------------------
+   WHERE THE EFFECTS STAND DOWN
+   ---------------------------------------------------------------------------- */
+
+/* Reduced motion: these exist to move, so a frozen version is pointless. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-stellar-bg] body::before { display: none !important; }
+  :root[data-stellar-frame="rainbow"] .nav-profile-btn::after {
+    animation: none !important;
+  }
+}
+
+/* High contrast: ambient layers are the first thing to cost legibility, and
+   high-contrast.css strips every other one for the same reason. */
+:root.high-contrast[data-stellar-bg] body::before { display: none !important; }
+:root.high-contrast .nav-avatar { box-shadow: none !important; }
+:root.high-contrast[data-stellar-frame="rainbow"] .nav-profile-btn::after {
+  display: none !important;
+}

@@ -279,3 +279,37 @@
   .play-again-btn { transition: none; }
   .color-option.shake { animation: none; }
 }
+
+/* ----------------------------------------------------------------------------
+   PHONETIC SPELLING (added in this pass)
+   The target used to be shown as "Red" in English and nothing else, so the
+   game never put the Arabic word it exists to teach on screen. Both the script
+   and its phonetic spelling are now always visible, in both languages.
+   Scoped under .color-game-container — the generic names would otherwise
+   collide with the other learning and game stylesheets.
+   ---------------------------------------------------------------------------- */
+.color-game-container .target-color-arabic {
+  margin: 6px 0 2px;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--mz-accent-text);
+}
+
+.color-game-container .target-color-phonetic {
+  margin: 0;
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--mz-text-2);
+}
+
+:root.high-contrast .color-game-container .target-color-arabic {
+  color: #ffff00 !important;
+  -webkit-text-fill-color: #ffff00 !important;
+}
+
+:root.high-contrast .color-game-container .target-color-phonetic {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

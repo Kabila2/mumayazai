@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { playClickSound } from '../utils/soundEffects';
 import CelebrationPopup from './CelebrationPopup';
+import { transliterate } from '../utils/phonetics';
 import './ColorMatchingGame.css';
 
 const ColorMatchingGame = ({ language = 'en', difficulty = 'medium' }) => {
@@ -260,6 +261,16 @@ const ColorMatchingGame = ({ language = 'en', difficulty = 'medium' }) => {
                 <h2 className="target-color-name">
                   {language === 'ar' ? targetColor.nameAr : targetColor.name}
                 </h2>
+                {/* The Arabic name and its phonetic spelling, in both
+                    languages. In English the target was shown only as "Red",
+                    which taught nothing — the point of the game is the Arabic
+                    word, so the Arabic word has to be on screen, readable. */}
+                <p className="target-color-arabic" lang="ar" dir="rtl">
+                  {targetColor.nameAr}
+                </p>
+                <p className="target-color-phonetic">
+                  {transliterate(targetColor.nameAr)}
+                </p>
               </div>
             </motion.div>
           )}

@@ -1,0 +1,251 @@
+/* ============================================================================
+   REWARDS STORE — what points are for.
+   All selectors scoped under .rewards-store / .rewards-store-overlay; the
+   generic names (.rewards-option, .swatch, .total) would otherwise collide with
+   the learning and game stylesheets this sits on top of.
+   ============================================================================ */
+
+.rewards-store-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--mz-scrim, rgba(15, 12, 32, 0.5));
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+
+.rewards-store {
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-xl);
+  box-shadow: var(--mz-shadow-lg);
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- Header */
+.rewards-store-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid var(--mz-border);
+}
+
+.rewards-store-title {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--mz-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rewards-store-subtitle {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--mz-text-2);
+}
+
+.rewards-store-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  cursor: pointer;
+}
+
+.rewards-store-close:hover { background: var(--mz-surface-3); }
+.rewards-store-close:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------- Total */
+.rewards-total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 16px 26px;
+  background: var(--mz-accent-soft);
+  border-bottom: 1px solid var(--mz-border);
+}
+
+.rewards-total-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--mz-accent-text);
+}
+
+.rewards-total-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--mz-text-2);
+}
+
+/* ------------------------------------------------------------------ Body */
+.rewards-store-body {
+  padding: 8px 26px 26px;
+  overflow-y: auto;
+}
+
+.rewards-group {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--mz-border);
+}
+
+.rewards-group:last-child { border-bottom: none; padding-bottom: 4px; }
+
+.rewards-group-title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--mz-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rewards-group-blurb {
+  margin: 0 0 14px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--mz-text-2);
+}
+
+.rewards-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 10px;
+}
+
+/* --------------------------------------------------------------- Options */
+.rewards-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 12px;
+  border: 2px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.rewards-option:hover:not(:disabled) {
+  border-color: var(--mz-accent);
+  transform: translateY(-2px);
+}
+
+.rewards-option:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 2px;
+}
+
+.rewards-option.is-active {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+}
+
+/* Locked rows read as a goal, not a dead control: still legible, clearly
+   unavailable, and they say how far away they are. */
+.rewards-option.is-locked {
+  cursor: not-allowed;
+  opacity: 0.72;
+  border-style: dashed;
+}
+
+.rewards-option-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.rewards-option-preview {
+  display: grid;
+  place-items: center;
+  height: 44px;
+}
+
+.rewards-swatch,
+.rewards-frame {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.rewards-frame {
+  box-shadow: inset 0 0 0 6px var(--mz-surface-2);
+}
+
+.rewards-emoji { font-size: 2rem; line-height: 1; }
+
+.rewards-option-badge,
+.rewards-option-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--mz-radius-pill);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rewards-option-badge {
+  background: var(--mz-accent);
+  color: var(--mz-accent-contrast);
+}
+
+.rewards-option-cost {
+  background: var(--mz-surface-3);
+  color: var(--mz-text-2);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ------------------------------------------------------------ Responsive */
+@media (max-width: 560px) {
+  .rewards-store-overlay { padding: 0; }
+  .rewards-store {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+  .rewards-store-header,
+  .rewards-total { padding-inline: 18px; }
+  .rewards-store-body { padding-inline: 18px; }
+  .rewards-options { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rewards-store-overlay { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .rewards-option:hover:not(:disabled) { transform: none; }
+}
