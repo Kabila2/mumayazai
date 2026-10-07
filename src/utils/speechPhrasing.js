@@ -1,24 +1,3 @@
-// src/utils/speechPhrasing.js — Natural wording for spoken feedback
-//
-// WHY THIS EXISTS
-// The learning modules announced progress by reading a data structure out
-// loud: "Letter baa marked as learned. You earned 5 points." Nobody talks like
-// that — "marked as learned" is a database state, and a bare numeral makes the
-// synthesiser clip straight through it. The result sounded robotic even on a
-// good voice.
-//
-// Two things are fixed here:
-//   1. WORDING — short, varied, human sentences. A teacher says "Nice one —
-//      that's baa. Five points for you." Rotating between a few phrasings also
-//      stops the fifth letter in a row from sounding like a recording.
-//   2. DELIVERY — `speechFriendly()` spells small numbers out (synthesisers
-//      read "5" far more flatly than "five"), turns dashes into commas so the
-//      voice breathes in the right places, and drops emoji and markdown that
-//      otherwise get read character by character.
-//
-// `useVoiceOver` applies `speechFriendly()` to everything it speaks, so plain
-// `speak()` calls elsewhere benefit without changing.
-
 const NUMBER_WORDS = {
   en: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
     'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',

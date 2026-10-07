@@ -50,9 +50,8 @@ import './high-contrast.css';
   }
 })();
 
-// The AI assistant no longer needs a third-party script on the page: it goes
-// through src/utils/aiClient.js, which picks its provider on the first request
-// (your own backend, Anthropic directly, or the built-in offline tutor).
+// The AI assistant goes through src/utils/aiClient.js, which uses Puter.js
+// (script tag in public/index.html) unless a backend or key is configured.
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

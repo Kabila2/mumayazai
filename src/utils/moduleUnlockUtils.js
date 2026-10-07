@@ -1,50 +1,9 @@
-// src/utils/moduleUnlockUtils.js — Sequential curriculum and module locking
-//
-// WHY THIS EXISTS
-// Every learning module used to be open from the first visit, which left a new
-// learner looking at sixteen tiles with no idea where to begin, and let them
-// into "Sentences" before they could read a letter. This file turns the modules
-// into an ordered path: one is open, the rest are locked, and finishing a
-// module opens the next.
-//
-// WHAT COUNTS AS FINISHED
-// A module is complete when BOTH hold:
-//   • its content is at least PASS_PERCENT (70%) covered — the same per-module
-//     percentages progressUtils already tracks and the Progress Dashboard
-//     already shows; and
-//   • its achievement is unlocked, i.e. the learner has actually been credited
-//     for the work rather than clicked through it.
-// Requiring both is deliberate: percentage alone can be reached by paging
-// through a module, and the achievement alone says nothing about coverage.
-//
-// TESTS LOCK WITH THEIR LESSON
-// Each learn module names the quiz topic that drills it (`testTopic`). The
-// Quiz Centre reads the same lock state, so "Colors" is unavailable as a test
-// topic for exactly as long as the Colors lesson is. A test you cannot study
-// for is just a way to fail.
-//
-// The practice activities (builders, games) and the always-on tools (homework,
-// drawing, stories) are NOT gated — they are places to play with what you
-// already know, and locking them would leave a stuck learner with nothing to
-// do. `CURRICULUM` lists only what is sequenced.
-
 import { getModulePercent } from './progressUtils';
 import { getUserAchievements } from './achievementsSystem';
 
 /** The score a module must reach before the next one opens. */
 export const PASS_PERCENT = 70;
 
-/**
- * The ordered path. `id` matches the section id the platform navigates to,
- * `testTopic` the Quiz Centre topic that drills it, and `achievement` the
- * badge that must also be unlocked.
- *
- * The alphabet gates on `alphabet_intermediate` (14 letters) rather than
- * `alphabet_master` (all 28) on purpose: PASS_PERCENT of 28 letters is 20, so
- * the intermediate badge is always already earned by the time the percentage
- * passes, and `alphabet_master` keeps meaning the full set. The other three
- * use the `*_complete` badges added to achievementsSystem.js for exactly this.
- */
 export const CURRICULUM = [
   {
     id: 'alphabet',
@@ -94,10 +53,7 @@ const unlockedAchievementIds = (userEmail) => {
   }
 };
 
-/**
- * Whether a single curriculum module counts as finished. Exported because the
- * Progress Dashboard and the unit test both want the same definition.
- */
+
 export const isModuleComplete = (userEmail, moduleId, unlockedIds = null) => {
   const entry = CURRICULUM.find((m) => m.id === moduleId);
   if (!entry) return false;
@@ -109,32 +65,12 @@ export const isModuleComplete = (userEmail, moduleId, unlockedIds = null) => {
   return ids.includes(entry.achievement);
 };
 
-/**
- * Lock state for the whole path, in one pass.
- *
- * Returns a map of `{ [moduleId]: { unlocked, complete, percent, isNext,
- * requires } }`. `requires` names the module that has to be finished first, so
- * the UI can say *why* a tile is locked instead of showing a bare padlock.
- *
- * Teachers and parents are not learners: `role` of 'teacher' or 'parent'
- * unlocks everything, so they can look at any lesson they are asked about.
- */
 export const getCurriculumState = (userEmail, role = 'student') => {
   const bypass = role === 'teacher' || role === 'parent';
   const unlockedIds = unlockedAchievementIds(userEmail);
 
   const state = {};
 
-  /**
-   * True while EVERY module so far has been completed — not merely the one
-   * immediately before.
-   *
-   * Tracking only the previous module lets a learner skip: finishing `words`
-   * (reachable through the Learn hub, a stale link, or progress carried over
-   * from before the path existed) would open `sentences` even with `colors`
-   * still locked, because `colors` was never the module checked. A path with a
-   * hole in it is not a path.
-   */
   let allPreviousComplete = true;
 
   CURRICULUM.forEach((entry, index) => {
