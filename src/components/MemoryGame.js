@@ -1,20 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
 import { transliterate } from '../utils/phonetics';
+import { awardPoints } from '../utils/pointsUtils';
+import { playCardFlipSound, playCorrectSound } from '../utils/soundEffects';
 import './MemoryGame.css';
 
-const MemoryGame = ({ language = 'en' }) => {
-  const [difficulty, setDifficulty] = useState('medium');
+const getSessionEmail = () => {
+  try {
+    return JSON.parse(localStorage.getItem('stellar_session') || '{}').email || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+const MemoryGame = ({ language = 'en', difficulty: initialDifficulty = 'medium' }) => {
+  // The difficulty chosen on the platform's selection screen is the starting
+  // point; the in-game buttons can still change it. (It used to be ignored,
+  // so picking "Easy" there always opened a medium game.)
+  const [difficulty, setDifficulty] = useState(initialDifficulty);
   const [cards, setCards] = useState([]);
   const [flipped, setFlipped] = useState([]);
   const [matched, setMatched] = useState([]);
   const [moves, setMoves] = useState(0);
   const [gameWon, setGameWon] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const userEmail = useRef(getSessionEmail());
 
   // Voice Over hook
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
+
+  useEffect(() => {
+    setDifficulty(initialDifficulty);
+  }, [initialDifficulty]);
 
   // Translations
   const translations = {
@@ -108,6 +126,7 @@ const MemoryGame = ({ language = 'en' }) => {
   // Initialize game when component mounts, difficulty changes, or language changes
   useEffect(() => {
     initializeGame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [difficulty, language]);
 
   const initializeGame = () => {
@@ -135,6 +154,8 @@ const MemoryGame = ({ language = 'en' }) => {
     if (flipped.length === 2 || flipped.includes(card.uniqueId) || matched.includes(card.id)) {
       return;
     }
+
+    playCardFlipSound();
 
     // Speak the card value when flipped
     if (card.type === 'word') {
@@ -166,12 +187,23 @@ const MemoryGame = ({ language = 'en' }) => {
           setMatched(newMatched);
           setFlipped([]);
 
-          // Show celebration for match
-          setShowCelebration(true);
+          // A chime per pair; the full celebration waits for the win. A popup
+          // on every one of twelve matches was twelve interruptions.
+          playCorrectSound();
+          if (userEmail.current) awardPoints(userEmail.current, 'MEMORY_PAIR_FOUND');
 
           // Check if game is won (all pairs matched)
-          if (newMatched.length === cards.length / 2) {
+          const totalPairs = cards.length / 2;
+          if (newMatched.length === totalPairs) {
             setGameWon(true);
+            setShowCelebration(true);
+            if (userEmail.current) {
+              awardPoints(userEmail.current, 'MEMORY_GAME_COMPLETED');
+              // `moves` here is the count BEFORE this move was added.
+              if (moves + 1 === totalPairs) {
+                awardPoints(userEmail.current, 'MEMORY_PERFECT_GAME');
+              }
+            }
             // Speak win message
             setTimeout(() => {
               const winMessage = language === 'ar'

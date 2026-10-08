@@ -1568,3 +1568,247 @@ html {
 .nav-profile-btn {
   isolation: isolate;
 }
+
+/* ============================================================================
+   HOME HERO ROW — today's goal ring + the one "Continue" button (2026-10-07).
+   ============================================================================ */
+.home-hero-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.home-section .home-continue-btn {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "kicker arrow"
+    "title  arrow"
+    "bar    arrow";
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 4px;
+  min-width: 280px;
+  padding: 16px 22px;
+  border: none;
+  border-radius: 20px;
+  background: var(--mz-accent-grad);
+  color: #fff;
+  text-align: start;
+  box-shadow: var(--mz-shadow-accent);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+.home-section .home-continue-btn:hover {
+  box-shadow: 0 14px 32px rgba(99, 102, 241, 0.42);
+}
+
+.home-section .home-continue-btn:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
+}
+
+.home-continue-kicker {
+  grid-area: kicker;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.home-continue-title {
+  grid-area: title;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.home-continue-progress {
+  grid-area: bar;
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+
+.home-continue-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #fff;
+  transition: width 0.5s ease;
+}
+
+.home-continue-arrow {
+  grid-area: arrow;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 560px) {
+  .home-hero-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home-section .home-continue-btn {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+   NAV — Comfort button sits with the other user tools.
+   ============================================================================ */
+.nav-user-tools .comfort-nav-btn {
+  height: 42px;
+  min-width: 42px;
+  padding: 0;
+  border: 1px solid var(--mz-border);
+  background: var(--mz-surface);
+  color: var(--mz-text-2);
+  border-radius: 12px;
+  box-shadow: none;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.nav-user-tools .comfort-nav-btn:hover {
+  background: var(--mz-accent-soft);
+  border-color: var(--mz-accent);
+  color: var(--mz-accent-text);
+}
+
+.nav-user-tools .comfort-nav-btn.is-calm {
+  background: var(--mz-accent-soft);
+  border-color: var(--mz-accent);
+  color: var(--mz-accent-text);
+}
+
+@media (max-width: 768px) {
+  .nav-user-tools .comfort-nav-btn {
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+}
+
+/* ============================================================================
+   DIFFICULTY SCREEN — was inline styles; now tokens, so dark mode and high
+   contrast reach it, and "last time" is marked.
+   ============================================================================ */
+.difficulty-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  padding: 2rem 1.5rem 4rem;
+  max-width: 980px;
+  margin: 0 auto !important;
+}
+
+.difficulty-title {
+  margin: 0 0 8px;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 800;
+  text-align: center;
+  color: var(--mz-text);
+}
+
+.difficulty-subtitle {
+  margin: 0 0 32px;
+  font-size: 1.05rem;
+  text-align: center;
+  color: var(--mz-text-2);
+}
+
+.difficulty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  width: 100%;
+}
+
+.difficulty-screen .difficulty-option {
+  --level-color: var(--mz-accent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px 24px;
+  border: 3px solid color-mix(in srgb, var(--level-color) 55%, var(--mz-border));
+  border-radius: 20px;
+  background: var(--mz-surface);
+  color: var(--mz-text);
+  box-shadow: var(--mz-shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.difficulty-screen .difficulty-option:hover {
+  border-color: var(--level-color);
+  box-shadow: var(--mz-shadow-lg);
+}
+
+.difficulty-screen .difficulty-option.is-last {
+  border-color: var(--level-color);
+  background: color-mix(in srgb, var(--level-color) 10%, var(--mz-surface));
+}
+
+.difficulty-last {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--level-color);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.difficulty-emoji {
+  font-size: 3.4rem;
+  line-height: 1;
+}
+
+.difficulty-label {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.difficulty-hint {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--mz-text-2);
+}
+
+.difficulty-screen .difficulty-back {
+  margin-top: 36px;
+  padding: 12px 26px;
+  border: 1px solid var(--mz-border);
+  border-radius: 12px;
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  font-size: 1rem;
+}
+
+.difficulty-screen .difficulty-back:hover {
+  background: var(--mz-surface-3);
+}

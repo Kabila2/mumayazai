@@ -7,6 +7,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
+import { applyComfort, getComfort } from './utils/comfortSettings';
 // Unified design system — imported LAST so its tokens win over the older,
 // conflicting :root blocks in the component stylesheets.
 import './theme.css';
@@ -47,6 +48,16 @@ import './high-contrast.css';
     }
   } catch {
     // localStorage unavailable — keep the default light theme.
+  }
+})();
+
+// Comfort settings (reduced motion, reading tint, focus mode) go on <html>
+// before the first paint for the same reason as the theme above.
+;(function applySavedComfort() {
+  try {
+    applyComfort(getComfort());
+  } catch {
+    // Storage unavailable — defaults apply.
   }
 })();
 

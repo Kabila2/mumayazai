@@ -1,0 +1,92 @@
+/* ============================================================================
+   BREAK NUDGE — the gentle "take a breather" card.
+   Bottom-centre so it never covers the points bar (bottom-left) or the point
+   toasts (top-right). Scoped under .break-nudge.
+   ============================================================================ */
+
+.break-nudge {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(560px, calc(100vw - 32px));
+  padding: 14px 18px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-inline-start: 6px solid var(--mz-success);
+  border-radius: 18px;
+  box-shadow: var(--mz-shadow-lg);
+  color: var(--mz-text);
+}
+
+.break-nudge.is-stretching {
+  border-inline-start-color: var(--mz-info);
+}
+
+.break-nudge-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.break-nudge-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.break-nudge-text strong {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.break-nudge-text span {
+  font-size: 0.85rem;
+  color: var(--mz-text-2);
+  line-height: 1.4;
+}
+
+.break-nudge-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.break-nudge .break-nudge-btn {
+  padding: 8px 14px;
+  border: 1px solid var(--mz-border);
+  border-radius: 10px;
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.break-nudge .break-nudge-btn--primary {
+  background: var(--mz-success);
+  border-color: var(--mz-success);
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .break-nudge {
+    flex-wrap: wrap;
+    bottom: 12px;
+  }
+
+  .break-nudge-actions {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .break-nudge .break-nudge-btn {
+    flex: 1;
+  }
+}

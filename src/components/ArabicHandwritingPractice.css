@@ -445,3 +445,9 @@
   border-color: var(--mz-accent);
   color: var(--mz-accent-text);
 }
+
+/* Tick beside the letter counter once this letter has been traced. */
+.handwriting-practice-page .hw-traced-badge {
+  color: var(--mz-success);
+  font-weight: 800;
+}

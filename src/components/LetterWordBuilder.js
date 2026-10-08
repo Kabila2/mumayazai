@@ -1,17 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
 import { transliterate } from '../utils/phonetics';
+import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
+import { playWrongSound } from '../utils/soundEffects';
 import './LetterWordBuilder.css';
 
+const getSessionEmail = () => {
+  try {
+    return JSON.parse(localStorage.getItem('stellar_session') || '{}').email || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/** Words already built, per learner, so progress survives leaving the screen. */
+const completedKey = (email) => `stellar_letterbuilder_${email}`;
+const loadCompleted = (email) => {
+  if (!email) return [];
+  try {
+    return JSON.parse(localStorage.getItem(completedKey(email))) || [];
+  } catch (error) {
+    return [];
+  }
+};
+
 const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
+  const userEmail = useRef(getSessionEmail());
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedLetters, setSelectedLetters] = useState([]);
   const [availableLetters, setAvailableLetters] = useState([]);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [completedWords, setCompletedWords] = useState([]);
+  const [wrongShake, setWrongShake] = useState(false);
+  const [completedWords, setCompletedWords] = useState(() => loadCompleted(userEmail.current));
   const [showCelebrationPopup, setShowCelebrationPopup] = useState(false);
 
   // Voice Over hook for Arabic pronunciation
@@ -50,6 +72,7 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
     setAvailableLetters(shuffled);
     setSelectedLetters([]);
     setIsCorrect(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWordIndex]);
 
   const handleLetterClick = (letter, index, fromAvailable = true) => {
@@ -73,10 +96,20 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
       voiceOver.speak(currentWord.arabic, true);
 
       setIsCorrect(true);
-      setShowCelebration(true);
-      setShowCelebrationPopup(true); // Show celebration popup!
+      setShowCelebrationPopup(true); // the popup plays the success chime
+
+      // Points the first time each word is built, saved per learner.
       if (!completedWords.includes(currentWordIndex)) {
-        setCompletedWords([...completedWords, currentWordIndex]);
+        const next = [...completedWords, currentWordIndex];
+        setCompletedWords(next);
+        if (userEmail.current) {
+          try {
+            localStorage.setItem(completedKey(userEmail.current), JSON.stringify(next));
+          } catch (error) {
+            // Storage unavailable.
+          }
+          awardPoints(userEmail.current, 'WORD_BUILT_CORRECT');
+        }
       }
 
       // After a short delay, speak the English meaning
@@ -86,12 +119,14 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
           : `Great! ${currentWord.english}`;
         voiceOver.speak(message, true);
       }, 1000);
-
-      setTimeout(() => {
-        setShowCelebration(false);
-      }, 2500);
     } else {
       setIsCorrect(false);
+      // A visible, gentle "not yet" rather than silence — a check button that
+      // appears to do nothing reads as broken.
+      playWrongSound();
+      setWrongShake(true);
+      setTimeout(() => setWrongShake(false), 500);
+      voiceOver.speak(language === 'ar' ? 'ليس بعد، حاول مرة أخرى' : 'Not quite yet, try again', true);
     }
   };
 
@@ -152,7 +187,12 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
           />
         </div>
         <div className="completed-count">
-          ✓ {completedWords.length} {language === 'ar' ? 'مكتمل' : 'Completed'}
+          ✓ {completedWords.length} / {words.length} {language === 'ar' ? 'مكتمل' : 'Completed'}
+          {completedWords.includes(currentWordIndex) && (
+            <span className="completed-this-word">
+              {' '}· {language === 'ar' ? 'بنيت هذه من قبل' : 'you built this one'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -192,7 +232,7 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
         <h3 className="area-label">
           {language === 'ar' ? 'الكلمة الخاصة بك:' : 'Your Word:'}
         </h3>
-        <div className={`selected-letters-container ${isCorrect ? 'correct' : ''}`}>
+        <div className={`selected-letters-container ${isCorrect ? 'correct' : ''} ${wrongShake ? 'shake' : ''}`}>
           {selectedLetters.length === 0 ? (
             <div className="placeholder-text">
               {language === 'ar' ? 'اسحب الحروف هنا...' : 'Drag letters here...'}
@@ -263,6 +303,9 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
           }}
         >
           ✓ {language === 'ar' ? 'تحقق' : 'Check'}
+          {!completedWords.includes(currentWordIndex) && (
+            <span className="check-points">+{POINT_VALUES.WORD_BUILT_CORRECT}</span>
+          )}
         </motion.button>
       </div>
 
@@ -285,38 +328,13 @@ const LetterWordBuilder = ({ language, fontSize, highContrast }) => {
         </button>
       </div>
 
-      {/* Celebration */}
-      <AnimatePresence>
-        {showCelebration && (
-          <motion.div
-            className="celebration-overlay"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-          >
-            <div className="celebration-content">
-              <motion.div
-                className="celebration-emoji"
-                animate={{ rotate: [0, 10, -10, 10, 0] }}
-                transition={{ duration: 0.5, repeat: 2 }}
-              >
-                🎉 ⭐ 🎊
-              </motion.div>
-              <div className="celebration-text">
-                {language === 'ar' ? 'رائع!' : 'Excellent!'}
-              </div>
-              <div className="celebration-subtext">
-                {language === 'ar' ? 'لقد كونت الكلمة بشكل صحيح!' : 'You built the word correctly!'}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Celebration Popup */}
+      {/* One celebration, not two: the module used to raise its own inline
+          overlay AND the shared popup at the same moment. */}
       <CelebrationPopup
         show={showCelebrationPopup}
         language={language}
+        userEmail={userEmail.current}
+        message={language === 'ar' ? 'لقد كونت الكلمة بشكل صحيح!' : 'You built the word correctly!'}
         onClose={() => setShowCelebrationPopup(false)}
       />
     </div>

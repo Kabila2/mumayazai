@@ -272,4 +272,6 @@ export const phoneticFor = (item, fallbackText) => {
   );
 };
 
-export default { transliterate, phoneticFor, stripHarakat };
+const phonetics = { transliterate, phoneticFor, stripHarakat };
+
+export default phonetics;

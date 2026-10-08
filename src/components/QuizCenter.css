@@ -910,3 +910,33 @@
     transform: none;
   }
 }
+
+/* ============================================================================
+   ADDED 2026-10-07
+   • `.reveal` — after a wrong answer the correct option is shown softly, so
+     the learner leaves the question knowing the answer rather than only that
+     they missed it.
+   • Arabic unscramble — the letters are Arabic in the Arabic interface, so
+     the answer strip and tiles need the Arabic face and a right-to-left flow.
+   ============================================================================ */
+.option-btn.reveal {
+  border-color: var(--mz-success);
+  background: var(--mz-success-soft);
+  color: var(--mz-success);
+  box-shadow: inset 0 0 0 2px var(--mz-success);
+}
+
+.scrambled-quiz .answer-display--arabic {
+  font-family: 'Amiri', 'Traditional Arabic', 'Cairo', sans-serif;
+  font-size: 2.6rem;
+  letter-spacing: 0.04em;
+}
+
+.scrambled-letters[dir="rtl"] .letter-btn {
+  font-family: 'Amiri', 'Traditional Arabic', 'Cairo', sans-serif;
+  font-size: 1.9rem;
+}
+
+.quiz-center .quiz-results .results-coverage + .results-coverage {
+  margin-top: 8px;
+}

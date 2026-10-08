@@ -95,10 +95,12 @@ export const pronouncePhrase = ({ language = 'en', arabic, english }) => {
   return language === 'ar' ? `${arabic}، وتعني ${english}` : `${arabic}, which means ${english}`;
 };
 
-export default {
+const speechPhrasing = {
   speechFriendly,
   learnedPhrase,
   moduleCompletePhrase,
   answerPhrase,
   pronouncePhrase
 };
+
+export default speechPhrasing;

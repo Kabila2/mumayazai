@@ -158,10 +158,8 @@ export const wordCategories = [
 const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [showTranslation, setShowTranslation] = useState(true); // Always show translation for clarity
   const [learnedWords, setLearnedWords] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [reviewMode, setReviewMode] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
 
   // Voice Over hook for Arabic pronunciation
@@ -244,12 +242,10 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setCurrentWordIndex(0);
-    setReviewMode(false);
   };
 
   const handleNextWord = () => {
     if (selectedCategory && currentWordIndex < selectedCategory.words.length - 1) {
-      markWordAsLearned(selectedCategory.id, currentWordIndex);
       const nextIndex = currentWordIndex + 1;
       setCurrentWordIndex(nextIndex);
       // Speak the next word
@@ -303,6 +299,7 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
         voiceOver.speak(selectedCategory.words[0].arabic, true);
       }, 500);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
   const renderCategorySelection = () => (
@@ -360,6 +357,9 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
   const renderWordLearning = () => {
     const currentWord = selectedCategory.words[currentWordIndex];
     const isLearned = learnedWords.includes(`${selectedCategory.id}_${currentWordIndex}`);
+    const isLastWord = currentWordIndex === selectedCategory.words.length - 1;
+    const categoryLearnedCount = selectedCategory.words.filter((_, index) =>
+      learnedWords.includes(`${selectedCategory.id}_${index}`)).length;
 
     return (
       <div className="word-learning ds-friendly">
@@ -468,6 +468,30 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
           </div>
         </motion.div>
 
+        {/* The learner says when a word is learned — one big, explicit button,
+            the same way the alphabet, colours and sentences modules work.
+            Pressing "Next" used to be the only way to mark a word, which meant
+            the LAST word of every category could never be learned at all (Next
+            is disabled there) and the module topped out at 75%. */}
+        <div className="word-learned-row">
+          {isLearned ? (
+            <div className="word-learned-done" role="status">
+              ✓ {language === 'ar' ? 'تعلمت هذه الكلمة' : 'You learned this word'}
+            </div>
+          ) : (
+            <motion.button
+              type="button"
+              className="word-learned-btn"
+              onClick={() => markWordAsLearned(selectedCategory.id, currentWordIndex)}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              ⭐ {language === 'ar' ? 'تعلمتها!' : 'I learned it!'}
+              <span className="word-learned-points">+{POINT_VALUES.WORD_LEARNED}</span>
+            </motion.button>
+          )}
+        </div>
+
         {/* Large, Clear Navigation Buttons */}
         <div className="word-navigation-large">
           <button
@@ -479,19 +503,32 @@ const ArabicWordsLearning = ({ t, language, fontSize, highContrast, reducedMotio
             <span className="nav-text">{language === 'ar' ? 'السابق' : 'Back'}</span>
           </button>
 
-          <button
-            className="nav-btn-large nav-next"
-            onClick={handleNextWord}
-            disabled={currentWordIndex === selectedCategory.words.length - 1}
-          >
-            <span className="nav-text">{language === 'ar' ? 'التالي' : 'Next'}</span>
-            <span className="nav-icon">→</span>
-          </button>
+          {isLastWord ? (
+            <button
+              className="nav-btn-large nav-next"
+              onClick={() => setSelectedCategory(null)}
+            >
+              <span className="nav-text">{language === 'ar' ? 'فئة أخرى' : 'Another category'}</span>
+              <span className="nav-icon">→</span>
+            </button>
+          ) : (
+            <button
+              className="nav-btn-large nav-next"
+              onClick={handleNextWord}
+            >
+              <span className="nav-text">{language === 'ar' ? 'التالي' : 'Next'}</span>
+              <span className="nav-icon">→</span>
+            </button>
+          )}
         </div>
 
         {/* Encouraging Message */}
         <div className="encouragement-message">
-          {language === 'ar' ? '🌟 أنت تتعلم بشكل رائع!' : '🌟 You are learning wonderfully!'}
+          {categoryLearnedCount === selectedCategory.words.length
+            ? (language === 'ar' ? '🏆 أكملت هذه الفئة كلها!' : '🏆 You finished this whole category!')
+            : (language === 'ar'
+                ? `🌟 ${categoryLearnedCount} من ${selectedCategory.words.length} كلمات متعلمة — أنت تتعلم بشكل رائع!`
+                : `🌟 ${categoryLearnedCount} of ${selectedCategory.words.length} words learned — you are doing wonderfully!`)}
         </div>
       </div>
     );

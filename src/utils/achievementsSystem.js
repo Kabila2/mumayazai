@@ -3,7 +3,7 @@
  * Tracks and rewards user milestones
  */
 
-import { playAchievementSound, playSuccessSound } from './soundEffects';
+import { playAchievementSound } from './soundEffects';
 import { emitPointsChanged } from './leaderboardUtils';
 
 // Achievement categories and definitions
@@ -550,6 +550,37 @@ const checkTimeBasedAchievements = (userEmail, achievements) => {
 };
 
 /**
+ * Remember that a learner opened a section, and award the Explorer badge once
+ * they have opened every learning section. `checkAchievements('section_visited')`
+ * existed but had no caller, so Explorer, Early Bird, Night Owl and Weekend
+ * Learner were all unreachable.
+ */
+const VISITED_PREFIX = 'stellar_sections_visited_';
+
+export const getVisitedSections = (userEmail) => {
+  try {
+    return JSON.parse(localStorage.getItem(`${VISITED_PREFIX}${userEmail}`)) || [];
+  } catch (error) {
+    return [];
+  }
+};
+
+export const recordSectionVisit = (userEmail, sectionId) => {
+  if (!userEmail || !sectionId) return [];
+  const visited = getVisitedSections(userEmail);
+  if (!visited.includes(sectionId)) {
+    visited.push(sectionId);
+    try {
+      localStorage.setItem(`${VISITED_PREFIX}${userEmail}`, JSON.stringify(visited));
+    } catch (error) {
+      // Storage unavailable.
+    }
+  }
+  checkAchievements(userEmail, 'section_visited', { sectionsVisited: visited });
+  return visited;
+};
+
+/**
  * Get achievement statistics
  */
 export const getAchievementStats = (userEmail) => {
@@ -573,11 +604,15 @@ export const getAchievementStats = (userEmail) => {
   };
 };
 
-export default {
+const achievementsSystem = {
   ACHIEVEMENTS,
   getUserAchievements,
   isAchievementUnlocked,
   unlockAchievement,
   checkAchievements,
-  getAchievementStats
+  getAchievementStats,
+  recordSectionVisit,
+  getVisitedSections
 };
+
+export default achievementsSystem;

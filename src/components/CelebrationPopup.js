@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCelebrationStyle } from '../utils/rewardsStore';
+import { getComfort, shouldReduceMotion } from '../utils/comfortSettings';
+import { playSuccessSound } from '../utils/soundEffects';
 import './CelebrationPopup.css';
 
 /**
@@ -40,6 +42,10 @@ import './CelebrationPopup.css';
 
 /** Particle counts and timings per celebration style. */
 const STYLE_PRESETS = {
+  // `quiet` is the Comfort panel's setting, not a reward: no particles at all,
+  // a shorter hold, and no sound. For a learner who finds sudden visual
+  // bursts distressing, the praise still arrives — just gently.
+  quiet: { confetti: 0, balloons: 0, stars: 0, hold: 1500, spread: 0 },
   calm: { confetti: 10, balloons: 0, stars: 0, hold: 2200, spread: 0.5 },
   cheerful: { confetti: 22, balloons: 5, stars: 6, hold: 2800, spread: 0.7 },
   fireworks: { confetti: 40, balloons: 8, stars: 14, hold: 3400, spread: 0.9 }
@@ -56,10 +62,6 @@ const MESSAGES = {
   keepGoing: { en: 'Keep Going!', ar: 'استمر!' }
 };
 
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
 const CelebrationPopup = ({
   show,
   message,
@@ -69,12 +71,17 @@ const CelebrationPopup = ({
   userEmail = null
 }) => {
   const [style, setStyle] = useState('calm');
-  const reduceMotion = prefersReducedMotion();
+  // The in-app Comfort switch counts as well as the OS preference.
+  const reduceMotion = shouldReduceMotion();
 
   // Read the learner's chosen celebration style when the popup opens, not on
-  // every render — switching style mid-animation would restart it.
+  // every render — switching style mid-animation would restart it. The
+  // Comfort panel's "quiet celebrations" overrides any reward style.
   useEffect(() => {
-    if (show) setStyle(getCelebrationStyle(userEmail));
+    if (!show) return;
+    const comfort = getComfort();
+    setStyle(comfort.quietCelebrations ? 'quiet' : getCelebrationStyle(userEmail));
+    if (!comfort.quietCelebrations) playSuccessSound();
   }, [show, userEmail]);
 
   const preset = STYLE_PRESETS[style] || STYLE_PRESETS.calm;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { playClickSound, playSuccessSound, playErrorSound } from '../utils/soundEffects';
 import { exportUserData, importUserData, clearAllUserData } from '../utils/dataExport';
 import { toast } from '../hooks/useToast';
@@ -29,7 +29,6 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
   // Profile picture
   const [profilePicture, setProfilePicture] = useState(null);
-  const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -168,6 +167,7 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
   useEffect(() => {
     loadUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail]);
 
   const loadUserData = () => {
@@ -186,10 +186,6 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
     } catch (error) {
       console.error('Error loading user data:', error);
     }
-  };
-
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const handleSaveProfile = () => {
@@ -344,7 +340,6 @@ const ProfileSettings = ({ userEmail, onClose, onUpdate, language = 'en' }) => {
 
   const handleAvatarSelect = (avatar) => {
     playClickSound();
-    setSelectedAvatar(avatar);
     updateProfilePicture(avatar);
     setShowAvatarPicker(false);
   };

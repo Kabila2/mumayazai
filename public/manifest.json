@@ -1,6 +1,9 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Stellar",
+  "name": "Stellar — Arabic learning for every mind",
+  "description": "A calm, playful Arabic learning app built for neurodiverse learners.",
+  "lang": "en",
+  "dir": "auto",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +23,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#6366f1",
+  "background_color": "#eef1f8"
 }

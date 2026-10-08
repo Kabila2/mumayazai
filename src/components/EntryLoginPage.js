@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import Orb from "../blocks/Orb/Orb";
 import ShinyTextSwitcher from "../blocks/ShinyTextSwitcher/ShinyTextSwitcher";
 import AuthModal from "./AuthModal";
 import AboutStellarModal from "./AboutStellarModal";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import "./EntryLoginPage.css";
 import { FaUserPlus, FaSignInAlt, FaInfoCircle } from "react-icons/fa";
 import { isElevenLabsConfigured, speakWithElevenLabs } from "../utils/elevenLabsTTS";
@@ -46,12 +46,6 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
   // it is chosen by which pair of buttons you press — so this is the only
   // signal available.
   const [aboutLang, setAboutLang] = useState("en");
-
-  const textVariants = {
-    enter: { opacity: 0, y: 10 },
-    center: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 }
-  };
 
   return (
     <>

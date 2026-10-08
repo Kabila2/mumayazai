@@ -7,7 +7,6 @@ import {
   deleteSavedChat,
   updateSavedChat,
   searchSavedChats,
-  getChatsByTag,
   getAllTags,
   exportSavedChats,
   importSavedChats,
@@ -18,7 +17,6 @@ import {
   deleteSavedVoiceChat,
   updateSavedVoiceChat,
   searchSavedVoiceChats,
-  getVoiceChatsByTag,
   getAllVoiceTags,
   exportSavedVoiceChats,
   getVoiceChatStatistics
@@ -79,6 +77,7 @@ const SavedChatsModal = ({
     }
 
     setFilteredChats(filtered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedTag, savedChats]);
 
   const handleDeleteChat = async (chatId) => {

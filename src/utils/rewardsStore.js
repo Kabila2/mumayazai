@@ -306,7 +306,7 @@ export const getRewardsOverview = (userEmail) => {
   };
 };
 
-export default {
+const rewardsStore = {
   ACCENT_THEMES,
   BACKGROUNDS,
   CELEBRATION_STYLES,
@@ -320,3 +320,5 @@ export default {
   getCelebrationStyle,
   getRewardsOverview
 };
+
+export default rewardsStore;

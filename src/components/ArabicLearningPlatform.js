@@ -33,13 +33,19 @@ import TeacherDashboard from "./TeacherDashboard";
 import ParentDashboard from "./ParentDashboard";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import stellarMuiTheme from "../muiTheme";
-import { LogOut, Home } from 'lucide-react';
+import { LogOut, Home, SlidersHorizontal, ArrowRight, ArrowLeft } from 'lucide-react';
 import HomeLeaderboard from "./HomeLeaderboard";
 import RewardsStore from "./RewardsStore";
 import CollapsedCardsBox from "./CollapsedCardsBox";
+import ComfortPanel from "./ComfortPanel";
+import DailyGoalRing from "./DailyGoalRing";
+import BreakNudge from "./BreakNudge";
 import { playClickSound, playWhooshSound } from '../utils/soundEffects';
 import { getTotalUnreadCount, getInitials } from '../utils/conversationUtils';
 import { getModuleProgress } from '../utils/progressUtils';
+import { touchStreak } from '../utils/streakUtils';
+import { recordSectionVisit } from '../utils/achievementsSystem';
+import { getComfort, isCalmMode, COMFORT_CHANGED_EVENT } from '../utils/comfortSettings';
 import {
   getCurriculumState,
   isSectionUnlocked,
@@ -72,6 +78,21 @@ const PRACTICE_SECTIONS = ['quiz', 'wordbuilder', 'letterwordbuilder', 'sentence
 
 /** Immersive screens that bring their own header (and their own way back home). */
 const NAV_HIDDEN_SECTIONS = ['chat', 'voice', 'teacherchat'];
+
+/** Games that ask for a difficulty before they start. */
+const GAME_SECTIONS = ['memory-game', 'color-matching', 'number-learning'];
+
+/** Where the last chosen game difficulty is remembered between sessions. */
+const DIFFICULTY_KEY = 'stellar_game_difficulty';
+
+const DIFFICULTY_LEVELS = [
+  { id: 'easy', labelEn: 'Easy', labelAr: 'سهل', emoji: '😊', color: '#10b981',
+    hintEn: 'Fewer choices, no timer', hintAr: 'خيارات أقل، بدون مؤقت' },
+  { id: 'medium', labelEn: 'Medium', labelAr: 'متوسط', emoji: '😎', color: '#f59e0b',
+    hintEn: 'A few more choices', hintAr: 'خيارات أكثر قليلاً' },
+  { id: 'hard', labelEn: 'Hard', labelAr: 'صعب', emoji: '🔥', color: '#ef4444',
+    hintEn: 'More rounds, with a timer', hintAr: 'جولات أكثر مع مؤقت' }
+];
 
 /**
  * Sections a teacher or parent account may open.
@@ -195,8 +216,19 @@ const ArabicLearningPlatform = ({
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showRewards, setShowRewards] = useState(false);
-  const [gameDifficulty, setGameDifficulty] = useState(null);
+  // The difficulty the learner picked last time is only a default: every game
+  // asks again on the way in. It used to be asked once per session and then
+  // silently reused, so a learner who picked "hard" to try it could not get
+  // back to "easy" without reloading.
+  const [gameDifficulty, setGameDifficulty] = useState(
+    () => localStorage.getItem(DIFFICULTY_KEY) || null
+  );
   const [pendingGameSection, setPendingGameSection] = useState(null);
+  const [showComfort, setShowComfort] = useState(false);
+  const [calmMode, setCalmMode] = useState(() => isCalmMode(getComfort()));
+  // A letter the learner asked to practise writing, carried from the alphabet
+  // lesson into the handwriting screen.
+  const [handwritingLetterIndex, setHandwritingLetterIndex] = useState(null);
   const [userProgress, setUserProgress] = useState({
     alphabetProgress: 0,
     colorsProgress: 0,
@@ -204,14 +236,39 @@ const ArabicLearningPlatform = ({
     streak: 0
   });
   const platformRef = useRef(null);
+  const comfortButtonRef = useRef(null);
 
   // Check if first-time user
   useEffect(() => {
     const hasCompletedOnboarding = localStorage.getItem('stellar_onboarding_completed');
-    if (!hasCompletedOnboarding && currentSection === 'home') {
-      // Show onboarding after a short delay
-      setTimeout(() => setShowOnboarding(true), 1000);
+    if (hasCompletedOnboarding || currentSection !== 'home' || showOnboarding) return undefined;
+    // Show onboarding after a short delay
+    const timer = setTimeout(() => setShowOnboarding(true), 1000);
+    return () => clearTimeout(timer);
+  }, [currentSection, showOnboarding]);
+
+  // Count today towards the streak as soon as the app opens, on whatever
+  // screen — it used to only happen when the streak widget rendered.
+  useEffect(() => {
+    try {
+      const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
+      if (session.email) touchStreak(session.email);
+    } catch (error) {
+      // No session.
     }
+  }, []);
+
+  // The comfort button in the nav shows whether calm mode is on.
+  useEffect(() => {
+    const sync = () => setCalmMode(isCalmMode(getComfort()));
+    window.addEventListener(COMFORT_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(COMFORT_CHANGED_EVENT, sync);
+  }, []);
+
+  // Moving to another screen closes the comfort panel: a settings sheet
+  // hanging over a lesson the learner just opened is one more thing in the way.
+  useEffect(() => {
+    setShowComfort(false);
   }, [currentSection]);
 
   // Load user progress from localStorage
@@ -343,9 +400,9 @@ const ArabicLearningPlatform = ({
       return;
     }
 
-    // Check if this is a game section that needs difficulty selection
-    const gameSections = ['memory-game', 'color-matching', 'number-learning'];
-    if (gameSections.includes(section) && !gameDifficulty) {
+    // Games always ask for a difficulty on the way in (the last choice is
+    // pre-selected), so the learner is never stuck with an old pick.
+    if (GAME_SECTIONS.includes(section)) {
       setPendingGameSection(section);
       setCurrentSection('difficulty-selection');
       return;
@@ -355,6 +412,14 @@ const ArabicLearningPlatform = ({
     if (section === 'alphabet' || section === 'colors') {
       updateSessionCount();
     }
+
+    // The Explorer badge, and the time-of-day badges, are checked on every
+    // section visit — they existed but were never triggered from anywhere.
+    const email = getCurrentUserEmail();
+    if (email && section !== 'home' && !isStaffRole(role)) {
+      recordSectionVisit(email, section);
+    }
+
     // Play whoosh for transitions
     if (section !== 'home') {
       setTimeout(() => playWhooshSound(), 100);
@@ -362,9 +427,24 @@ const ArabicLearningPlatform = ({
   };
 
   const handleDifficultySelect = (difficulty) => {
+    playClickSound();
     setGameDifficulty(difficulty);
+    try {
+      localStorage.setItem(DIFFICULTY_KEY, difficulty);
+    } catch (error) {
+      // Storage unavailable — it still applies for this session.
+    }
+    const email = getCurrentUserEmail();
+    if (email && pendingGameSection) recordSectionVisit(email, pendingGameSection);
     setCurrentSection(pendingGameSection);
     setPendingGameSection(null);
+    setTimeout(() => playWhooshSound(), 100);
+  };
+
+  /** From the alphabet lesson: open handwriting on this letter. */
+  const handlePracticeWriting = (letterIndex) => {
+    setHandwritingLetterIndex(typeof letterIndex === 'number' ? letterIndex : null);
+    handleSectionChange('handwriting');
   };
 
   const handleChatModeSwitch = (mode) => {
@@ -777,6 +857,41 @@ const ArabicLearningPlatform = ({
             {tr('Pick up where you left off — letters, words, stories and games, all in one place.',
                 'تابع من حيث توقفت — حروف وكلمات وقصص وألعاب في مكان واحد.')}
           </p>
+
+          {/* The two things a learner needs on arrival: how today is going,
+              and the ONE button that continues the path. Everything else on
+              the page is optional; this row is the plan. */}
+          <div className="home-hero-row">
+            <DailyGoalRing userEmail={userEmail} language={language} />
+            {nextModule && (
+              <motion.button
+                type="button"
+                className="home-continue-btn"
+                onClick={() => handleSectionChange(nextModule.complete ? 'quiz' : nextModule.id)}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="home-continue-kicker">
+                  {nextModule.complete
+                    ? tr('All lessons open', 'كل الدروس مفتوحة')
+                    : (nextModule.percent > 0 ? tr('Continue', 'تابع') : tr('Start here', 'ابدأ هنا'))}
+                </span>
+                <span className="home-continue-title">
+                  {nextModule.complete
+                    ? tr('Test yourself', 'اختبر نفسك')
+                    : (language === 'ar' ? nextModule.titleAr : nextModule.titleEn)}
+                </span>
+                {!nextModule.complete && (
+                  <span className="home-continue-progress" aria-hidden="true">
+                    <span style={{ width: `${nextModule.percent}%` }} />
+                  </span>
+                )}
+                <span className="home-continue-arrow" aria-hidden="true">
+                  {language === 'ar' ? <ArrowLeft size={22} /> : <ArrowRight size={22} />}
+                </span>
+              </motion.button>
+            )}
+          </div>
         </motion.div>
 
         {/* Streak and standing side by side: the two "how am I doing?" answers
@@ -925,6 +1040,21 @@ const ArabicLearningPlatform = ({
               </span>
               <span className="nav-avatar-gear" aria-hidden="true">⚙️</span>
             </button>
+            {/* Comfort: sounds, read-aloud, motion, celebrations, reading
+                tint, text size. One tap from every screen, for the learner
+                who is overwhelmed right now. */}
+            <button
+              type="button"
+              ref={comfortButtonRef}
+              className={`comfort-nav-btn ${calmMode ? 'is-calm' : ''}`}
+              onClick={() => { playClickSound(); setShowComfort((value) => !value); }}
+              aria-expanded={showComfort}
+              aria-haspopup="dialog"
+              aria-label={tr('Comfort settings: sound, motion, reading tint', 'إعدادات الراحة: الصوت والحركة ولون القراءة')}
+              title={calmMode ? tr('Comfort (calm mode on)', 'الراحة (وضع الهدوء مفعّل)') : tr('Comfort', 'الراحة')}
+            >
+              <SlidersHorizontal size={18} aria-hidden="true" />
+            </button>
             <DarkModeToggle language={language} />
             <HighContrastToggle language={language} />
             <button
@@ -993,6 +1123,7 @@ const ArabicLearningPlatform = ({
                 highContrast={highContrast}
                 reducedMotion={reducedMotion}
                 speak={speak}
+                onPracticeWriting={handlePracticeWriting}
               />
             </motion.div>
           )}
@@ -1076,96 +1207,62 @@ const ArabicLearningPlatform = ({
           {currentSection === 'difficulty-selection' && (
             <motion.div
               key="difficulty-selection"
-              initial={{ opacity: 0, scale: 0.95 }}
+              className="difficulty-screen"
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '70vh',
-                padding: '2rem'
-              }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.25 }}
             >
-              <h2 style={{
-                fontSize: '2.5rem',
-                marginBottom: '1rem',
-                color: 'var(--mz-text)',
-                textAlign: 'center'
-              }}>
-                {language === 'ar' ? 'اختر مستوى الصعوبة' : 'Select Difficulty Level'}
+              <h2 className="difficulty-title">
+                {language === 'ar' ? 'اختر مستوى الصعوبة' : 'Choose a difficulty'}
               </h2>
-              <p style={{
-                fontSize: '1.2rem',
-                marginBottom: '3rem',
-                color: 'var(--text-secondary)',
-                textAlign: 'center'
-              }}>
-                {language === 'ar' ? 'اختر المستوى المناسب لك' : 'Choose the level that suits you'}
+              <p className="difficulty-subtitle">
+                {language === 'ar'
+                  ? 'يمكنك تغييره في أي وقت — لا توجد إجابة خاطئة.'
+                  : 'You can change it any time — there is no wrong choice.'}
               </p>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '2rem',
-                maxWidth: '900px',
-                width: '100%'
-              }}>
-                {[
-                  { id: 'easy', labelEn: 'Easy', labelAr: 'سهل', emoji: '😊', color: '#10b981' },
-                  { id: 'medium', labelEn: 'Medium', labelAr: 'متوسط', emoji: '😎', color: '#f59e0b' },
-                  { id: 'hard', labelEn: 'Hard', labelAr: 'صعب', emoji: '😤', color: '#ef4444' }
-                ].map((level, index) => (
-                  <motion.button
-                    key={level.id}
-                    onClick={() => handleDifficultySelect(level.id)}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ y: -3 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      padding: '2rem',
-                      borderRadius: '20px',
-                      border: `3px solid ${level.color}`,
-                      background: `linear-gradient(135deg, ${level.color}15, ${level.color}30)`,
-                      cursor: 'pointer',
-                      fontSize: '1.5rem',
-                      fontWeight: '700',
-                      color: 'var(--mz-text)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '1rem',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <span style={{ fontSize: '4rem' }}>{level.emoji}</span>
-                    <span>{language === 'ar' ? level.labelAr : level.labelEn}</span>
-                  </motion.button>
-                ))}
+              <div className="difficulty-grid" role="group" aria-label={tr('Difficulty', 'الصعوبة')}>
+                {DIFFICULTY_LEVELS.map((level, index) => {
+                  const isLast = gameDifficulty === level.id;
+                  return (
+                    <motion.button
+                      key={level.id}
+                      type="button"
+                      className={`difficulty-option ${isLast ? 'is-last' : ''}`}
+                      style={{ '--level-color': level.color }}
+                      onClick={() => handleDifficultySelect(level.id)}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.07 }}
+                      whileHover={{ y: -3 }}
+                      whileTap={{ scale: 0.97 }}
+                      aria-pressed={isLast}
+                    >
+                      {isLast && (
+                        <span className="difficulty-last">
+                          {language === 'ar' ? 'اختيارك السابق' : 'Last time'}
+                        </span>
+                      )}
+                      <span className="difficulty-emoji" aria-hidden="true">{level.emoji}</span>
+                      <span className="difficulty-label">{language === 'ar' ? level.labelAr : level.labelEn}</span>
+                      <span className="difficulty-hint">{language === 'ar' ? level.hintAr : level.hintEn}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
               <motion.button
+                type="button"
+                className="difficulty-back"
                 onClick={() => {
+                  playClickSound();
                   setCurrentSection('quiz');
                   setPendingGameSection(null);
                 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                style={{
-                  marginTop: '3rem',
-                  padding: '1rem 2rem',
-                  borderRadius: '12px',
-                  border: '1px solid var(--mz-border)',
-                  background: 'var(--mz-surface-2)',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  color: 'var(--mz-text)'
-                }}
+                transition={{ delay: 0.3 }}
               >
-                ← {language === 'ar' ? 'رجوع' : 'Back'}
+                {language === 'ar' ? '→ رجوع' : '← Back'}
               </motion.button>
             </motion.div>
           )}
@@ -1380,8 +1477,9 @@ const ArabicLearningPlatform = ({
               transition={{ duration: 0.3 }}
             >
               <ArabicHandwritingPractice
-                onClose={() => setCurrentSection('home')}
+                onClose={() => { setHandwritingLetterIndex(null); setCurrentSection('home'); }}
                 language={language}
+                initialLetterIndex={handwritingLetterIndex}
               />
             </motion.div>
           )}
@@ -1538,6 +1636,23 @@ const ArabicLearningPlatform = ({
           />
         )}
       </AnimatePresence>
+
+      {/* Comfort panel — anchored to its nav button, portalled to <body>. */}
+      <ComfortPanel
+        open={showComfort}
+        onClose={() => setShowComfort(false)}
+        language={language}
+        anchorRef={comfortButtonRef}
+      />
+
+      {/* A gentle break suggestion after twenty minutes on learning screens.
+          Learners only: a teacher marking homework does not need it. */}
+      {!isStaff && (
+        <BreakNudge
+          active={POINTS_BAR_SECTIONS.includes(currentSection) && currentSection !== 'learn'}
+          language={language}
+        />
+      )}
 
       {/* Onboarding Tutorial for First-Time Users */}
       {showOnboarding && (

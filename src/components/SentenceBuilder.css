@@ -355,3 +355,36 @@
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+
+/* "Not yet" feedback — a short sideways shake, and the points the next
+   sentence is worth on the Check button (added 2026-10-07). */
+.sentence-builder .selected-words-container.shake {
+  animation: sbShake 0.45s ease;
+  border-color: var(--mz-warning);
+}
+
+@keyframes sbShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.sentence-builder .check-points {
+  margin-inline-start: 8px;
+  padding: 2px 10px;
+  border-radius: var(--mz-radius-pill);
+  background: rgba(255, 255, 255, 0.28);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.sentence-builder .completed-this-word {
+  color: var(--mz-success);
+  font-weight: 700;
+}
+
+html.reduced-motion .sentence-builder .selected-words-container.shake {
+  animation: none;
+}

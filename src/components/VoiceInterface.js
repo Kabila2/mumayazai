@@ -1,6 +1,6 @@
 // AI provider selection lives in src/utils/aiClient.js.
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ExploreModal from './ExploreModal';
 import SaveVoiceChatModal from './SaveVoiceChatModal';
 import { awardPoints } from '../utils/pointsUtils';
@@ -14,10 +14,6 @@ import { isElevenLabsConfigured, speakWithElevenLabs, stopElevenLabsSpeech } fro
 import { askAI } from "../utils/aiClient";
 
 /** ---------- Advanced Voice System ---------- */
-const VOICE_STORAGE_KEY = "stellar_voice_data";
-const MAX_CONVERSATION_LENGTH = 150;
-const CONTEXT_WINDOW = 25;
-const AUTO_SAVE_DELAY = 800;
 
 /** ---------- Enhanced Memory System (from ChatInterface) ---------- */
 const VOICE_MEMORY_STORAGE_KEY = "stellar_voice_memory";
@@ -32,8 +28,6 @@ const saveVoiceConversationMemory = (messages) => {
       version: "2.0"
     };
     localStorage.setItem(VOICE_MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
-    console.log("💾 Voice memory saved:", messages.length, "messages");
-    console.log("💾 Saved messages:", messages.map(m => `${m.sender}: ${m.text?.substring(0, 50)}...`));
   } catch (error) {
     console.warn("Failed to save voice conversation memory:", error);
   }
@@ -43,22 +37,13 @@ const loadVoiceConversationMemory = () => {
   try {
     const stored = localStorage.getItem(VOICE_MEMORY_STORAGE_KEY);
     if (!stored) {
-      console.log("💾 No voice memory found in storage");
       return null;
     }
 
     const memoryData = JSON.parse(stored);
     const isRecent = Date.now() - memoryData.timestamp < 30 * 24 * 60 * 60 * 1000; // 30 days
 
-    console.log("💾 Memory data found:", {
-      messageCount: memoryData.messages?.length,
-      isRecent,
-      timestamp: new Date(memoryData.timestamp).toLocaleString()
-    });
-
     if (isRecent && memoryData.messages?.length) {
-      console.log("💾 Voice memory loaded:", memoryData.messages.length, "messages");
-      console.log("💾 Loaded messages:", memoryData.messages.map(m => `${m.sender}: ${m.text?.substring(0, 50)}...`));
       return memoryData.messages;
     }
   } catch (error) {
@@ -70,7 +55,6 @@ const loadVoiceConversationMemory = () => {
 const clearVoiceConversationMemory = () => {
   try {
     localStorage.removeItem(VOICE_MEMORY_STORAGE_KEY);
-    console.log("💾 Voice memory cleared");
   } catch (error) {
     console.warn("Failed to clear voice conversation memory:", error);
   }
@@ -78,10 +62,8 @@ const clearVoiceConversationMemory = () => {
 
 // Enhanced context building with full conversation history (from working chat interface)
 const buildConversationContext = (messages) => {
-  console.log("🔍 buildConversationContext called with", messages.length, "messages");
 
   if (messages.length <= 1) {
-    console.log("🔍 No context - too few messages");
     return "";
   }
 
@@ -95,16 +77,12 @@ const buildConversationContext = (messages) => {
       return `${role}: ${msg.text}`;
     });
 
-  console.log("🔍 Filtered conversation messages:", conversationMessages.length);
-  console.log("🔍 Context messages:", conversationMessages);
 
   if (conversationMessages.length === 0) {
-    console.log("🔍 No valid context messages found");
     return "";
   }
 
   const context = `\n\nConversation History:\n${conversationMessages.join('\n')}\n\nCurrent Request:\n`;
-  console.log("🔍 Final built context:", context);
   return context;
 };
 
@@ -245,7 +223,6 @@ const getArabicVoices = (availableVoices) => {
 
   // If no Arabic voices found, create synthetic ones
   if (arabicVoices.length === 0) {
-    console.log('🚨 No Arabic voices found on system - creating synthetic voices');
     return [
       createArabicVoice(),
       {
@@ -267,7 +244,6 @@ const getArabicVoices = (availableVoices) => {
     ];
   }
 
-  console.log('✅ Found Arabic voices on system:', arabicVoices.length);
   return arabicVoices;
 };
 
@@ -291,55 +267,6 @@ const getVoiceCommands = (language) => {
     'repeat that': { action: 'repeatLast', response: 'Repeating last message' }
   };
 };
-
-// Enhanced Voice Memory Management
-class VoiceMemoryManager {
-  static save(conversations, currentSession) {
-    try {
-      const data = {
-        conversations,
-        currentSession,
-        timestamp: Date.now(),
-        version: "3.0"
-      };
-      localStorage.setItem(VOICE_STORAGE_KEY, JSON.stringify(data));
-      console.log("🔄 Voice memory saved:", conversations.length, "conversations");
-    } catch (error) {
-      console.warn("Failed to save voice memory:", error);
-    }
-  }
-
-  static load() {
-    try {
-      const stored = localStorage.getItem(VOICE_STORAGE_KEY);
-      if (!stored) return null;
-
-      const data = JSON.parse(stored);
-      const isRecent = Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000; // 7 days
-
-      if (isRecent && data.version === "3.0") {
-        console.log("📂 Voice memory loaded:", data.conversations?.length || 0, "conversations");
-        return data;
-      }
-    } catch (error) {
-      console.warn("Failed to load voice memory:", error);
-    }
-    return null;
-  }
-
-  static clear() {
-    localStorage.removeItem(VOICE_STORAGE_KEY);
-    console.log("🗑️ Voice memory cleared");
-  }
-
-  static buildContext(messages) {
-    return messages
-      .slice(-CONTEXT_WINDOW)
-      .filter(m => m.text && !m.isCommand)
-      .map(m => `${m.sender === 'user' ? 'Human' : 'Assistant'}: ${m.text}`)
-      .join('\n');
-  }
-}
 
 /** ---------- Enhanced AI Integration ----------
  * Provider selection lives in src/utils/aiClient.js; this screen only builds
@@ -380,7 +307,6 @@ export default function VoiceInterface({
   onSignOut,
   onBack
 }) {
-  console.log("🎯 New VoiceInterface initialized");
 
   // Translations for Arabic/English
   const translations = {
@@ -422,17 +348,11 @@ export default function VoiceInterface({
 
   const t = translations[language] || translations.en;
 
-  // Core State
-  const [conversations, setConversations] = useState(() => {
-    const saved = VoiceMemoryManager.load();
-    return saved?.conversations || [];
-  });
 
   // Initialize messages with memory or welcome message (simplified like chat interface)
   const [messages, setMessages] = useState(() => {
     const savedMessages = loadVoiceConversationMemory();
     if (savedMessages && savedMessages.length > 0) {
-      console.log("💾 Restored", savedMessages.length, "voice messages from memory");
       return savedMessages;
     }
 
@@ -451,12 +371,12 @@ export default function VoiceInterface({
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [voiceLevel, setVoiceLevel] = useState(0);
-  const [lastTranscript, setLastTranscript] = useState("");
+  const [, setVoiceLevel] = useState(0);
+  const [, setLastTranscript] = useState("");
   const [confidence, setConfidence] = useState(0);
 
   // UI State
-  const [showConversations, setShowConversations] = useState(false);
+  
   const [showExploreModal, setShowExploreModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -464,13 +384,13 @@ export default function VoiceInterface({
   const [userEmail, setUserEmail] = useState(null);
 
   // Voice Settings
-  const [voices, setVoices] = useState(extVoices || []);
+  const [voices] = useState(extVoices || []);
   const [selectedVoiceLocal, setSelectedVoiceLocal] = useState(selectedVoice || "");
-  const [speedLocal, setSpeedLocal] = useState(speed || 1.0);
-  const [pitchLocal, setPitchLocal] = useState(pitch || 1.0);
-  const [volumeLocal, setVolumeLocal] = useState(0.9);
-  const [autoSpeak, setAutoSpeak] = useState(true);
-  const [commandMode, setCommandMode] = useState(true);
+  const [speedLocal] = useState(speed || 1.0);
+  const [pitchLocal] = useState(pitch || 1.0);
+  const [volumeLocal] = useState(0.9);
+  const [autoSpeak] = useState(true);
+  const [commandMode] = useState(true);
 
   // Refs
   const recognitionRef = useRef(null);
@@ -597,14 +517,12 @@ export default function VoiceInterface({
     recognition.lang = language === 'ar' ? 'ar-SA' : 'en-US';
     recognition.maxAlternatives = 3;
 
-    console.log(`🎤 Voice recognition set to: ${recognition.lang}`);
 
     recognition.onstart = () => {
       setIsListening(true);
       setLastTranscript("");
       setConfidence(0);
       finalTranscriptRef.current = "";
-      console.log("🎤 Voice recognition started with 0.8-second buffer");
     };
 
     recognition.onresult = (event) => {
@@ -620,7 +538,6 @@ export default function VoiceInterface({
         if (result.isFinal) {
           finalTranscript += transcript;
           finalTranscriptRef.current = finalTranscript;
-          console.log("🎤 Final speech detected:", transcript);
 
           // Start 0.8-second silence timer
           if (silenceTimeoutRef.current) {
@@ -628,7 +545,6 @@ export default function VoiceInterface({
           }
 
           silenceTimeoutRef.current = setTimeout(() => {
-            console.log("🔇 0.8-second silence detected, processing speech");
             if (finalTranscriptRef.current.trim()) {
               handleVoiceInputCallbackRef.current?.(finalTranscriptRef.current.trim(), confidence);
               finalTranscriptRef.current = "";
@@ -652,7 +568,6 @@ export default function VoiceInterface({
       if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current);
       }
-      console.log("🔇 Voice recognition ended");
     };
 
     recognition.onerror = (event) => {
@@ -800,12 +715,10 @@ export default function VoiceInterface({
 
     // Ensure voices are loaded (important for Arabic voices)
     if (voices.length === 0) {
-      console.log('🔄 Loading voices...');
       const availableVoices = window.speechSynthesis.getVoices();
       if (availableVoices.length === 0) {
         // Wait for voices to load
         setTimeout(() => {
-          console.log('⏰ Retrying speech after voice loading delay');
           speak(text);
         }, 100);
         return;
@@ -839,20 +752,16 @@ export default function VoiceInterface({
       naturalVoices = getNaturalVoices(language, voices);
     }
 
-    console.log(`🔍 Available voices for ${language}:`, voices.length);
-    console.log(`🔍 Natural voices found:`, naturalVoices.length, naturalVoices.map(v => v.name));
 
     let selectedVoice = null;
 
     // First try to use user's selected voice if it's natural
     if (selectedVoiceLocal && naturalVoices.find(v => v.name === selectedVoiceLocal)) {
       selectedVoice = voices.find(v => v.name === selectedVoiceLocal);
-      console.log(`🎯 Using user-selected voice: ${selectedVoice.name}`);
     }
     // Otherwise use the best natural voice available
     else if (naturalVoices.length > 0) {
       selectedVoice = naturalVoices[0]; // Use the highest quality voice
-      console.log(`🎯 Auto-selected natural voice: ${selectedVoice.name}`);
     }
     // Enhanced fallback for Arabic
     else if (language === 'ar') {
@@ -864,7 +773,6 @@ export default function VoiceInterface({
       );
 
       if (selectedVoice) {
-        console.log(`🎯 Arabic fallback voice: ${selectedVoice.name}`);
       } else {
         console.warn('🚨 No Arabic voices found! Creating synthetic voice.');
         // Create a synthetic Arabic voice entry
@@ -886,30 +794,24 @@ export default function VoiceInterface({
       // Handle synthetic Arabic voices specially
       if (selectedVoice.synthetic && language === 'ar') {
         utterance.lang = selectedVoice.lang;
-        console.log(`🎭 Using synthetic Arabic voice: ${selectedVoice.name} (${selectedVoice.lang})`);
       } else if (!selectedVoice.synthetic) {
         utterance.voice = selectedVoice;
         utterance.lang = selectedVoice.lang;
-        console.log(`🔊 Using system voice: ${selectedVoice.name} (${selectedVoice.lang})`);
       }
     } else {
       // Absolute fallback to language setting
       if (language === 'ar') {
         utterance.lang = 'ar-SA';
-        console.log(`🔊 Arabic fallback - forcing lang to: ${utterance.lang}`);
       } else {
         utterance.lang = 'en-US';
-        console.log(`🔊 English fallback - using lang: ${utterance.lang}`);
       }
     }
 
     // Ensure Arabic text is properly handled
     if (language === 'ar' && cleanText) {
-      console.log(`📝 Arabic text to speak:`, cleanText.substring(0, 100) + '...');
       // Force Arabic language settings for better pronunciation
       if (!utterance.lang || !utterance.lang.startsWith('ar')) {
         utterance.lang = 'ar-SA';
-        console.log(`🔧 Corrected language to ar-SA for Arabic text`);
       }
     }
 
@@ -926,12 +828,10 @@ export default function VoiceInterface({
 
     utterance.onstart = () => {
       setIsSpeaking(true);
-      console.log(`🗣️ AI speaking with ${selectedVoice?.name || 'default'} voice`);
     };
 
     utterance.onend = () => {
       setIsSpeaking(false);
-      console.log(`🔇 AI finished speaking`);
     };
 
     utterance.onerror = (event) => {
@@ -975,18 +875,20 @@ export default function VoiceInterface({
           case 'repeatLast':
             repeatLastMessage();
             break;
+          default:
+            break;
         }
         return true;
       }
     }
     return false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSwitchMode, stopSpeaking, language]);
 
   // Handle Voice Input - defined after speak and processVoiceCommand to satisfy dependencies
   const handleVoiceInputCallback = useCallback(async (transcript, confidence) => {
     if (!transcript.trim()) return;
 
-    console.log("🗣️ Voice input:", transcript, "confidence:", confidence);
 
     // Check for voice commands first
     if (commandMode && processVoiceCommand(transcript)) {
@@ -1021,8 +923,6 @@ export default function VoiceInterface({
       const updatedMessages = [...messages, newUserMessage];
       const conversationContext = buildConversationContext(updatedMessages);
 
-      console.log("💾 Building AI response with full conversation context");
-      console.log("📝 Context includes", updatedMessages.length - 1, "previous messages");
 
       const responseText = await getVoiceAIResponse(transcript, conversationContext);
 
@@ -1161,7 +1061,6 @@ export default function VoiceInterface({
 
     // Process any accumulated speech before stopping
     if (finalTranscriptRef.current.trim()) {
-      console.log("🔇 Manual stop - processing accumulated speech");
       handleVoiceInputCallback(finalTranscriptRef.current.trim(), confidence);
       finalTranscriptRef.current = "";
     }

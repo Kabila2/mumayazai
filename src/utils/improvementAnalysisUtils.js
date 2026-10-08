@@ -10,7 +10,7 @@ export const analyzeAreasForImprovement = (childStats, childData) => {
     return improvements;
   }
 
-  const { totalTimeSpent, totalSessions, totalMessages, dailyActivity, averageSessionTime, averageMessagesPerSession } = childStats;
+  const { totalSessions, dailyActivity, averageSessionTime, averageMessagesPerSession } = childStats;
 
   // 1. Low Engagement Analysis
   if (totalSessions < 5) {
@@ -155,7 +155,7 @@ export const calculateImprovementScore = (childStats, childData) => {
 
   let score = 50; // Start with base score
 
-  const { totalTimeSpent, totalSessions, averageSessionTime, averageMessagesPerSession, dailyActivity } = childStats;
+  const { totalSessions, averageSessionTime, averageMessagesPerSession, dailyActivity } = childStats;
 
   // Session frequency bonus
   if (totalSessions >= 10) score += 15;
@@ -199,7 +199,7 @@ export const generateLearningRecommendations = (childStats, childData) => {
     return recommendations;
   }
 
-  const { totalTimeSpent, totalSessions, averageSessionTime, dailyActivity } = childStats;
+  const { averageSessionTime, dailyActivity } = childStats;
   const recentDays = dailyActivity?.slice(-7) || [];
   const activeDays = recentDays.filter(day => day.timeSpent > 0).length;
 

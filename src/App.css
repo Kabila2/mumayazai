@@ -423,25 +423,45 @@ body {
 
 
 
-/* Reduced Motion */
+/* Reduced Motion — the OS preference and the in-app Comfort switch (which
+   puts `.reduced-motion` on <html>) are treated the same. */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
-  .app-container::before {
-    animation: none;
-  }
-  
-  .mode-switcher::after {
-    animation: none;
-  }
-  
+
+  .app-container::before,
+  .mode-switcher::after,
   .placeholder {
     animation: none;
   }
+}
+
+html.reduced-motion .app-container::before,
+html.reduced-motion .placeholder {
+  animation: none;
+}
+
+/* Focus mode (Comfort panel): the home page keeps only the path forward.
+   Ambient glows, floating icons and the leaderboard — the parts that compete
+   for attention — are hidden. */
+html[data-stellar-focus="true"] .home-section .welcome-header::before,
+html[data-stellar-focus="true"] .home-section .welcome-header::after,
+html[data-stellar-focus="true"] .home-section .progress-fill::after,
+html[data-stellar-focus="true"] .home-leaderboard,
+html[data-stellar-focus="true"] .app-container::before {
+  display: none;
+}
+
+html[data-stellar-focus="true"] .home-section .card-icon {
+  animation: none;
+}
+
+/* With the leaderboard gone the status row holds only the streak. */
+html[data-stellar-focus="true"] .home-status-row {
+  grid-template-columns: 1fr;
 }
 
 /* Focus Styles for Accessibility */
@@ -510,42 +530,12 @@ body {
   }
 }
 
-/* Global Button Shine Effect */
-button,
-.dock-btn,
-.mode-switcher button {
-  position: relative;
-  overflow: hidden;
-}
-
-button::before,
-.dock-btn::before,
-.mode-switcher button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.6s ease;
-  pointer-events: none;
-  z-index: 1;
-}
-
-button:hover::before,
-.dock-btn:hover::before,
-.mode-switcher button:hover::before {
-  left: 100%;
-}
-
-/* Ensure button content stays above shine effect */
-button > *,
-.dock-btn > *,
-.mode-switcher button > * {
-  position: relative;
-  z-index: 2;
-}
+/* The old global button "shine" (a ::before gradient swept across EVERY
+   button on hover) is gone. It forced `overflow: hidden` onto every button in
+   the app, which clipped the unread badge that hangs off the nav links, and it
+   animated a 200%-wide gradient on each hover — exactly the incidental motion
+   the Comfort panel exists to remove. Primary buttons keep their own hover
+   styles. */
 /* ============================================
    ACCESSIBILITY STYLES
    ============================================ */
@@ -674,10 +664,12 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
+/* No `pointer-events: none` here: a locked tile is meant to be clickable so it
+   can SAY why it is locked (see LearnHub / CollapsedCardsBox). With
+   pointer-events off, that click never fired and the tile read as broken. */
 [aria-disabled="true"] {
   opacity: 0.6;
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 /* Loading state accessibility */

@@ -70,6 +70,11 @@ const PREFERENCE_KEYS = [
   "voice-speed",
   "voice-pitch",
   "voice-selected",
+  // Comfort panel (utils/comfortSettings.js) and the remembered game difficulty
+  "stellar_reading_tint",
+  "stellar_quiet_celebrations",
+  "stellar_focus_mode",
+  "stellar_game_difficulty",
 ];
 
 /**
@@ -95,8 +100,13 @@ export const USER_KEY_PREFIXES = [
   "stellar_sync_data_",
   "stellar_last_sync_",
   "stellar_parent_data_",
+  "stellar_sections_visited_",
+  "stellar_letterbuilder_",
+  "stellar_sentencebuilder_",
+  "stellar_handwriting_",
   "alphabet_learned_",
   "alphabet_viewed_",
+  "arabic_wordbuilder_progress_",
   "child_session_",
 ];
 
@@ -235,6 +245,7 @@ const CONTAINERS = [
 
   emailKeyedMap("stellar_user_stats"),
   emailKeyedMap("stellar_module_progress"),
+  emailKeyedMap("stellar_daily_activity"),
   emailKeyedMap("stellar_leaderboard"),
   emailKeyedMap("stellar_teachers"),
 
@@ -645,7 +656,7 @@ export const countUserData = (userEmail, options = {}) => {
   ).length;
 };
 
-export default {
+const storageRegistry = {
   collectUserData,
   purgeUserData,
   restoreUserData,
@@ -655,3 +666,5 @@ export default {
   getKnownEmails,
   USER_KEY_PREFIXES,
 };
+
+export default storageRegistry;

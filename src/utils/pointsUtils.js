@@ -5,9 +5,90 @@ import {
   getTotalPoints,
   recordLearningPoints
 } from './leaderboardUtils';
+import { checkAchievements } from './achievementsSystem';
 
 const POINTS_STORAGE_KEY = "stellar_points";
 const NOTIFICATION_THRESHOLD = 25; // Show notification every 25 points
+
+/* ---------------------------------------------------------------------------
+   DAILY GOAL
+   A small, reachable target for today — "do five things" — shown as a ring on
+   the home page. Short, concrete goals are what keep a learner with ADHD
+   going; "finish the alphabet" is too far away to feel.
+
+   An "activity" is any award worth at least ACTIVITY_MIN_POINTS: learning a
+   letter, finishing a quiz, matching a pair. The one-point "viewed" awards
+   and two-point chat messages do not count, so the ring cannot be filled by
+   paging through a lesson without doing anything.
+   --------------------------------------------------------------------------- */
+const DAILY_ACTIVITY_KEY = "stellar_daily_activity";
+export const DAILY_GOAL = 5;
+const ACTIVITY_MIN_POINTS = 5;
+export const DAILY_GOAL_EVENT = "stellar:daily-goal";
+
+const todayKey = () => new Date().toDateString();
+
+const readDaily = () => {
+  try {
+    return JSON.parse(localStorage.getItem(DAILY_ACTIVITY_KEY)) || {};
+  } catch (error) {
+    return {};
+  }
+};
+
+/** Today's activity for a learner, reset automatically on a new day. */
+export const getDailyActivity = (userEmail) => {
+  const empty = { date: todayKey(), count: 0, points: 0, goalAwarded: false };
+  if (!userEmail) return { ...empty, goal: DAILY_GOAL, percent: 0, reached: false };
+
+  const entry = readDaily()[userEmail.toLowerCase()];
+  const today = entry && entry.date === todayKey() ? entry : empty;
+  const count = today.count || 0;
+
+  return {
+    ...today,
+    goal: DAILY_GOAL,
+    percent: Math.min(100, Math.round((count / DAILY_GOAL) * 100)),
+    reached: count >= DAILY_GOAL
+  };
+};
+
+/**
+ * Count one activity towards today's goal. Called from awardPoints, so every
+ * module contributes without knowing this exists. Reports the moment the goal
+ * is first reached so a one-off bonus can be paid.
+ */
+const recordDailyActivity = (userEmail, points) => {
+  if (!userEmail || points < ACTIVITY_MIN_POINTS) return null;
+
+  try {
+    const all = readDaily();
+    const k = userEmail.toLowerCase();
+    const current = getDailyActivity(userEmail);
+    const justReached = current.count + 1 >= DAILY_GOAL && !current.goalAwarded;
+    const next = {
+      date: todayKey(),
+      count: current.count + 1,
+      points: (current.points || 0) + points,
+      goalAwarded: !!current.goalAwarded || justReached
+    };
+    all[k] = next;
+    localStorage.setItem(DAILY_ACTIVITY_KEY, JSON.stringify(all));
+
+    try {
+      window.dispatchEvent(new CustomEvent(DAILY_GOAL_EVENT, {
+        detail: { userEmail, count: next.count, goal: DAILY_GOAL, reached: next.count >= DAILY_GOAL, justReached }
+      }));
+    } catch (error) {
+      // No window (tests / SSR).
+    }
+
+    return { ...next, justReached };
+  } catch (error) {
+    console.error("Error recording daily activity:", error);
+    return null;
+  }
+};
 
 // Point values for different activities
 export const POINT_VALUES = {
@@ -34,6 +115,10 @@ export const POINT_VALUES = {
   // Word Builder
   WORD_BUILT_CORRECT: 10,
   WORD_BUILT_PERFECT: 20,
+  SENTENCE_BUILT_CORRECT: 15,
+  LETTER_TRACED: 5,
+  GAME_ROUND_CORRECT: 5,
+  GAME_COMPLETED: 15,
   THREE_WORD_STREAK: 15,
   FIVE_WORD_STREAK: 30,
   TEN_WORD_STREAK: 60,
@@ -71,10 +156,11 @@ export const POINT_VALUES = {
   STREAK_7_DAYS: 75,
   STREAK_30_DAYS: 200,
   PERFECT_WEEK: 100,
+  DAILY_GOAL_REACHED: 20,
 
   // Bonus
   COMEBACK_BONUS: 20, // After being inactive
-  RANDOM_BONUS: Math.floor(Math.random() * 10) + 5 // 5-15 random
+  RANDOM_BONUS: 10 // fixed and predictable — a surprise amount reads as unfair to a child
 };
 
 /**
@@ -112,6 +198,21 @@ export const awardPoints = (userEmail, pointType, multiplier = 1, customAmount =
 
       // Check for milestone notifications
       checkMilestoneNotification(userEmail, previousTotal, newTotal);
+
+      // Today's goal ring, and the bonus for filling it.
+      const daily = recordDailyActivity(userEmail, points);
+      if (daily?.justReached && pointType !== 'DAILY_GOAL_REACHED') {
+        awardPoints(userEmail, 'DAILY_GOAL_REACHED');
+      }
+
+      // The points badges (100 / 500 / 1000) were defined but never checked
+      // from anywhere, so nobody could earn them. This is the one place every
+      // point passes through, so it is the place to check.
+      try {
+        checkAchievements(userEmail, 'points_earned', { totalPoints: getTotalPoints(userEmail) });
+      } catch (achievementError) {
+        // A badge failing must never block the points themselves.
+      }
 
       return { success: true, points, totalPoints: newTotal };
     }
@@ -354,6 +455,17 @@ export const getPointDescription = (pointType, language = 'en') => {
       PRACTICE_SESSION: 'Practice Session',
       FAVORITE_ADDED: 'Favorite Added',
       STREAK_BONUS: 'Streak Bonus',
+      STREAK_3_DAYS: '3-Day Streak',
+      STREAK_7_DAYS: '7-Day Streak',
+      STREAK_30_DAYS: '30-Day Streak',
+      DAILY_GOAL_REACHED: 'Daily Goal Reached',
+      MEMORY_PERFECT_GAME: 'Perfect Memory Game',
+      WORD_BUILT_PERFECT: 'Perfect Word',
+      TEST_PASSED: 'Test Passed',
+      SENTENCE_BUILT_CORRECT: 'Sentence Built',
+      LETTER_TRACED: 'Letter Traced',
+      GAME_ROUND_CORRECT: 'Correct Answer',
+      GAME_COMPLETED: 'Game Completed',
       MILESTONE_REACHED: 'Milestone Reached'
     },
     ar: {
@@ -374,11 +486,23 @@ export const getPointDescription = (pointType, language = 'en') => {
       PRACTICE_SESSION: 'جلسة تدريب',
       FAVORITE_ADDED: 'مفضل مُضاف',
       STREAK_BONUS: 'مكافأة السلسلة',
+      STREAK_3_DAYS: 'سلسلة 3 أيام',
+      STREAK_7_DAYS: 'سلسلة 7 أيام',
+      STREAK_30_DAYS: 'سلسلة 30 يوماً',
+      DAILY_GOAL_REACHED: 'تحقق هدف اليوم',
+      MEMORY_PERFECT_GAME: 'لعبة ذاكرة مثالية',
+      WORD_BUILT_PERFECT: 'كلمة مثالية',
+      TEST_PASSED: 'نجحت في الاختبار',
+      SENTENCE_BUILT_CORRECT: 'جملة مبنية',
+      LETTER_TRACED: 'حرف مرسوم',
+      GAME_ROUND_CORRECT: 'إجابة صحيحة',
+      GAME_COMPLETED: 'لعبة مكتملة',
       MILESTONE_REACHED: 'معلم بارز'
     }
   };
 
-  return descriptions[language][pointType] || pointType;
+  const table = descriptions[language] || descriptions.en;
+  return table[pointType] || descriptions.en[pointType] || pointType;
 };
 
 /**
@@ -424,7 +548,7 @@ export const getClassLeaderboard = (className) => {
   }
 };
 
-export default {
+const pointsUtils = {
   awardPoints,
   awardStreakBonus,
   awardTimeBonusPoints,
@@ -434,5 +558,10 @@ export default {
   getThresholdNotification,
   getPointDescription,
   getClassLeaderboard,
+  getDailyActivity,
+  DAILY_GOAL,
+  DAILY_GOAL_EVENT,
   POINT_VALUES
 };
+
+export default pointsUtils;

@@ -1,0 +1,95 @@
+/* ============================================================================
+   DAILY GOAL RING — "3 of 5 things today", on the home page hero.
+   Scoped under .daily-goal; token-driven so dark/high-contrast flow through.
+   ============================================================================ */
+
+.daily-goal {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px 12px 12px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: 20px;
+  box-shadow: var(--mz-shadow-sm);
+  text-align: start;
+}
+
+.daily-goal.is-compact {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.daily-goal-ring {
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.daily-goal.is-compact .daily-goal-ring {
+  width: 56px;
+  height: 56px;
+}
+
+/* Named *-track / *-fill so high-contrast.css's progress rules pick them up. */
+.daily-goal-track {
+  stroke: var(--mz-surface-3);
+}
+
+.daily-goal-fill {
+  stroke: var(--mz-accent);
+}
+
+.daily-goal.is-reached .daily-goal-fill {
+  stroke: var(--mz-success);
+}
+
+.daily-goal-count {
+  fill: var(--mz-text);
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-goal.is-compact .daily-goal-count {
+  font-size: 1rem;
+}
+
+.daily-goal.is-reached .daily-goal-count {
+  fill: var(--mz-success);
+  font-size: 1.6rem;
+}
+
+.daily-goal-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.daily-goal-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mz-text-3);
+}
+
+.daily-goal-label {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--mz-text);
+}
+
+.daily-goal.is-reached .daily-goal-label {
+  color: var(--mz-success);
+}
+
+.daily-goal-hint {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--mz-text-2);
+  line-height: 1.4;
+  max-width: 26ch;
+}

@@ -1,13 +1,8 @@
-// src/App.js - Enhanced with Universal Accessibility
+// src/App.js — Sign-in flow, app-wide preferences, and the platform shell
 import React, { useState, useEffect } from "react";
-import ChatInterface from "./components/ChatInterface";
-import VoiceInterface from "./components/VoiceInterface";
-import VoiceSettings from "./blocks/VoiceSettings/VoiceSettings";
+import { MotionConfig } from "framer-motion";
 import EntryLoginPage from "./components/EntryLoginPage";
 import OnboardingSetup from "./components/OnboardingSetup";
-import PaperAirplaneTransition from "./components/PaperAirplaneTransition";
-import ParentDashboard from "./components/ParentDashboard";
-import TeacherDashboard from "./components/TeacherDashboard";
 import ArabicLearningPlatform from "./components/ArabicLearningPlatform";
 import { ToastContainer } from "./components/Toast";
 import { useToast } from "./hooks/useToast";
@@ -15,14 +10,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { translations } from "./translations";
 import {
   initializeParentAccount,
-  linkChildToParent,
-  isChildLinkedToParent,
-  startChildSession,
-  endChildSession
+  linkChildToParent
 } from "./utils/parentTrackingUtils";
-import {
-  initializeTeacherAccount
-} from "./utils/teacherUtils";
+import { initializeTeacherAccount } from "./utils/teacherUtils";
 import {
   initHighContrast,
   applyHighContrast,
@@ -30,6 +20,12 @@ import {
 } from "./utils/highContrast";
 import { applyRewards, REWARDS_CHANGED_EVENT } from "./utils/rewardsStore";
 import { POINTS_CHANGED_EVENT } from "./utils/leaderboardUtils";
+import {
+  applyComfort,
+  getComfort,
+  shouldReduceMotion,
+  COMFORT_CHANGED_EVENT
+} from "./utils/comfortSettings";
 import "./App.css";
 import "./dark-mode-global.css";
 
@@ -79,14 +75,6 @@ export default function App() {
   );
   const t = translations[appLanguage] || translations.en;
 
-  // ---------- Main UI state ----------
-  const [mode, setMode] = useState("text");   // "text" | "voice"
-  const [view, setView] = useState("chat");   // "chat" | "profile" | "settings"
-
-  // ---------- Transition state ----------
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [pendingMode, setPendingMode] = useState(null);
-
   // ---------- User preference state ----------
   const [currentPreference, setCurrentPreference] = useState(getCurrentPreference());
 
@@ -98,7 +86,9 @@ export default function App() {
   const [language, setLanguage] = useState("en-US");
   const [fontSize, setFontSize] = useState(1.1);
   const [highContrast, setHighContrast] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  // Reduced motion is true if EITHER the learner switched it on in the Comfort
+  // panel or the operating system asks for it.
+  const [reducedMotion, setReducedMotion] = useState(() => shouldReduceMotion());
 
   // ---------- Assistant title (universal) ----------
   const [assistantTitle, setAssistantTitle] = useState(getAssistantTitle(t));
@@ -120,9 +110,11 @@ export default function App() {
     // also covers the page background and the full-screen chat/voice screens.
     setHighContrast(initHighContrast());
     const fs = localStorage.getItem("font-size");
-    const rm = localStorage.getItem("reduced-motion");
     if (fs) setFontSize(parseFloat(fs));
-    if (rm === "true") setReducedMotion(true);
+
+    // Comfort settings (sounds, read-aloud, motion, tint, focus) live on <html>
+    // too — see utils/comfortSettings.js.
+    applyComfort(getComfort());
 
     // Load appearance preferences
     const savedFont = localStorage.getItem('stellar_font');
@@ -137,12 +129,8 @@ export default function App() {
     if (savedSpeed) setSpeed(parseFloat(savedSpeed));
     if (savedPitch) setPitch(parseFloat(savedPitch));
     if (savedVoice) setSelectedVoice(savedVoice);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Watch for preference changes and update title
-  useEffect(() => {
-    setAssistantTitle(getAssistantTitle(t));
-  }, [currentPreference, t]);
 
   // Keep React state in step with the toggle, wherever it is rendered.
   useEffect(() => {
@@ -156,6 +144,26 @@ export default function App() {
   useEffect(() => {
     applyHighContrast(highContrast);
   }, [highContrast]);
+
+  // Reduced motion: follow the Comfort panel and the OS preference.
+  useEffect(() => {
+    const sync = () => setReducedMotion(shouldReduceMotion());
+    window.addEventListener(COMFORT_CHANGED_EVENT, sync);
+
+    const media = typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : null;
+    if (media && typeof media.addEventListener === "function") {
+      media.addEventListener("change", sync);
+    }
+
+    return () => {
+      window.removeEventListener(COMFORT_CHANGED_EVENT, sync);
+      if (media && typeof media.removeEventListener === "function") {
+        media.removeEventListener("change", sync);
+      }
+    };
+  }, []);
 
   // Apply the signed-in learner's unlocked rewards (accent colour, background
   // effect, avatar frame) to <html>. Done here rather than in the platform
@@ -178,9 +186,11 @@ export default function App() {
     };
   }, []);
 
-  // Load voices
+  // Load voices for the voice-chat screen's settings.
   useEffect(() => {
     const synth = window.speechSynthesis;
+    if (!synth) return undefined;
+
     const load = () => {
       const all = synth.getVoices();
       const en = all.filter(v => v.lang.startsWith("en"));
@@ -188,8 +198,14 @@ export default function App() {
       if (!selectedVoice && en.length) setSelectedVoice(en[0].name);
     };
     load();
-    synth.onvoiceschanged = load;
-    return () => (synth.onvoiceschanged = null);
+
+    // addEventListener rather than `onvoiceschanged =`: other hooks listen for
+    // the same event, and assigning the property would clobber them.
+    if (typeof synth.addEventListener === "function") {
+      synth.addEventListener("voiceschanged", load);
+      return () => synth.removeEventListener("voiceschanged", load);
+    }
+    return undefined;
   }, [selectedVoice]);
 
   const speak = (text) => {
@@ -200,22 +216,6 @@ export default function App() {
     if (vObj) { u.voice = vObj; u.lang = vObj.lang; } else { u.lang = language; }
     u.rate = speed; u.pitch = pitch;
     window.speechSynthesis.speak(u);
-  };
-
-  /* ===================== MODE SWITCHING WITH TRANSITION ===================== */
-  const handleModeSwitch = (newMode) => {
-    if (isTransitioning || newMode === mode) return;
-    
-    console.log(`Transitioning from ${mode} to ${newMode} mode`);
-    setPendingMode(newMode);
-    setIsTransitioning(true);
-  };
-
-  const handleTransitionComplete = () => {
-    console.log(`Transition completed to ${pendingMode} mode`);
-    setMode(pendingMode);
-    setPendingMode(null);
-    setIsTransitioning(false);
   };
 
   /* ===================== AUTH HANDLERS ===================== */
@@ -279,7 +279,7 @@ export default function App() {
     openSession(key);
     setIsLoggedIn(true);
     localStorage.setItem("stellar_role", user.role || "student");
-    
+
     // Sync preference on login
     const preference = getCurrentPreference();
     setCurrentPreference(preference);
@@ -312,143 +312,70 @@ export default function App() {
   const handleSignOut = () => {
     closeSession();
     setIsLoggedIn(false);
-    setMode("text");
-    setView("chat");
-    // Reset transition state on sign out
-    setIsTransitioning(false);
-    setPendingMode(null);
   };
 
   /* ===================== RENDER FLOW ===================== */
   if (!isLoggedIn && !showSetup) {
     return (
-      <EntryLoginPage
-        onSignUp={handleSignUp}
-        onSignIn={handleSignIn}
-      />
+      <MotionConfig reducedMotion={reducedMotion ? "always" : "user"}>
+        <EntryLoginPage
+          onSignUp={handleSignUp}
+          onSignIn={handleSignIn}
+        />
+      </MotionConfig>
     );
   }
 
   if (showSetup) {
     return (
-      <OnboardingSetup
-        defaultLanguage={localStorage.getItem(LANGUAGE_KEY) || "en"}
-        onComplete={handleCompleteSetup}
-        onCancel={() => { setShowSetup(false); setPendingEmail(null); }}
-      />
+      <MotionConfig reducedMotion={reducedMotion ? "always" : "user"}>
+        <OnboardingSetup
+          defaultLanguage={localStorage.getItem(LANGUAGE_KEY) || "en"}
+          onComplete={handleCompleteSetup}
+          onCancel={() => { setShowSetup(false); setPendingEmail(null); }}
+        />
+      </MotionConfig>
     );
   }
 
   // All users (students, teachers, parents) go through ArabicLearningPlatform.
   // Teachers get a "Teacher Dashboard" nav item; parents get a "Parent Dashboard" nav item.
-  // All roles see the full set of learning features.
-
-  let content;
-  if (view === "chat") {
-    content = (
-      <ArabicLearningPlatform
-        t={t}
-        language={appLanguage}
-        fontSize={fontSize}
-        highContrast={highContrast}
-        reducedMotion={reducedMotion}
-        assistantTitle={assistantTitle}
-        currentPreference={currentPreference}
-        onSignOut={handleSignOut}
-        voices={voices}
-        selectedVoice={selectedVoice}
-        setSelectedVoice={setSelectedVoice}
-        speed={speed}
-        setSpeed={setSpeed}
-        pitch={pitch}
-        setPitch={setPitch}
-        setLanguage={setLanguage}
-        speak={speak}
-      />
-    );
-  } else if (view === "profile") {
-    content = (
-      <div className="placeholder" style={{ position: "relative" }}>
-        <button
-          onClick={handleSignOut}
-          style={{
-            position: "absolute",
-            top: "1rem",
-            right: "1rem",
-            background: "linear-gradient(135deg, #ff4757, #ff3838)",
-            border: "none",
-            color: "#ffffff",
-            padding: "0.6rem 1.2rem",
-            borderRadius: "12px",
-            cursor: "pointer",
-            fontWeight: "600",
-            fontSize: "0.9rem",
-            zIndex: 10,
-            boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)"
-          }}
-        >
-          Sign Out
-        </button>
-        
-        <h2>Profile</h2>
-        <p>Current preference: <strong>{currentPreference.toUpperCase()}</strong></p>
-        <p>Manage your preferences and accessibility settings.</p>
-        <button onClick={() => setView("chat")}>{t.back}</button>
-      </div>
-    );
-  } else {
-    content = (
-      <div style={{ position: "relative" }}>
-        <button
-          onClick={handleSignOut}
-          style={{
-            position: "absolute",
-            top: "1rem",
-            right: "1rem",
-            background: "linear-gradient(135deg, #ff4757, #ff3838)",
-            border: "none",
-            color: "#ffffff",
-            padding: "0.6rem 1.2rem",
-            borderRadius: "12px",
-            cursor: "pointer",
-            fontWeight: "600",
-            fontSize: "0.9rem",
-            zIndex: 10,
-            boxShadow: "0 4px 15px rgba(255, 71, 87, 0.3)"
-          }}
-        >
-          Sign Out
-        </button>
-        
-        <VoiceSettings
-          voices={voices}
-          selectedVoice={selectedVoice}
-          setSelectedVoice={setSelectedVoice}
-          speed={speed}
-          setSpeed={setSpeed}
-          pitch={pitch}
-          setPitch={setPitch}
-          language={language}
-          setLanguage={setLanguage}
-          speak={speak}
-          onClose={() => setView("chat")}
-        />
-      </div>
-    );
-  }
-
   return (
     <ErrorBoundary language={appLanguage}>
-      {/* High contrast is not in this className: its class goes on <html> (see
-          utils/highContrast.js) so it also covers the page background and the
-          full-screen chat/voice screens. */}
-      <div
-        className={`app-container ${reducedMotion ? "reduced-motion" : ""} ${currentPreference === "dyslexia" ? "dyslexia-friendly" : ""}`}
-        style={{ fontSize: `${fontSize}rem` }}
-      >
-        {content}
-        <ToastContainer toasts={toasts} removeToast={removeToast} />
-      </div>
+      {/* MotionConfig makes every framer-motion animation in the tree honour
+          the reduced-motion setting — both the OS preference ("user") and the
+          in-app Comfort switch ("always") — without each component checking. */}
+      <MotionConfig reducedMotion={reducedMotion ? "always" : "user"}>
+        {/* High contrast and reduced motion are not in this className: their
+            classes go on <html> (see utils/highContrast.js and
+            utils/comfortSettings.js) so they also cover the page background,
+            portalled popups and the full-screen chat/voice screens. */}
+        <div
+          className={`app-container ${currentPreference === "dyslexia" ? "dyslexia-friendly" : ""}`}
+          style={{ fontSize: `${fontSize}rem` }}
+        >
+          <ArabicLearningPlatform
+            t={t}
+            language={appLanguage}
+            fontSize={fontSize}
+            highContrast={highContrast}
+            reducedMotion={reducedMotion}
+            assistantTitle={assistantTitle}
+            currentPreference={currentPreference}
+            onSignOut={handleSignOut}
+            voices={voices}
+            selectedVoice={selectedVoice}
+            setSelectedVoice={setSelectedVoice}
+            speed={speed}
+            setSpeed={setSpeed}
+            pitch={pitch}
+            setPitch={setPitch}
+            setLanguage={setLanguage}
+            speak={speak}
+          />
+          <ToastContainer toasts={toasts} removeToast={removeToast} />
+        </div>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

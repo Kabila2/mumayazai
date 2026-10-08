@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { speechFriendly } from '../utils/speechPhrasing';
+import { COMFORT_CHANGED_EVENT } from '../utils/comfortSettings';
 
 /**
  * Enhanced Voice Over Hook - Provides text-to-speech functionality
@@ -166,16 +167,31 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     };
 
     loadVoices();
-    if (window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
 
-    return () => {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = null;
-      }
-    };
+    // addEventListener, not `onvoiceschanged = …`: every screen mounts its own
+    // copy of this hook, and assigning the property meant each new instance
+    // overwrote the last one's handler — and unmounting set it to null for
+    // everyone. Voices arriving late then never reached the screens that were
+    // still waiting for them.
+    const synth = window.speechSynthesis;
+    if (synth && typeof synth.addEventListener === 'function') {
+      synth.addEventListener('voiceschanged', loadVoices);
+      return () => synth.removeEventListener('voiceschanged', loadVoices);
+    }
+    return undefined;
   }, [language, selectedVoice]);
+
+  // Stay in step with the Comfort panel (and any other screen's toggle): the
+  // read-aloud switch writes the same storage key this hook loads from.
+  useEffect(() => {
+    const sync = () => setSettings(loadVoiceSettings());
+    window.addEventListener(COMFORT_CHANGED_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(COMFORT_CHANGED_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   // Update selected voice when language changes
   useEffect(() => {

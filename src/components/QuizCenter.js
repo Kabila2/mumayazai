@@ -1,22 +1,290 @@
 // src/components/QuizCenter.js - Centralized Quiz System with Multiple Quiz Types
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { awardPoints } from '../utils/pointsUtils';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import { isTopicUnlocked, lockReason, PASS_PERCENT } from '../utils/moduleUnlockUtils';
 import { buildUnitTest, getCompletedBreakdown, MIN_ITEMS } from '../utils/unitTestUtils';
 import { answerPhrase } from '../utils/speechPhrasing';
-import { transliterate } from '../utils/phonetics';
+import { transliterate, stripHarakat } from '../utils/phonetics';
 import { checkAchievements } from '../utils/achievementsSystem';
+import { playCorrectSound, playWrongSound, playClickSound } from '../utils/soundEffects';
 import CelebrationPopup from './CelebrationPopup';
 import './QuizCenter.css';
 
+/* ---------------------------------------------------------------------------
+   CONTENT
+   Kept at module scope: it never depends on props, and recreating ~80
+   question objects on every keystroke (it used to live inside the component)
+   was pointless work.
+
+   Every question carries what the ARABIC interface needs as well as the
+   English one. The quiz was English-only even when the whole app was in
+   Arabic, so an Arabic-speaking learner — exactly who the Arabic interface is
+   for — got English prompts in the middle of an Arabic app.
+   --------------------------------------------------------------------------- */
+const QUICK_REVIEW_SIZE = 5;
+
+/** Hints, by their English text, in Arabic. */
+const HINTS_AR = {
+  'First letter of Arabic alphabet': 'أول حرف في الأبجدية',
+  'Second letter of Arabic alphabet': 'ثاني حرف في الأبجدية',
+  'Third letter of Arabic alphabet': 'ثالث حرف في الأبجدية',
+  'Fourth letter of Arabic alphabet': 'رابع حرف في الأبجدية',
+  'Fifth letter of Arabic alphabet': 'خامس حرف في الأبجدية',
+  'First letter': 'الحرف الأول',
+  'Second letter': 'الحرف الثاني',
+  'Third letter': 'الحرف الثالث',
+  'Fourth letter': 'الحرف الرابع',
+  'Fifth letter': 'الحرف الخامس',
+  'Reading material': 'شيء نقرأه',
+  'Writing tool': 'أداة للكتابة',
+  'Drink this': 'نشربه',
+  'Where you live': 'المكان الذي تسكن فيه',
+  'Feeling good': 'شعور جميل',
+  'You eat this': 'نأكله',
+  'Greeting': 'تحية',
+  'Express gratitude': 'للتعبير عن الشكر',
+  'Farewell': 'وداع',
+  'Polite request': 'طلب مهذب',
+  'Greeting guests': 'ترحيب بالضيوف',
+  'Islamic greeting': 'تحية إسلامية',
+  'Ask about wellbeing': 'سؤال عن الحال',
+  'Color of apple': 'لون التفاحة',
+  'Color of sky': 'لون السماء',
+  'Color of grass': 'لون العشب',
+  'Color of sun': 'لون الشمس',
+  'Color of snow': 'لون الثلج'
+};
+
+const QUIZ_CONTENT = {
+  alphabet: {
+    multipleChoice: [
+      { question: 'What is the sound of "ب"?', arabic: 'ب', options: ['ba', 'ta', 'tha', 'ja'], correct: 0 },
+      { question: 'What is the sound of "ت"?', arabic: 'ت', options: ['ba', 'ta', 'tha', 'ja'], correct: 1 },
+      { question: 'What is the sound of "ث"?', arabic: 'ث', options: ['ba', 'ta', 'tha', 'ja'], correct: 2 },
+      { question: 'What is the sound of "ج"?', arabic: 'ج', options: ['ba', 'ta', 'tha', 'ja'], correct: 3 },
+      { question: 'What is the sound of "ح"?', arabic: 'ح', options: ['ha', 'kha', 'dal', 'dhal'], correct: 0 }
+    ],
+    scrambledWords: [
+      { word: 'alif', arabic: 'أ', hint: 'First letter of Arabic alphabet' },
+      { word: 'ba', arabic: 'ب', hint: 'Second letter of Arabic alphabet' },
+      { word: 'ta', arabic: 'ت', hint: 'Third letter of Arabic alphabet' },
+      { word: 'tha', arabic: 'ث', hint: 'Fourth letter of Arabic alphabet' },
+      { word: 'jeem', arabic: 'ج', hint: 'Fifth letter of Arabic alphabet' }
+    ],
+    recall: [
+      { arabic: 'أ', english: 'alif', hint: 'First letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 0 },
+      { arabic: 'ب', english: 'ba', hint: 'Second letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 1 },
+      { arabic: 'ت', english: 'ta', hint: 'Third letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 2 },
+      { arabic: 'ث', english: 'tha', hint: 'Fourth letter', options: ['ba', 'ta', 'tha', 'jeem'], correct: 2 },
+      { arabic: 'ج', english: 'jeem', hint: 'Fifth letter', options: ['tha', 'jeem', 'ha', 'kha'], correct: 1 }
+    ],
+    fillBlanks: [
+      { sentence: 'The first letter of Arabic is _____.', arabic: 'أ', options: ['alif', 'ba', 'ta', 'tha'], correct: 0,
+        sentenceAr: 'أول حرف في العربية هو _____.', optionsAr: ['أ', 'ب', 'ت', 'ث'], correctAr: 0 },
+      { sentence: 'The sound "ba" is written as _____.', arabic: 'ب', options: ['أ', 'ب', 'ت', 'ث'], correct: 1,
+        sentenceAr: 'صوت "با" يُكتب _____.', optionsAr: ['أ', 'ب', 'ت', 'ث'], correctAr: 1 },
+      { sentence: 'The third letter is pronounced _____.', arabic: 'ت', options: ['alif', 'ba', 'ta', 'tha'], correct: 2,
+        sentenceAr: 'الحرف الثالث هو _____.', optionsAr: ['أ', 'ب', 'ت', 'ث'], correctAr: 2 },
+      { sentence: 'The letter ث sounds like _____.', arabic: 'ث', options: ['ba', 'ta', 'tha', 'jeem'], correct: 2,
+        sentenceAr: 'الحرف الرابع هو _____.', optionsAr: ['ب', 'ت', 'ث', 'ج'], correctAr: 2 },
+      { sentence: 'The fifth Arabic letter is _____.', arabic: 'ج', options: ['tha', 'jeem', 'ha', 'kha'], correct: 1,
+        sentenceAr: 'الحرف الخامس هو _____.', optionsAr: ['ث', 'ج', 'ح', 'خ'], correctAr: 1 }
+    ],
+    matching: [
+      { arabic: 'أ', english: 'alif' },
+      { arabic: 'ب', english: 'ba' },
+      { arabic: 'ت', english: 'ta' },
+      { arabic: 'ث', english: 'tha' },
+      { arabic: 'ج', english: 'jeem' },
+      { arabic: 'ح', english: 'ha' }
+    ]
+  },
+  words: {
+    multipleChoice: [
+      { question: 'What does "كِتَاب" mean?', arabic: 'كِتَاب', options: ['Book', 'Pen', 'Learn', 'Reading'], correct: 0 },
+      { question: 'What does "قَلَم" mean?', arabic: 'قَلَم', options: ['Book', 'Pen', 'Learn', 'Reading'], correct: 1 },
+      { question: 'What does "مَاء" mean?', arabic: 'مَاء', options: ['Food', 'Water', 'Home', 'Family'], correct: 1 },
+      { question: 'What does "سَعِيد" mean?', arabic: 'سَعِيد', options: ['Sad', 'Happy', 'Angry', 'Tired'], correct: 1 },
+      { question: 'What does "بَيْت" mean?', arabic: 'بَيْت', options: ['School', 'Home', 'Car', 'Tree'], correct: 1 }
+    ],
+    scrambledWords: [
+      { word: 'book', arabic: 'كِتَاب', hint: 'Reading material' },
+      { word: 'pen', arabic: 'قَلَم', hint: 'Writing tool' },
+      { word: 'water', arabic: 'مَاء', hint: 'Drink this' },
+      { word: 'home', arabic: 'بَيْت', hint: 'Where you live' },
+      { word: 'happy', arabic: 'سَعِيد', hint: 'Feeling good' }
+    ],
+    recall: [
+      { arabic: 'كِتَاب', english: 'book', hint: 'Reading material', options: ['book', 'pen', 'water', 'home'], correct: 0 },
+      { arabic: 'قَلَم', english: 'pen', hint: 'Writing tool', options: ['book', 'pen', 'water', 'home'], correct: 1 },
+      { arabic: 'مَاء', english: 'water', hint: 'Drink this', options: ['food', 'water', 'home', 'happy'], correct: 1 },
+      { arabic: 'بَيْت', english: 'home', hint: 'Where you live', options: ['school', 'home', 'car', 'tree'], correct: 1 },
+      { arabic: 'طَعَام', english: 'food', hint: 'You eat this', options: ['water', 'food', 'pen', 'book'], correct: 1 }
+    ],
+    fillBlanks: [
+      { sentence: 'I read a _____ every day.', arabic: 'كِتَاب', options: ['book', 'pen', 'car', 'tree'], correct: 0, sentenceAr: 'أقرأ _____ كل يوم.' },
+      { sentence: 'I write with a _____.', arabic: 'قَلَم', options: ['book', 'pen', 'car', 'tree'], correct: 1, sentenceAr: 'أكتب بـ _____.' },
+      { sentence: 'I drink _____ when thirsty.', arabic: 'مَاء', options: ['food', 'water', 'milk', 'juice'], correct: 1, sentenceAr: 'أشرب _____ عندما أعطش.' },
+      { sentence: 'I live in a _____.', arabic: 'بَيْت', options: ['car', 'home', 'school', 'park'], correct: 1, sentenceAr: 'أعيش في _____.' },
+      { sentence: 'I am _____ today!', arabic: 'سَعِيد', options: ['sad', 'happy', 'angry', 'tired'], correct: 1, sentenceAr: 'أنا _____ اليوم!' }
+    ],
+    matching: [
+      { arabic: 'كِتَاب', english: 'book' },
+      { arabic: 'قَلَم', english: 'pen' },
+      { arabic: 'مَاء', english: 'water' },
+      { arabic: 'بَيْت', english: 'home' },
+      { arabic: 'طَعَام', english: 'food' },
+      { arabic: 'سَعِيد', english: 'happy' }
+    ]
+  },
+  sentences: {
+    multipleChoice: [
+      { question: 'What does "السَّلَامُ عَلَيْكُم" mean?', arabic: 'السَّلَامُ عَلَيْكُم', options: ['Peace be upon you', 'Good morning', 'Thank you', 'Goodbye'], correct: 0 },
+      { question: 'What does "شُكْرًا" mean?', arabic: 'شُكْرًا', options: ['Hello', 'Goodbye', 'Thank you', 'Please'], correct: 2 },
+      { question: 'What does "مَعَ السَّلَامَة" mean?', arabic: 'مَعَ السَّلَامَة', options: ['Hello', 'Goodbye', 'Thank you', 'Please'], correct: 1 },
+      { question: 'What does "صَبَاحُ الخَيْر" mean?', arabic: 'صَبَاحُ الخَيْر', options: ['Good morning', 'Good night', 'Good afternoon', 'Good evening'], correct: 0 },
+      { question: 'What does "كَيْفَ حَالُك" mean?', arabic: 'كَيْفَ حَالُك', options: ['What is your name?', 'How are you?', 'Where are you?', 'What time is it?'], correct: 1 }
+    ],
+    scrambledWords: [
+      { word: 'hello', arabic: 'مَرْحَبًا', hint: 'Greeting' },
+      { word: 'thanks', arabic: 'شُكْرًا', hint: 'Express gratitude' },
+      { word: 'goodbye', arabic: 'مَعَ السَّلَامَة', hint: 'Farewell' },
+      { word: 'please', arabic: 'مِن فَضْلِك', hint: 'Polite request' },
+      { word: 'welcome', arabic: 'أَهْلًا وَسَهْلًا', hint: 'Greeting guests' }
+    ],
+    recall: [
+      { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you', hint: 'Islamic greeting', options: ['peace be upon you', 'good morning', 'thank you', 'goodbye'], correct: 0 },
+      { arabic: 'شُكْرًا', english: 'thank you', hint: 'Express gratitude', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 2 },
+      { arabic: 'مَرْحَبًا', english: 'hello', hint: 'Greeting', options: ['hello', 'goodbye', 'thank you', 'how are you'], correct: 0 },
+      { arabic: 'مَعَ السَّلَامَة', english: 'goodbye', hint: 'Farewell', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 1 },
+      { arabic: 'كَيْفَ حَالُك', english: 'how are you', hint: 'Ask about wellbeing', options: ['what is your name', 'how are you', 'where are you', 'what time is it'], correct: 1 }
+    ],
+    fillBlanks: [
+      { sentence: 'Muslims greet each other by saying _____.', arabic: 'السَّلَامُ عَلَيْكُم', options: ['peace be upon you', 'good morning', 'thank you', 'goodbye'], correct: 0, sentenceAr: 'يحيّي المسلمون بعضهم بقول _____.' },
+      { sentence: 'To express gratitude, you say _____.', arabic: 'شُكْرًا', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 2, sentenceAr: 'للتعبير عن الامتنان نقول _____.' },
+      { sentence: 'When you meet someone, you say _____.', arabic: 'مَرْحَبًا', options: ['hello', 'goodbye', 'thank you', 'how are you'], correct: 0, sentenceAr: 'عندما تقابل شخصاً تقول _____.' },
+      { sentence: 'When leaving, you say _____.', arabic: 'مَعَ السَّلَامَة', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 1, sentenceAr: 'عند المغادرة تقول _____.' },
+      { sentence: 'To ask about wellbeing, say _____.', arabic: 'كَيْفَ حَالُك', options: ['what is your name', 'how are you', 'where are you', 'what time is it'], correct: 1, sentenceAr: 'للسؤال عن الحال نقول _____.' }
+    ],
+    matching: [
+      { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you' },
+      { arabic: 'شُكْرًا', english: 'thank you' },
+      { arabic: 'مَرْحَبًا', english: 'hello' },
+      { arabic: 'مَعَ السَّلَامَة', english: 'goodbye' },
+      { arabic: 'صَبَاحُ الخَيْر', english: 'good morning' },
+      { arabic: 'كَيْفَ حَالُك', english: 'how are you' }
+    ]
+  },
+  colors: {
+    multipleChoice: [
+      { question: 'What color is "أَحْمَر"?', arabic: 'أَحْمَر', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 1 },
+      { question: 'What color is "أَزْرَق"?', arabic: 'أَزْرَق', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 0 },
+      { question: 'What color is "أَخْضَر"?', arabic: 'أَخْضَر', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 2 },
+      { question: 'What color is "أَصْفَر"?', arabic: 'أَصْفَر', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 3 },
+      { question: 'What color is "أَبْيَض"?', arabic: 'أَبْيَض', options: ['White', 'Black', 'Brown', 'Pink'], correct: 0 }
+    ],
+    scrambledWords: [
+      { word: 'red', arabic: 'أَحْمَر', hint: 'Color of apple' },
+      { word: 'blue', arabic: 'أَزْرَق', hint: 'Color of sky' },
+      { word: 'green', arabic: 'أَخْضَر', hint: 'Color of grass' },
+      { word: 'yellow', arabic: 'أَصْفَر', hint: 'Color of sun' },
+      { word: 'white', arabic: 'أَبْيَض', hint: 'Color of snow' }
+    ],
+    recall: [
+      { arabic: 'أَحْمَر', english: 'red', hint: 'Color of apple', options: ['blue', 'red', 'green', 'yellow'], correct: 1 },
+      { arabic: 'أَزْرَق', english: 'blue', hint: 'Color of sky', options: ['blue', 'red', 'green', 'yellow'], correct: 0 },
+      { arabic: 'أَخْضَر', english: 'green', hint: 'Color of grass', options: ['blue', 'red', 'green', 'yellow'], correct: 2 },
+      { arabic: 'أَصْفَر', english: 'yellow', hint: 'Color of sun', options: ['blue', 'red', 'green', 'yellow'], correct: 3 },
+      { arabic: 'أَبْيَض', english: 'white', hint: 'Color of snow', options: ['white', 'black', 'brown', 'pink'], correct: 0 }
+    ],
+    fillBlanks: [
+      { sentence: 'An apple is _____ in color.', arabic: 'أَحْمَر', options: ['blue', 'red', 'green', 'yellow'], correct: 1, sentenceAr: 'لون التفاحة _____.' },
+      { sentence: 'The sky is _____.', arabic: 'أَزْرَق', options: ['blue', 'red', 'green', 'yellow'], correct: 0, sentenceAr: 'لون السماء _____.' },
+      { sentence: 'Grass is _____.', arabic: 'أَخْضَر', options: ['blue', 'red', 'green', 'yellow'], correct: 2, sentenceAr: 'لون العشب _____.' },
+      { sentence: 'The sun is _____.', arabic: 'أَصْفَر', options: ['blue', 'red', 'green', 'yellow'], correct: 3, sentenceAr: 'لون الشمس _____.' },
+      { sentence: 'Snow is _____.', arabic: 'أَبْيَض', options: ['white', 'black', 'brown', 'pink'], correct: 0, sentenceAr: 'لون الثلج _____.' }
+    ],
+    matching: [
+      { arabic: 'أَحْمَر', english: 'red' },
+      { arabic: 'أَزْرَق', english: 'blue' },
+      { arabic: 'أَخْضَر', english: 'green' },
+      { arabic: 'أَصْفَر', english: 'yellow' },
+      { arabic: 'أَبْيَض', english: 'white' },
+      { arabic: 'أَسْوَد', english: 'black' }
+    ]
+  }
+};
+
+const TOPICS = [
+  { id: 'alphabet', nameEn: 'Alphabet', nameAr: 'الحروف', icon: '🔤', color: '#6366f1' },
+  { id: 'words', nameEn: 'Words', nameAr: 'الكلمات', icon: '📚', color: '#8b5cf6' },
+  { id: 'sentences', nameEn: 'Sentences', nameAr: 'الجمل', icon: '💬', color: '#ec4899' },
+  { id: 'colors', nameEn: 'Colors', nameAr: 'الألوان', icon: '🎨', color: '#10b981' }
+];
+
+/** Fisher-Yates. `sort(() => Math.random() - 0.5)` is not a shuffle. */
+const shuffle = (input) => {
+  const array = [...input];
+  for (let i = array.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
+const rotate = (array, by) => [...array.slice(by), ...array.slice(0, by)];
+
+/** The multiple-choice prompt, in the interface language. */
+const questionText = (topicId, item, language) => {
+  if (language !== 'ar') return item.question;
+  if (topicId === 'alphabet') return `ما صوت الحرف "${item.arabic}"؟`;
+  if (topicId === 'colors') return `ما هو لون "${item.arabic}"؟`;
+  return `ما معنى "${item.arabic}"؟`;
+};
+
+const hintText = (hint, language) => (language === 'ar' ? HINTS_AR[hint] || hint : hint);
+
+/**
+ * A fill-in-the-blank question for the interface language. In Arabic the
+ * sentence is Arabic and the choices are the topic's Arabic words (the
+ * alphabet bank spells its own choices out), so the learner completes an
+ * Arabic sentence rather than an English one.
+ */
+const localizedFillBlank = (topicId, item, index, language) => {
+  if (language !== 'ar' || !item.sentenceAr) {
+    return { sentence: item.sentence, options: item.options, correct: item.correct };
+  }
+  if (item.optionsAr) {
+    return { sentence: item.sentenceAr, options: item.optionsAr, correct: item.correctAr };
+  }
+  const pool = QUIZ_CONTENT[topicId].fillBlanks
+    .map((entry) => entry.arabic)
+    .filter((arabic) => arabic !== item.arabic);
+  const options = rotate([item.arabic, ...pool.slice(0, 3)], index % 4);
+  return { sentence: item.sentenceAr, options, correct: options.indexOf(item.arabic) };
+};
+
+/** The word to unscramble: English letters in English, Arabic letters in Arabic. */
+const scrambleTarget = (item, language) =>
+  (language === 'ar' ? stripHarakat(item.arabic).replace(/\s+/g, '') : item.word);
+
+/** A short review built from the learner's own completed items. */
+const buildQuickReview = (userEmail, language) => {
+  const test = buildUnitTest(userEmail, language);
+  return { ...test, questions: test.questions.slice(0, QUICK_REVIEW_SIZE) };
+};
+
+const GENERATED_TYPES = ['unit-test', 'quick-review'];
+
 const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak, userEmail, userRole = 'student', onSectionSelect }) => {
   const [selectedQuizType, setSelectedQuizType] = useState(null);
-  // The unit test is generated per attempt from the learner's completed items,
-  // so unlike the other quizzes it cannot come from a static bank.
-  const [unitTest, setUnitTest] = useState(null);
+  // The unit test and quick review are generated per attempt from the
+  // learner's completed items, so unlike the other quizzes they cannot come
+  // from a static bank.
+  const [generatedTest, setGeneratedTest] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -31,9 +299,13 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   const [selectedCards, setSelectedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
+  // Guards against the results effect awarding twice for one attempt.
+  const awardedRef = useRef(false);
 
   // Voice Over hook for accessibility
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
+
+  const ar = language === 'ar';
 
   /**
    * What the learner has finished, and so what a unit test could cover.
@@ -45,13 +317,37 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
     [userEmail, selectedQuizType]  // eslint-disable-line react-hooks/exhaustive-deps
   );
 
+  const hasEnoughCompleted = completed.total >= MIN_ITEMS;
+
   // Quiz Types
   const quizTypes = [
     {
       /**
-       * The unit test: the only quiz drawn from the learner's own completed
-       * material rather than a fixed bank. Listed first because it is the one
-       * whose score actually means something — the others can ask about
+       * Quick review: five questions from the learner's own completed items.
+       * Short on purpose — spaced, little-and-often recall is what moves
+       * things into long-term memory, and five questions is a length a
+       * learner with a short attention span will actually finish.
+       */
+      id: 'quick-review',
+      nameEn: 'Quick Review',
+      nameAr: 'مراجعة سريعة',
+      icon: '⚡',
+      color: '#10b981',
+      description: hasEnoughCompleted
+        ? `${QUICK_REVIEW_SIZE} quick questions on what you have learned`
+        : `Finish at least ${MIN_ITEMS} items in a lesson to open this`,
+      descriptionAr: hasEnoughCompleted
+        ? `${QUICK_REVIEW_SIZE} أسئلة سريعة عمّا تعلمته`
+        : `أكمل ${MIN_ITEMS} عناصر على الأقل في درس لفتح هذا`,
+      category: 'quiz',
+      noTopic: true,
+      locked: !hasEnoughCompleted,
+      featured: true
+    },
+    {
+      /**
+       * The unit test: the only full test drawn from the learner's own
+       * completed material rather than a fixed bank. The others can ask about
        * letters and words the learner has never been shown.
        */
       id: 'unit-test',
@@ -59,12 +355,16 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       nameAr: 'اختبار الوحدة',
       icon: '📋',
       color: '#0ea5e9',
-      description: completed.total >= MIN_ITEMS
+      description: hasEnoughCompleted
         ? `Only what you have finished — ${completed.total} items so far`
         : `Finish at least ${MIN_ITEMS} items in a lesson to open this`,
+      descriptionAr: hasEnoughCompleted
+        ? `فقط ما أكملته — ${completed.total} عنصراً حتى الآن`
+        : `أكمل ${MIN_ITEMS} عناصر على الأقل في درس لفتح هذا`,
       category: 'quiz',
-      noTopic: true,                    // it spans every module at once
-      locked: completed.total < MIN_ITEMS
+      noTopic: true,
+      locked: !hasEnoughCompleted,
+      featured: true
     },
     {
       id: 'multiple-choice',
@@ -73,6 +373,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '✓',
       color: '#6366f1',
       description: 'Choose the correct answer from options',
+      descriptionAr: 'اختر الإجابة الصحيحة من الخيارات',
       category: 'quiz'
     },
     {
@@ -82,6 +383,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '🔤',
       color: '#8b5cf6',
       description: 'Arrange letters to form the correct word',
+      descriptionAr: 'رتب الحروف لتكوين الكلمة الصحيحة',
       category: 'quiz'
     },
     {
@@ -91,6 +393,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '🔗',
       color: '#ec4899',
       description: 'Match Arabic words with their English translations',
+      descriptionAr: 'طابق الكلمات العربية مع معانيها',
       category: 'quiz'
     },
     {
@@ -100,6 +403,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '📝',
       color: '#10b981',
       description: 'Complete the sentence with the correct word',
+      descriptionAr: 'أكمل الجملة بالكلمة الصحيحة',
       category: 'quiz'
     },
     {
@@ -109,6 +413,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '🧠',
       color: '#f59e0b',
       description: 'Recall the meaning from memory',
+      descriptionAr: 'تذكّر المعنى من الذاكرة',
       category: 'quiz'
     },
     {
@@ -118,6 +423,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '🧠',
       color: '#8b5cf6',
       description: 'Match pictures with words',
+      descriptionAr: 'طابق الصور مع الكلمات',
       category: 'game',
       isGame: true
     },
@@ -128,6 +434,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '🎨',
       color: '#667eea',
       description: 'Learn colors by matching',
+      descriptionAr: 'تعلم الألوان بالمطابقة',
       category: 'game',
       isGame: true
     },
@@ -138,214 +445,23 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       icon: '🔢',
       color: '#f97316',
       description: 'Learn numbers by counting',
+      descriptionAr: 'تعلم الأرقام بالعدّ',
       category: 'game',
       isGame: true
     }
   ];
 
-  // Topics with content for quizzes
-  const topics = [
-    {
-      id: 'alphabet',
-      nameEn: 'Alphabet',
-      nameAr: 'الحروف',
-      icon: '🔤',
-      color: '#6366f1'
-    },
-    {
-      id: 'words',
-      nameEn: 'Words',
-      nameAr: 'الكلمات',
-      icon: '📚',
-      color: '#8b5cf6'
-    },
-    {
-      id: 'sentences',
-      nameEn: 'Sentences',
-      nameAr: 'الجمل',
-      icon: '💬',
-      color: '#ec4899'
-    },
-    {
-      id: 'colors',
-      nameEn: 'Colors',
-      nameAr: 'الألوان',
-      icon: '🎨',
-      color: '#10b981'
-    }
-  ];
-
-  // Quiz content database
-  const quizContent = {
-    alphabet: {
-      multipleChoice: [
-        { question: 'What is the sound of "ب"?', arabic: 'ب', options: ['ba', 'ta', 'tha', 'ja'], correct: 0 },
-        { question: 'What is the sound of "ت"?', arabic: 'ت', options: ['ba', 'ta', 'tha', 'ja'], correct: 1 },
-        { question: 'What is the sound of "ث"?', arabic: 'ث', options: ['ba', 'ta', 'tha', 'ja'], correct: 2 },
-        { question: 'What is the sound of "ج"?', arabic: 'ج', options: ['ba', 'ta', 'tha', 'ja'], correct: 3 },
-        { question: 'What is the sound of "ح"?', arabic: 'ح', options: ['ha', 'kha', 'dal', 'dhal'], correct: 0 }
-      ],
-      scrambledWords: [
-        { word: 'alif', scrambled: 'flia', arabic: 'أ', hint: 'First letter of Arabic alphabet' },
-        { word: 'ba', scrambled: 'ab', arabic: 'ب', hint: 'Second letter of Arabic alphabet' },
-        { word: 'ta', scrambled: 'at', arabic: 'ت', hint: 'Third letter of Arabic alphabet' },
-        { word: 'tha', scrambled: 'aht', arabic: 'ث', hint: 'Fourth letter of Arabic alphabet' },
-        { word: 'jeem', scrambled: 'mejе', arabic: 'ج', hint: 'Fifth letter of Arabic alphabet' }
-      ],
-      recall: [
-        { arabic: 'أ', english: 'alif', hint: 'First letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 0 },
-        { arabic: 'ب', english: 'ba', hint: 'Second letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 1 },
-        { arabic: 'ت', english: 'ta', hint: 'Third letter', options: ['alif', 'ba', 'ta', 'tha'], correct: 2 },
-        { arabic: 'ث', english: 'tha', hint: 'Fourth letter', options: ['ba', 'ta', 'tha', 'jeem'], correct: 2 },
-        { arabic: 'ج', english: 'jeem', hint: 'Fifth letter', options: ['tha', 'jeem', 'ha', 'kha'], correct: 1 }
-      ],
-      fillBlanks: [
-        { sentence: 'The first letter of Arabic is _____.', arabic: 'أ', options: ['alif', 'ba', 'ta', 'tha'], correct: 0 },
-        { sentence: 'The sound "ba" is written as _____.', arabic: 'ب', options: ['أ', 'ب', 'ت', 'ث'], correct: 1 },
-        { sentence: 'The third letter is pronounced _____.', arabic: 'ت', options: ['alif', 'ba', 'ta', 'tha'], correct: 2 },
-        { sentence: 'The letter ث sounds like _____.', arabic: 'ث', options: ['ba', 'ta', 'tha', 'jeem'], correct: 2 },
-        { sentence: 'The fifth Arabic letter is _____.', arabic: 'ج', options: ['tha', 'jeem', 'ha', 'kha'], correct: 1 }
-      ],
-      matching: [
-        { arabic: 'أ', english: 'alif' },
-        { arabic: 'ب', english: 'ba' },
-        { arabic: 'ت', english: 'ta' },
-        { arabic: 'ث', english: 'tha' },
-        { arabic: 'ج', english: 'jeem' },
-        { arabic: 'ح', english: 'ha' }
-      ]
-    },
-    words: {
-      multipleChoice: [
-        { question: 'What does "كِتَاب" mean?', arabic: 'كِتَاب', options: ['Book', 'Pen', 'Learn', 'Reading'], correct: 0 },
-        { question: 'What does "قَلَم" mean?', arabic: 'قَلَم', options: ['Book', 'Pen', 'Learn', 'Reading'], correct: 1 },
-        { question: 'What does "مَاء" mean?', arabic: 'مَاء', options: ['Food', 'Water', 'Home', 'Family'], correct: 1 },
-        { question: 'What does "سَعِيد" mean?', arabic: 'سَعِيد', options: ['Sad', 'Happy', 'Angry', 'Tired'], correct: 1 },
-        { question: 'What does "بَيْت" mean?', arabic: 'بَيْت', options: ['School', 'Home', 'Car', 'Tree'], correct: 1 }
-      ],
-      scrambledWords: [
-        { word: 'book', scrambled: 'koob', arabic: 'كِتَاب', hint: 'Reading material' },
-        { word: 'pen', scrambled: 'nep', arabic: 'قَلَم', hint: 'Writing tool' },
-        { word: 'water', scrambled: 'retaw', arabic: 'مَاء', hint: 'Drink this' },
-        { word: 'home', scrambled: 'emoh', arabic: 'بَيْت', hint: 'Where you live' },
-        { word: 'happy', scrambled: 'yppah', arabic: 'سَعِيد', hint: 'Feeling good' }
-      ],
-      recall: [
-        { arabic: 'كِتَاب', english: 'book', hint: 'Reading material', options: ['book', 'pen', 'water', 'home'], correct: 0 },
-        { arabic: 'قَلَم', english: 'pen', hint: 'Writing tool', options: ['book', 'pen', 'water', 'home'], correct: 1 },
-        { arabic: 'مَاء', english: 'water', hint: 'Drink this', options: ['food', 'water', 'home', 'happy'], correct: 1 },
-        { arabic: 'بَيْت', english: 'home', hint: 'Where you live', options: ['school', 'home', 'car', 'tree'], correct: 1 },
-        { arabic: 'طَعَام', english: 'food', hint: 'You eat this', options: ['water', 'food', 'pen', 'book'], correct: 1 }
-      ],
-      fillBlanks: [
-        { sentence: 'I read a _____ every day.', arabic: 'كِتَاب', options: ['book', 'pen', 'car', 'tree'], correct: 0 },
-        { sentence: 'I write with a _____.', arabic: 'قَلَم', options: ['book', 'pen', 'car', 'tree'], correct: 1 },
-        { sentence: 'I drink _____ when thirsty.', arabic: 'مَاء', options: ['food', 'water', 'milk', 'juice'], correct: 1 },
-        { sentence: 'I live in a _____.', arabic: 'بَيْت', options: ['car', 'home', 'school', 'park'], correct: 1 },
-        { sentence: 'I am _____ today!', arabic: 'سَعِيد', options: ['sad', 'happy', 'angry', 'tired'], correct: 1 }
-      ],
-      matching: [
-        { arabic: 'كِتَاب', english: 'book' },
-        { arabic: 'قَلَم', english: 'pen' },
-        { arabic: 'مَاء', english: 'water' },
-        { arabic: 'بَيْت', english: 'home' },
-        { arabic: 'طَعَام', english: 'food' },
-        { arabic: 'سَعِيد', english: 'happy' }
-      ]
-    },
-    sentences: {
-      multipleChoice: [
-        { question: 'What does "السَّلَامُ عَلَيْكُم" mean?', arabic: 'السَّلَامُ عَلَيْكُم', options: ['Peace be upon you', 'Good morning', 'Thank you', 'Goodbye'], correct: 0 },
-        { question: 'What does "شُكْرًا" mean?', arabic: 'شُكْرًا', options: ['Hello', 'Goodbye', 'Thank you', 'Please'], correct: 2 },
-        { question: 'What does "مَعَ السَّلَامَة" mean?', arabic: 'مَعَ السَّلَامَة', options: ['Hello', 'Goodbye', 'Thank you', 'Please'], correct: 1 },
-        { question: 'What does "صَبَاحُ الخَيْر" mean?', arabic: 'صَبَاحُ الخَيْر', options: ['Good morning', 'Good night', 'Good afternoon', 'Good evening'], correct: 0 },
-        { question: 'What does "كَيْفَ حَالُك" mean?', arabic: 'كَيْفَ حَالُك', options: ['What is your name?', 'How are you?', 'Where are you?', 'What time is it?'], correct: 1 }
-      ],
-      scrambledWords: [
-        { word: 'hello', scrambled: 'olleh', arabic: 'مَرْحَبًا', hint: 'Greeting' },
-        { word: 'thanks', scrambled: 'sknath', arabic: 'شُكْرًا', hint: 'Express gratitude' },
-        { word: 'goodbye', scrambled: 'eydboog', arabic: 'مَعَ السَّلَامَة', hint: 'Farewell' },
-        { word: 'please', scrambled: 'esaelp', arabic: 'مِن فَضْلِك', hint: 'Polite request' },
-        { word: 'welcome', scrambled: 'emoclew', arabic: 'أَهْلًا وَسَهْلًا', hint: 'Greeting guests' }
-      ],
-      recall: [
-        { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you', hint: 'Islamic greeting', options: ['peace be upon you', 'good morning', 'thank you', 'goodbye'], correct: 0 },
-        { arabic: 'شُكْرًا', english: 'thank you', hint: 'Express gratitude', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 2 },
-        { arabic: 'مَرْحَبًا', english: 'hello', hint: 'Greeting', options: ['hello', 'goodbye', 'thank you', 'how are you'], correct: 0 },
-        { arabic: 'مَعَ السَّلَامَة', english: 'goodbye', hint: 'Farewell', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 1 },
-        { arabic: 'كَيْفَ حَالُك', english: 'how are you', hint: 'Ask about wellbeing', options: ['what is your name', 'how are you', 'where are you', 'what time is it'], correct: 1 }
-      ],
-      fillBlanks: [
-        { sentence: 'Muslims greet each other by saying _____.', arabic: 'السَّلَامُ عَلَيْكُم', options: ['peace be upon you', 'good morning', 'thank you', 'goodbye'], correct: 0 },
-        { sentence: 'To express gratitude, you say _____.', arabic: 'شُكْرًا', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 2 },
-        { sentence: 'When you meet someone, you say _____.', arabic: 'مَرْحَبًا', options: ['hello', 'goodbye', 'thank you', 'how are you'], correct: 0 },
-        { sentence: 'When leaving, you say _____.', arabic: 'مَعَ السَّلَامَة', options: ['hello', 'goodbye', 'thank you', 'please'], correct: 1 },
-        { sentence: 'To ask about wellbeing, say _____.', arabic: 'كَيْفَ حَالُك', options: ['what is your name', 'how are you', 'where are you', 'what time is it'], correct: 1 }
-      ],
-      matching: [
-        { arabic: 'السَّلَامُ عَلَيْكُم', english: 'peace be upon you' },
-        { arabic: 'شُكْرًا', english: 'thank you' },
-        { arabic: 'مَرْحَبًا', english: 'hello' },
-        { arabic: 'مَعَ السَّلَامَة', english: 'goodbye' },
-        { arabic: 'صَبَاحُ الخَيْر', english: 'good morning' },
-        { arabic: 'كَيْفَ حَالُك', english: 'how are you' }
-      ]
-    },
-    colors: {
-      multipleChoice: [
-        { question: 'What color is "أَحْمَر"?', arabic: 'أَحْمَر', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 1 },
-        { question: 'What color is "أَزْرَق"?', arabic: 'أَزْرَق', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 0 },
-        { question: 'What color is "أَخْضَر"?', arabic: 'أَخْضَر', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 2 },
-        { question: 'What color is "أَصْفَر"?', arabic: 'أَصْفَر', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 3 },
-        { question: 'What color is "أَبْيَض"?', arabic: 'أَبْيَض', options: ['White', 'Black', 'Brown', 'Pink'], correct: 0 }
-      ],
-      scrambledWords: [
-        { word: 'red', scrambled: 'der', arabic: 'أَحْمَر', hint: 'Color of apple' },
-        { word: 'blue', scrambled: 'eulb', arabic: 'أَزْرَق', hint: 'Color of sky' },
-        { word: 'green', scrambled: 'neerg', arabic: 'أَخْضَر', hint: 'Color of grass' },
-        { word: 'yellow', scrambled: 'wolley', arabic: 'أَصْفَر', hint: 'Color of sun' },
-        { word: 'white', scrambled: 'etihw', arabic: 'أَبْيَض', hint: 'Color of snow' }
-      ],
-      recall: [
-        { arabic: 'أَحْمَر', english: 'red', hint: 'Color of apple', options: ['blue', 'red', 'green', 'yellow'], correct: 1 },
-        { arabic: 'أَزْرَق', english: 'blue', hint: 'Color of sky', options: ['blue', 'red', 'green', 'yellow'], correct: 0 },
-        { arabic: 'أَخْضَر', english: 'green', hint: 'Color of grass', options: ['blue', 'red', 'green', 'yellow'], correct: 2 },
-        { arabic: 'أَصْفَر', english: 'yellow', hint: 'Color of sun', options: ['blue', 'red', 'green', 'yellow'], correct: 3 },
-        { arabic: 'أَبْيَض', english: 'white', hint: 'Color of snow', options: ['white', 'black', 'brown', 'pink'], correct: 0 }
-      ],
-      fillBlanks: [
-        { sentence: 'An apple is _____ in color.', arabic: 'أَحْمَر', options: ['blue', 'red', 'green', 'yellow'], correct: 1 },
-        { sentence: 'The sky is _____.', arabic: 'أَزْرَق', options: ['blue', 'red', 'green', 'yellow'], correct: 0 },
-        { sentence: 'Grass is _____.', arabic: 'أَخْضَر', options: ['blue', 'red', 'green', 'yellow'], correct: 2 },
-        { sentence: 'The sun is _____.', arabic: 'أَصْفَر', options: ['blue', 'red', 'green', 'yellow'], correct: 3 },
-        { sentence: 'Snow is _____.', arabic: 'أَبْيَض', options: ['white', 'black', 'brown', 'pink'], correct: 0 }
-      ],
-      matching: [
-        { arabic: 'أَحْمَر', english: 'red' },
-        { arabic: 'أَزْرَق', english: 'blue' },
-        { arabic: 'أَخْضَر', english: 'green' },
-        { arabic: 'أَصْفَر', english: 'yellow' },
-        { arabic: 'أَبْيَض', english: 'white' },
-        { arabic: 'أَسْوَد', english: 'black' }
-      ]
-    }
-  };
+  const describe = (type) => (ar ? type.descriptionAr || type.description : type.description);
+  const isGenerated = selectedQuizType ? GENERATED_TYPES.includes(selectedQuizType.id) : false;
 
   // Scramble letters for scrambled quiz
-  const scrambleWord = (word) => {
-    const letters = word.split('');
-    for (let i = letters.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [letters[i], letters[j]] = [letters[j], letters[i]];
-    }
-    return letters;
-  };
+  const scrambleWord = (word) => shuffle(word.split(''));
 
   // Generate matching pairs for matching game
   const generateMatchingGame = () => {
     if (!selectedTopic) return;
 
-    const matchingContent = quizContent[selectedTopic.id]?.matching;
+    const matchingContent = QUIZ_CONTENT[selectedTopic.id]?.matching;
     if (!matchingContent) return;
 
     const pairs = [];
@@ -356,87 +472,115 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       );
     });
 
-    // Shuffle the pairs
-    const shuffled = pairs.sort(() => Math.random() - 0.5);
-    setMatchingPairs(shuffled);
+    setMatchingPairs(shuffle(pairs));
     setMatchedPairs([]);
     setSelectedCards([]);
+    setAnswers([]);
+    setScore(0);
   };
 
   // Award points and save quiz history when quiz is completed
   useEffect(() => {
-    if (showResults && userEmail && answers.length > 0) {
-      const totalQuestions = answers.length;
-      const percentage = Math.round((score / totalQuestions) * 100);
+    if (!showResults || !userEmail || answers.length === 0 || awardedRef.current) return;
+    awardedRef.current = true;
 
+    const totalQuestions = answers.length;
+    const percentage = Math.round((score / totalQuestions) * 100);
+    const isMatching = selectedQuizType?.id === 'matching';
+
+    if (isMatching) {
+      // Matching cannot be failed, so it pays per pair plus a completion
+      // bonus rather than the "perfect score" bonus a real test earns.
+      awardPoints(userEmail, 'MEMORY_PAIR_FOUND', score);
+      awardPoints(userEmail, 'QUIZ_COMPLETED');
+    } else {
       // Award points based on performance
       if (percentage === 100) {
         awardPoints(userEmail, 'QUIZ_PERFECT_SCORE');
-        console.log('Awarded QUIZ_PERFECT_SCORE points');
-      } else if (percentage >= 70) {
+      } else if (percentage >= PASS_PERCENT) {
         awardPoints(userEmail, 'QUIZ_COMPLETED');
-        console.log('Awarded QUIZ_COMPLETED points');
       }
-
       // Award points for each correct answer
-      awardPoints(userEmail, 'QUIZ_QUESTION_CORRECT', score);
-
-      // Quiz badges. `checkAchievements` existed but was never called from
-      // anywhere, so `first_quiz`, `perfect_quiz` and `quiz_master` could not
-      // be earned at all — the gallery listed three achievements nobody could
-      // ever unlock.
-      try {
-        const quizKey = `stellar_quiz_history_${userEmail}`;
-        const history = JSON.parse(localStorage.getItem(quizKey) || '[]');
-        checkAchievements(userEmail, 'quiz_completed', {
-          score: percentage,
-          totalQuizzes: history.length + 1,
-          perfectQuizCount: history.filter((h) => h.score === 100).length
-            + (percentage === 100 ? 1 : 0),
-          // No per-quiz timer exists, so the speed badge is left unclaimed
-          // rather than awarded on a number that is not measured.
-          completionTime: Infinity
-        });
-      } catch (e) {
-        console.error('Error checking quiz achievements:', e);
-      }
-
-      // Save quiz result to history
-      try {
-        const quizKey = `stellar_quiz_history_${userEmail}`;
-        const existing = JSON.parse(localStorage.getItem(quizKey) || '[]');
-        const result = {
-          quizName: selectedQuizType?.nameEn
-            ? `${selectedQuizType.nameEn}${selectedTopic ? ` - ${selectedTopic.nameEn || selectedTopic.id}` : ''}`
-            : 'Quiz',
-          score: percentage,
-          correctAnswers: score,
-          totalQuestions,
-          completedAt: new Date().toISOString()
-        };
-        existing.unshift(result); // newest first
-        localStorage.setItem(quizKey, JSON.stringify(existing.slice(0, 50))); // keep last 50
-      } catch (e) {
-        console.error('Error saving quiz history:', e);
+      if (score > 0) awardPoints(userEmail, 'QUIZ_QUESTION_CORRECT', score);
+      // Passing the unit test is the milestone the curriculum is built around.
+      if (selectedQuizType?.id === 'unit-test' && percentage >= PASS_PERCENT) {
+        awardPoints(userEmail, 'TEST_PASSED');
       }
     }
+
+    // One celebration, at the end, when it was earned — not one per answer.
+    if (percentage >= PASS_PERCENT) setShowCelebration(true);
+
+    // Quiz badges. `checkAchievements` existed but was never called from
+    // anywhere, so `first_quiz`, `perfect_quiz` and `quiz_master` could not
+    // be earned at all.
+    const quizKey = `stellar_quiz_history_${userEmail}`;
+    try {
+      const history = JSON.parse(localStorage.getItem(quizKey) || '[]');
+      checkAchievements(userEmail, 'quiz_completed', {
+        score: percentage,
+        totalQuizzes: history.length + 1,
+        perfectQuizCount: history.filter((h) => h.score === 100).length
+          + (percentage === 100 ? 1 : 0),
+        // No per-quiz timer exists, so the speed badge is left unclaimed
+        // rather than awarded on a number that is not measured. A timer
+        // would also reward rushing, which is the opposite of what these
+        // learners need.
+        completionTime: Infinity
+      });
+    } catch (e) {
+      console.error('Error checking quiz achievements:', e);
+    }
+
+    // Save quiz result to history
+    try {
+      const existing = JSON.parse(localStorage.getItem(quizKey) || '[]');
+      const result = {
+        quizName: selectedQuizType?.nameEn
+          ? `${selectedQuizType.nameEn}${selectedTopic && !selectedQuizType.noTopic ? ` - ${selectedTopic.nameEn || selectedTopic.id}` : ''}`
+          : 'Quiz',
+        score: percentage,
+        correctAnswers: score,
+        totalQuestions,
+        completedAt: new Date().toISOString()
+      };
+      existing.unshift(result); // newest first
+      localStorage.setItem(quizKey, JSON.stringify(existing.slice(0, 50))); // keep last 50
+    } catch (e) {
+      console.error('Error saving quiz history:', e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showResults, userEmail, score, answers]);
 
   // Initialize scrambled letters when starting scrambled quiz
   useEffect(() => {
     if (selectedQuizType?.id === 'scrambled-letters' && selectedTopic && currentQuestionIndex >= 0) {
-      const content = quizContent[selectedTopic.id]?.scrambledWords;
+      const content = QUIZ_CONTENT[selectedTopic.id]?.scrambledWords;
       if (content && content[currentQuestionIndex]) {
-        const word = content[currentQuestionIndex].word;
-        setScrambledLetters(scrambleWord(word));
+        setScrambledLetters(scrambleWord(scrambleTarget(content[currentQuestionIndex], language)));
         setUserAnswer('');
       }
     } else if (selectedQuizType?.id === 'matching' && selectedTopic) {
       generateMatchingGame();
     }
-  }, [selectedQuizType, selectedTopic, currentQuestionIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedQuizType, selectedTopic, currentQuestionIndex, language]);
+
+  const startGenerated = (typeId) => {
+    const generated = typeId === 'quick-review'
+      ? buildQuickReview(userEmail, language)
+      : buildUnitTest(userEmail, language);
+    setGeneratedTest(generated);
+    // A synthetic topic keeps the rest of this screen (progress bar, score,
+    // back button, results) working unchanged.
+    setSelectedTopic(typeId === 'quick-review'
+      ? { id: 'quick-review', nameEn: 'Quick Review', nameAr: 'مراجعة سريعة', icon: '⚡', color: '#10b981' }
+      : { id: 'unit-test', nameEn: 'Your Unit Test', nameAr: 'اختبار وحدتك', icon: '📋', color: '#0ea5e9' });
+  };
 
   const handleQuizTypeSelect = (type) => {
+    playClickSound();
+
     // If it's a game, navigate to the game section instead
     if (type.isGame && onSectionSelect) {
       onSectionSelect(type.id);
@@ -445,7 +589,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
     if (type.locked) {
       voiceOver.speak(
-        language === 'ar'
+        ar
           ? `أكمل ${MIN_ITEMS} عناصر على الأقل في أي درس لفتح هذا الاختبار`
           : `Finish at least ${MIN_ITEMS} items in a lesson to open this test`,
         true
@@ -457,26 +601,17 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
     setSelectedTopic(null);
     resetQuiz();
 
-    // The unit test has no topic step — it already spans every module — so it
-    // is generated the moment it is chosen.
-    if (type.id === 'unit-test') {
-      const generated = buildUnitTest(userEmail, language);
-      setUnitTest(generated);
-      // A synthetic topic keeps the rest of this screen (progress bar, score,
-      // back button, results) working unchanged.
-      setSelectedTopic({
-        id: 'unit-test',
-        nameEn: 'Your Unit Test',
-        nameAr: 'اختبار وحدتك',
-        icon: '📋',
-        color: '#0ea5e9'
-      });
+    // The generated tests have no topic step — they already span every
+    // module — so they are built the moment they are chosen.
+    if (GENERATED_TYPES.includes(type.id)) {
+      startGenerated(type.id);
     } else {
-      setUnitTest(null);
+      setGeneratedTest(null);
     }
   };
 
   const handleTopicSelect = (topic) => {
+    playClickSound();
     // A test topic is locked for exactly as long as its lesson is: a quiz you
     // have not been taught the material for is only a way to fail.
     if (!isTopicUnlocked(userEmail, topic.id, userRole)) {
@@ -489,6 +624,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   };
 
   const resetQuiz = () => {
+    awardedRef.current = false;
     setCurrentQuestionIndex(0);
     setScore(0);
     setAnswers([]);
@@ -500,6 +636,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
     setMatchingPairs([]);
     setSelectedCards([]);
     setMatchedPairs([]);
+    setShowCelebration(false);
   };
 
   const handleCardClick = (card) => {
@@ -508,6 +645,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
     // Don't allow clicking the same card twice
     if (selectedCards.some(c => c.id === card.id)) return;
+
+    playClickSound();
+    if (card.type === 'arabic') voiceOver.speak(card.content, true);
 
     const newSelected = [...selectedCards, card];
     setSelectedCards(newSelected);
@@ -518,20 +658,26 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       // Check if they match (same pairId but different types)
       if (first.pairId === second.pairId && first.type !== second.type) {
         // Match found!
+        playCorrectSound();
         setTimeout(() => {
-          setMatchedPairs([...matchedPairs, first.id, second.id]);
+          const nextMatched = [...matchedPairs, first.id, second.id];
+          setMatchedPairs(nextMatched);
           setSelectedCards([]);
           setScore(score + 1);
 
-          // Check if all pairs are matched
-          if (matchedPairs.length + 2 === matchingPairs.length) {
-            setTimeout(() => {
-              setShowResults(true);
-            }, 500);
+          // Check if all pairs are matched. The results screen reads
+          // `answers.length` as the question count, which was never filled in
+          // for matching — so it divided by zero and showed "Infinity%", and
+          // the points effect (guarded on answers) never fired.
+          if (nextMatched.length === matchingPairs.length) {
+            const pairCount = matchingPairs.length / 2;
+            setAnswers(Array.from({ length: pairCount }, (_, i) => ({ questionIndex: i, correct: true })));
+            setTimeout(() => setShowResults(true), 500);
           }
         }, 500);
       } else {
         // No match
+        playWrongSound();
         setTimeout(() => {
           setSelectedCards([]);
         }, 1000);
@@ -542,31 +688,39 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   const isCardSelected = (card) => selectedCards.some(selected => selected.id === card.id);
   const isCardMatched = (card) => matchedPairs.includes(card.id);
 
-  const handleAnswerSelect = (answerIndex) => {
+  /** The question bank in play, with per-language shaping applied. */
+  const getContent = () => {
+    if (!selectedQuizType || !selectedTopic) return null;
+    if (isGenerated) return generatedTest?.questions || null;
+    const bank = QUIZ_CONTENT[selectedTopic.id];
+    if (!bank) return null;
+    if (selectedQuizType.id === 'multiple-choice') return bank.multipleChoice;
+    if (selectedQuizType.id === 'fill-blanks') return bank.fillBlanks;
+    if (selectedQuizType.id === 'recall') return bank.recall;
+    if (selectedQuizType.id === 'scrambled-letters') return bank.scrambledWords;
+    return null;
+  };
+
+  const handleAnswerSelect = (answerIndex, correctIndexOverride = null) => {
     if (showFeedback) return; // Prevent multiple selections
 
     setSelectedAnswer(answerIndex);
 
-    // Get current question content
-    let content;
-    if (selectedQuizType.id === 'unit-test') {
-      content = unitTest?.questions;
-    } else if (selectedQuizType.id === 'multiple-choice') {
-      content = quizContent[selectedTopic.id]?.multipleChoice;
-    } else if (selectedQuizType.id === 'fill-blanks') {
-      content = quizContent[selectedTopic.id]?.fillBlanks;
-    } else if (selectedQuizType.id === 'recall') {
-      content = quizContent[selectedTopic.id]?.recall;
-    }
-
+    const content = getContent();
     if (content && content[currentQuestionIndex]) {
-      const correct = content[currentQuestionIndex].correct === answerIndex;
+      const correctIndex = correctIndexOverride ?? content[currentQuestionIndex].correct;
+      const correct = correctIndex === answerIndex;
       setIsCorrect(correct);
       setShowFeedback(true);
 
+      // A chime and a spoken phrase per answer; the celebration popup waits
+      // for the results screen. A popup on every one of twelve questions was
+      // twelve interruptions in the middle of a test.
       if (correct) {
         setScore(score + 1);
-        setShowCelebration(true); // Show celebration!
+        playCorrectSound();
+      } else {
+        playWrongSound();
       }
       // Varied wording, so twenty answers in a row do not sound like a
       // recording — see speechPhrasing.js.
@@ -587,19 +741,20 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   };
 
   const handleScrambledSubmit = () => {
-    const content = quizContent[selectedTopic.id]?.scrambledWords;
+    const content = QUIZ_CONTENT[selectedTopic.id]?.scrambledWords;
     if (content && content[currentQuestionIndex]) {
-      const correct = userAnswer.toLowerCase().trim() === content[currentQuestionIndex].word.toLowerCase();
+      const target = scrambleTarget(content[currentQuestionIndex], language);
+      const correct = userAnswer.toLowerCase().trim() === target.toLowerCase();
       setIsCorrect(correct);
       setShowFeedback(true);
 
       if (correct) {
         setScore(score + 1);
-        setShowCelebration(true); // Show celebration!
-        voiceOver.speak(language === 'ar' ? 'صحيح! رائع' : 'Correct! Great job', true);
+        playCorrectSound();
       } else {
-        voiceOver.speak(language === 'ar' ? 'حاول مرة أخرى' : 'Try again', true);
+        playWrongSound();
       }
+      voiceOver.speak(answerPhrase({ language, correct }), true);
 
       setAnswers([...answers, { questionIndex: currentQuestionIndex, correct }]);
 
@@ -616,17 +771,21 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
   const handleLetterClick = (letter, index) => {
     if (showFeedback) return;
+    playClickSound();
     setUserAnswer(userAnswer + letter);
     setScrambledLetters(scrambledLetters.filter((_, i) => i !== index));
   };
 
   const handleBackspace = () => {
     if (userAnswer.length > 0) {
+      playClickSound();
       const lastLetter = userAnswer[userAnswer.length - 1];
       setUserAnswer(userAnswer.slice(0, -1));
       setScrambledLetters([...scrambledLetters, lastLetter]);
     }
   };
+
+  const backLabel = ar ? 'رجوع' : 'Back';
 
   // Render Quiz Type Selection
   if (!selectedQuizType) {
@@ -642,10 +801,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
         >
           <h2 className="quiz-title">
             <span className="title-emoji" aria-hidden="true">🎯</span>{' '}
-            {language === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
+            {ar ? 'اختبر نفسك' : 'Test Yourself'}
           </h2>
           <p className="quiz-subtitle">
-            {language === 'ar'
+            {ar
               ? 'اختر اختباراً أو لعبة لبدء التعلم'
               : 'Select a quiz or game to start learning'}
           </p>
@@ -654,19 +813,19 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
         {/* Quizzes Section */}
         <div className="quiz-section">
           <h3 className="quiz-section-title">
-            {language === 'ar' ? '📝 الاختبارات' : '📝 Quizzes'}
+            {ar ? '📝 الاختبارات' : '📝 Quizzes'}
           </h3>
           <div className="quiz-types-grid">
             {quizOptions.map((type, index) => (
               <motion.div
                 key={type.id}
-                className={`quiz-type-card ${type.locked ? 'is-locked' : ''} ${type.id === 'unit-test' ? 'is-featured' : ''}`}
+                className={`quiz-type-card ${type.locked ? 'is-locked' : ''} ${type.featured ? 'is-featured' : ''}`}
                 role="button"
                 tabIndex={0}
                 aria-disabled={!!type.locked}
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.06 }}
                 onClick={() => handleQuizTypeSelect(type)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -680,14 +839,14 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                   {type.locked ? '🔒' : type.icon}
                 </div>
                 <h3 className="quiz-type-name">
-                  {language === 'ar' ? type.nameAr : type.nameEn}
+                  {ar ? type.nameAr : type.nameEn}
                 </h3>
                 <p className="quiz-type-description">
-                  {type.description}
+                  {describe(type)}
                 </p>
-                {type.id === 'unit-test' && !type.locked && (
+                {type.featured && !type.locked && (
                   <span className="quiz-type-tag">
-                    {language === 'ar' ? 'من تعلمك فقط' : 'From your learning only'}
+                    {ar ? 'من تعلمك فقط' : 'From your learning only'}
                   </span>
                 )}
               </motion.div>
@@ -698,27 +857,35 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
         {/* Interactive Games Section */}
         <div className="quiz-section">
           <h3 className="quiz-section-title">
-            {language === 'ar' ? '🎮 الألعاب التفاعلية' : '🎮 Interactive Games'}
+            {ar ? '🎮 الألعاب التفاعلية' : '🎮 Interactive Games'}
           </h3>
           <div className="quiz-types-grid">
             {gameOptions.map((type, index) => (
               <motion.div
                 key={type.id}
                 className="quiz-type-card"
-                initial={{ opacity: 0, scale: 0.9 }}
+                role="button"
+                tabIndex={0}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: (quizOptions.length + index) * 0.1 }}
+                transition={{ delay: (quizOptions.length + index) * 0.06 }}
                 onClick={() => handleQuizTypeSelect(type)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleQuizTypeSelect(type);
+                  }
+                }}
                 style={{ '--quiz-accent': type.color }}
               >
                 <div className="quiz-type-icon">
                   {type.icon}
                 </div>
                 <h3 className="quiz-type-name">
-                  {language === 'ar' ? type.nameAr : type.nameEn}
+                  {ar ? type.nameAr : type.nameEn}
                 </h3>
                 <p className="quiz-type-description">
-                  {type.description}
+                  {describe(type)}
                 </p>
               </motion.div>
             ))}
@@ -737,19 +904,19 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <button className="back-button" onClick={() => setSelectedQuizType(null)}>
-            ← {language === 'ar' ? 'رجوع' : 'Back'}
+          <button className="back-button" onClick={() => { playClickSound(); setSelectedQuizType(null); }}>
+            ← {backLabel}
           </button>
           <h2 className="quiz-title">
-            {language === 'ar' ? selectedQuizType.nameAr : selectedQuizType.nameEn}
+            {ar ? selectedQuizType.nameAr : selectedQuizType.nameEn}
           </h2>
           <p className="quiz-subtitle">
-            {language === 'ar' ? 'اختر موضوعًا' : 'Select a topic'}
+            {ar ? 'اختر موضوعًا' : 'Select a topic'}
           </p>
         </motion.div>
 
         <div className="topics-grid">
-          {topics.map((topic, index) => {
+          {TOPICS.map((topic, index) => {
             // A topic locks and unlocks with its lesson — see
             // moduleUnlockUtils.js. The reason replaces the name, so a locked
             // tile explains itself instead of just refusing to open.
@@ -766,9 +933,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                 tabIndex={0}
                 aria-disabled={locked}
                 title={reason || undefined}
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.06 }}
                 onClick={() => handleTopicSelect(topic)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -782,7 +949,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                   {locked ? '🔒' : topic.icon}
                 </div>
                 <h3 className="topic-name">
-                  {language === 'ar' ? topic.nameAr : topic.nameEn}
+                  {ar ? topic.nameAr : topic.nameEn}
                 </h3>
                 {locked && <p className="topic-lock-reason">{reason}</p>}
               </motion.div>
@@ -796,23 +963,24 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   // Render Results
   if (showResults) {
     const totalQuestions = answers.length;
-    const percentage = Math.round((score / totalQuestions) * 100);
+    const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
     // The same threshold the curriculum uses to unlock the next module, read
     // from one place so the two can never disagree about what "passed" means.
     const passed = percentage >= PASS_PERCENT;
+    const missed = answers.filter((answer) => !answer.correct).length;
 
     return (
       <div className="quiz-center">
         <motion.div
           className="quiz-results"
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
           <div className="results-icon">
             {passed ? '🎉' : '📚'}
           </div>
           <h2 className="results-title">
-            {language === 'ar' ? 'النتيجة النهائية' : 'Test Complete!'}
+            {ar ? 'النتيجة النهائية' : 'Test Complete!'}
           </h2>
           <div className="results-score">
             <div className="score-circle" style={{ borderColor: passed ? '#10b981' : '#f59e0b' }}>
@@ -822,17 +990,26 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           </div>
           <p className="results-message">
             {passed
-              ? (language === 'ar' ? 'رائع! لقد نجحت!' : 'Great job! You passed!')
-              : (language === 'ar'
+              ? (ar ? 'رائع! لقد نجحت!' : 'Great job! You passed!')
+              : (ar
                   ? `تحتاج ${PASS_PERCENT}% للنجاح — حاول مرة أخرى!`
                   : `You need ${PASS_PERCENT}% to pass — give it another go!`)}
           </p>
 
-          {/* What the unit test actually covered. Without this the score is a
-              bare number with no scope attached. */}
-          {selectedQuizType.id === 'unit-test' && (
+          {/* Specific, non-judgemental: what to look at, not "you failed". */}
+          {!passed && missed > 0 && (
             <p className="results-coverage">
-              {language === 'ar'
+              {ar
+                ? `${missed} ${missed === 1 ? 'سؤال واحد' : 'أسئلة'} لم تُجب صحيحاً. ارجع إلى الدرس، ثم جرّب مرة أخرى.`
+                : `${missed} ${missed === 1 ? 'question' : 'questions'} to look at again. Revisit the lesson, then try once more.`}
+            </p>
+          )}
+
+          {/* What the generated test actually covered. Without this the score
+              is a bare number with no scope attached. */}
+          {isGenerated && (
+            <p className="results-coverage">
+              {ar
                 ? `بُني هذا الاختبار من ${completed.total} عنصراً أكملتها: ${completed.alphabet} حرفاً، ${completed.colors} لوناً، ${completed.words} كلمة، ${completed.sentences} جملة.`
                 : `Built from the ${completed.total} items you have finished: ${completed.alphabet} letters, ${completed.colors} colours, ${completed.words} words, ${completed.sentences} sentences.`}
             </p>
@@ -842,49 +1019,57 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
             <button
               className="btn btn-primary"
               onClick={() => {
+                playClickSound();
                 resetQuiz();
-                // A retake of the unit test is regenerated, not replayed: the
-                // learner may have finished more since, and a reshuffle stops
-                // it being the same paper twice.
-                if (selectedQuizType.id === 'unit-test') {
-                  setUnitTest(buildUnitTest(userEmail, language));
-                }
+                // A retake of a generated test is regenerated, not replayed:
+                // the learner may have finished more since, and a reshuffle
+                // stops it being the same paper twice.
+                if (isGenerated) startGenerated(selectedQuizType.id);
               }}
             >
-              {language === 'ar' ? 'إعادة المحاولة' : 'Try Again'}
+              {ar ? 'إعادة المحاولة' : 'Try Again'}
             </button>
             {!selectedQuizType.noTopic && (
-              <button className="btn btn-secondary" onClick={() => setSelectedTopic(null)}>
-                {language === 'ar' ? 'اختر موضوعًا آخر' : 'Choose Another Topic'}
+              <button className="btn btn-secondary" onClick={() => { playClickSound(); setSelectedTopic(null); }}>
+                {ar ? 'اختر موضوعًا آخر' : 'Choose Another Topic'}
               </button>
             )}
             <button
               className="btn btn-secondary"
               onClick={() => {
+                playClickSound();
                 setSelectedQuizType(null);
                 setSelectedTopic(null);
-                setUnitTest(null);
+                setGeneratedTest(null);
               }}
             >
-              {language === 'ar' ? 'العودة إلى الاختبارات' : 'Back to Tests'}
+              {ar ? 'العودة إلى الاختبارات' : 'Back to Tests'}
             </button>
           </div>
         </motion.div>
+
+        <CelebrationPopup
+          show={showCelebration}
+          language={language}
+          userEmail={userEmail}
+          message={ar ? 'أحسنت! نجحت في الاختبار' : 'You passed the test!'}
+          onClose={() => setShowCelebration(false)}
+        />
       </div>
     );
   }
 
   // Handle matching game separately
   if (selectedQuizType.id === 'matching') {
-    const matchingContent = quizContent[selectedTopic.id]?.matching;
+    const matchingContent = QUIZ_CONTENT[selectedTopic.id]?.matching;
 
     if (!matchingContent) {
       return (
         <div className="quiz-center">
           <div className="quiz-error">
-            <p>{language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet'}</p>
+            <p>{ar ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet'}</p>
             <button className="btn btn-primary" onClick={() => setSelectedTopic(null)}>
-              {language === 'ar' ? 'رجوع' : 'Go Back'}
+              {ar ? 'رجوع' : 'Go Back'}
             </button>
           </div>
         </div>
@@ -899,38 +1084,47 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           animate={{ opacity: 1 }}
         >
           <div className="quiz-progress-header">
-            <button className="back-button" onClick={() => setSelectedTopic(null)}>
-              ← {language === 'ar' ? 'رجوع' : 'Back'}
+            <button className="back-button" onClick={() => { playClickSound(); setSelectedTopic(null); }}>
+              ← {backLabel}
             </button>
             <h3 className="matching-title">
-              {language === 'ar' ? 'طابق الكلمات' : 'Match the Pairs'}
+              {ar ? 'طابق الكلمات' : 'Match the Pairs'}
             </h3>
             <div className="quiz-score-display">
-              <span className="score-label">{language === 'ar' ? 'النقاط:' : 'Score:'}</span>
+              <span className="score-label">{ar ? 'النقاط:' : 'Score:'}</span>
               <span className="score-value">{score}/{matchingContent.length}</span>
             </div>
           </div>
 
           <div className="matching-instructions">
-            {language === 'ar'
-              ? 'اضغط على البطاقات لمطابقة الكلمات العربية مع الإنجليزية'
+            {ar
+              ? 'اضغط على البطاقات لمطابقة الكلمات العربية مع معانيها'
               : 'Click on cards to match Arabic words with their English translations'
             }
           </div>
 
           <div className="matching-grid">
-            {matchingPairs.map((card) => (
+            {matchingPairs.map((card, cardIndex) => (
               <motion.div
                 key={card.id}
                 className={`matching-card ${
                   isCardSelected(card) ? 'selected' : ''
                 } ${isCardMatched(card) ? 'matched' : ''}`}
+                role="button"
+                tabIndex={isCardMatched(card) ? -1 : 0}
+                aria-pressed={isCardSelected(card)}
                 onClick={() => handleCardClick(card)}
-                whileHover={!isCardMatched(card) ? { y: -8, scale: 1.03 } : {}}
-                whileTap={!isCardMatched(card) ? { scale: 0.95 } : {}}
-                initial={{ opacity: 0, y: 20 }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleCardClick(card);
+                  }
+                }}
+                whileHover={!isCardMatched(card) ? { y: -6, scale: 1.02 } : {}}
+                whileTap={!isCardMatched(card) ? { scale: 0.96 } : {}}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: matchingPairs.indexOf(card) * 0.05 }}
+                transition={{ duration: 0.25, delay: cardIndex * 0.04 }}
               >
                 <div className="card-content">
                   {card.content}
@@ -953,63 +1147,28 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
               </motion.div>
             ))}
           </div>
-
-          {matchedPairs.length === matchingPairs.length && matchingPairs.length > 0 && (
-            <motion.div
-              className="game-complete"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <h3>{language === 'ar' ? '🎉 أحسنت! لعبة مكتملة' : '🎉 Well done! Game complete'}</h3>
-              <button
-                className="btn btn-primary"
-                onClick={generateMatchingGame}
-              >
-                {language === 'ar' ? 'العب مرة أخرى' : 'Play Again'}
-              </button>
-            </motion.div>
-          )}
         </motion.div>
       </div>
     );
   }
 
   // Render Quiz Questions
-  let content;
-  let currentQuestion;
-
-  if (selectedQuizType.id === 'unit-test') {
-    content = unitTest?.questions;
-    currentQuestion = content?.[currentQuestionIndex];
-  } else if (selectedQuizType.id === 'multiple-choice') {
-    content = quizContent[selectedTopic.id]?.multipleChoice;
-    currentQuestion = content?.[currentQuestionIndex];
-  } else if (selectedQuizType.id === 'scrambled-letters') {
-    content = quizContent[selectedTopic.id]?.scrambledWords;
-    currentQuestion = content?.[currentQuestionIndex];
-  } else if (selectedQuizType.id === 'recall') {
-    content = quizContent[selectedTopic.id]?.recall;
-    currentQuestion = content?.[currentQuestionIndex];
-  } else if (selectedQuizType.id === 'fill-blanks') {
-    content = quizContent[selectedTopic.id]?.fillBlanks;
-    currentQuestion = content?.[currentQuestionIndex];
-  }
+  const content = getContent();
+  const currentQuestion = content?.[currentQuestionIndex];
 
   if (!content || !currentQuestion) {
-    // The unit test fails differently from the fixed quizzes: there is nothing
-    // wrong with it, the learner just has not finished enough yet. Saying "not
-    // available" would read as a bug, so it says what to do instead.
-    const isUnitTest = selectedQuizType.id === 'unit-test';
-
+    // The generated tests fail differently from the fixed quizzes: there is
+    // nothing wrong with them, the learner just has not finished enough yet.
+    // Saying "not available" would read as a bug, so it says what to do.
     return (
       <div className="quiz-center">
         <div className="quiz-error">
           <p>
-            {isUnitTest
-              ? (language === 'ar'
+            {isGenerated
+              ? (ar
                   ? `أكمل ${MIN_ITEMS} عناصر على الأقل في أي درس، ثم سيبنى اختبارك منها.`
                   : `Finish at least ${MIN_ITEMS} items in any lesson, and your test will be built from them.`)
-              : (language === 'ar' ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet')}
+              : (ar ? 'هذا الاختبار غير متوفر حاليًا' : 'This test is not available yet')}
           </p>
           <button
             className="btn btn-primary"
@@ -1018,12 +1177,67 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
               setSelectedQuizType(null);
             }}
           >
-            {language === 'ar' ? 'رجوع' : 'Go Back'}
+            {ar ? 'رجوع' : 'Go Back'}
           </button>
         </div>
       </div>
     );
   }
+
+  const speakable = (text) => (
+    <div
+      className="arabic-display-large quiz-speakable"
+      role="button"
+      tabIndex={0}
+      title={ar ? 'انقر لسماع النطق' : 'Click to hear it'}
+      onClick={() => voiceOver.speak(text, true)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          voiceOver.speak(text, true);
+        }
+      }}
+    >
+      {text}
+      <span className="quiz-speak-hint" aria-hidden="true">🔊</span>
+    </div>
+  );
+
+  const renderOptions = (options, correctIndex) => (
+    <div className="options-grid">
+      {options.map((option, index) => (
+        <button
+          key={index}
+          className={`option-btn ${selectedAnswer === index ? (isCorrect ? 'correct' : 'incorrect') : ''} ${showFeedback && !isCorrect && index === correctIndex ? 'reveal' : ''}`}
+          onClick={() => handleAnswerSelect(index, correctIndex)}
+          disabled={showFeedback}
+        >
+          {option}
+          {/* Options that are Arabic script get their own phonetic line, so
+              choosing is not guesswork. */}
+          {transliterate(option) && (
+            <span className="option-phonetic">{transliterate(option)}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderFeedback = (correctAnswerText) => showFeedback && (
+    <motion.div
+      className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      {isCorrect
+        ? `✓ ${ar ? 'صحيح!' : 'Correct!'}`
+        : `${ar ? 'الإجابة الصحيحة: ' : 'The answer was: '}${correctAnswerText}`}
+    </motion.div>
+  );
+
+  const fillBlank = selectedQuizType.id === 'fill-blanks'
+    ? localizedFillBlank(selectedTopic.id, currentQuestion, currentQuestionIndex, language)
+    : null;
 
   return (
     <div className="quiz-center">
@@ -1034,8 +1248,8 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       >
         {/* Quiz Header */}
         <div className="quiz-progress-header">
-          <button className="back-button" onClick={() => setSelectedTopic(null)}>
-            ← {language === 'ar' ? 'رجوع' : 'Back'}
+          <button className="back-button" onClick={() => { playClickSound(); setSelectedTopic(null); }}>
+            ← {backLabel}
           </button>
           <div className="quiz-progress-bar">
             <div
@@ -1056,32 +1270,17 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
           <motion.div
             key={currentQuestionIndex}
             className="quiz-question-container"
-            initial={{ opacity: 0, x: 50 }}
+            initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.25 }}
           >
-            {/* Unit Test — generated from the learner's completed items. */}
-            {selectedQuizType.id === 'unit-test' && (
+            {/* Generated tests — built from the learner's completed items. */}
+            {isGenerated && (
               <div className="quiz-question">
                 {currentQuestion.promptArabic && (
                   <>
-                    <div
-                      className="arabic-display-large quiz-speakable"
-                      role="button"
-                      tabIndex={0}
-                      title={language === 'ar' ? 'انقر لسماع النطق' : 'Click to hear it'}
-                      onClick={() => voiceOver.speak(currentQuestion.promptArabic, true)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          voiceOver.speak(currentQuestion.promptArabic, true);
-                        }
-                      }}
-                    >
-                      {currentQuestion.promptArabic}
-                      <span className="quiz-speak-hint" aria-hidden="true">🔊</span>
-                    </div>
+                    {speakable(currentQuestion.promptArabic)}
                     {/* Phonetic spelling under every piece of Arabic script —
                         a learner who cannot read the script yet has no way in
                         without it. */}
@@ -1091,90 +1290,45 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                   </>
                 )}
                 <h3 className="question-text">{currentQuestion.prompt}</h3>
-                <div className="options-grid">
-                  {currentQuestion.options.map((option, index) => (
-                    <button
-                      key={index}
-                      className={`option-btn ${selectedAnswer === index ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
-                      onClick={() => handleAnswerSelect(index)}
-                      disabled={showFeedback}
-                    >
-                      {option}
-                      {/* Options that are Arabic script get their own
-                          phonetic line, so choosing is not guesswork. */}
-                      {transliterate(option) && (
-                        <span className="option-phonetic">{transliterate(option)}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                {showFeedback && (
-                  <motion.div
-                    className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    {isCorrect
-                      ? `✓ ${language === 'ar' ? 'صحيح!' : 'Correct!'}`
-                      : `✗ ${language === 'ar' ? 'الإجابة الصحيحة: ' : 'Correct answer: '}${currentQuestion.options[currentQuestion.correct]}`}
-                  </motion.div>
-                )}
+                {renderOptions(currentQuestion.options, currentQuestion.correct)}
+                {renderFeedback(currentQuestion.options[currentQuestion.correct])}
               </div>
             )}
 
             {/* Multiple Choice Quiz */}
             {selectedQuizType.id === 'multiple-choice' && (
               <div className="quiz-question">
-                <div className="arabic-display">
-                  {currentQuestion.arabic}
-                </div>
-                {/* Phonetic spelling, so the script is readable to a learner
-                    who has not learned to read it yet. */}
+                {speakable(currentQuestion.arabic)}
                 {transliterate(currentQuestion.arabic) && (
                   <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
                 )}
-                <h3 className="question-text">{currentQuestion.question}</h3>
-                <div className="options-grid">
-                  {currentQuestion.options.map((option, index) => (
-                    <button
-                      key={index}
-                      className={`option-btn ${selectedAnswer === index ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
-                      onClick={() => handleAnswerSelect(index)}
-                      disabled={showFeedback}
-                    >
-                      {option}
-                      {transliterate(option) && (
-                        <span className="option-phonetic">{transliterate(option)}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <h3 className="question-text">{questionText(selectedTopic.id, currentQuestion, language)}</h3>
+                {renderOptions(currentQuestion.options, currentQuestion.correct)}
+                {renderFeedback(currentQuestion.options[currentQuestion.correct])}
               </div>
             )}
 
             {/* Scrambled Letters Quiz */}
             {selectedQuizType.id === 'scrambled-letters' && (
               <div className="quiz-question scrambled-quiz">
-                <div className="arabic-display">
-                  {currentQuestion.arabic}
-                </div>
+                {speakable(currentQuestion.arabic)}
                 {transliterate(currentQuestion.arabic) && (
                   <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
                 )}
-                <p className="hint-text">💡 {currentQuestion.hint}</p>
+                <p className="hint-text">💡 {hintText(currentQuestion.hint, language)}</p>
                 <h3 className="question-text">
-                  {language === 'ar' ? 'رتب الحروف لتكوين الكلمة' : 'Arrange the letters to form the word'}
+                  {ar ? 'رتب الحروف لتكوين الكلمة' : 'Arrange the letters to form the word'}
                 </h3>
 
-                <div className="answer-display">
+                <div className={`answer-display ${ar ? 'answer-display--arabic' : ''}`} dir={ar ? 'rtl' : 'ltr'}>
                   {userAnswer || (
                     <span className="placeholder">
-                      {language === 'ar' ? 'اضغط على الحروف أدناه' : 'Click letters below'}
+                      {ar ? 'اضغط على الحروف أدناه' : 'Click letters below'}
                     </span>
                   )}
                 </div>
 
-                <div className="scrambled-letters">
+                <div className="scrambled-letters" dir={ar ? 'rtl' : 'ltr'}>
                   {scrambledLetters.map((letter, index) => (
                     <button
                       key={index}
@@ -1193,96 +1347,47 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
                     onClick={handleBackspace}
                     disabled={showFeedback || userAnswer.length === 0}
                   >
-                    ⌫ {language === 'ar' ? 'حذف' : 'Backspace'}
+                    ⌫ {ar ? 'حذف' : 'Backspace'}
                   </button>
                   <button
                     className="btn btn-primary"
                     onClick={handleScrambledSubmit}
                     disabled={showFeedback || userAnswer.length === 0}
                   >
-                    ✓ {language === 'ar' ? 'تحقق' : 'Check'}
+                    ✓ {ar ? 'تحقق' : 'Check'}
                   </button>
                 </div>
 
-                {showFeedback && (
-                  <motion.div
-                    className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    {isCorrect ? (
-                      <span>✓ {language === 'ar' ? 'صحيح!' : 'Correct!'}</span>
-                    ) : (
-                      <span>✗ {language === 'ar' ? `الإجابة الصحيحة: ${currentQuestion.word}` : `Correct answer: ${currentQuestion.word}`}</span>
-                    )}
-                  </motion.div>
-                )}
+                {renderFeedback(scrambleTarget(currentQuestion, language))}
               </div>
             )}
 
             {/* Recall Quiz - Multiple Choice */}
             {selectedQuizType.id === 'recall' && (
               <div className="quiz-question">
-                <div className="arabic-display-large">
-                  {currentQuestion.arabic}
-                </div>
+                {speakable(currentQuestion.arabic)}
                 {transliterate(currentQuestion.arabic) && (
                   <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
                 )}
-                <p className="hint-text">💡 {currentQuestion.hint}</p>
+                <p className="hint-text">💡 {hintText(currentQuestion.hint, language)}</p>
                 <h3 className="question-text">
-                  {language === 'ar' ? 'ما معنى هذه الكلمة؟' : 'What does this mean?'}
+                  {ar ? 'ما معنى هذه الكلمة؟' : 'What does this mean?'}
                 </h3>
-                <div className="options-grid">
-                  {currentQuestion.options.map((option, index) => (
-                    <button
-                      key={index}
-                      className={`option-btn ${selectedAnswer === index ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
-                      onClick={() => handleAnswerSelect(index)}
-                      disabled={showFeedback}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-                {showFeedback && (
-                  <motion.div
-                    className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                  >
-                    {isCorrect ? '✓ ' : '✗ '}
-                    {isCorrect
-                      ? (language === 'ar' ? 'صحيح!' : 'Correct!')
-                      : (language === 'ar' ? `الإجابة الصحيحة: ${currentQuestion.english}` : `Correct answer: ${currentQuestion.english}`)
-                    }
-                  </motion.div>
-                )}
+                {renderOptions(currentQuestion.options, currentQuestion.correct)}
+                {renderFeedback(currentQuestion.english)}
               </div>
             )}
 
             {/* Fill in the Blanks Quiz */}
-            {selectedQuizType.id === 'fill-blanks' && (
+            {selectedQuizType.id === 'fill-blanks' && fillBlank && (
               <div className="quiz-question">
-                <div className="arabic-display">
-                  {currentQuestion.arabic}
-                </div>
+                {speakable(currentQuestion.arabic)}
                 {transliterate(currentQuestion.arabic) && (
                   <div className="quiz-phonetic">{transliterate(currentQuestion.arabic)}</div>
                 )}
-                <h3 className="question-text">{currentQuestion.sentence}</h3>
-                <div className="options-grid">
-                  {currentQuestion.options.map((option, index) => (
-                    <button
-                      key={index}
-                      className={`option-btn ${selectedAnswer === index ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
-                      onClick={() => handleAnswerSelect(index)}
-                      disabled={showFeedback}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
+                <h3 className="question-text" dir={ar ? 'rtl' : 'ltr'}>{fillBlank.sentence}</h3>
+                {renderOptions(fillBlank.options, fillBlank.correct)}
+                {renderFeedback(fillBlank.options[fillBlank.correct])}
               </div>
             )}
           </motion.div>
@@ -1290,17 +1395,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
 
         {/* Score Display */}
         <div className="quiz-score-display">
-          <span className="score-label">{language === 'ar' ? 'النقاط:' : 'Score:'}</span>
+          <span className="score-label">{ar ? 'النقاط:' : 'Score:'}</span>
           <span className="score-value">{score}/{content.length}</span>
         </div>
       </motion.div>
-
-      {/* Celebration Popup */}
-      <CelebrationPopup
-        show={showCelebration}
-        language={language}
-        onClose={() => setShowCelebration(false)}
-      />
     </div>
   );
 };

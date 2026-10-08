@@ -73,16 +73,22 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
           highlight: '.learning-sections'
         },
         {
+          title: 'Your Next Step',
+          description: 'This button always takes you to the next lesson, and the ring shows how today is going. Five things a day is the goal.',
+          icon: '🎯',
+          highlight: '.home-hero-row'
+        },
+        {
           title: 'Track Your Progress',
           description: 'View your achievements, points, and learning streak in the Progress Dashboard.',
           icon: '📊',
           highlight: '.home-card--progress'
         },
         {
-          title: 'Smart Assistant',
-          description: 'Need help? Ask our AI assistant anything about Arabic language learning!',
-          icon: '🤖',
-          highlight: '.home-card--chat'
+          title: 'Make It Comfortable',
+          description: 'Too loud, too busy, too much movement? The Comfort button turns sounds, animations and celebrations down — or on. Calm mode does it all at once.',
+          icon: '🧘',
+          highlight: '.comfort-nav-btn'
         },
         {
           title: 'Settings & Profile',
@@ -129,16 +135,22 @@ const OnboardingTutorial = ({ language = 'en', onComplete }) => {
           highlight: '.learning-sections'
         },
         {
+          title: 'خطوتك التالية',
+          description: 'هذا الزر يأخذك دائماً إلى الدرس التالي، والحلقة تُظهر كيف يسير يومك. خمسة أنشطة في اليوم هي الهدف.',
+          icon: '🎯',
+          highlight: '.home-hero-row'
+        },
+        {
           title: 'تتبع تقدمك',
           description: 'شاهد إنجازاتك ونقاطك وسلسلة التعلم في لوحة التقدم.',
           icon: '📊',
           highlight: '.home-card--progress'
         },
         {
-          title: 'المساعد الذكي',
-          description: 'بحاجة إلى مساعدة؟ اسأل مساعدنا الذكي أي شيء عن تعلم اللغة العربية!',
-          icon: '🤖',
-          highlight: '.home-card--chat'
+          title: 'اجعله مريحاً',
+          description: 'صوت عالٍ؟ حركة كثيرة؟ زر الراحة يخفض الأصوات والحركات والاحتفالات — أو يرفعها. وضع الهدوء يفعل كل ذلك بضغطة واحدة.',
+          icon: '🧘',
+          highlight: '.comfort-nav-btn'
         },
         {
           title: 'الإعدادات والملف الشخصي',

@@ -42,6 +42,7 @@ const Leaderboard = ({ userEmail, language, onClose }) => {
 
   useEffect(() => {
     calculateLeaderboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeFilter, userEmail]);
 
   const calculateLeaderboard = () => {

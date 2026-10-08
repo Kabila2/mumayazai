@@ -889,3 +889,237 @@
 .dyslexia-friendly .word-meaning {
   font-weight: 700;
 }
+
+/* ============================================================================
+   ADDED 2026-10-07 — letter forms, the alphabet map, the learned summary and
+   the "practise writing" link. All scoped under .arabic-alphabet-learning.
+   ============================================================================ */
+
+/* Learned summary in the header */
+.arabic-alphabet-learning .alphabet-learned-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-pill);
+  box-shadow: var(--mz-shadow-sm);
+}
+
+.arabic-alphabet-learning .alphabet-learned-count {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--mz-accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.arabic-alphabet-learning .alphabet-learned-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mz-text-2);
+  white-space: nowrap;
+}
+
+.arabic-alphabet-learning .alphabet-learned-bar {
+  width: 90px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--mz-surface-3);
+  overflow: hidden;
+}
+
+.arabic-alphabet-learning .alphabet-learned-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--mz-accent-grad);
+  transition: width 0.4s ease;
+}
+
+/* Letter forms */
+.arabic-alphabet-learning .letter-forms {
+  margin: 6px 0 22px;
+  padding: 16px 14px 14px;
+  background: var(--mz-surface-2);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
+}
+
+.arabic-alphabet-learning .letter-forms-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--mz-text-2);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.arabic-alphabet-learning .letter-forms-note {
+  font-weight: 500;
+  color: var(--mz-text-3);
+}
+
+.arabic-alphabet-learning .letter-forms-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.arabic-alphabet-learning .letter-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+}
+
+.arabic-alphabet-learning .letter-form-glyph {
+  font-family: 'Amiri', 'Traditional Arabic', 'Cairo', 'Noto Kufi Arabic', serif !important;
+  font-size: 2.4rem;
+  line-height: 1.1;
+  color: var(--mz-accent-text);
+  direction: rtl;
+}
+
+.arabic-alphabet-learning .letter-form-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--mz-text-2);
+  text-align: center;
+}
+
+/* Practise writing link */
+.arabic-alphabet-learning .practice-writing-btn {
+  width: 100%;
+  padding: 12px 18px;
+  margin-top: 4px;
+  border: 2px solid var(--mz-warning);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-warning-soft);
+  color: var(--mz-warning);
+  font-size: 1rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.arabic-alphabet-learning .practice-writing-btn:hover {
+  background: var(--mz-warning);
+  color: #fff;
+}
+
+/* Alphabet map */
+.arabic-alphabet-learning .alphabet-overview {
+  max-width: 760px;
+  margin: 0 auto 10px;
+}
+
+.arabic-alphabet-learning .alphabet-overview-toggle {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface);
+  color: var(--mz-text);
+  font-size: 1rem;
+  box-shadow: var(--mz-shadow-sm);
+}
+
+.arabic-alphabet-learning .alphabet-overview-toggle:hover {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+}
+
+.arabic-alphabet-learning .alphabet-overview-hint {
+  margin-inline-start: auto;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--mz-text-2);
+}
+
+.arabic-alphabet-learning .alphabet-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  padding: 14px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius-lg);
+  box-shadow: var(--mz-shadow-sm);
+}
+
+.arabic-alphabet-learning .alphabet-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 1;
+  padding: 6px 4px;
+  border: 2px solid var(--mz-border);
+  border-radius: var(--mz-radius-md);
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.arabic-alphabet-learning .alphabet-tile:hover {
+  border-color: var(--mz-accent);
+  transform: translateY(-2px);
+}
+
+.arabic-alphabet-learning .alphabet-tile-letter {
+  font-family: 'Amiri', 'Traditional Arabic', 'Cairo', serif !important;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.arabic-alphabet-learning .alphabet-tile-name {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--mz-text-3);
+  text-transform: lowercase;
+}
+
+.arabic-alphabet-learning .alphabet-tile.is-learned {
+  border-color: var(--mz-success);
+  background: var(--mz-success-soft);
+}
+
+.arabic-alphabet-learning .alphabet-tile.is-active {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-grad);
+  color: #fff;
+}
+
+.arabic-alphabet-learning .alphabet-tile.is-active .alphabet-tile-name {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.arabic-alphabet-learning .alphabet-tile-tick {
+  position: absolute;
+  top: 3px;
+  inset-inline-end: 5px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--mz-success);
+}
+
+.arabic-alphabet-learning .alphabet-tile.is-active .alphabet-tile-tick {
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .arabic-alphabet-learning .letter-forms-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .arabic-alphabet-learning .alphabet-learned-bar {
+    display: none;
+  }
+}

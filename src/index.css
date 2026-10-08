@@ -70,9 +70,40 @@ body {
   bottom: 0;
 }
 
-/* 4. Force selected font on everything — overrides all component-level styles */
-*:not(.material-icons):not([class*="material-icons"]) {
+/* 4. Force the learner's chosen font on everything — overrides every
+   component-level font-family so the Appearance setting really is global.
+   Exempted: icon fonts, and the font-picker previews, which must render in
+   the font they are offering (with !important here they all looked identical,
+   so the picker was a row of four indistinguishable buttons). */
+*:not(.material-icons):not([class*="material-icons"]):not(.font-preview):not(.font-preview *):not(.onboarding-font-preview) {
   font-family: var(--font-sans) !important;
+}
+
+/* 6. Reading tint — a translucent colour wash over the whole page, chosen in
+   the Comfort panel. Many dyslexic readers find a pale tint reduces visual
+   stress and "swimming" text; it is the screen equivalent of a coloured
+   overlay sheet. Painted on body::after (body::before belongs to the reward
+   backgrounds), above everything, and it never catches a click. */
+html[data-stellar-tint]:not([data-stellar-tint="none"]) body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+html[data-stellar-tint="cream"] body::after { background: #fff3c4; }
+html[data-stellar-tint="peach"] body::after { background: #ffd9c7; }
+html[data-stellar-tint="mint"]  body::after { background: #d2f5e3; }
+html[data-stellar-tint="sky"]   body::after { background: #d6e9ff; }
+html[data-stellar-tint="lilac"] body::after { background: #e6dcff; }
+
+/* In dark mode a multiply tint only darkens; a soft overlay is what reads as
+   "warmer" there. */
+html.dark-mode[data-stellar-tint]:not([data-stellar-tint="none"]) body::after {
+  mix-blend-mode: soft-light;
+  opacity: 0.35;
 }
 
 /* 5. Gradient animation for chat-area background */

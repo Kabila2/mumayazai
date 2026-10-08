@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { motion } from "framer-motion";
 import Speech from 'speak-tts';
 import './ArabicAlphabetLearning.css';
 import PointNotification from './PointNotification';
@@ -9,6 +9,7 @@ import { useVoiceOver } from '../hooks/useVoiceOver';
 import { checkAchievements } from '../utils/achievementsSystem';
 import { PASS_PERCENT } from '../utils/moduleUnlockUtils';
 import { learnedPhrase, moduleCompletePhrase } from '../utils/speechPhrasing';
+import { playClickSound } from '../utils/soundEffects';
 import CelebrationPopup from './CelebrationPopup';
 
 /**
@@ -47,20 +48,54 @@ export const arabicAlphabet = [
   { letter: 'ي', name: 'ياء', pronunciation: 'yaa', english: 'Y', word: 'يد', wordMeaning: 'hand', emoji: '✋', category: 'vowel' }
 ];
 
-const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
+/**
+ * How a letter looks in each position of a word.
+ *
+ * This is the single hardest thing about reading Arabic, and the one most
+ * primers skip: ب on its own, بـ at the start, ـبـ in the middle and ـب at
+ * the end are the same letter wearing four shapes. For a dyslexic learner,
+ * who already finds letter shapes slippery, seeing all four side by side —
+ * with the lesson's own letter — is what makes the shape change predictable
+ * rather than frightening. The joins are drawn with the tatweel (ـ), the
+ * typographic connector Arabic fonts use for exactly this.
+ *
+ * Six letters never connect to the letter after them, so they have no
+ * distinct initial or medial form.
+ */
+const NON_CONNECTING = new Set(['ا', 'د', 'ذ', 'ر', 'ز', 'و']);
+const TATWEEL = 'ـ';
+
+export const letterForms = (letter) => {
+  const nonConnecting = NON_CONNECTING.has(letter);
+  return {
+    isolated: letter,
+    initial: nonConnecting ? letter : `${letter}${TATWEEL}`,
+    medial: nonConnecting ? `${TATWEEL}${letter}` : `${TATWEEL}${letter}${TATWEEL}`,
+    final: `${TATWEEL}${letter}`,
+    nonConnecting
+  };
+};
+
+const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMotion, speak, onPracticeWriting }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [learnedLetters, setLearnedLetters] = useState([]);
   const [userEmail, setUserEmail] = useState(null);
   const [speechReady, setSpeechReady] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showOverview, setShowOverview] = useState(false);
   const speechRef = useRef(null);
 
   // Voice Over hook for accessibility
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   const currentLetter = arabicAlphabet[currentIndex];
+  const forms = useMemo(() => letterForms(currentLetter.letter), [currentLetter.letter]);
+  const ar = language === 'ar';
 
-  // Initialize Speech TTS
+  // Initialize Speech TTS for the Arabic letter sounds. Kept separate from
+  // the voice-over hook because this one is pinned to an Arabic voice: the
+  // name of a letter must be said in Arabic even when the interface is
+  // English, and an English voice reading Arabic script is unintelligible.
   useEffect(() => {
     const initSpeech = async () => {
       try {
@@ -71,31 +106,20 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
           volume: 1,
           lang: 'ar-SA',
           rate: 0.8,
-          pitch: 1,
-          listeners: {
-            onvoiceschanged: (voices) => {
-              console.log('Voices loaded:', voices.filter(v => v.lang.includes('ar')));
-            }
-          }
+          pitch: 1
         });
 
-        console.log('✅ Speech initialized:', result);
         setSpeechReady(true);
 
-        // Try to set Arabic voice if available
         const voices = result.voices || [];
-        console.log('Total voices available:', voices.length);
-
         const arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar'));
-
         if (arabicVoice) {
           speech.setVoice(arabicVoice.name);
-          console.log('✅ Arabic voice set:', arabicVoice.name);
         } else {
           console.warn('No Arabic speech voice installed — pronunciation falls back to the default voice (Windows: Settings → Time & Language → Speech → Add voices).');
         }
       } catch (error) {
-        console.error('❌ Speech init failed:', error);
+        console.warn('Speech init failed:', error);
       }
     };
 
@@ -121,27 +145,39 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
         // Mirror existing progress into the central store the dashboard reads
         syncModuleLearned(session.email, 'alphabet', learned, arabicAlphabet.length);
+
+        // Open on the first letter not yet learned, so "continue" means
+        // continue rather than starting from alif every time.
+        const firstUnlearned = arabicAlphabet.findIndex((entry) => !learned.includes(entry.letter));
+        if (firstUnlearned > 0) setCurrentIndex(firstUnlearned);
       }
     } catch (error) {
       console.error("Error loading user:", error);
     }
   }, []);
 
-
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e) => {
-      // Leave arrow keys alone while the learner is typing (e.g. in the settings modal)
+      // Leave keys alone while the learner is typing (e.g. in the settings modal)
       const target = e.target;
-      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
-      switch(e.key) {
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))) return;
+      switch (e.key) {
         case 'ArrowRight':
           e.preventDefault();
-          nextLetter();
+          if (ar) previousLetter(); else nextLetter();
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          previousLetter();
+          if (ar) nextLetter(); else previousLetter();
+          break;
+        case ' ':
+          e.preventDefault();
+          speakLetter();
+          break;
+        case 'Enter':
+          e.preventDefault();
+          markLetterAsLearned();
           break;
         default:
           break;
@@ -150,108 +186,41 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, learnedLetters, userEmail, ar]);
 
-  const speakLetter = () => {
-    console.log('🔊 Speaking letter:', currentLetter.name);
-
-    if (!speechRef.current || !speechReady) {
-      console.warn('⚠️ Speech not ready yet');
-      return;
-    }
-
+  const sayArabic = (text) => {
+    if (!speechRef.current || !speechReady) return;
+    // Stop any voice-over announcement so the two voices never overlap.
+    voiceOver.stop();
     try {
-      speechRef.current.speak({
-        text: currentLetter.name,
-        queue: false,
-        listeners: {
-          onstart: () => {
-            console.log('✅ Speech started');
-          },
-          onend: () => {
-            console.log('✅ Speech ended');
-          },
-          onerror: (e) => {
-            console.error('❌ Speech error:', e);
-          }
-        }
-      }).then(() => {
-        console.log('✅ Speech command sent');
-      }).catch((error) => {
-        console.error('❌ Speak failed:', error);
-      });
+      speechRef.current.speak({ text, queue: false }).catch(() => {});
     } catch (error) {
-      console.error('❌ Error in speakLetter:', error);
+      // Speech unavailable in this browser.
     }
   };
 
-  const speakWord = () => {
-    console.log('🔊 Speaking word:', currentLetter.word);
+  const speakLetter = () => sayArabic(currentLetter.name);
+  const speakWord = () => sayArabic(currentLetter.word);
 
-    if (!speechRef.current || !speechReady) {
-      console.warn('⚠️ Speech not ready yet');
-      return;
-    }
+  const goTo = (index) => {
+    if (speechRef.current) speechRef.current.cancel();
+    const next = (index + arabicAlphabet.length) % arabicAlphabet.length;
+    setCurrentIndex(next);
+    markLetterAsViewed(arabicAlphabet[next]);
 
-    try {
-      speechRef.current.speak({
-        text: currentLetter.word,
-        queue: false,
-        listeners: {
-          onstart: () => {
-            console.log('✅ Word speech started');
-          },
-          onend: () => {
-            console.log('✅ Word speech ended');
-          },
-          onerror: (e) => {
-            console.error('❌ Word speech error:', e);
-          }
-        }
-      }).then(() => {
-        console.log('✅ Word speech command sent');
-      }).catch((error) => {
-        console.error('❌ Word speak failed:', error);
-      });
-    } catch (error) {
-      console.error('❌ Error in speakWord:', error);
-    }
+    const entry = arabicAlphabet[next];
+    // In English the English voice reads the phonetic name; the Arabic script
+    // name would be garbled by it.
+    voiceOver.speakAuto(ar ? `الحرف ${entry.name}` : `Letter ${entry.pronunciation}`);
   };
 
-  const nextLetter = () => {
-    // Cancel any ongoing speech when navigating
-    if (speechRef.current) {
-      speechRef.current.cancel();
-    }
-    setCurrentIndex((prev) => (prev + 1) % arabicAlphabet.length);
-    markLetterAsViewed();
+  const nextLetter = () => goTo(currentIndex + 1);
+  const previousLetter = () => goTo(currentIndex - 1);
 
-    // Voice over announcement
-    const nextIndex = (currentIndex + 1) % arabicAlphabet.length;
-    const nextLetter = arabicAlphabet[nextIndex];
-    voiceOver.speakAuto(
-      language === 'ar'
-        ? `الحرف ${nextLetter.name}`
-        : `Letter ${nextLetter.name}, ${nextLetter.pronunciation}`
-    );
-  };
-
-  const previousLetter = () => {
-    // Cancel any ongoing speech when navigating
-    if (speechRef.current) {
-      speechRef.current.cancel();
-    }
-    setCurrentIndex((prev) => (prev - 1 + arabicAlphabet.length) % arabicAlphabet.length);
-    markLetterAsViewed();
-
-    // Voice over announcement
-    const prevIndex = (currentIndex - 1 + arabicAlphabet.length) % arabicAlphabet.length;
-    const prevLetter = arabicAlphabet[prevIndex];
-    voiceOver.speakAuto(
-      language === 'ar'
-        ? `الحرف ${prevLetter.name}`
-        : `Letter ${prevLetter.name}, ${prevLetter.pronunciation}`
-    );
+  const jumpTo = (index) => {
+    playClickSound();
+    goTo(index);
   };
 
   // Mark letter as learned and award points
@@ -279,7 +248,7 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
       passPercent: PASS_PERCENT
     });
 
-    // Show celebration popup
+    // Show celebration popup (it plays the success chime)
     setShowCelebration(true);
 
     // Voice over announcement. Phrased by speechPhrasing.js rather than built
@@ -289,7 +258,7 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
       learnedPhrase({
         language,
         kind: 'letter',
-        name: language === 'ar' ? currentLetter.name : currentLetter.pronunciation,
+        name: ar ? currentLetter.name : currentLetter.pronunciation,
         points: POINT_VALUES.LETTER_LEARNED
       }),
       true
@@ -304,7 +273,7 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
         voiceOver.speak(
           moduleCompletePhrase({
             language,
-            moduleName: language === 'ar' ? 'الحروف العربية' : 'Arabic alphabet'
+            moduleName: ar ? 'الحروف العربية' : 'Arabic alphabet'
           }),
           true
         );
@@ -313,15 +282,15 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
   };
 
   // Mark letter as viewed (for tracking activity)
-  const markLetterAsViewed = () => {
+  const markLetterAsViewed = (entry) => {
     if (!userEmail) return;
 
     // Award points for first-time viewing
     const viewedKey = `alphabet_viewed_${userEmail}`;
     const viewed = JSON.parse(localStorage.getItem(viewedKey) || '[]');
 
-    if (!viewed.includes(currentLetter.letter)) {
-      viewed.push(currentLetter.letter);
+    if (!viewed.includes(entry.letter)) {
+      viewed.push(entry.letter);
       localStorage.setItem(viewedKey, JSON.stringify(viewed));
 
       // Small points for viewing
@@ -329,6 +298,13 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
     }
   };
 
+  const isLearned = learnedLetters.includes(currentLetter.letter);
+  const learnedCount = learnedLetters.length;
+  const percent = Math.round((learnedCount / arabicAlphabet.length) * 100);
+
+  const formLabels = ar
+    ? { isolated: 'منفصل', initial: 'في البداية', medial: 'في الوسط', final: 'في النهاية' }
+    : { isolated: 'On its own', initial: 'At the start', medial: 'In the middle', final: 'At the end' };
 
   return (
     <div className="arabic-alphabet-learning">
@@ -337,8 +313,17 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
 
       <div className="learning-header">
         <h2 className="learning-title">
-          {language === 'ar' ? 'تعلم الحروف العربية' : 'Learn Arabic Alphabet'}
+          {ar ? 'تعلم الحروف العربية' : 'Learn Arabic Alphabet'}
         </h2>
+        {/* Where the learner stands in the whole alphabet, always visible:
+            28 letters is a long road, and the counter is the map. */}
+        <div className="alphabet-learned-summary" aria-live="off">
+          <span className="alphabet-learned-count">{learnedCount}/{arabicAlphabet.length}</span>
+          <span className="alphabet-learned-label">{ar ? 'حرفاً تعلمتها' : 'letters learned'}</span>
+          <span className="alphabet-learned-bar" aria-hidden="true">
+            <span style={{ width: `${percent}%` }} />
+          </span>
+        </div>
       </div>
 
       {/* Card View */}
@@ -346,25 +331,56 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
         <motion.div
           key={currentIndex}
           className="letter-card"
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.96, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4, type: "spring" }}
+          transition={{ duration: 0.3 }}
         >
-          <div className="letter-display" onClick={speakLetter}>
+          <div
+            className="letter-display"
+            role="button"
+            tabIndex={0}
+            onClick={speakLetter}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); speakLetter(); } }}
+            aria-label={ar ? `اسمع الحرف ${currentLetter.name}` : `Hear the letter ${currentLetter.pronunciation}`}
+          >
             <motion.div
               className="arabic-letter"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.3 }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.25 }}
             >
               {currentLetter.letter}
             </motion.div>
             <div className="letter-name">{currentLetter.name}</div>
             <div className="letter-pronunciation">
-              {language === 'ar' ? currentLetter.pronunciation : `(${currentLetter.pronunciation})`}
+              {ar ? currentLetter.pronunciation : `(${currentLetter.pronunciation})`}
             </div>
             <div className="pronunciation-hint">
-              🔊 {language === 'ar' ? 'اضغط للاستماع' : 'Click to hear'}
+              🔊 {ar ? 'اضغط للاستماع' : 'Click to hear'}
+            </div>
+          </div>
+
+          {/* The four shapes of the letter. */}
+          <div className="letter-forms" role="group" aria-label={ar ? 'أشكال الحرف' : 'Letter shapes'}>
+            <div className="letter-forms-title">
+              {ar ? 'كيف يُكتب في الكلمة' : 'How it looks inside a word'}
+              {forms.nonConnecting && (
+                <span className="letter-forms-note">
+                  {ar ? ' — هذا الحرف لا يتصل بما بعده' : ' — this letter does not join to the next one'}
+                </span>
+              )}
+            </div>
+            {/* The row follows the interface direction, so in English it reads
+                own → start → middle → end left to right, and in Arabic the
+                natural right-to-left way. Each glyph is Arabic text in its own
+                box, so the joins render correctly either way. */}
+            <div className="letter-forms-row" dir={ar ? 'rtl' : 'ltr'}>
+              {['isolated', 'initial', 'medial', 'final'].map((position) => (
+                <div className="letter-form" key={position}>
+                  <span className="letter-form-glyph" lang="ar">{forms[position]}</span>
+                  <span className="letter-form-label">{formLabels[position]}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -372,51 +388,68 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
           <motion.div
             key={`visual-${currentIndex}`}
             className="letter-visual"
+            role="button"
+            tabIndex={0}
             onClick={speakWord}
-            initial={{ scale: 0.8, opacity: 0 }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); speakWord(); } }}
+            aria-label={ar ? `اسمع كلمة ${currentLetter.word}` : `Hear the word ${currentLetter.word}, ${currentLetter.wordMeaning}`}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
+            transition={{ delay: 0.15, duration: 0.3 }}
           >
-            <div className="visual-emoji">{currentLetter.emoji}</div>
+            <div className="visual-emoji" aria-hidden="true">{currentLetter.emoji}</div>
             <div className="visual-word">
               <div className="arabic-word-main">{currentLetter.word}</div>
               <div className="word-meaning-main">
                 ({currentLetter.wordMeaning})
               </div>
               <div className="word-pronunciation-hint">
-                🔊 {language === 'ar' ? 'اضغط لسماع الكلمة' : 'Click to hear word'}
+                🔊 {ar ? 'اضغط لسماع الكلمة' : 'Click to hear word'}
               </div>
             </div>
           </motion.div>
 
           <div className="letter-info">
             <div className="english-equivalent">
-              {language === 'ar' ? 'بالإنجليزية' : 'English'}: <strong>{currentLetter.english}</strong>
+              {ar ? 'بالإنجليزية' : 'English'}: <strong>{currentLetter.english}</strong>
             </div>
           </div>
 
           {/* Mark as Learned Button */}
-          {userEmail && !learnedLetters.includes(currentLetter.letter) && (
+          {userEmail && !isLearned && (
             <motion.button
               className="mark-learned-btn"
               onClick={markLetterAsLearned}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.25 }}
             >
-              ✓ {language === 'ar' ? 'علّم كمتعلم' : 'Mark as Learned'}
+              ✓ {ar ? 'علّم كمتعلم' : 'Mark as Learned'}
               <span className="points-badge">+{POINT_VALUES.LETTER_LEARNED}</span>
             </motion.button>
           )}
 
-          {userEmail && learnedLetters.includes(currentLetter.letter) && (
+          {userEmail && isLearned && (
             <div className="learned-badge">
-              ✓ {language === 'ar' ? 'متعلم' : 'Learned'}
+              ✓ {ar ? 'متعلم' : 'Learned'}
             </div>
+          )}
+
+          {/* See it, hear it, now write it: the handwriting screen opens on
+              this exact letter. Multisensory practice is what makes a letter
+              shape stick for a learner who finds shapes slippery. */}
+          {onPracticeWriting && (
+            <button
+              type="button"
+              className="practice-writing-btn"
+              onClick={() => { playClickSound(); onPracticeWriting(currentIndex); }}
+            >
+              ✍️ {ar ? 'تدرّب على كتابة هذا الحرف' : 'Practise writing this letter'}
+            </button>
           )}
         </motion.div>
       </div>
@@ -426,10 +459,11 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
         <motion.button
           className="nav-btn prev"
           onClick={previousLetter}
-          whileHover={{ scale: 1.1, x: -3 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          aria-label={ar ? 'الحرف السابق' : 'Previous letter'}
         >
-          {language === 'ar' ? '→' : '←'}
+          {ar ? '→' : '←'}
         </motion.button>
 
         <div className="progress-section">
@@ -449,17 +483,69 @@ const ArabicAlphabetLearning = ({ t, language, fontSize, highContrast, reducedMo
         <motion.button
           className="nav-btn next"
           onClick={nextLetter}
-          whileHover={{ scale: 1.1, x: 3 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          aria-label={ar ? 'الحرف التالي' : 'Next letter'}
         >
-          {language === 'ar' ? '←' : '→'}
+          {ar ? '←' : '→'}
         </motion.button>
+      </div>
+
+      {/* The whole alphabet at a glance, folded by default so the card stays
+          the focus; opened, it is a map with the learned letters ticked and
+          any letter one tap away. */}
+      <div className="alphabet-overview">
+        <button
+          type="button"
+          className="alphabet-overview-toggle"
+          onClick={() => { playClickSound(); setShowOverview((value) => !value); }}
+          aria-expanded={showOverview}
+          aria-controls="alphabet-overview-grid"
+        >
+          <span aria-hidden="true">{showOverview ? '▾' : '▸'}</span>
+          {ar ? 'كل الحروف' : 'All letters'}
+          <span className="alphabet-overview-hint">
+            {ar ? `${learnedCount} متعلمة` : `${learnedCount} learned`}
+          </span>
+        </button>
+
+        {showOverview && (
+          <div className="alphabet-overview-grid" id="alphabet-overview-grid" dir="rtl" role="list">
+            {arabicAlphabet.map((entry, index) => {
+              const learned = learnedLetters.includes(entry.letter);
+              const active = index === currentIndex;
+              return (
+                <button
+                  type="button"
+                  key={entry.letter}
+                  role="listitem"
+                  className={`alphabet-tile ${learned ? 'is-learned' : ''} ${active ? 'is-active' : ''}`}
+                  onClick={() => jumpTo(index)}
+                  aria-current={active ? 'true' : undefined}
+                  aria-label={`${entry.name} ${entry.pronunciation}${learned ? (ar ? '، متعلم' : ', learned') : ''}`}
+                  title={entry.pronunciation}
+                >
+                  <span className="alphabet-tile-letter" lang="ar">{entry.letter}</span>
+                  <span className="alphabet-tile-name">{entry.pronunciation}</span>
+                  {learned && <span className="alphabet-tile-tick" aria-hidden="true">✓</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="keyboard-hints" aria-hidden="true">
+        <span className="hint">← →  {ar ? 'تنقّل' : 'move'}</span>
+        <span className="hint">{ar ? 'مسافة: اسمع' : 'Space: hear'}</span>
+        <span className="hint">{ar ? 'إدخال: تعلمت' : 'Enter: learned'}</span>
       </div>
 
       {/* Celebration Popup */}
       <CelebrationPopup
         show={showCelebration}
         language={language}
+        userEmail={userEmail}
         onClose={() => setShowCelebration(false)}
       />
     </div>

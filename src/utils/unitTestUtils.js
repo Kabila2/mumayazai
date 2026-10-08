@@ -270,7 +270,7 @@ export const buildUnitTest = (userEmail, language = 'en') => {
   };
 };
 
-export default {
+const unitTestUtils = {
   MIN_ITEMS,
   MAX_QUESTIONS,
   getCompletedItems,
@@ -278,3 +278,5 @@ export default {
   isUnitTestAvailable,
   buildUnitTest
 };
+
+export default unitTestUtils;

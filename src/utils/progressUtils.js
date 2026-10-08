@@ -100,10 +100,12 @@ export const getModuleProgress = (userEmail) => ({
   sentencesProgress: getModulePercent(userEmail, "sentences"),
 });
 
-export default {
+const progressUtils = {
   getLearnedItems,
   recordModuleItemLearned,
   syncModuleLearned,
   getModulePercent,
   getModuleProgress,
 };
+
+export default progressUtils;

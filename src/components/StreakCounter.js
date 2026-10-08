@@ -2,8 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playStreakSound, playAchievementSound } from '../utils/soundEffects';
 import { getTotalPoints, POINTS_CHANGED_EVENT } from '../utils/leaderboardUtils';
+import {
+  getStreak,
+  touchStreak,
+  armStreakFreeze,
+  STREAK_CHANGED_EVENT
+} from '../utils/streakUtils';
 import './StreakCounter.css';
 
+/**
+ * The streak widget on the home page.
+ *
+ * The streak itself is now computed in utils/streakUtils.js (and advanced by
+ * the platform on mount, whatever screen the learner lands on). This widget
+ * reads it, shows the milestone celebration the first time a 7 / 30 / 100-day
+ * streak is reached, and offers the freeze.
+ */
 const StreakCounter = ({ language = 'en' }) => {
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
@@ -32,9 +46,7 @@ const StreakCounter = ({ language = 'en' }) => {
       useFreeze: 'Protect my streak',
       milestone7: '7 Day Warrior!',
       milestone30: '30 Day Champion!',
-      milestone100: '100 Day Legend!',
-      streakBroken: 'Streak Broken',
-      startAgain: 'Start a new streak today!'
+      milestone100: '100 Day Legend!'
     },
     ar: {
       currentStreak: 'السلسلة الحالية',
@@ -51,17 +63,38 @@ const StreakCounter = ({ language = 'en' }) => {
       useFreeze: 'احمِ سلسلتي',
       milestone7: 'محارب 7 أيام!',
       milestone30: 'بطل 30 يوم!',
-      milestone100: 'أسطورة 100 يوم!',
-      streakBroken: 'انقطعت السلسلة',
-      startAgain: 'ابدأ سلسلة جديدة اليوم!'
+      milestone100: 'أسطورة 100 يوم!'
     }
   };
 
   const t = translations[language] || translations.en;
 
-  // Load streak data from localStorage
+  const getCurrentUserEmail = () => {
+    try {
+      const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
+      return session.email || null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Read the streak, advance it for today if the platform has not already, and
+  // celebrate a milestone reached right now.
   useEffect(() => {
-    loadStreakData();
+    const email = getCurrentUserEmail();
+    if (!email) return undefined;
+
+    const result = touchStreak(email);
+    setStreakData(result.data);
+    if (result.milestone) {
+      showMilestoneCelebration(`milestone${result.milestone}`);
+    } else if (result.extended && result.data.currentStreak > 1) {
+      playStreakSound();
+    }
+
+    const sync = () => setStreakData(getStreak(email));
+    window.addEventListener(STREAK_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(STREAK_CHANGED_EVENT, sync);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -73,140 +106,7 @@ const StreakCounter = ({ language = 'en' }) => {
     read();
     window.addEventListener(POINTS_CHANGED_EVENT, read);
     return () => window.removeEventListener(POINTS_CHANGED_EVENT, read);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const loadStreakData = () => {
-    try {
-      const userEmail = getCurrentUserEmail();
-      if (!userEmail) return;
-
-      const streakKey = `stellar_streak_${userEmail}`;
-      const savedStreak = localStorage.getItem(streakKey);
-
-      if (savedStreak) {
-        const data = JSON.parse(savedStreak);
-        setStreakData(data);
-        checkAndUpdateStreak(data);
-      } else {
-        // Initialize new streak
-        const newStreak = {
-          currentStreak: 0,
-          longestStreak: 0,
-          lastActiveDate: null,
-          streakFreeze: false,
-          totalDaysActive: 0
-        };
-        saveStreakData(newStreak);
-      }
-    } catch (error) {
-      console.error('Error loading streak data:', error);
-    }
-  };
-
-  const getCurrentUserEmail = () => {
-    try {
-      const session = JSON.parse(localStorage.getItem('stellar_session') || '{}');
-      return session.email || null;
-    } catch (error) {
-      console.error('Error getting user email:', error);
-      return null;
-    }
-  };
-
-  const saveStreakData = (data) => {
-    try {
-      const userEmail = getCurrentUserEmail();
-      if (!userEmail) return;
-
-      const streakKey = `stellar_streak_${userEmail}`;
-      localStorage.setItem(streakKey, JSON.stringify(data));
-      setStreakData(data);
-    } catch (error) {
-      console.error('Error saving streak data:', error);
-    }
-  };
-
-  const checkAndUpdateStreak = (data) => {
-    const today = new Date().toDateString();
-    const lastActive = data.lastActiveDate ? new Date(data.lastActiveDate).toDateString() : null;
-
-    if (!lastActive) {
-      // First time user
-      const updatedData = {
-        ...data,
-        currentStreak: 1,
-        longestStreak: Math.max(1, data.longestStreak),
-        lastActiveDate: today,
-        totalDaysActive: data.totalDaysActive + 1
-      };
-      saveStreakData(updatedData);
-      checkMilestone(1);
-      return;
-    }
-
-    if (lastActive === today) {
-      // Already counted for today
-      return;
-    }
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toDateString();
-
-    if (lastActive === yesterdayStr) {
-      // Consecutive day
-      const newStreak = data.currentStreak + 1;
-      const updatedData = {
-        ...data,
-        currentStreak: newStreak,
-        longestStreak: Math.max(newStreak, data.longestStreak),
-        lastActiveDate: today,
-        totalDaysActive: data.totalDaysActive + 1,
-        streakFreeze: false // Reset freeze after use
-      };
-      saveStreakData(updatedData);
-      checkMilestone(newStreak);
-    } else {
-      // Check if freeze is available
-      const twoDaysAgo = new Date();
-      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-      const twoDaysAgoStr = twoDaysAgo.toDateString();
-
-      if (lastActive === twoDaysAgoStr && data.streakFreeze) {
-        // Use freeze to save streak
-        const updatedData = {
-          ...data,
-          lastActiveDate: today,
-          totalDaysActive: data.totalDaysActive + 1,
-          streakFreeze: false
-        };
-        saveStreakData(updatedData);
-      } else {
-        // Streak broken
-        const updatedData = {
-          ...data,
-          currentStreak: 1,
-          lastActiveDate: today,
-          totalDaysActive: data.totalDaysActive + 1,
-          streakFreeze: false
-        };
-        saveStreakData(updatedData);
-      }
-    }
-  };
-
-  const checkMilestone = (streak) => {
-    if (streak === 7) {
-      showMilestoneCelebration('milestone7');
-    } else if (streak === 30) {
-      showMilestoneCelebration('milestone30');
-    } else if (streak === 100) {
-      showMilestoneCelebration('milestone100');
-    } else if (streak > 1) {
-      playStreakSound();
-    }
-  };
 
   const showMilestoneCelebration = (type) => {
     setCelebrationType(type);
@@ -219,11 +119,9 @@ const StreakCounter = ({ language = 'en' }) => {
   };
 
   const handleUseFreeze = () => {
-    const updatedData = {
-      ...streakData,
-      streakFreeze: true
-    };
-    saveStreakData(updatedData);
+    const email = getCurrentUserEmail();
+    if (!email) return;
+    setStreakData(armStreakFreeze(email));
   };
 
   const getFlameEmoji = () => {

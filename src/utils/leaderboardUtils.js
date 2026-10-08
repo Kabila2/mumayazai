@@ -1,6 +1,5 @@
 // src/utils/leaderboardUtils.js - Leaderboard tracking utilities
 
-const LEADERBOARD_KEY = "stellar_leaderboard";
 const USER_STATS_KEY = "stellar_user_stats";
 
 // Achievement bonuses are the one kind of point kept outside user stats:

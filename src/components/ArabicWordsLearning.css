@@ -701,3 +701,87 @@
   outline: 3px solid var(--mz-ring);
   outline-offset: 3px;
 }
+
+/* ============================================================================
+   "I learned it!" — the explicit learn button (added 2026-10-07).
+   Pressing Next used to be the only way to mark a word learned, so the last
+   word of every category could never be learned. This is the same shape as
+   the alphabet module's Mark-as-Learned button, so the two feel like one app.
+   ============================================================================ */
+.arabic-words-learning .word-learned-row {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 28px;
+  max-width: 560px;
+}
+
+.arabic-words-learning .word-learned-btn {
+  width: 100%;
+  min-height: 64px;
+  padding: 16px 28px;
+  border: none;
+  border-radius: var(--mz-radius-lg);
+  background: var(--mz-success);
+  color: #fff;
+  font-family: inherit;
+  font-size: 1.35rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--mz-success) 35%, transparent);
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.arabic-words-learning .word-learned-btn:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--mz-success) 45%, transparent);
+}
+
+.arabic-words-learning .word-learned-btn:focus-visible {
+  outline: 3px solid var(--mz-ring);
+  outline-offset: 3px;
+}
+
+.arabic-words-learning .word-learned-points {
+  padding: 4px 12px;
+  border-radius: var(--mz-radius-pill);
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.arabic-words-learning .word-learned-done {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 28px;
+  border: 2px solid var(--mz-success);
+  border-radius: var(--mz-radius-lg);
+  background: var(--mz-success-soft);
+  color: var(--mz-success);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+/* App.css visually hides every [role="status"]; this one is the visible
+   confirmation, so it is restored. */
+.arabic-words-learning .word-learned-done[role="status"] {
+  position: static;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 16px 28px;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+@media (max-width: 480px) {
+  .arabic-words-learning .word-learned-btn,
+  .arabic-words-learning .word-learned-done {
+    font-size: 1.1rem;
+    padding: 14px 18px;
+  }
+}

@@ -145,7 +145,7 @@ export const lockReason = (userEmail, sectionId, language = 'en', role = 'studen
     : `Finish ${name} first (${PASS_PERCENT}% or more)`;
 };
 
-export default {
+const moduleUnlockUtils = {
   PASS_PERCENT,
   CURRICULUM,
   SEQUENCED_SECTIONS,
@@ -157,3 +157,5 @@ export default {
   getNextModule,
   lockReason
 };
+
+export default moduleUnlockUtils;

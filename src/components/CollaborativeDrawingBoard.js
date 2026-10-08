@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useVoiceOver } from '../hooks/useVoiceOver';
+import { motion } from 'framer-motion';
 import './CollaborativeDrawingBoard.css';
 
 const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
@@ -15,8 +14,6 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
   const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
   const [showTextInput, setShowTextInput] = useState(false);
 
-  // Voice Over hook for accessibility
-  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   // Multiplayer state
   const [isConnected, setIsConnected] = useState(false);
@@ -87,6 +84,7 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
       // Fall back to local mode
       setIsConnected(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasJoined, username, selectedRole]);
 
   const handleWebSocketMessage = useCallback((data) => {
@@ -183,6 +181,7 @@ const CollaborativeDrawingBoard = ({ language, fontSize, highContrast }) => {
       ctx.lineJoin = 'round';
       redrawCanvas();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [texts]);
 
   /**

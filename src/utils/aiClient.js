@@ -385,4 +385,6 @@ if (process.env.NODE_ENV !== 'production' && !BACKEND_URL && ANTHROPIC_KEY) {
   );
 }
 
-export default { askAI, isAIConfigured, getActiveProvider };
+const aiClient = { askAI, isAIConfigured, getActiveProvider };
+
+export default aiClient;

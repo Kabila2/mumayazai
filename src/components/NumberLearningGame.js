@@ -1,12 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
-import { playClickSound } from '../utils/soundEffects';
+import { playClickSound, playCorrectSound, playWrongSound } from '../utils/soundEffects';
+import { awardPoints } from '../utils/pointsUtils';
 import CelebrationPopup from './CelebrationPopup';
 import { transliterate } from '../utils/phonetics';
 import './NumberLearningGame.css';
 
+const getSessionEmail = () => {
+  try {
+    return JSON.parse(localStorage.getItem('stellar_session') || '{}').email || null;
+  } catch (error) {
+    return null;
+  }
+};
+
 const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
+  const userEmail = useRef(getSessionEmail());
   const [currentNumber, setCurrentNumber] = useState(null);
   const [options, setOptions] = useState([]);
   const [score, setScore] = useState(0);
@@ -127,6 +137,8 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
     advancingRef.current = false;
     if (roundIndex >= totalRounds) {
       setGameComplete(true);
+      setShowCelebration(true);
+      if (userEmail.current) awardPoints(userEmail.current, 'GAME_COMPLETED');
       voiceOver.speak(
         language === 'ar' ? 'انتهت اللعبة! أحسنت' : 'Game complete! Well done!',
         true
@@ -174,7 +186,8 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
     if (selectedNumber.value === currentNumber.value) {
       setScore(score + 10);
       setFeedback('correct');
-      setShowCelebration(true);
+      playCorrectSound();
+      if (userEmail.current) awardPoints(userEmail.current, 'GAME_ROUND_CORRECT');
       voiceOver.speak(
         language === 'ar'
           ? `صحيح! ${selectedNumber.nameAr}`
@@ -186,6 +199,7 @@ const NumberLearningGame = ({ language = 'en', difficulty = 'medium' }) => {
       setTimeout(() => advanceRound(round), 1500);
     } else {
       setFeedback('wrong');
+      playWrongSound();
       voiceOver.speak(
         language === 'ar' ? 'حاول مرة أخرى' : 'Try again',
         true

@@ -335,9 +335,11 @@ export const clearAllUserData = (userEmail, options = {}) => {
   }
 };
 
-export default {
+const dataExport = {
   exportUserData,
   importUserData,
   clearAllUserData,
   EXPORT_VERSION
 };
+
+export default dataExport;

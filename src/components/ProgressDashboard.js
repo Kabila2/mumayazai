@@ -85,16 +85,15 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       window.removeEventListener(POINTS_CHANGED_EVENT, loadStatistics);
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail, timeRange]);
 
   const loadStatistics = () => {
     try {
-      console.log('📊 [ProgressDashboard] Loading statistics for user:', userEmail);
 
       // Load progress data with proper defaults
       const progressRaw = localStorage.getItem('arabic_learning_progress');
       const progress = progressRaw ? JSON.parse(progressRaw) : {};
-      console.log('📊 [ProgressDashboard] Raw progress data:', progress);
 
       // Per-user module progress is the source of truth for topic completion.
       // (The legacy `arabic_learning_progress` key only ever stored sessions/
@@ -111,7 +110,6 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         streak: progress.streak || 0,
         lastSessionDate: progress.lastSessionDate || null
       };
-      console.log('📊 [ProgressDashboard] Safe progress data:', safeProgress);
 
       // Load quiz history
       const quizKey = `stellar_quiz_history_${userEmail}`;
@@ -141,17 +139,12 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
       // One canonical total — the same helper the Explore leaderboard uses, so
       // the two screens can never drift apart.
       const pointsData = { total: getTotalPoints(userEmail) };
-      console.log('📊 [ProgressDashboard] User stats:', userStats);
-      console.log('📊 [ProgressDashboard] Quiz history:', quizHistory.length, 'quizzes');
-      console.log('📊 [ProgressDashboard] Points:', pointsData.total);
-      console.log('📊 [ProgressDashboard] Streak:', streakData.currentStreak);
 
       // Calculate statistics
       const filteredQuizzes = filterByTimeRange(quizHistory);
       const avgScore = filteredQuizzes.length > 0
         ? Math.round(filteredQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / filteredQuizzes.length)
         : 0;
-      console.log('📊 [ProgressDashboard] Filtered quizzes:', filteredQuizzes.length, 'avg score:', avgScore);
 
       const topicsCompleted = [
         safeProgress.alphabetProgress >= 100 ? 'Alphabet' : null,
@@ -188,21 +181,6 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
         progressData: safeProgress,
         chartData
       };
-
-      console.log('📊 [ProgressDashboard] Final stats:', {
-        totalTime: finalStats.totalTime,
-        topicsCompleted: finalStats.topicsCompleted,
-        avgQuizScore: finalStats.avgQuizScore,
-        currentStreak: finalStats.currentStreak,
-        totalQuizzes: finalStats.totalQuizzes,
-        totalPoints: finalStats.totalPoints,
-        achievements: finalStats.achievements,
-        totalMessages: finalStats.totalMessages,
-        totalChatSessions: finalStats.totalChatSessions,
-        strengthsCount: finalStats.strengths.length,
-        weaknessesCount: finalStats.weaknesses.length,
-        recommendationsCount: finalStats.recommendations.length
-      });
 
       setStats(finalStats);
     } catch (error) {
@@ -360,9 +338,13 @@ const ProgressDashboard = ({ userEmail, language = 'en', onClose }) => {
     return t.needsWork;
   };
 
+  // "Export" opens the browser's print dialog, where "Save as PDF" is one of
+  // the destinations on every platform. ProgressDashboard.css hides the nav
+  // and controls for print. (This used to be an alert() promising the feature
+  // "soon" — a button that explains it does nothing is worse than no button.)
   const handleExportPDF = () => {
     playClickSound();
-    alert('PDF export will be available soon! For now, use the screenshot feature of your device.');
+    window.print();
   };
 
   if (!stats) {

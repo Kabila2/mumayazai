@@ -1,17 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
 import CelebrationPopup from './CelebrationPopup';
 import { transliterate } from '../utils/phonetics';
+import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
+import { playWrongSound } from '../utils/soundEffects';
 import './SentenceBuilder.css';
 
+const getSessionEmail = () => {
+  try {
+    return JSON.parse(localStorage.getItem('stellar_session') || '{}').email || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/** Sentences already built, per learner, so progress survives leaving. */
+const completedKey = (email) => `stellar_sentencebuilder_${email}`;
+const loadCompleted = (email) => {
+  if (!email) return [];
+  try {
+    return JSON.parse(localStorage.getItem(completedKey(email))) || [];
+  } catch (error) {
+    return [];
+  }
+};
+
 const SentenceBuilder = ({ language, fontSize, highContrast }) => {
+  const userEmail = useRef(getSessionEmail());
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [selectedWords, setSelectedWords] = useState([]);
   const [availableWords, setAvailableWords] = useState([]);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [completedSentences, setCompletedSentences] = useState([]);
+  const [wrongShake, setWrongShake] = useState(false);
+  const [completedSentences, setCompletedSentences] = useState(() => loadCompleted(userEmail.current));
   const [showCelebrationPopup, setShowCelebrationPopup] = useState(false);
 
   // Voice Over hook for Arabic pronunciation
@@ -129,6 +151,7 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
     setAvailableWords(shuffled);
     setSelectedWords([]);
     setIsCorrect(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSentenceIndex]);
 
   const handleWordClick = (word, fromAvailable = true) => {
@@ -151,10 +174,20 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
       voiceOver.speak(currentSentence.arabic, true);
 
       setIsCorrect(true);
-      setShowCelebration(true);
-      setShowCelebrationPopup(true); // Show celebration popup!
+      setShowCelebrationPopup(true); // the popup plays the success chime
+
+      // Points the first time each sentence is built, saved per learner.
       if (!completedSentences.includes(currentSentenceIndex)) {
-        setCompletedSentences([...completedSentences, currentSentenceIndex]);
+        const next = [...completedSentences, currentSentenceIndex];
+        setCompletedSentences(next);
+        if (userEmail.current) {
+          try {
+            localStorage.setItem(completedKey(userEmail.current), JSON.stringify(next));
+          } catch (error) {
+            // Storage unavailable.
+          }
+          awardPoints(userEmail.current, 'SENTENCE_BUILT_CORRECT');
+        }
       }
 
       // After a short delay, speak the English meaning
@@ -164,13 +197,13 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
           : `Excellent! ${currentSentence.english}`;
         voiceOver.speak(message, true);
       }, 1500);
-
-      setTimeout(() => {
-        setShowCelebration(false);
-      }, 2500);
     } else {
-      // Shake animation for wrong answer
       setIsCorrect(false);
+      // A visible, gentle "not yet" rather than silence.
+      playWrongSound();
+      setWrongShake(true);
+      setTimeout(() => setWrongShake(false), 500);
+      voiceOver.speak(language === 'ar' ? 'ليس بعد، حاول مرة أخرى' : 'Not quite yet, try again', true);
     }
   };
 
@@ -230,7 +263,12 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
           />
         </div>
         <div className="completed-count">
-          ✓ {completedSentences.length} {language === 'ar' ? 'مكتمل' : 'Completed'}
+          ✓ {completedSentences.length} / {sentences.length} {language === 'ar' ? 'مكتمل' : 'Completed'}
+          {completedSentences.includes(currentSentenceIndex) && (
+            <span className="completed-this-word">
+              {' '}· {language === 'ar' ? 'بنيت هذه من قبل' : 'you built this one'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -262,7 +300,7 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
         <h3 className="area-label">
           {language === 'ar' ? 'الجملة الخاصة بك:' : 'Your Sentence:'}
         </h3>
-        <div className={`selected-words-container ${isCorrect ? 'correct' : ''}`}>
+        <div className={`selected-words-container ${isCorrect ? 'correct' : ''} ${wrongShake ? 'shake' : ''}`}>
           {selectedWords.length === 0 ? (
             <div className="placeholder-text">
               {language === 'ar' ? 'اسحب الكلمات هنا...' : 'Drag words here...'}
@@ -333,6 +371,9 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
           }}
         >
           ✓ {language === 'ar' ? 'تحقق' : 'Check'}
+          {!completedSentences.includes(currentSentenceIndex) && (
+            <span className="check-points">+{POINT_VALUES.SENTENCE_BUILT_CORRECT}</span>
+          )}
         </motion.button>
       </div>
 
@@ -355,38 +396,13 @@ const SentenceBuilder = ({ language, fontSize, highContrast }) => {
         </button>
       </div>
 
-      {/* Celebration */}
-      <AnimatePresence>
-        {showCelebration && (
-          <motion.div
-            className="celebration-overlay"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-          >
-            <div className="celebration-content">
-              <motion.div
-                className="celebration-emoji"
-                animate={{ rotate: [0, 10, -10, 10, 0] }}
-                transition={{ duration: 0.5, repeat: 2 }}
-              >
-                🎉 🌟 🎊
-              </motion.div>
-              <div className="celebration-text">
-                {language === 'ar' ? 'ممتاز!' : 'Perfect!'}
-              </div>
-              <div className="celebration-subtext">
-                {language === 'ar' ? 'لقد كونت الجملة بشكل صحيح!' : 'You built the sentence correctly!'}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Celebration Popup */}
+      {/* One celebration, not two: the module used to raise its own inline
+          overlay AND the shared popup at the same moment. */}
       <CelebrationPopup
         show={showCelebrationPopup}
         language={language}
+        userEmail={userEmail.current}
+        message={language === 'ar' ? 'لقد كونت الجملة بشكل صحيح!' : 'You built the sentence correctly!'}
         onClose={() => setShowCelebrationPopup(false)}
       />
     </div>

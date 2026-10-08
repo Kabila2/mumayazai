@@ -370,6 +370,7 @@ const ArabicSentencesLearning = ({ t, language, fontSize, highContrast, reducedM
         voiceOver.speak(selectedCategory.sentences[0].arabic, true);
       }, 700);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
   const renderCategorySelection = () => (

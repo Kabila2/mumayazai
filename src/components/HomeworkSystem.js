@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playClickSound, playSuccessSound } from '../utils/soundEffects';
-import { useVoiceOver } from '../hooks/useVoiceOver';
 import './HomeworkSystem.css';
 
 const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
   const [homework, setHomework] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedHomework, setSelectedHomework] = useState(null);
   const [filter, setFilter] = useState('all'); // 'all', 'pending', 'completed'
 
-  // Voice Over hook for accessibility
-  const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
 
   const translations = {
     en: {
@@ -56,6 +52,7 @@ const HomeworkSystem = ({ userEmail, userRole, language = 'en', onClose }) => {
 
   useEffect(() => {
     loadHomework();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail, userRole]);
 
   const loadHomework = () => {

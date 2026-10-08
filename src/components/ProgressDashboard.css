@@ -446,3 +446,43 @@
     text-align: left;
   }
 }
+
+/* ============================================================================
+   PRINT — the "Export PDF" button prints this page; everything that is not
+   the report is hidden and the page goes white-on-paper.
+   ============================================================================ */
+@media print {
+  .platform-nav,
+  .total-points-bar,
+  .point-notifications-container,
+  .time-range-filter,
+  .progress-dashboard-header .header-actions,
+  .progress-dashboard-header .back-button,
+  .break-nudge,
+  .comfort-panel {
+    display: none !important;
+  }
+
+  .arabic-learning-platform,
+  .platform-content,
+  .progress-dashboard-container,
+  .progress-dashboard-page {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .progress-dashboard-page {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .stat-card,
+  .insight-item,
+  .quiz-item,
+  section {
+    break-inside: avoid;
+  }
+}

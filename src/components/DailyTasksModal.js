@@ -12,6 +12,7 @@ export default function DailyTasksModal({ isOpen, onClose, userEmail, t, languag
     if (isOpen && userEmail) {
       loadTasks();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, userEmail]);
 
   const loadTasks = () => {

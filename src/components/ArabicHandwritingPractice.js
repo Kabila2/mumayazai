@@ -1,7 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound, playSuccessSound } from '../utils/soundEffects';
+import { awardPoints, POINT_VALUES } from '../utils/pointsUtils';
 import './ArabicHandwritingPractice.css';
+
+const getSessionEmail = () => {
+  try {
+    return JSON.parse(localStorage.getItem('stellar_session') || '{}').email || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/** Letters already traced, per learner, so the count survives leaving. */
+const tracedKey = (email) => `stellar_handwriting_${email}`;
+const loadTraced = (email) => {
+  if (!email) return [];
+  try {
+    return JSON.parse(localStorage.getItem(tracedKey(email))) || [];
+  } catch (error) {
+    return [];
+  }
+};
 
 const arabicLetters = [
   { letter: 'أ', name: 'Alif' },
@@ -34,18 +54,22 @@ const arabicLetters = [
   { letter: 'ي', name: 'Yaa' }
 ];
 
-const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
-  const [level, setLevel] = useState(null); // 'beginner', 'intermediate', 'advanced'
+const ArabicHandwritingPractice = ({ onClose, language = 'en', initialLetterIndex = null }) => {
+  // Arriving from the alphabet lesson with a specific letter skips the level
+  // screen: the learner already said what they want to do.
+  const hasJump = typeof initialLetterIndex === 'number' && initialLetterIndex >= 0 && initialLetterIndex < arabicLetters.length;
+  const [level, setLevel] = useState(hasJump ? 'beginner' : null); // 'beginner', 'intermediate', 'advanced'
   const [mode, setMode] = useState('trace'); // 'trace', 'free', 'timed'
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(hasJump ? initialLetterIndex : 0);
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
   const [ctx, setCtx] = useState(null);
   const [brushColor, setBrushColor] = useState('#8b5cf6');
-  const [brushSize, setBrushSize] = useState(5);
-  const [score, setScore] = useState(0);
+  const [brushSize] = useState(5);
+  const userEmail = useRef(getSessionEmail());
+  const [completedLetters, setCompletedLetters] = useState(() => loadTraced(userEmail.current));
+  const [score, setScore] = useState(() => loadTraced(userEmail.current).length * POINT_VALUES.LETTER_TRACED);
   const [timeLeft, setTimeLeft] = useState(null);
-  const [completedLetters, setCompletedLetters] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
 
   const selectedLetter = arabicLetters[currentIndex];
@@ -192,10 +216,22 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
   const handleNextLetter = () => {
     playSuccessSound();
     if (!completedLetters.includes(currentIndex)) {
-      setCompletedLetters([...completedLetters, currentIndex]);
-      setScore(score + 10);
+      const next = [...completedLetters, currentIndex];
+      setCompletedLetters(next);
+      setScore(score + POINT_VALUES.LETTER_TRACED);
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 2000);
+
+      // Saved per learner and fed into the global points, so tracing counts
+      // towards the leaderboard, rewards and today's goal like everything else.
+      if (userEmail.current) {
+        try {
+          localStorage.setItem(tracedKey(userEmail.current), JSON.stringify(next));
+        } catch (error) {
+          // Storage unavailable.
+        }
+        awardPoints(userEmail.current, 'LETTER_TRACED');
+      }
     }
     goToNext();
   };
@@ -358,6 +394,9 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
               </div>
               <div className="progress-indicator">
                 {t.letterProgress} {currentIndex + 1} {t.of} {arabicLetters.length}
+                {completedLetters.includes(currentIndex) && (
+                  <span className="hw-traced-badge" title={t.completed}> ✓</span>
+                )}
               </div>
             </div>
 
@@ -463,7 +502,7 @@ const ArabicHandwritingPractice = ({ onClose, language = 'en' }) => {
           >
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
             <div style={{ fontSize: '2rem', fontWeight: '700' }}>{t.congratulations}</div>
-            <div style={{ fontSize: '1.5rem', marginTop: '0.5rem' }}>+10 {t.score.replace(':', '')}</div>
+            <div style={{ fontSize: '1.5rem', marginTop: '0.5rem' }}>+{POINT_VALUES.LETTER_TRACED} {t.score.replace(':', '')}</div>
           </motion.div>
         )}
       </div>

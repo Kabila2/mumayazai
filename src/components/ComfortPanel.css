@@ -1,0 +1,370 @@
+/* ============================================================================
+   COMFORT PANEL — sensory settings, one tap from the nav.
+   Portalled to <body>, pinned under the nav's comfort button. Every selector
+   is scoped under .comfort-panel; the panel sits on the same page as modules
+   that share generic class names.
+   ============================================================================ */
+
+.comfort-panel {
+  position: fixed;
+  top: 68px;
+  inset-inline-end: 16px;
+  z-index: 1200;
+  width: min(420px, calc(100vw - 24px));
+  max-height: calc(100vh - 84px);
+  overflow-y: auto;
+  padding: 18px 18px 20px;
+  background: var(--mz-surface);
+  border: 1px solid var(--mz-border);
+  border-radius: 20px;
+  box-shadow: var(--mz-shadow-lg);
+  color: var(--mz-text);
+  scrollbar-width: thin;
+}
+
+.comfort-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.comfort-panel-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comfort-panel .comfort-panel-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--mz-border);
+  border-radius: 50%;
+  background: var(--mz-surface-2);
+  color: var(--mz-text-2);
+  font-size: 0.95rem;
+}
+
+.comfort-panel .comfort-panel-close:hover {
+  background: var(--mz-surface-3);
+  color: var(--mz-text);
+}
+
+.comfort-panel-blurb {
+  margin: 0 0 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--mz-text-2);
+}
+
+/* ------------------------------------------------------------- Calm mode */
+.comfort-panel .comfort-calm-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border: 2px solid var(--mz-accent);
+  border-radius: 16px;
+  background: var(--mz-accent-soft);
+  color: var(--mz-text);
+  text-align: start;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.comfort-panel .comfort-calm-btn > span:first-child {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.comfort-panel .comfort-calm-btn > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.comfort-panel .comfort-calm-btn strong {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.comfort-panel .comfort-calm-btn small {
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--mz-text-2);
+}
+
+.comfort-panel .comfort-calm-btn.is-on {
+  background: var(--mz-accent-grad);
+  border-color: transparent;
+  color: #fff;
+}
+
+.comfort-panel .comfort-calm-btn.is-on small {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* --------------------------------------------------------------- Toggles */
+.comfort-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comfort-panel .comfort-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--mz-border);
+  border-radius: 14px;
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  text-align: start;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.comfort-panel .comfort-toggle:hover {
+  border-color: var(--mz-accent);
+}
+
+.comfort-toggle-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--mz-surface);
+  font-size: 1.2rem;
+}
+
+.comfort-toggle-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.comfort-toggle-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.comfort-toggle-hint {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--mz-text-2);
+  line-height: 1.35;
+}
+
+/* The switch is drawn, not an <input>, so it inherits the button's state. */
+.comfort-switch {
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--mz-border-strong);
+  transition: background 0.18s ease;
+}
+
+.comfort-switch i {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.18s ease;
+}
+
+.comfort-panel .comfort-toggle.is-on .comfort-switch {
+  background: var(--mz-accent);
+}
+
+.comfort-panel .comfort-toggle.is-on .comfort-switch i {
+  transform: translateX(18px);
+}
+
+[dir="rtl"] .comfort-panel .comfort-toggle.is-on .comfort-switch i {
+  transform: translateX(-18px);
+}
+
+/* -------------------------------------------------------------- Sections */
+.comfort-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--mz-border);
+}
+
+.comfort-section-title {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comfort-section-hint {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: var(--mz-text-2);
+  line-height: 1.4;
+}
+
+/* Tints */
+.comfort-tints {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.comfort-panel .comfort-tint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 2px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--mz-text-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.comfort-tint-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--mz-border-strong);
+  background: var(--tint);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--mz-text-3);
+}
+
+.comfort-panel .comfort-tint.is-none .comfort-tint-swatch {
+  background: var(--mz-surface-2);
+}
+
+.comfort-panel .comfort-tint.is-on {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+  color: var(--mz-accent-text);
+}
+
+/* Text size + fonts */
+.comfort-size-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.comfort-panel .comfort-size-btn {
+  width: 48px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--mz-border);
+  border-radius: 10px;
+  background: var(--mz-surface-2);
+  color: var(--mz-text);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.comfort-panel .comfort-size-btn--big {
+  font-size: 1.2rem;
+}
+
+.comfort-panel .comfort-size-btn:hover:not(:disabled) {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+}
+
+.comfort-size-value {
+  flex: 1;
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.comfort-fonts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.comfort-panel .comfort-font {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 2px solid var(--mz-border);
+  border-radius: 12px;
+  background: var(--mz-surface-2);
+  color: var(--mz-text-2);
+}
+
+.comfort-panel .comfort-font .font-preview {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--mz-text);
+  line-height: 1.2;
+}
+
+.comfort-font-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.comfort-panel .comfort-font.is-on {
+  border-color: var(--mz-accent);
+  background: var(--mz-accent-soft);
+  color: var(--mz-accent-text);
+}
+
+/* --------------------------------------------------------- Nav trigger */
+.nav-user-tools .comfort-nav-btn {
+  position: relative;
+}
+
+.nav-user-tools .comfort-nav-btn.is-calm {
+  background: var(--mz-accent-soft);
+  border-color: var(--mz-accent);
+  color: var(--mz-accent-text);
+}
+
+@media (max-width: 480px) {
+  .comfort-panel {
+    top: auto;
+    bottom: 0;
+    inset-inline: 0;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .comfort-tints {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -130,11 +130,16 @@ export const playCorrectSound = () => {
   }
 };
 
-// Wrong answer sound - descending tone
+// Wrong answer sound — a soft, low two-note "hmm", not a buzzer.
+// The old sawtooth at 200 Hz was the harshest sound in the app, and it played
+// at the exact moment a child had just got something wrong. Feedback should be
+// clear without being punishing, so this is two gentle sine notes stepping
+// down, quieter than the correct chime.
 export const playWrongSound = () => {
-  playTone(200, 0.3, 'sawtooth', 0.2);
+  playTone(392, 0.16, 'sine', 0.12);
+  setTimeout(() => playTone(311, 0.26, 'sine', 0.1), 140);
   if (navigator.vibrate) {
-    navigator.vibrate([100, 50, 100]);
+    navigator.vibrate(60);
   }
 };
 
@@ -183,11 +188,13 @@ export const playSuccessSound = () => {
   }
 };
 
-// Error sound - negative feedback
+// Error sound — something went wrong technically (a failed import, say).
+// Distinct from a wrong answer: a short, muted double tap.
 export const playErrorSound = () => {
-  playTone(150, 0.4, 'square', 0.2);
+  playTone(220, 0.12, 'triangle', 0.12);
+  setTimeout(() => playTone(220, 0.12, 'triangle', 0.12), 160);
   if (navigator.vibrate) {
-    navigator.vibrate([200]);
+    navigator.vibrate([80, 40, 80]);
   }
 };
 
@@ -299,7 +306,7 @@ export const playSound = (soundName) => {
   }
 };
 
-export default {
+const soundEffects = {
   areSoundsEnabled,
   toggleSounds,
   playCorrectSound,
@@ -321,3 +328,5 @@ export default {
   playSoftClickSound,
   playSound
 };
+
+export default soundEffects;

@@ -8,6 +8,7 @@ import {
   getThresholdNotification,
   getPointDescription
 } from '../utils/pointsUtils';
+import { POINTS_CHANGED_EVENT } from '../utils/leaderboardUtils';
 
 const PointNotification = ({ userEmail, language = 'en' }) => {
   const [notifications, setNotifications] = useState([]);
@@ -60,10 +61,17 @@ const PointNotification = ({ userEmail, language = 'en' }) => {
     // Check immediately
     checkNotifications();
 
-    // Check periodically
-    const interval = setInterval(checkNotifications, 500);
+    // Points announce themselves the instant they land (every awardPoints
+    // call emits this), so the toast appears right away. The old 500 ms poll
+    // ran twice a second for the whole lesson; a slow backstop poll is kept
+    // only for writes made from another tab.
+    window.addEventListener(POINTS_CHANGED_EVENT, checkNotifications);
+    const interval = setInterval(checkNotifications, 4000);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener(POINTS_CHANGED_EVENT, checkNotifications);
+      clearInterval(interval);
+    };
   }, [userEmail, language]);
 
   return (

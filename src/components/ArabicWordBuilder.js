@@ -1,12 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceOver } from '../hooks/useVoiceOver';
+import { awardPoints, awardStreakBonus } from '../utils/pointsUtils';
 import CelebrationPopup from './CelebrationPopup';
 import './ArabicWordBuilder.css';
+
+const getSessionEmail = () => {
+  try {
+    return JSON.parse(localStorage.getItem('stellar_session') || '{}').email || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * The in-game coin total is saved PER LEARNER. It used to live under one
+ * device-wide key, so every account on a shared tablet saw (and added to) the
+ * same total. The old key is read once as a fallback so nobody loses coins.
+ */
+const LEGACY_PROGRESS_KEY = 'arabic_wordbuilder_progress';
+const progressKey = (email) => (email ? `${LEGACY_PROGRESS_KEY}_${email}` : LEGACY_PROGRESS_KEY);
 
 const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion, speak }) => {
   // Voice Over hook for Arabic pronunciation
   const voiceOver = useVoiceOver(language, { autoPlayEnabled: true });
+  const userEmail = useRef(getSessionEmail());
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedLetters, setSelectedLetters] = useState([]);
@@ -315,9 +333,11 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
     return newArray;
   };
 
-  // Load saved progress
+  // Load saved progress (per learner, falling back to the old shared key)
   useEffect(() => {
-    const savedProgress = localStorage.getItem('arabic_wordbuilder_progress');
+    const savedProgress =
+      localStorage.getItem(progressKey(userEmail.current)) ||
+      localStorage.getItem(LEGACY_PROGRESS_KEY);
     if (savedProgress) {
       try {
         const progress = JSON.parse(savedProgress);
@@ -330,18 +350,14 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
   }, []);
 
   // Save progress
-  const saveProgress = () => {
-    const progress = {
-      totalPoints,
-      bestStreak,
-      lastPlayed: new Date().toISOString()
-    };
-    localStorage.setItem('arabic_wordbuilder_progress', JSON.stringify(progress));
-  };
-
   useEffect(() => {
     if (totalPoints > 0) {
-      saveProgress();
+      const progress = {
+        totalPoints,
+        bestStreak,
+        lastPlayed: new Date().toISOString()
+      };
+      localStorage.setItem(progressKey(userEmail.current), JSON.stringify(progress));
     }
   }, [totalPoints, bestStreak]);
 
@@ -429,6 +445,15 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
         setBestStreak(streak + 1);
       }
 
+      // The coins above are the game's own display. The global points —
+      // what the leaderboard, rewards and daily goal count — are awarded
+      // here too; this game used to be the one place points never reached.
+      // (No chime here: the celebration popup below plays it.)
+      if (userEmail.current) {
+        awardPoints(userEmail.current, showHint ? 'WORD_BUILT_CORRECT' : 'WORD_BUILT_PERFECT');
+        if ([3, 5, 10].includes(streak + 1)) awardStreakBonus(userEmail.current, streak + 1);
+      }
+
       // Determine reward
       const reward = {
         points: pointsEarned,
@@ -473,6 +498,7 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
     if (selectedLetters.length > 0) {
       checkAnswer();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLetters]);
 
   const renderDifficultySelection = () => (

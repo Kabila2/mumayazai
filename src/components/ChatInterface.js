@@ -31,7 +31,6 @@ const saveConversationMemory = (messages) => {
       version: "2.0"
     };
     localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memoryData));
-    console.log("💾 Memory saved:", messages.length, "messages");
   } catch (error) {
     console.warn("Failed to save conversation memory:", error);
   }
@@ -46,7 +45,6 @@ const loadConversationMemory = () => {
     const isRecent = Date.now() - memoryData.timestamp < 30 * 24 * 60 * 60 * 1000; // 30 days
     
     if (isRecent && memoryData.messages?.length) {
-      console.log("💾 Memory loaded:", memoryData.messages.length, "messages");
       return memoryData.messages;
     }
   } catch (error) {
@@ -58,7 +56,6 @@ const loadConversationMemory = () => {
 const clearConversationMemory = () => {
   try {
     localStorage.removeItem(MEMORY_STORAGE_KEY);
-    console.log("💾 Memory cleared");
   } catch (error) {
     console.warn("Failed to clear conversation memory:", error);
   }
@@ -81,178 +78,6 @@ const buildConversationContext = (messages) => {
   if (conversationMessages.length === 0) return "";
   
   return `\n\nConversation History:\n${conversationMessages.join('\n')}\n\nCurrent Request:\n`;
-};
-
-/** ---------- Enhanced Image Analysis Function ---------- */
-const analyzeImage = async (imageUrl) => {
-  try {
-    // Convert image to base64 for analysis
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-
-    return new Promise(async (resolve) => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const base64 = reader.result;
-          const imageElement = new Image();
-
-          imageElement.onload = async () => {
-            // Create canvas for image processing
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = imageElement.width;
-            canvas.height = imageElement.height;
-            ctx.drawImage(imageElement, 0, 0);
-
-            let analysis = `• Image Analysis Complete\n• Dimensions: ${imageElement.width} × ${imageElement.height} pixels\n• File size: ${(blob.size / 1024).toFixed(1)} KB\n• Format: ${blob.type}\n\n`;
-
-            // Basic image characteristics
-            const aspectRatio = (imageElement.width / imageElement.height).toFixed(2);
-            if (aspectRatio > 1.5) {
-              analysis += "• Image orientation: Landscape (wide)\n";
-            } else if (aspectRatio < 0.7) {
-              analysis += "• Image orientation: Portrait (tall)\n";
-            } else {
-              analysis += "• Image orientation: Square or standard\n";
-            }
-
-            // Analyze image colors and brightness
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const pixels = imageData.data;
-            let totalBrightness = 0;
-            let redSum = 0, greenSum = 0, blueSum = 0;
-            const sampleSize = Math.min(10000, pixels.length / 4); // Sample pixels for performance
-
-            for (let i = 0; i < sampleSize * 4; i += 4) {
-              const r = pixels[i];
-              const g = pixels[i + 1];
-              const b = pixels[i + 2];
-
-              redSum += r;
-              greenSum += g;
-              blueSum += b;
-
-              // Calculate brightness using luminance formula
-              totalBrightness += (0.299 * r + 0.587 * g + 0.114 * b);
-            }
-
-            const avgBrightness = totalBrightness / sampleSize;
-            const avgRed = redSum / sampleSize;
-            const avgGreen = greenSum / sampleSize;
-            const avgBlue = blueSum / sampleSize;
-
-            // Brightness analysis
-            if (avgBrightness > 180) {
-              analysis += "• Brightness: Very bright/light image\n";
-            } else if (avgBrightness > 120) {
-              analysis += "• Brightness: Well-lit image\n";
-            } else if (avgBrightness > 60) {
-              analysis += "• Brightness: Moderately lit\n";
-            } else {
-              analysis += "• Brightness: Dark image\n";
-            }
-
-            // Color analysis
-            const dominantColor = Math.max(avgRed, avgGreen, avgBlue);
-            if (dominantColor === avgRed && avgRed > avgGreen + 30 && avgRed > avgBlue + 30) {
-              analysis += "• Color tone: Predominantly red/warm tones\n";
-            } else if (dominantColor === avgBlue && avgBlue > avgRed + 30 && avgBlue > avgGreen + 30) {
-              analysis += "• Color tone: Predominantly blue/cool tones\n";
-            } else if (dominantColor === avgGreen && avgGreen > avgRed + 20 && avgGreen > avgBlue + 20) {
-              analysis += "• Color tone: Predominantly green/natural tones\n";
-            } else if (Math.abs(avgRed - avgGreen) < 20 && Math.abs(avgGreen - avgBlue) < 20) {
-              analysis += "• Color tone: Balanced/neutral colors or grayscale\n";
-            } else {
-              analysis += "• Color tone: Mixed color palette\n";
-            }
-
-            // Try OCR-like text detection (basic edge detection for text regions)
-            try {
-              const grayImageData = ctx.createImageData(canvas.width, canvas.height);
-              for (let i = 0; i < pixels.length; i += 4) {
-                const gray = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
-                grayImageData.data[i] = gray;
-                grayImageData.data[i + 1] = gray;
-                grayImageData.data[i + 2] = gray;
-                grayImageData.data[i + 3] = pixels[i + 3];
-              }
-
-              // Simple edge detection for text-like regions
-              let edgeCount = 0;
-              const sampleEdges = Math.min(1000, canvas.width * canvas.height / 100);
-
-              for (let i = 0; i < sampleEdges; i++) {
-                const x = Math.floor(Math.random() * (canvas.width - 1));
-                const y = Math.floor(Math.random() * (canvas.height - 1));
-                const idx = (y * canvas.width + x) * 4;
-
-                if (idx + 4 < grayImageData.data.length) {
-                  const current = grayImageData.data[idx];
-                  const right = grayImageData.data[idx + 4];
-                  const bottom = grayImageData.data[idx + canvas.width * 4];
-
-                  if (Math.abs(current - right) > 50 || Math.abs(current - bottom) > 50) {
-                    edgeCount++;
-                  }
-                }
-              }
-
-              const edgeRatio = edgeCount / sampleEdges;
-              if (edgeRatio > 0.3) {
-                analysis += "• Content: Likely contains text, diagrams, or detailed graphics\n";
-              } else if (edgeRatio > 0.15) {
-                analysis += "• Content: Moderate detail, may contain some text or structured elements\n";
-              } else {
-                analysis += "• Content: Appears to be a photo or smooth graphics with minimal text\n";
-              }
-
-            } catch (ocrError) {
-              analysis += "• Content: Unable to analyze text content\n";
-            }
-
-            // Image quality assessment
-            const resolution = canvas.width * canvas.height;
-            if (resolution > 2000000) {
-              analysis += "• Quality: High resolution image\n";
-            } else if (resolution > 500000) {
-              analysis += "• Quality: Standard resolution\n";
-            } else {
-              analysis += "• Quality: Lower resolution or thumbnail\n";
-            }
-
-            analysis += "\n• What I can help with:\n";
-            analysis += "  • Describe what you see in the image\n";
-            analysis += "  • Ask questions about specific elements\n";
-            analysis += "  • Request analysis of colors, composition, or technical aspects\n";
-            analysis += "  • Help identify potential text content or document structure\n";
-            analysis += "  • Provide suggestions for image improvement or editing\n";
-
-            resolve(analysis);
-          };
-
-          imageElement.onerror = () => {
-            resolve("• I can see you've uploaded an image\n• Having trouble processing the image format\n• Could you try a different image or describe what's in it?");
-          };
-
-          imageElement.src = base64;
-
-        } catch (processingError) {
-          console.error("Image processing error:", processingError);
-          resolve("• Image received successfully\n• Basic analysis available\n• Please describe what's in the image for more detailed help");
-        }
-      };
-
-      reader.onerror = () => {
-        resolve("• I can see you've uploaded an image\n• Having trouble reading the file\n• Could you try uploading again or describe the image?");
-      };
-
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error("Image analysis error:", error);
-    return "• I can see you've uploaded an image\n• I'm having trouble analyzing it right now\n• Could you describe what's in the image so I can better help you?";
-  }
 };
 
 /** ---------- AI Integration with Enhanced Memory ----------
@@ -388,7 +213,6 @@ const ChatInterface = ({
   const [messages, setMessages] = useState(() => {
     const savedMessages = loadConversationMemory();
     if (savedMessages && savedMessages.length > 0) {
-      console.log("💾 Restored", savedMessages.length, "messages from memory");
       return savedMessages;
     }
     return [{
@@ -400,11 +224,11 @@ const ChatInterface = ({
   
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [, setIsInputFocused] = useState(false);
   const [showMemoryStatus, setShowMemoryStatus] = useState(false);
   const [showSaveChatModal, setShowSaveChatModal] = useState(false);
   const [showExploreModal, setShowExploreModal] = useState(false);
-  const [isChildLinked, setIsChildLinked] = useState(false);
+  const [, setIsChildLinked] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
   
@@ -560,6 +384,7 @@ const ChatInterface = ({
       text: tr.welcomeMessage,
       id: Date.now()
     }]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t, userEmail, messages]);
 
   // Enhanced send message handler
@@ -618,8 +443,6 @@ const ChatInterface = ({
       const updatedMessages = [...messages, newUserMessage];
       const conversationContext = buildConversationContext(updatedMessages);
 
-      console.log("💾 Building AI response with full conversation context");
-      console.log("📝 Context includes", updatedMessages.length - 1, "previous messages");
 
       const responseText = await getAIResponse(text, conversationContext, false);
 
