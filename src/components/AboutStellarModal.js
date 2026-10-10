@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -8,13 +8,11 @@ import './AboutStellarModal.css';
  * "About Stellar" — the why-this-was-made panel, opened from the login screen.
  *
  * THE VIDEO SLOT
- * The intro video is not in the repo yet, so this renders a labelled slot
- * rather than a broken <video>: drop a file at `public/about-stellar.mp4`
- * (optionally with `public/about-stellar-poster.jpg`) and it plays. Deciding
- * that at runtime matters because a missing src on a <video> element renders as
- * a dead black rectangle with no explanation, which looks like a bug on the
- * first screen anyone sees. `HAS_VIDEO` is the one line to flip, and it is read
- * from the public folder so no build config is involved.
+ * The intro video lives at `public/about-stellar.mp4` (optionally with
+ * `public/about-stellar-poster.jpg`). It is served straight from the public
+ * folder, so no build config is involved. If the file is missing or fails to
+ * load, the <video> fires onError and we swap in a labelled slot instead of
+ * leaving a dead black rectangle on the first screen anyone sees.
  *
  * The written copy stands on its own either way — someone on a slow connection
  * or with video blocked still gets the answer.
@@ -69,12 +67,11 @@ const COPY = {
   }
 };
 
-/** Whether the video file has been added. Flip by adding the file. */
-const HAS_VIDEO = false;
-
 const AboutStellarModal = ({ language = 'en', onClose }) => {
   const closeRef = useRef(null);
   const copy = COPY[language] || COPY.en;
+  // Flips to false only if the browser cannot load the file.
+  const [hasVideo, setHasVideo] = useState(true);
 
   // Focus the close button on open and close on Escape — the panel covers the
   // whole login screen, so there has to be a keyboard way out.
@@ -127,7 +124,7 @@ const AboutStellarModal = ({ language = 'en', onClose }) => {
         <p className="about-stellar-tagline">{copy.tagline}</p>
 
         <div className="about-stellar-video">
-          {HAS_VIDEO ? (
+          {hasVideo ? (
             <video
               className="about-stellar-player"
               src={VIDEO_SRC}
@@ -135,6 +132,7 @@ const AboutStellarModal = ({ language = 'en', onClose }) => {
               controls
               preload="metadata"
               playsInline
+              onError={() => setHasVideo(false)}
             >
               {copy.videoPending}
             </video>
