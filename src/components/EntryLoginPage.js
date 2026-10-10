@@ -41,11 +41,6 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
   const [showAbout, setShowAbout] = useState(false);
   const [mode, setMode] = useState("signin");
   const [selectedLang, setSelectedLang] = useState("en");
-  // The About panel follows whichever language the visitor last engaged with,
-  // defaulting to English. There is no app-wide language yet on this screen —
-  // it is chosen by which pair of buttons you press — so this is the only
-  // signal available.
-  const [aboutLang, setAboutLang] = useState("en");
 
   return (
     <>
@@ -82,26 +77,16 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
         {/* About Stellar, bottom right. Deliberately quieter than the four
             auth buttons — it answers "what is this?" for someone who has not
             decided to sign up yet, so it must not compete with the thing they
-            came to do. Both languages in one label, since the visitor has not
-            picked one at this point. */}
+            came to do. English only by design. */}
         <div className="about-launcher">
           <button
             type="button"
             className="about-launcher-btn"
-            onClick={() => { setAboutLang("en"); setShowAbout(true); }}
+            onClick={() => setShowAbout(true)}
             aria-label="About Stellar"
           >
             <FaInfoCircle aria-hidden="true" />
             <span>About Stellar</span>
-          </button>
-          <button
-            type="button"
-            className="about-launcher-btn about-launcher-btn--ar"
-            onClick={() => { setAboutLang("ar"); setShowAbout(true); }}
-            aria-label="عن مميّز"
-          >
-            <FaInfoCircle aria-hidden="true" />
-            <span>عن مميّز</span>
           </button>
         </div>
       </div>
@@ -109,7 +94,7 @@ export default function EntryLoginPage({ onSignIn, onSignUp }) {
       <AnimatePresence>
         {showAbout && (
           <AboutStellarModal
-            language={aboutLang}
+            language="en"
             onClose={() => setShowAbout(false)}
           />
         )}

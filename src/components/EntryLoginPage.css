@@ -311,10 +311,6 @@ canvas[data-orb]           { z-index: 0 !important; pointer-events: none; }
   animation: fadeInUp 0.6s ease-out 0.6s forwards;
 }
 
-.about-launcher-btn--ar {
-  animation-delay: 0.75s;
-}
-
 .about-launcher-btn:hover {
   background: rgba(233, 230, 255, 0.18);
   border-color: rgba(167, 139, 250, 0.6);
