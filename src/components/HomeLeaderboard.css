@@ -31,23 +31,6 @@
   gap: 8px;
 }
 
-.home-leaderboard-all {
-  border: none;
-  background: none;
-  padding: 6px 8px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--mz-accent-text);
-  cursor: pointer;
-  border-radius: var(--mz-radius-sm);
-}
-
-.home-leaderboard-all:hover { background: var(--mz-accent-soft); }
-.home-leaderboard-all:focus-visible {
-  outline: 3px solid var(--mz-ring);
-  outline-offset: 2px;
-}
 
 .home-leaderboard-empty,
 .home-leaderboard-mine {

@@ -620,20 +620,12 @@ select:focus-visible,
   }
 }
 
-/* Screen reader announcements */
-[role="status"],
-[role="alert"],
-[aria-live] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
+/* Screen reader announcements.
+   There is deliberately NO blanket rule hiding [role="status"], [role="alert"]
+   or [aria-live] here. One used to exist, and it clipped every inline error
+   message (auth form, chat composer, ...) to a single invisible pixel, because
+   those attributes also belong on messages sighted users must read.
+   An element that should be heard but not seen opts in with .sr-only. */
 
 /* Ensure proper heading hierarchy visual styling */
 h1, h2, h3, h4, h5, h6 {

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import LeaderboardModal from './LeaderboardModal';
 import DailyTasksModal from './DailyTasksModal';
 import SavedChatsModal from './SavedChatsModal';
 import "./ExploreModal.css";
@@ -9,15 +8,10 @@ export default function ExploreModal({ isOpen, onClose, currentUserEmail, t, lan
   const [activeModal, setActiveModal] = useState(null);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
+  // No leaderboard card here: the leaderboard lives on the platform home
+  // page (HomeLeaderboard), and the chat/voice Explore menu is for things
+  // specific to the conversation screens.
   const exploreItems = [
-    {
-      id: 'leaderboard',
-      title: language === 'en' ? 'Leaderboard' : 'لوحة المتصدرين',
-      description: language === 'en' ? 'See how you rank against other users' : 'شاهد ترتيبك مقارنة بالمستخدمين الآخرين',
-      icon: '🏆',
-      color: '#FFD700',
-      gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
-    },
     {
       id: 'tasks',
       title: language === 'en' ? 'Daily Tasks' : 'المهام اليومية',
@@ -332,14 +326,6 @@ export default function ExploreModal({ isOpen, onClose, currentUserEmail, t, lan
       </AnimatePresence>
 
       {/* Sub-modals */}
-      <LeaderboardModal
-        isOpen={activeModal === 'leaderboard'}
-        onClose={handleModalClose}
-        currentUserEmail={currentUserEmail}
-        t={t}
-        language={language}
-      />
-
       <DailyTasksModal
         isOpen={activeModal === 'tasks'}
         onClose={handleModalClose}

@@ -20,12 +20,12 @@ import './HomeLeaderboard.css';
  * It is deliberately SMALL: a top five and the learner's own row. The home
  * page is already the busiest screen in the app, and a full eight-tab
  * leaderboard there would be exactly the overload this pass is trying to undo.
- * The full version is still one tap away via "See all".
+ * There is no "See all": the top five is the whole board.
  */
 const PODIUM = ['🥇', '🥈', '🥉'];
 const VISIBLE_ROWS = 5;
 
-const HomeLeaderboard = ({ userEmail, language = 'en', onSeeAll }) => {
+const HomeLeaderboard = ({ userEmail, language = 'en' }) => {
   const [rows, setRows] = useState([]);
   const [standing, setStanding] = useState({ rank: null, total: 0, points: 0 });
 
@@ -61,11 +61,6 @@ const HomeLeaderboard = ({ userEmail, language = 'en', onSeeAll }) => {
         <h3 className="home-leaderboard-title" id="home-leaderboard-title">
           <span aria-hidden="true">🏆</span> {tr('Leaderboard', 'لوحة المتصدرين')}
         </h3>
-        {onSeeAll && rows.length > 0 && (
-          <button type="button" className="home-leaderboard-all" onClick={onSeeAll}>
-            {tr('See all', 'عرض الكل')}
-          </button>
-        )}
       </header>
 
       {rows.length === 0 ? (

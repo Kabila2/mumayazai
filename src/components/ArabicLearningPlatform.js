@@ -19,7 +19,6 @@ import TeacherParentChat from "./TeacherParentChat";
 import DarkModeToggle from "./DarkModeToggle";
 import HighContrastToggle from "./HighContrastToggle";
 import ProfileSettings from "./ProfileSettings";
-import Leaderboard from "./Leaderboard";
 import StreakCounter from "./StreakCounter";
 import TotalPointsBar from "./TotalPointsBar";
 import ProgressDashboard from "./ProgressDashboard";
@@ -214,7 +213,6 @@ const ArabicLearningPlatform = ({
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [currentProfilePicture, setCurrentProfilePicture] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showRewards, setShowRewards] = useState(false);
   // The difficulty the learner picked last time is only a default: every game
   // asks again on the way in. It used to be asked once per session and then
@@ -904,11 +902,7 @@ const ArabicLearningPlatform = ({
           transition={{ delay: 0.12, duration: 0.35 }}
         >
           <StreakCounter language={language} />
-          <HomeLeaderboard
-            userEmail={userEmail}
-            language={language}
-            onSeeAll={() => setShowLeaderboard(true)}
-          />
+          <HomeLeaderboard userEmail={userEmail} language={language} />
         </motion.div>
 
         {renderGroup(
@@ -1608,19 +1602,6 @@ const ArabicLearningPlatform = ({
               setCurrentProfilePicture(user?.profilePicture || null);
             }}
             onClose={() => setShowProfileSettings(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Full leaderboard — opened from "See all" on the home panel. The flag
-          that controls it was previously never set anywhere, so this modal was
-          unreachable dead code. */}
-      <AnimatePresence>
-        {showLeaderboard && (
-          <Leaderboard
-            userEmail={getCurrentUserEmail()}
-            language={language}
-            onClose={() => setShowLeaderboard(false)}
           />
         )}
       </AnimatePresence>

@@ -138,9 +138,8 @@ const RewardsStore = ({ userEmail, language = 'en', onClose }) => {
           </button>
         </header>
 
-        {/* No `role="status"` on this banner: App.css visually hides every
-            element carrying one, treating it as a screen-reader-only
-            announcer. The points total is the headline of this screen. */}
+        {/* No `role="status"` on this banner: the points total is the
+            headline of this screen, not a live announcement. */}
         <div className="rewards-total">
           <span className="rewards-total-value">{overview.totalPoints}</span>
           <span className="rewards-total-label">

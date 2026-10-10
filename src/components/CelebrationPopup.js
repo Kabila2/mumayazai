@@ -145,16 +145,9 @@ const CelebrationPopup = ({
           transition={{ duration: 0.25, ease: 'easeOut' }}
           onClick={onClose}
         >
-          {/*
-            The announcement lives on its own hidden element, NOT on this
-            overlay. App.css visually hides every `[role="status"]`,
-            `[role="alert"]` and `[aria-live]` element (1x1, clipped) on the
-            assumption that anything carrying one is a screen-reader-only
-            announcer. Putting those attributes on the overlay therefore
-            collapsed the entire popup to a single clipped pixel — visible to
-            nobody. The message still needs announcing, so it gets a real
-            announcer instead.
-          */}
+          {/* The announcement lives on its own .sr-only element rather than
+              on the overlay, so the popup stays visible and the message is
+              still read out. */}
           <span className="sr-only" role="status">{displayMessage}</span>
 
           {/* Confetti — falls once and settles, rather than looping. */}

@@ -89,9 +89,8 @@ const TotalPointsBar = ({ userEmail, language = 'en' }) => {
   const label = language === 'ar' ? 'مجموع النقاط' : 'Total Points';
 
   return (
-    // No role="status" / aria-live on the bar itself: App.css visually hides
-    // every live region app-wide, which would collapse the bar to 1px. The
-    // announcement lives in its own hidden span at the end instead.
+    // No role="status" / aria-live on the bar itself: the announcement lives
+    // in its own screen-reader-only span at the end instead.
     <motion.aside
       className="total-points-bar"
       aria-label={`${label}: ${total}. ${rankName}`}
@@ -147,10 +146,9 @@ const TotalPointsBar = ({ userEmail, language = 'en' }) => {
         </span>
       </div>
 
-      {/* Announcer. App.css hides every [aria-live] node app-wide, so this is
-          invisible by that rule alone — and it only re-announces when the
-          total actually changes, not on every poll. */}
-      <span className="tpb-announcement" aria-live="polite">
+      {/* Announcer. Visually hidden via .sr-only; it only re-announces when
+          the total actually changes, not on every poll. */}
+      <span className="tpb-announcement sr-only" aria-live="polite">
         {`${label}: ${total}`}
       </span>
     </motion.aside>

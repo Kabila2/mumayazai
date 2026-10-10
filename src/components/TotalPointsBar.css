@@ -13,10 +13,9 @@
    scoped under .total-points-bar — the learning and game stylesheets share
    plenty of generic class names.
 
-   NOTE: the bar must never carry role="status" or aria-live. App.css hides
-   every live region app-wide (absolute, 1x1, clipped), which collapses whatever
-   it lands on. The component announces through a separate .tpb-announcement
-   span, which wants exactly that treatment and so needs no rule of its own.
+   NOTE: the bar itself carries no role="status" / aria-live. The component
+   announces through a separate .tpb-announcement span that uses the global
+   .sr-only helper, so it needs no rule of its own.
    ========================================================================== */
 
 .total-points-bar {

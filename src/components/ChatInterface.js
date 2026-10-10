@@ -674,7 +674,7 @@ const ChatInterface = ({
             <motion.button
               className="header-button white explore-button"
               onClick={() => setShowExploreModal(true)}
-              title="Explore features, leaderboard, tasks and learning"
+              title="Explore daily tasks and saved chats"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               initial={{ x: 80, opacity: 0 }}
