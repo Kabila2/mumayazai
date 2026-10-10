@@ -34,11 +34,11 @@ const COPY = {
     tagline: 'Welcome to Stellar, where kids can unlock their potential.',
     videoPending: 'The intro video is coming soon.',
     videoPendingHint: 'Add about-stellar.mp4 to the public folder and it will play here.',
-    whyTitle: 'Why we built it',
+    whyTitle: 'Why I built it',
     why: [
       'Most language apps assume you can already read the script. Stellar does not: every Arabic word, letter and sentence comes with its sound and its phonetic spelling, so a child can start on day one.',
       'Lessons open one at a time. Finishing one unlocks the next, so nobody is handed sixteen choices and left to guess where to begin.',
-      'It is built for learners who find a busy screen hard — including children with Down syndrome and dyslexia. Large targets, calm animation, a dyslexia-friendly typeface and a real high-contrast mode are not add-ons here; they are the design.'
+      'It is built for learners who find a busy screen hard, including children with Down syndrome and dyslexia. Large targets, calm animation, a dyslexia-friendly typeface and a real high-contrast mode are not add-ons here; they are the design.'
     ],
     forTitle: 'Who it is for',
     forList: [
@@ -53,11 +53,11 @@ const COPY = {
     tagline: 'مرحباً بك في مميّز، حيث يكتشف الأطفال قدراتهم.',
     videoPending: 'فيديو التعريف قادم قريباً.',
     videoPendingHint: 'أضف about-stellar.mp4 إلى مجلد public ليُشغَّل هنا.',
-    whyTitle: 'لماذا بنيناه',
+    whyTitle: 'لماذا بنيته',
     why: [
       'معظم تطبيقات اللغة تفترض أنك تقرأ الحرف العربي أصلاً. مميّز لا يفترض ذلك: كل كلمة وحرف وجملة مع صوتها وكتابتها الصوتية، ليبدأ الطفل من اليوم الأول.',
       'تُفتح الدروس واحداً تلو الآخر. إكمال درس يفتح التالي، فلا يُترك أحد أمام ستة عشر خياراً يحاول تخمين البداية.',
-      'بُني لمن تصعب عليهم الشاشة المزدحمة — ومنهم أطفال متلازمة داون وصعوبات القراءة. الأهداف الكبيرة والحركة الهادئة والخط الصديق لصعوبات القراءة ووضع التباين العالي ليست إضافات هنا، بل هي التصميم نفسه.'
+      'بُني لمن تصعب عليهم الشاشة المزدحمة، ومنهم أطفال متلازمة داون وصعوبات القراءة. الأهداف الكبيرة والحركة الهادئة والخط الصديق لصعوبات القراءة ووضع التباين العالي ليست إضافات هنا، بل هي التصميم نفسه.'
     ],
     forTitle: 'لمن هو',
     forList: [
