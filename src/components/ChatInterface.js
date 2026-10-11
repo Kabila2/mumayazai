@@ -17,6 +17,7 @@ import {
 } from '../utils/leaderboardUtils';
 import { awardPoints } from '../utils/pointsUtils';
 import { askAI } from '../utils/aiClient';
+import { chatHtml } from '../utils/chatFormatting';
 
 /** ---------- Enhanced Memory System ---------- */
 const MEMORY_STORAGE_KEY = "stellar_chat_memory";
@@ -92,7 +93,7 @@ const getAIResponse = async (prompt, conversationContext = "", hasImages = false
     : "";
 
   // Add bullet point formatting instruction
-  const bulletPointInstruction = "\n\nIMPORTANT: Please format your response using bullet points. Start each main point with • and use clear, concise bullet points throughout your response.";
+  const bulletPointInstruction = "\n\nIMPORTANT FORMATTING: Reply in plain text only. Do NOT use Markdown: no asterisks, no **bold**, no # headings, no --- lines, no backticks. Put each main point on its own line starting with • and keep every point short and clear.";
 
   const imageInstruction = hasImages
     ? "\n\nThe learner has attached one or more images; describe what is relevant to their question."
@@ -749,7 +750,7 @@ const ChatInterface = ({
                       fontWeight: '500'
                     }}
                     dangerouslySetInnerHTML={{
-                      __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
+                      __html: chatHtml(message.text)
                     }}
                   />
                 )}

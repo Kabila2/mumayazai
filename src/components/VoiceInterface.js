@@ -12,6 +12,7 @@ import "./VoiceInterface.css";
 import "./ChatInterface.css";
 import { isElevenLabsConfigured, speakWithElevenLabs, stopElevenLabsSpeech } from "../utils/elevenLabsTTS";
 import { askAI } from "../utils/aiClient";
+import { chatHtml, chatPlainText } from "../utils/chatFormatting";
 
 /** ---------- Advanced Voice System ---------- */
 
@@ -279,7 +280,7 @@ const getVoiceAIResponse = async (prompt, conversationContext = "") => {
     : "";
 
   // Add bullet point formatting instruction for voice
-  const bulletPointInstruction = "\n\nIMPORTANT: Please format your response using bullet points for voice interaction. Start each main point with • and use clear, concise bullet points throughout your response. Keep responses conversational and optimized for voice.";
+  const bulletPointInstruction = "\n\nIMPORTANT FORMATTING: Reply in plain text only. Do NOT use Markdown: no asterisks, no **bold**, no # headings, no --- lines, no backticks. Put each main point on its own line starting with • and keep it conversational, short and easy to read aloud.";
 
   const enhancedPrompt = conversationContext
     ? prompt + conversationContext + memoryInstruction + bulletPointInstruction
@@ -1530,12 +1531,12 @@ export default function VoiceInterface({
                   fontWeight: '500'
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: message.text.replace(/\n/g, '<br/>').replace(/•/g, '<span style="display: inline-block; margin-right: 8px;">•</span>')
+                  __html: chatHtml(message.text)
                 }}
               />
               {message.sender === 'assistant' && !message.isCommand && (
                 <motion.button
-                  onClick={() => speak(message.text)}
+                  onClick={() => speak(chatPlainText(message.text))}
                   style={{
                     background: 'rgba(16, 185, 129, 0.1)',
                     border: '1px solid rgba(16, 185, 129, 0.3)',
