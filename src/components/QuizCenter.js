@@ -323,10 +323,10 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   const quizTypes = [
     {
       /**
-       * Quick review: five questions from the learner's own completed items.
-       * Short on purpose — spaced, little-and-often recall is what moves
-       * things into long-term memory, and five questions is a length a
-       * learner with a short attention span will actually finish.
+       * Quick Review: 5 questions taken from what the learner has already
+       * finished. I kept it short on purpose because little and often is
+       * better for memory, and 5 questions is a length a child with a short
+       * attention span will actually finish.
        */
       id: 'quick-review',
       nameEn: 'Quick Review',
@@ -346,9 +346,9 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
     },
     {
       /**
-       * The unit test: the only full test drawn from the learner's own
-       * completed material rather than a fixed bank. The others can ask about
-       * letters and words the learner has never been shown.
+       * Unit Test: the only full test built from what the learner has actually
+       * completed. The other quizzes use a fixed question bank, so they can ask
+       * about letters and words the learner has not seen yet.
        */
       id: 'unit-test',
       nameEn: 'Unit Test',
@@ -489,26 +489,26 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
     const isMatching = selectedQuizType?.id === 'matching';
 
     if (isMatching) {
-      // Matching cannot be failed, so it pays per pair plus a completion
-      // bonus rather than the "perfect score" bonus a real test earns.
+      // You cannot fail Match Pairs, so it pays per pair plus a finish bonus
+      // instead of the perfect score bonus a real test gives.
       awardPoints(userEmail, 'MEMORY_PAIR_FOUND', score);
       awardPoints(userEmail, 'QUIZ_COMPLETED');
     } else {
-      // Award points based on performance
+      // Points depend on how well they did
       if (percentage === 100) {
         awardPoints(userEmail, 'QUIZ_PERFECT_SCORE');
       } else if (percentage >= PASS_PERCENT) {
         awardPoints(userEmail, 'QUIZ_COMPLETED');
       }
-      // Award points for each correct answer
+      // Plus points for every correct answer
       if (score > 0) awardPoints(userEmail, 'QUIZ_QUESTION_CORRECT', score);
-      // Passing the unit test is the milestone the curriculum is built around.
+      // Passing the unit test is what unlocks the next module, so it gets extra
       if (selectedQuizType?.id === 'unit-test' && percentage >= PASS_PERCENT) {
         awardPoints(userEmail, 'TEST_PASSED');
       }
     }
 
-    // One celebration, at the end, when it was earned — not one per answer.
+    // One celebration at the end if they passed, not one after every answer
     if (percentage >= PASS_PERCENT) setShowCelebration(true);
 
     // Quiz badges. `checkAchievements` existed but was never called from
@@ -702,7 +702,7 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
   };
 
   const handleAnswerSelect = (answerIndex, correctIndexOverride = null) => {
-    if (showFeedback) return; // Prevent multiple selections
+    if (showFeedback) return; // ignore extra taps while feedback is showing
 
     setSelectedAnswer(answerIndex);
 
@@ -713,17 +713,17 @@ const QuizCenter = ({ t, language, fontSize, highContrast, reducedMotion, speak,
       setIsCorrect(correct);
       setShowFeedback(true);
 
-      // A chime and a spoken phrase per answer; the celebration popup waits
-      // for the results screen. A popup on every one of twelve questions was
-      // twelve interruptions in the middle of a test.
+      // A sound and a spoken phrase after each answer. The celebration popup
+      // waits for the results screen, because a popup after every one of
+      // twelve questions was too many interruptions.
       if (correct) {
         setScore(score + 1);
         playCorrectSound();
       } else {
         playWrongSound();
       }
-      // Varied wording, so twenty answers in a row do not sound like a
-      // recording — see speechPhrasing.js.
+      // Different wording each time so twenty answers in a row do not sound
+      // like a recording (see speechPhrasing.js)
       voiceOver.speak(answerPhrase({ language, correct }), true);
 
       setAnswers([...answers, { questionIndex: currentQuestionIndex, correct }]);

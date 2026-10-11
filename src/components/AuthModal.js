@@ -64,7 +64,7 @@ const COPY = {
   }
 };
 
-// Messages returned by App.js's auth handlers, translated for Arabic sessions
+// Error messages that come back from App.js, translated when the site is in Arabic
 const SERVER_MESSAGES_AR = {
   "Invalid email or password.": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
   "This email is already registered.": "هذا البريد الإلكتروني مسجل بالفعل.",
@@ -95,7 +95,7 @@ export default function AuthModal({ lang, mode, setMode, onClose, onSubmit }) {
   const t = COPY[lang] || COPY.en;
   const isSignup = mode === "signup";
 
-  // Escape closes the dialog
+  // Pressing Escape closes the popup
   useEffect(() => {
     const handleKey = (event) => {
       if (event.key === "Escape") onClose();
@@ -111,7 +111,7 @@ export default function AuthModal({ lang, mode, setMode, onClose, onSubmit }) {
     if (!EMAIL_RE.test(email)) newErrors.email = t.errors.email;
     if (password.length < 6) newErrors.password = t.errors.password;
 
-    // Validate parent email for student accounts
+    // Students can add a parent email, so check it only if they typed one
     if (isSignup && role === "student" && parentEmail && !EMAIL_RE.test(parentEmail)) {
       newErrors.parentEmail = t.errors.parentEmail;
     }
@@ -131,7 +131,7 @@ export default function AuthModal({ lang, mode, setMode, onClose, onSubmit }) {
       const res = await onSubmit(mode, { name, email, password, role, parentEmail });
       if (res && res.ok) {
         setSuccess(t.success);
-        setTimeout(() => onClose(), 900); // close modal -> App shows main UI
+        setTimeout(() => onClose(), 900); // close the popup, App then shows the main page
       } else {
         const message = res?.message || t.errors.generic;
         setServerError(lang === "ar" ? SERVER_MESSAGES_AR[message] || message : message);

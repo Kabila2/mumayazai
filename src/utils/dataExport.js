@@ -244,7 +244,7 @@ export const importUserData = (file, userEmail, options = {}) => {
           }
         }
 
-        // Start from a clean slate so leftovers can't survive the restore.
+        // Wipe the old data first so nothing from before survives the restore
         if (replace) {
           purgeUserData(userEmail, { dropAccount: false });
         }

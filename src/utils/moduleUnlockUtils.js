@@ -1,7 +1,7 @@
 import { getModulePercent } from './progressUtils';
 import { getUserAchievements } from './achievementsSystem';
 
-/** The score a module must reach before the next one opens. */
+/** The percentage a module must reach before the next one opens. */
 export const PASS_PERCENT = 70;
 
 export const CURRICULUM = [
@@ -35,10 +35,10 @@ export const CURRICULUM = [
   }
 ];
 
-/** Section ids that sit on the path, for quick membership checks. */
+/** The ids of the lessons that are on the locked path, for quick lookups. */
 export const SEQUENCED_SECTIONS = CURRICULUM.map((m) => m.id);
 
-/** Quiz topics that sit on the path. */
+/** The quiz topics that are on the locked path. */
 export const SEQUENCED_TOPICS = CURRICULUM.map((m) => m.testTopic);
 
 const unlockedAchievementIds = (userEmail) => {
@@ -96,13 +96,13 @@ export const getCurriculumState = (userEmail, role = 'student') => {
   return state;
 };
 
-/** Whether one section is open to this learner. Unsequenced sections are. */
+/** Is this lesson open for this learner? Lessons not on the path are always open. */
 export const isSectionUnlocked = (userEmail, sectionId, role = 'student') => {
   if (!SEQUENCED_SECTIONS.includes(sectionId)) return true;
   return !!getCurriculumState(userEmail, role)[sectionId]?.unlocked;
 };
 
-/** Whether a Quiz Centre topic is open. Topics track their lesson exactly. */
+/** Is this Quiz Centre topic open? A topic is open whenever its lesson is open. */
 export const isTopicUnlocked = (userEmail, topicId, role = 'student') => {
   const entry = CURRICULUM.find((m) => m.testTopic === topicId);
   if (!entry) return true;
@@ -110,8 +110,8 @@ export const isTopicUnlocked = (userEmail, topicId, role = 'student') => {
 };
 
 /**
- * The module the learner should do next: the first unlocked-but-unfinished one,
- * or the last module once everything is done. Drives the "Continue" card.
+ * The module the learner should do next: the first one that is unlocked but
+ * not finished, or the last module once everything is done. Used by the "Continue" card.
  */
 export const getNextModule = (userEmail, role = 'student') => {
   const state = getCurriculumState(userEmail, role);
@@ -120,12 +120,12 @@ export const getNextModule = (userEmail, role = 'student') => {
 };
 
 /**
- * A short, child-readable reason a tile is locked.
+ * A short reason a child can read for why a tile is locked.
  *
- * Names the FIRST unfinished module before this one, not simply the one
- * directly before it: those differ when a learner has finished a later module
- * out of order, and naming an already-finished module as the blocker is worse
- * than saying nothing — it sends them back to something they have done.
+ * It names the FIRST unfinished module before this one, not just the one
+ * directly before it. These can be different when a learner finished a later
+ * module out of order, and telling them to go back to a module they have
+ * already finished would be confusing.
  */
 export const lockReason = (userEmail, sectionId, language = 'en', role = 'student') => {
   const state = getCurriculumState(userEmail, role);

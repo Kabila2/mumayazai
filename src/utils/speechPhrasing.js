@@ -6,38 +6,38 @@ const NUMBER_WORDS = {
     'تسع', 'عشر']
 };
 
-/** Pick one of several phrasings, so repeated events do not sound canned. */
+/** Pick one phrase at random so the same event does not always sound the same. */
 const pick = (options) => options[Math.floor(Math.random() * options.length)];
 
-/** Spell a small number out; large ones stay as digits. */
+/** Write a small number as a word. Big numbers stay as digits. */
 const spellNumber = (n, language = 'en') => {
   const words = NUMBER_WORDS[language] || NUMBER_WORDS.en;
   return words[n] !== undefined ? words[n] : String(n);
 };
 
 /**
- * Rewrite a string so a speech synthesiser reads it the way a person would.
- * Safe to run on anything, including text that is already clean.
+ * Rewrite text so the browser voice reads it the way a person would say it.
+ * Safe to run on anything, even text that is already clean.
  */
 export const speechFriendly = (text, language = 'en') => {
   if (!text) return '';
 
   return (
     String(text)
-      // Emoji and pictographs get read as their unicode names on some voices.
+      // Some voices read emoji out by their unicode name, so remove them
       .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2190}-\u{21FF}]/gu, ' ')
-      // Markdown emphasis and bullets.
+      // Remove markdown bold and bullet symbols
       .replace(/\*\*([^*]+)\*\*/g, '$1')
       .replace(/^[\s>*•-]+/gm, '')
-      // Dashes and slashes become pauses rather than being read aloud.
+      // Turn dashes and slashes into pauses instead of reading them out
       .replace(/\s+[—–-]\s+/g, ', ')
       .replace(/\s*\/\s*/g, ' or ')
-      // "5 points" reads much more naturally as "five points".
+      // "5 points" sounds much better as "five points"
       .replace(/\b(\d{1,2})\b/g, (match, digits) =>
         spellNumber(Number(digits), language))
-      // Percentages are read flat without the word.
+      // Say "percent" after a percentage
       .replace(/(\d+)\s*%/g, language === 'ar' ? '$1 بالمئة' : '$1 percent')
-      // Collapse the whitespace the substitutions above leave behind.
+      // Tidy up the extra spaces left behind by the replacements above
       .replace(/\n+/g, '. ')
       .replace(/\s{2,}/g, ' ')
       .replace(/\s+([.,!?])/g, '$1')
@@ -47,8 +47,8 @@ export const speechFriendly = (text, language = 'en') => {
 };
 
 /**
- * "You learned something and earned points." The single most-spoken line in
- * the app, so it gets the most variations.
+ * "You learned something and earned points." This is the line the app says
+ * most often, so it has the most variations.
  */
 export const learnedPhrase = ({ language = 'en', kind = 'letter', name, points }) => {
   const kindWords = {
@@ -77,7 +77,7 @@ export const moduleCompletePhrase = ({ language = 'en', moduleName }) => {
   return `${pick(['Wonderful', 'Brilliant', 'Amazing work'])}! You finished the whole ${moduleName}.`;
 };
 
-/** Feedback on a quiz answer. */
+/** What to say after a quiz answer. */
 export const answerPhrase = ({ language = 'en', correct }) => {
   if (language === 'ar') {
     return correct
@@ -89,7 +89,7 @@ export const answerPhrase = ({ language = 'en', correct }) => {
     : pick(['Not quite, have another go', 'Close, try that again']);
 };
 
-/** Reading a word or phrase out with its phonetic spelling. */
+/** Read a word out together with its meaning. */
 export const pronouncePhrase = ({ language = 'en', arabic, english }) => {
   if (!english) return arabic;
   return language === 'ar' ? `${arabic}، وتعني ${english}` : `${arabic}, which means ${english}`;

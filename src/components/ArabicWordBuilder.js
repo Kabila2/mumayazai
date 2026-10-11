@@ -425,36 +425,36 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
     const userWord = selectedLetters.map(l => l.letter).join('');
 
     if (userWord === currentWord.arabic) {
-      // Speak the word in Arabic using voice over
+      // Read the word out loud in Arabic
       voiceOver.speak(currentWord.arabic, true);
 
-      // Calculate points
+      // Work out the points
       const basePoints = 10;
       const streakBonus = streak * 5;
       const hintPenalty = showHint ? 5 : 0;
       const pointsEarned = basePoints + streakBonus - hintPenalty;
 
-      // Update scores
+      // Update the scores
       setScore(score + 1);
       setStreak(streak + 1);
       setTotalPoints(totalPoints + pointsEarned);
       setCoinsEarned(coinsEarned + pointsEarned);
 
-      // Update best streak
+      // Save the best streak
       if (streak + 1 > bestStreak) {
         setBestStreak(streak + 1);
       }
 
-      // The coins above are the game's own display. The global points —
-      // what the leaderboard, rewards and daily goal count — are awarded
-      // here too; this game used to be the one place points never reached.
-      // (No chime here: the celebration popup below plays it.)
+      // The coins above are only for this game's own display. The real points
+      // (the ones the leaderboard, rewards and daily goal count) are added
+      // here as well. Before this fix the Word Builder was the one place
+      // where points never reached the main total.
       if (userEmail.current) {
         awardPoints(userEmail.current, showHint ? 'WORD_BUILT_CORRECT' : 'WORD_BUILT_PERFECT');
         if ([3, 5, 10].includes(streak + 1)) awardStreakBonus(userEmail.current, streak + 1);
       }
 
-      // Determine reward
+      // Build the reward popup
       const reward = {
         points: pointsEarned,
         streak: streak + 1,
@@ -463,7 +463,7 @@ const ArabicWordBuilder = ({ t, language, fontSize, highContrast, reducedMotion,
       };
       setCurrentReward(reward);
       setShowSuccess(true);
-      setShowCelebration(true); // Show celebration popup!
+      setShowCelebration(true); // show the celebration popup
 
       setTimeout(() => {
         setShowSuccess(false);

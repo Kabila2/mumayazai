@@ -3,33 +3,33 @@ import { speechFriendly } from '../utils/speechPhrasing';
 import { COMFORT_CHANGED_EVENT } from '../utils/comfortSettings';
 
 /**
- * Enhanced Voice Over Hook - Provides text-to-speech functionality
- * for accessibility and user preference
+ * Voice Over hook - gives every screen text-to-speech
  *
- * DELIVERY
- * Two things made the old output sound robotic, and both are handled here
- * rather than at every call site:
+ * HOW IT SOUNDS
+ * Two things made the old voice sound robotic, and both are fixed here
+ * instead of in every single screen:
  *
- *   • PACE. Rate 1.0 with pitch 1.0 is the synthesiser's flattest setting.
- *     Easing the rate slightly below 1 and lifting the pitch a little reads as
- *     warmer and, more importantly, gives a child time to follow a word they
- *     have never heard. The defaults below do that; a learner who wants it
- *     faster still can change it in voice settings.
- *   • PHRASING. Every utterance now goes through `speechFriendly()`, which
- *     spells small numbers out ("five points", not "5 points" — voices clip
- *     straight through digits), turns dashes into commas so the voice breathes,
- *     and strips emoji and markdown that otherwise get read out character by
- *     character.
+ *   1. SPEED. Rate 1.0 and pitch 1.0 is the flattest the browser voice
+ *      gets. Slowing it down a little and lifting the pitch a little sounds
+ *      warmer and gives a child time to follow a word they have never heard
+ *      before. The defaults below do that. A learner who wants it faster
+ *      can still change it in the voice settings.
+ *   2. WORDING. Everything goes through speechFriendly() first, which
+ *      spells small numbers out ("five points" instead of "5 points"),
+ *      turns dashes into commas so the voice pauses, and removes emoji and
+ *      markdown that would otherwise get read out letter by letter.
  *
- * Long text is also split into sentences and queued, because a synthesiser
- * given one long string runs the whole thing at a single flat contour.
+ * Long text is also split into sentences and queued one by one, because
+ * if you give the browser one long string it reads the whole thing in
+ * one flat tone. Short text like a single letter is left as it is.
+ *
  */
 
 const VOICE_STORAGE_KEY = "stellar_voice_settings";
 
 /**
- * Defaults tuned for a child learning to read, not for the fastest possible
- * playback. Saved settings always win over these.
+ * Default settings chosen for a child learning to read, not for the fastest
+ * playback. If the user has saved their own settings those are used instead.
  */
 const DEFAULT_SETTINGS = {
   enabled: true,
@@ -39,14 +39,14 @@ const DEFAULT_SETTINGS = {
   volume: 0.9
 };
 
-/** Break text at sentence ends so each clause gets its own intonation. */
+/** Split text at the end of each sentence so each one gets its own rise and fall. */
 const splitIntoClauses = (text) =>
   String(text)
     .split(/(?<=[.!?؟])\s+/)
     .map((part) => part.trim())
     .filter(Boolean);
 
-// Get natural voices for Arabic and English
+// Find the most natural sounding voices for Arabic and English
 const getNaturalVoices = (language, availableVoices) => {
   if (!availableVoices || availableVoices.length === 0) return [];
 
@@ -82,7 +82,7 @@ const getNaturalVoices = (language, availableVoices) => {
   const preferredNames = naturalVoices[language] || naturalVoices.en;
   const filtered = [];
 
-  // First pass: Find exact matches
+  // First try: look for the voices in the list above
   for (const preferredName of preferredNames) {
     const voice = availableVoices.find(v =>
       v.name === preferredName ||
@@ -94,7 +94,7 @@ const getNaturalVoices = (language, availableVoices) => {
     }
   }
 
-  // Second pass: Find by language if no exact matches
+  // Second try: if none of them exist, take any voice in the right language
   if (filtered.length === 0) {
     const langVoices = availableVoices.filter(v => {
       if (!v.lang) return false;
@@ -168,11 +168,11 @@ export const useVoiceOver = (language = 'en', options = {}) => {
 
     loadVoices();
 
-    // addEventListener, not `onvoiceschanged = …`: every screen mounts its own
-    // copy of this hook, and assigning the property meant each new instance
-    // overwrote the last one's handler — and unmounting set it to null for
-    // everyone. Voices arriving late then never reached the screens that were
-    // still waiting for them.
+    // I use addEventListener instead of setting onvoiceschanged directly.
+    // Every screen has its own copy of this hook, so setting the property
+    // meant each new screen replaced the last one's handler, and when a
+    // screen closed it set it to null for everyone. Voices that loaded late
+    // then never reached the screens that were still waiting for them.
     const synth = window.speechSynthesis;
     if (synth && typeof synth.addEventListener === 'function') {
       synth.addEventListener('voiceschanged', loadVoices);
@@ -181,8 +181,8 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     return undefined;
   }, [language, selectedVoice]);
 
-  // Stay in step with the Comfort panel (and any other screen's toggle): the
-  // read-aloud switch writes the same storage key this hook loads from.
+  // Keep in sync with the Comfort panel: its read-aloud switch writes to the
+  // same storage key this hook reads from.
   useEffect(() => {
     const sync = () => setSettings(loadVoiceSettings());
     window.addEventListener(COMFORT_CHANGED_EVENT, sync);
@@ -208,7 +208,7 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     saveVoiceSettings(settings);
   }, [settings]);
 
-  // Process voice queue
+  // Take the next item off the queue and speak it
   const processQueue = useCallback(() => {
     if (isProcessingRef.current || queueRef.current.length === 0) {
       return;
@@ -222,14 +222,14 @@ export const useVoiceOver = (language = 'en', options = {}) => {
       return;
     }
 
-    // `speechFriendly` replaces the hand-rolled emoji/markdown strip that used
-    // to live here. It covers the same ground and also spells out numbers and
-    // converts dashes to pauses — see src/utils/speechPhrasing.js.
+    // speechFriendly replaces the emoji and markdown stripping that used to
+    // be written out here. It does the same job and also spells out numbers
+    // and turns dashes into pauses (see src/utils/speechPhrasing.js).
     const cleanText = speechFriendly(nextText, language);
 
-    // Nothing left to say once the decoration is stripped (e.g. the text was
-    // only an emoji). Move straight on rather than queueing a silent utterance,
-    // which some browsers never fire `onend` for.
+    // If nothing is left after cleaning (for example the text was only an
+    // emoji) move on to the next item. Some browsers never fire onend for an
+    // empty utterance, so queueing it would get the queue stuck.
     if (!cleanText) {
       isProcessingRef.current = false;
       setTimeout(() => processQueue(), 0);
@@ -265,9 +265,9 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     };
 
     utterance.onerror = (event) => {
-      // "interrupted"/"canceled" happen whenever newer speech replaces older speech,
-      // and "not-allowed" when the browser blocks audio before the first tap —
-      // all expected, so they aren't reported as errors.
+      // "interrupted" and "canceled" happen whenever new speech replaces old
+      // speech, and "not-allowed" when the browser blocks audio before the
+      // first tap. These are all normal so they are not reported as errors.
       if (!['interrupted', 'canceled', 'not-allowed'].includes(event.error)) {
         console.error('Speech synthesis error:', event.error);
       }
@@ -282,9 +282,9 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     window.speechSynthesis.speak(utterance);
   }, [selectedVoice, settings, language, onStart, onEnd, onError]);
 
-  // Stop speaking. Declared before `speak`, which lists it as a dependency —
-  // a `const` in a dependency array is read during render, so the other order
-  // would throw before initialisation.
+  // Stop speaking. This has to be declared before speak() because speak()
+  // lists it as a dependency, and a const used before it is declared would
+  // crash on the first render.
   const stop = useCallback(() => {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -294,13 +294,13 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     }
   }, []);
 
-  // Speak function - main API
+  // speak() - the main function the screens call
   //
-  // Longer text is queued one sentence at a time rather than handed over as a
-  // single utterance: a synthesiser reads one long string on a single flat
-  // contour, where separate utterances each get their own rise and fall. Short
-  // text (a word, a letter name) is left whole — splitting it would only
-  // insert a pause where none belongs.
+  // Long text is queued one sentence at a time instead of being sent as one
+  // big utterance, because the browser reads one long string in a single
+  // flat tone, while separate sentences each get their own rise and fall.
+  // Short text (a word or a letter name) is left whole, since splitting it
+  // would only add a pause where there should not be one.
   const speak = useCallback((text, immediate = false) => {
     if (!text || !settings.enabled || !window.speechSynthesis) {
       return;
@@ -350,7 +350,7 @@ export const useVoiceOver = (language = 'en', options = {}) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
   }, []);
 
-  // Speak with auto-play check
+  // Only speak if auto-play is turned on
   const speakAuto = useCallback((text, immediate = false) => {
     if (settings.autoPlay && autoPlayEnabled) {
       speak(text, immediate);
